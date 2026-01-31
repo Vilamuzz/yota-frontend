@@ -1,34 +1,28 @@
-# Build Stage 1
-
+# Build Stage
 FROM node:22-alpine AS build
 WORKDIR /app
 
 RUN corepack enable
 
-# Copy package.json and your lockfile, here we add pnpm-lock.yaml for illustration
 COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies
 RUN pnpm i
 
-# Copy the entire project
 COPY . ./
-
-# Build the project
 RUN pnpm run build
 
-# Build Stage 2
+# Production Stage
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
 
-FROM node:22-alpine
-WORKDIR /app
+# Remove default nginx files
+RUN rm -rf ./*
 
-# Only `.output` folder is needed from the build stage
-COPY --from=build /app/dist/ ./
+# Copy built files from build stage
+COPY --from=build /app/dist ./
 
-# Change the port and host
-ENV PORT=80
-ENV HOST=0.0.0.0
+# Copy nginx configuration (optional, see below)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-CMD ["node", "/app/server/index.mjs"]
+CMD ["nginx", "-g", "daemon off;"]
