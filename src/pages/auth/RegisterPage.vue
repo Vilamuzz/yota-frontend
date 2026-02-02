@@ -1,54 +1,50 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
 
+const { register } = useAuth()
 const username = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
-const isLoading = ref(false)
-const errorMessage = ref('')
+const loading = ref(false)
+const error = ref('')
 
 const handleRegister = async () => {
-  errorMessage.value = ''
+  error.value = ''
 
   // Validation
   if (!username.value || !email.value || !password.value || !confirmPassword.value) {
-    errorMessage.value = 'Please fill in all fields'
+    error.value = 'Please fill in all fields'
     return
   }
 
   if (password.value !== confirmPassword.value) {
-    errorMessage.value = 'Passwords do not match'
+    error.value = 'Passwords do not match'
     return
   }
 
   if (password.value.length < 8) {
-    errorMessage.value = 'Password must be at least 8 characters long'
+    error.value = 'Password must be at least 8 characters long'
     return
   }
 
-  isLoading.value = true
+  loading.value = true
 
   try {
-    // TODO: Implement actual registration logic with your API
-    console.log('Register with:', {
+    const result = await register({
       username: username.value,
       email: email.value,
       password: password.value,
     })
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Navigate to login or dashboard after successful registration
-    // router.push('/login')
-  } catch {
-    errorMessage.value = 'Registration failed. Please try again.'
+    if (!result.success) {
+      error.value = result.message || 'Registration failed. Please try again.'
+    }
   } finally {
-    isLoading.value = false
+    loading.value = false
   }
 }
 
@@ -59,7 +55,7 @@ const goToLogin = () => {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12"
+    class="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4 py-12"
   >
     <div class="w-full max-w-md">
       <div class="bg-white rounded-lg shadow-xl p-8">
@@ -70,10 +66,10 @@ const goToLogin = () => {
 
         <form @submit.prevent="handleRegister" class="space-y-5">
           <div
-            v-if="errorMessage"
+            v-if="error"
             class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
           >
-            {{ errorMessage }}
+            {{ error }}
           </div>
 
           <div>
@@ -139,10 +135,10 @@ const goToLogin = () => {
 
           <button
             type="submit"
-            :disabled="isLoading"
+            :disabled="loading"
             class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span v-if="!isLoading">Create Account</span>
+            <span v-if="!loading">Create Account</span>
             <span v-else class="flex items-center justify-center">
               <svg
                 class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"

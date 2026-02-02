@@ -42,7 +42,7 @@ export const useAuth = () => {
     } catch (error: any) {
       return {
         success: false,
-        message: error.data?.message || 'An error occurred during login',
+        message: error.response?.data?.message || 'An error occurred during login',
       }
     }
   }
@@ -67,7 +67,7 @@ export const useAuth = () => {
     } catch (error: any) {
       return {
         success: false,
-        message: error.data?.message || 'An error occurred during registration',
+        message: error.response?.data?.message || 'An error occurred during registration',
       }
     }
   }
@@ -78,19 +78,53 @@ export const useAuth = () => {
     await router.push('/login')
   }
 
-  // Forgot password logic
-  const forgotPassword = async (email: string): Promise<AuthResult> => {
+  // Forget password logic
+  const forgetPassword = async (email: string): Promise<AuthResult> => {
     try {
-      const response = await authService.forgotPassword({ email })
+      const response = await authService.forgetPassword({ email })
+
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          message: response.message || 'Password reset link sent successfully',
+        }
+      }
 
       return {
-        success: response.status >= 200 && response.status < 300,
-        message: response.data.message || response.data.message,
+        success: false,
+        message: response.message || 'Failed to send password reset email',
       }
     } catch (error: any) {
       return {
         success: false,
-        message: error.data?.message || 'Failed to send password reset email',
+        message: error.response?.data?.message || 'Failed to send password reset email',
+      }
+    }
+  }
+
+  // Reset password logic
+  const resetPassword = async (token: string, newPassword: string): Promise<AuthResult> => {
+    try {
+      const response = await authService.resetPassword({
+        token,
+        newPassword,
+      })
+
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          message: response.message || 'Password reset successfully',
+        }
+      }
+
+      return {
+        success: false,
+        message: response.message || 'Failed to reset password',
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to reset password',
       }
     }
   }
@@ -140,7 +174,8 @@ export const useAuth = () => {
     login,
     register,
     logout,
-    forgotPassword,
+    forgetPassword,
+    resetPassword,
     fetchCurrentUser,
     hasRole,
     hasAnyRole,

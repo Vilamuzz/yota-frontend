@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
+const { forgetPassword } = useAuth()
 
 const email = ref('')
 const isLoading = ref(false)
@@ -21,18 +23,12 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    // TODO: Implement actual forgot password logic with your API
-    console.log('Reset password for:', email.value)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    successMessage.value = 'Password reset link has been sent to your email'
-
-    // Optionally redirect to login after a delay
-    // setTimeout(() => {
-    //   router.push('/login')
-    // }, 3000)
+    const result = await forgetPassword(email.value)
+    if (result.success) {
+      successMessage.value = 'Password reset link has been sent to your email'
+    } else {
+      errorMessage.value = result.message || 'Failed to send reset link. Please try again.'
+    }
   } catch {
     errorMessage.value = 'Failed to send reset link. Please try again.'
   } finally {
@@ -47,7 +43,7 @@ const goToLogin = () => {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4"
+    class="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4"
   >
     <div class="w-full max-w-md">
       <div class="bg-white rounded-lg shadow-xl p-8">
