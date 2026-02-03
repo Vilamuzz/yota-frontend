@@ -25,11 +25,22 @@ const router = createRouter({
       name: 'forgot-password',
       component: () => import('@/pages/auth/ForgetPasswordPage.vue'),
     },
+    // Update this route to match your backend callback URL
+    {
+      path: '/auth/callback',
+      name: 'auth-callback',
+      component: () => import('@/pages/auth/CallbackPage.vue'),
+    },
     {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('@/pages/dashboard/IndexPage.vue'),
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('@/pages/auth/ResetPasswordPage.vue'),
     },
   ],
 })

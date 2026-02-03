@@ -5,8 +5,9 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  ForgotPasswordRequest,
-  ForgotPasswordResponse,
+  ForgetPasswordRequest,
+  ForgetPasswordResponse,
+  ResetPasswordRequest,
   CurrentUserResponse,
 } from '@/types/auth'
 
@@ -21,8 +22,13 @@ export const authService = {
     return response.data
   },
 
-  forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
-    const response = await http.post<ForgotPasswordResponse>(API.AUTH_FORGOT_PASSWORD, data)
+  forgetPassword: async (data: ForgetPasswordRequest): Promise<ForgetPasswordResponse> => {
+    const response = await http.post<ForgetPasswordResponse>(API.AUTH_FORGET_PASSWORD, data)
+    return response.data
+  },
+
+  resetPassword: async (data: ResetPasswordRequest): Promise<ForgetPasswordResponse> => {
+    const response = await http.post<ForgetPasswordResponse>(API.AUTH_RESET_PASSWORD, data)
     return response.data
   },
 

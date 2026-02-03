@@ -6,13 +6,18 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  name: string
+  username: string
   email: string
   password: string
 }
 
-export interface ForgotPasswordRequest {
+export interface ForgetPasswordRequest {
   email: string
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  newPassword: string
 }
 
 export interface User {
@@ -31,5 +36,5 @@ export interface AuthData {
 
 export type LoginResponse = Response<AuthData>
 export type RegisterResponse = Response<AuthData>
-export type ForgotPasswordResponse = Response<{ message: string }>
+export type ForgetPasswordResponse = Response<{ message: string }>
 export type CurrentUserResponse = Response<User>
