@@ -38,6 +38,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/dashboard/tracking',
+      name: 'ambulance-tracking',
+      component: () => import('@/pages/dashboard/TrackingPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/reset-password',
       name: 'reset-password',
       component: () => import('@/pages/auth/ResetPasswordPage.vue'),

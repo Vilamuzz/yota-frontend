@@ -101,6 +101,14 @@ onMounted(() => {
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <router-link
+            to="/dashboard/tracking"
+            class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer"
+          >
+            <div class="text-4xl mb-3">🚑</div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Ambulance Tracking</h3>
+            <p class="text-gray-600">Track ambulances in real-time</p>
+          </router-link>
           <div class="bg-white rounded-lg shadow-md p-6">
             <div class="text-4xl mb-3">📊</div>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Analytics</h3>
@@ -110,11 +118,6 @@ onMounted(() => {
             <div class="text-4xl mb-3">⚙️</div>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Settings</h3>
             <p class="text-gray-600">Manage your account preferences</p>
-          </div>
-          <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="text-4xl mb-3">📝</div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Activity</h3>
-            <p class="text-gray-600">Track your recent activity</p>
           </div>
         </div>
       </div>
