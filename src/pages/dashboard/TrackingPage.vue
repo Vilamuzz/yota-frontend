@@ -1,13 +1,5 @@
 <script setup lang="ts">
 import AmbulanceMap from '@/components/molecules/AmbulanceMap.vue'
-import { useAmbulanceTracking } from '@/composables/useAmbulanceTracking'
-const { fetchOnlineAmbulances, refreshAmbulances } = useAmbulanceTracking()
-
-// Fetch online ambulances independently
-await fetchOnlineAmbulances()
-
-// Or refresh the list
-await refreshAmbulances()
 </script>
 
 <template>
