@@ -5,7 +5,7 @@ import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
 
-const { register } = useAuth()
+const { registerMutation } = useAuth()
 const username = ref('')
 const email = ref('')
 const password = ref('')
@@ -35,14 +35,13 @@ const handleRegister = async () => {
   loading.value = true
 
   try {
-    const result = await register({
+    await registerMutation.mutateAsync({
       username: username.value,
       email: email.value,
       password: password.value,
     })
-    if (!result.success) {
-      error.value = result.message || 'Registration failed. Please try again.'
-    }
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Registration failed. Please try again.'
   } finally {
     loading.value = false
   }

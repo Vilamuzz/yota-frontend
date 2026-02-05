@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
-const { forgetPassword } = useAuth()
+const { forgetPasswordMutation } = useAuth()
 
 const email = ref('')
 const isLoading = ref(false)
@@ -23,14 +23,11 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    const result = await forgetPassword(email.value)
-    if (result.success) {
-      successMessage.value = 'Password reset link has been sent to your email'
-    } else {
-      errorMessage.value = result.message || 'Failed to send reset link. Please try again.'
-    }
-  } catch {
-    errorMessage.value = 'Failed to send reset link. Please try again.'
+    const result = await forgetPasswordMutation.mutateAsync(email.value)
+    successMessage.value = result.message || 'Password reset link has been sent to your email'
+  } catch (err: any) {
+    errorMessage.value =
+      err.response?.data?.message || err.message || 'Failed to send reset link. Please try again.'
   } finally {
     isLoading.value = false
   }

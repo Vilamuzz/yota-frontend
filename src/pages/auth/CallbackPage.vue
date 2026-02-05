@@ -23,11 +23,11 @@ onMounted(async () => {
       // Fetch user data using the token
       const result = await fetchCurrentUser()
 
-      if (result.success) {
+      if (result.isSuccess) {
         // Redirect to dashboard
         await router.push('/dashboard')
       } else {
-        error.value = result.message || 'Failed to fetch user data'
+        error.value = result.error?.message || 'Failed to fetch user data'
         setTimeout(() => {
           router.push('/login')
         }, 3000)

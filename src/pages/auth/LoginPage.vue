@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
-const { login } = useAuth()
+const { loginMutation } = useAuth()
 const email = ref('')
 const password = ref('')
 const error = ref('')
@@ -14,16 +14,16 @@ const handleLogin = async () => {
   loading.value = true
   error.value = ''
 
-  const result = await login({
-    email: email.value,
-    password: password.value,
-  })
-
-  if (!result.success) {
-    error.value = result.message || 'Login failed'
+  try {
+    await loginMutation.mutateAsync({
+      email: email.value,
+      password: password.value,
+    })
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Login failed'
+  } finally {
+    loading.value = false
   }
-
-  loading.value = false
 }
 
 const goToRegister = () => {

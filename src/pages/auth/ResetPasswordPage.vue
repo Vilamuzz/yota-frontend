@@ -5,7 +5,7 @@ import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
 const route = useRoute()
-const { resetPassword } = useAuth()
+const { resetPasswordMutation } = useAuth()
 
 const token = ref('')
 const password = ref('')
@@ -44,19 +44,15 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    const result = await resetPassword(token.value, password.value)
+    const result = await resetPasswordMutation.mutateAsync({ token: token.value, newPassword: password.value })
 
-    if (result.success) {
-      success.value = result.message || 'Password reset successfully'
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push('/login')
-      }, 2000)
-    } else {
-      error.value = result.message || 'Failed to reset password'
-    }
-  } catch {
-    error.value = 'Failed to reset password. Please try again.'
+    success.value = result.message || 'Password reset successfully'
+    // Redirect to login after 2 seconds
+    setTimeout(() => {
+      router.push('/login')
+    }, 2000)
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to reset password. Please try again.'
   } finally {
     isLoading.value = false
   }

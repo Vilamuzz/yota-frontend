@@ -1,4 +1,4 @@
-import { http } from '@/composables/useHttp'
+import { api } from '@/utils/api'
 import { API } from '@/const/api'
 import type {
   LoginRequest,
@@ -13,27 +13,27 @@ import type {
 
 export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await http.post<LoginResponse>(API.AUTH_LOGIN, credentials)
+    const response = await api.post<LoginResponse>(API.AUTH_LOGIN, credentials)
     return response.data
   },
 
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
-    const response = await http.post<RegisterResponse>(API.AUTH_REGISTER, data)
+    const response = await api.post<RegisterResponse>(API.AUTH_REGISTER, data)
     return response.data
   },
 
   forgetPassword: async (data: ForgetPasswordRequest): Promise<ForgetPasswordResponse> => {
-    const response = await http.post<ForgetPasswordResponse>(API.AUTH_FORGET_PASSWORD, data)
+    const response = await api.post<ForgetPasswordResponse>(API.AUTH_FORGET_PASSWORD, data)
     return response.data
   },
 
   resetPassword: async (data: ResetPasswordRequest): Promise<ForgetPasswordResponse> => {
-    const response = await http.post<ForgetPasswordResponse>(API.AUTH_RESET_PASSWORD, data)
+    const response = await api.post<ForgetPasswordResponse>(API.AUTH_RESET_PASSWORD, data)
     return response.data
   },
 
   getCurrentUser: async (): Promise<CurrentUserResponse> => {
-    const response = await http.get<CurrentUserResponse>(API.AUTH_ME)
+    const response = await api.get<CurrentUserResponse>(API.AUTH_ME)
     return response.data
   },
 }

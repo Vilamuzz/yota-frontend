@@ -13,8 +13,8 @@ const getUserData = async () => {
 
   const result = await fetchCurrentUser()
 
-  if (!result.success) {
-    error.value = result.message || 'Failed to fetch user data'
+  if (result.isError) {
+    error.value = result.error?.message || 'Failed to fetch user data'
   }
 
   loading.value = false
