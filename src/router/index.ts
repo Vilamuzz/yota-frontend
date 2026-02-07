@@ -1,47 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LandingPage from '@/pages/LandingPage.vue'
 import { useAuthStore } from '@/stores/auth'
+import { publicRoutes } from '@/router/routes/public'
+import { authRoutes } from '@/router/routes/auth'
+import { dashboardRoutes } from '@/router/routes/dashboard'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/',
-      name: 'landing',
-      component: LandingPage,
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: () => import('@/pages/auth/LoginPage.vue'),
-    },
-    {
-      path: '/register',
-      name: 'register',
-      component: () => import('@/pages/auth/RegisterPage.vue'),
-    },
-    {
-      path: '/forgot-password',
-      name: 'forgot-password',
-      component: () => import('@/pages/auth/ForgetPasswordPage.vue'),
-    },
-    // Update this route to match your backend callback URL
-    {
-      path: '/auth/callback',
-      name: 'auth-callback',
-      component: () => import('@/pages/auth/CallbackPage.vue'),
-    },
-    {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: () => import('@/pages/dashboard/IndexPage.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/reset-password',
-      name: 'reset-password',
-      component: () => import('@/pages/auth/ResetPasswordPage.vue'),
-    },
+    ...publicRoutes,
+    ...authRoutes,
+    ...dashboardRoutes,
   ],
 })
 

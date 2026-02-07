@@ -1,17 +1,14 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/authService'
-import type { LoginRequest, RegisterRequest, User } from '@/types/auth'
-
-interface AuthResult {
-  success: boolean
-  message?: string
-}
-
-interface FetchUserResult extends AuthResult {
-  user?: User
-}
+import type {
+  LoginRequest,
+  RegisterRequest,
+  UpdateUserProfileRequest,
+  UpdateUserPasswordRequest,
+} from '@/types/auth'
 
 export const useAuth = () => {
   const authStore = useAuthStore()
@@ -22,55 +19,29 @@ export const useAuth = () => {
   const isAuthenticated = computed(() => authStore.isAuthenticated)
   const token = computed(() => authStore.token)
 
-  // Login logic
-  const login = async (credentials: LoginRequest): Promise<AuthResult> => {
-    try {
-      const response = await authService.login(credentials)
-
-      // Handle successful response based on status
-      if (response.status >= 200 && response.status < 300) {
-        authStore.setToken(response.data.token)
-        authStore.setUser(response.data.user)
+  // Login Mutation
+  const loginMutation = useMutation({
+    mutationFn: (credentials: LoginRequest) => authService.login(credentials),
+    onSuccess: async (data) => {
+      if (data.data?.token) {
+        authStore.setToken(data.data.token)
         await router.push('/dashboard')
-        return { success: true }
       }
+    },
+  })
 
-      return {
-        success: false,
-        message: response.message || 'Login failed',
-      }
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'An error occurred during login',
-      }
-    }
-  }
+  // Register Mutation
+  const registerMutation = useMutation({
+    mutationFn: (data: RegisterRequest) => authService.register(data),
+  })
 
-  // Register logic
-  const register = async (data: RegisterRequest): Promise<AuthResult> => {
-    try {
-      const response = await authService.register(data)
+  const verifyEmailMutation = useMutation({
+    mutationFn: (token: string) => authService.verifyEmail({ token }),
+  })
 
-      // Handle successful response based on status
-      if (response.status >= 200 && response.status < 300) {
-        authStore.setToken(response.data.token)
-        authStore.setUser(response.data.user)
-        await router.push('/dashboard')
-        return { success: true }
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Registration failed',
-      }
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'An error occurred during registration',
-      }
-    }
-  }
+  const resendVerificationMutation = useMutation({
+    mutationFn: (email: string) => authService.resendVerification({ email }),
+  })
 
   // Logout logic
   const logout = async (): Promise<void> => {
@@ -78,89 +49,54 @@ export const useAuth = () => {
     await router.push('/login')
   }
 
-  // Forget password logic
-  const forgetPassword = async (email: string): Promise<AuthResult> => {
-    try {
-      const response = await authService.forgetPassword({ email })
+  // Forget Password Mutation
+  const forgetPasswordMutation = useMutation({
+    mutationFn: (email: string) => authService.forgetPassword({ email }),
+  })
 
-      if (response.status >= 200 && response.status < 300) {
-        return {
-          success: true,
-          message: response.message || 'Password reset link sent successfully',
-        }
-      }
+  // Reset Password Mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ token, newPassword }: { token: string; newPassword: string }) =>
+      authService.resetPassword({ token, newPassword }),
+  })
 
-      return {
-        success: false,
-        message: response.message || 'Failed to send password reset email',
-      }
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to send password reset email',
-      }
-    }
-  }
-
-  // Reset password logic
-  const resetPassword = async (token: string, newPassword: string): Promise<AuthResult> => {
-    try {
-      const response = await authService.resetPassword({
-        token,
-        newPassword,
-      })
-
-      if (response.status >= 200 && response.status < 300) {
-        return {
-          success: true,
-          message: response.message || 'Password reset successfully',
-        }
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to reset password',
-      }
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to reset password',
-      }
-    }
-  }
-
-  // Fetch current user logic
-  const fetchCurrentUser = async (): Promise<FetchUserResult> => {
-    try {
+  // Fetch Current User Query
+  const { refetch: fetchCurrentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
       const response = await authService.getCurrentUser()
-
-      if (response.status >= 200 && response.status < 300) {
+      // Store the user data in the auth store
+      if (response.data) {
         authStore.setUser(response.data)
-        return {
-          success: true,
-          user: response.data,
-        }
-      } else {
-        return {
-          success: false,
-          message: response.message || 'Failed to fetch user data',
-        }
       }
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to fetch user data',
+      return response
+    },
+    enabled: false,
+    retry: false,
+  })
+
+  // Update Current User Profile Mutation
+  const updateCurrentUserProfileMutation = useMutation({
+    mutationFn: (data: UpdateUserProfileRequest) => authService.updateCurrentUserProfile(data),
+    onSuccess: (data) => {
+      if (data.data) {
+        authStore.setUser(data.data)
       }
-    }
-  }
+    },
+  })
+
+  // Update Current User Password Mutation
+  const updateCurrentUserPasswordMutation = useMutation({
+    mutationFn: (data: UpdateUserPasswordRequest) => authService.updateCurrentUserPassword(data),
+  })
 
   // Check if user has specific role
-  const hasRole = (role: string | number): boolean => {
+  const hasRole = (role: string): boolean => {
     return authStore.user?.role === role
   }
 
   // Check if user has any of the specified roles
-  const hasAnyRole = (roles: (string | number)[]): boolean => {
+  const hasAnyRole = (roles: string[]): boolean => {
     return roles.some((role) => authStore.user?.role === role)
   }
 
@@ -170,12 +106,18 @@ export const useAuth = () => {
     isAuthenticated,
     token,
 
+    // Mutations & Queries
+    loginMutation,
+    registerMutation,
+    verifyEmailMutation,
+    resendVerificationMutation,
+    forgetPasswordMutation,
+    resetPasswordMutation,
+    updateCurrentUserProfileMutation,
+    updateCurrentUserPasswordMutation,
+
     // Methods
-    login,
-    register,
     logout,
-    forgetPassword,
-    resetPassword,
     fetchCurrentUser,
     hasRole,
     hasAnyRole,
