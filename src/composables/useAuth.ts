@@ -3,7 +3,12 @@ import { useRouter } from 'vue-router'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/authService'
-import type { LoginRequest, RegisterRequest, User } from '@/types/auth'
+import type {
+  LoginRequest,
+  RegisterRequest,
+  UpdateUserProfileRequest,
+  UpdateUserPasswordRequest,
+} from '@/types/auth'
 
 export const useAuth = () => {
   const authStore = useAuthStore()
@@ -18,20 +23,24 @@ export const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginRequest) => authService.login(credentials),
     onSuccess: async (data) => {
-      authStore.setToken(data.data.token)
-      authStore.setUser(data.data.user)
-      await router.push('/dashboard')
+      if (data.data?.token) {
+        authStore.setToken(data.data.token)
+        await router.push('/dashboard')
+      }
     },
   })
 
   // Register Mutation
   const registerMutation = useMutation({
     mutationFn: (data: RegisterRequest) => authService.register(data),
-    onSuccess: async (data) => {
-      authStore.setToken(data.data.token)
-      authStore.setUser(data.data.user)
-      await router.push('/dashboard')
-    },
+  })
+
+  const verifyEmailMutation = useMutation({
+    mutationFn: (token: string) => authService.verifyEmail({ token }),
+  })
+
+  const resendVerificationMutation = useMutation({
+    mutationFn: (email: string) => authService.resendVerification({ email }),
   })
 
   // Logout logic
@@ -52,28 +61,42 @@ export const useAuth = () => {
   })
 
   // Fetch Current User Query
-  // This can be enabled/disabled or used to refresh user data
-  const {
-    data: currentUser,
-    isLoading: isFetchingUser,
-    refetch: fetchCurrentUser,
-  } = useQuery({
+  const { refetch: fetchCurrentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       const response = await authService.getCurrentUser()
+      // Store the user data in the auth store
+      if (response.data) {
+        authStore.setUser(response.data)
+      }
       return response
     },
-    enabled: false, // Only fetch when explicitly called or configured otherwise
+    enabled: false,
     retry: false,
   })
 
+  // Update Current User Profile Mutation
+  const updateCurrentUserProfileMutation = useMutation({
+    mutationFn: (data: UpdateUserProfileRequest) => authService.updateCurrentUserProfile(data),
+    onSuccess: (data) => {
+      if (data.data) {
+        authStore.setUser(data.data)
+      }
+    },
+  })
+
+  // Update Current User Password Mutation
+  const updateCurrentUserPasswordMutation = useMutation({
+    mutationFn: (data: UpdateUserPasswordRequest) => authService.updateCurrentUserPassword(data),
+  })
+
   // Check if user has specific role
-  const hasRole = (role: string | number): boolean => {
+  const hasRole = (role: string): boolean => {
     return authStore.user?.role === role
   }
 
   // Check if user has any of the specified roles
-  const hasAnyRole = (roles: (string | number)[]): boolean => {
+  const hasAnyRole = (roles: string[]): boolean => {
     return roles.some((role) => authStore.user?.role === role)
   }
 
@@ -86,9 +109,13 @@ export const useAuth = () => {
     // Mutations & Queries
     loginMutation,
     registerMutation,
+    verifyEmailMutation,
+    resendVerificationMutation,
     forgetPasswordMutation,
     resetPasswordMutation,
-    
+    updateCurrentUserProfileMutation,
+    updateCurrentUserPasswordMutation,
+
     // Methods
     logout,
     fetchCurrentUser,

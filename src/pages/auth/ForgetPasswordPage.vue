@@ -8,15 +8,15 @@ const { forgetPasswordMutation } = useAuth()
 
 const email = ref('')
 const isLoading = ref(false)
-const errorMessage = ref('')
-const successMessage = ref('')
+const error = ref('')
+const success = ref('')
 
 const handleSubmit = async () => {
-  errorMessage.value = ''
-  successMessage.value = ''
+  error.value = ''
+  success.value = ''
 
   if (!email.value) {
-    errorMessage.value = 'Please enter your email address'
+    error.value = 'Please enter your email address'
     return
   }
 
@@ -24,9 +24,9 @@ const handleSubmit = async () => {
 
   try {
     const result = await forgetPasswordMutation.mutateAsync(email.value)
-    successMessage.value = result.message || 'Password reset link has been sent to your email'
+    success.value = result.message || 'Password reset link has been sent to your email'
   } catch (err: any) {
-    errorMessage.value =
+    error.value =
       err.response?.data?.message || err.message || 'Failed to send reset link. Please try again.'
   } finally {
     isLoading.value = false
@@ -53,17 +53,17 @@ const goToLogin = () => {
 
         <form @submit.prevent="handleSubmit" class="space-y-6">
           <div
-            v-if="errorMessage"
+            v-if="error"
             class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
           >
-            {{ errorMessage }}
+            {{ error }}
           </div>
 
           <div
-            v-if="successMessage"
+            v-if="success"
             class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm"
           >
-            {{ successMessage }}
+            {{ success }}
           </div>
 
           <div>

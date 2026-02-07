@@ -12,6 +12,11 @@ export const authRoutes: RouteRecordRaw[] = [
     component: () => import('@/pages/auth/RegisterPage.vue'),
   },
   {
+    path: '/verify-email',
+    name: 'verify-email',
+    component: () => import('@/pages/auth/VerifyEmailPage.vue'),
+  },
+  {
     path: '/forgot-password',
     name: 'forgot-password',
     component: () => import('@/pages/auth/ForgetPasswordPage.vue'),

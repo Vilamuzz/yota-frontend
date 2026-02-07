@@ -38,8 +38,8 @@ onMounted(async () => {
         router.push('/login')
       }, 3000)
     }
-  } catch (err: any) {
-    error.value = err.message || 'Authentication failed'
+  } catch (err: unknown) {
+    error.value = (err as Error).message || 'Authentication failed'
     setTimeout(() => {
       router.push('/login')
     }, 3000)
