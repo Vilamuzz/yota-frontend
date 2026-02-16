@@ -49,16 +49,7 @@ const emit = defineEmits<{
         leave-from-class="opacity-100 scale-100"
         leave-to-class="opacity-0 scale-95"
       >
-        <div v-if="show" class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
-          <!-- Close Button -->
-          <button
-            @click="emit('close')"
-            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-            aria-label="Close"
-          >
-            <X :size="24" />
-          </button>
-
+        <div v-if="show" class="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 relative">
           <!-- Modal Content -->
           <div class="text-center py-4">
             <!-- Icon -->
