@@ -87,8 +87,8 @@ const goToLogin = () => {
         label="New Password"
         placeholder="••••••••"
         autocomplete="new-password"
-        hint="Must be at least 8 characters"
         :show-password-toggle="true"
+        :show-password-strength="true"
         required
       />
 

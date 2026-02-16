@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { Eye, EyeOff } from 'lucide-vue-next'
 
 interface Props {
   modelValue: string
@@ -14,6 +15,7 @@ interface Props {
   hint?: string
   size?: 'sm' | 'md' | 'lg'
   showPasswordToggle?: boolean
+  showPasswordStrength?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -22,6 +24,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   size: 'md',
   showPasswordToggle: false,
+  showPasswordStrength: false,
 })
 
 const emit = defineEmits<{
@@ -35,6 +38,38 @@ const inputType = computed(() => {
     return showPassword.value ? 'text' : 'password'
   }
   return props.type
+})
+
+// Password strength calculation
+const passwordStrength = computed(() => {
+  if (props.type !== 'password' || !props.showPasswordStrength || !props.modelValue) {
+    return { level: 0, text: '', color: '' }
+  }
+
+  const password = props.modelValue
+  let strength = 0
+
+  // Length check
+  if (password.length >= 8) strength++
+  if (password.length >= 12) strength++
+
+  // Character variety checks
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++
+  if (/\d/.test(password)) strength++
+  if (/[^a-zA-Z0-9]/.test(password)) strength++
+
+  // Cap at 4
+  strength = Math.min(strength, 4)
+
+  const levels = [
+    { level: 0, text: '', color: '' },
+    { level: 1, text: 'Weak', color: 'bg-red-500' },
+    { level: 2, text: 'Fair', color: 'bg-orange-500' },
+    { level: 3, text: 'Good', color: 'bg-yellow-500' },
+    { level: 4, text: 'Strong', color: 'bg-green-500' },
+  ]
+
+  return levels[strength]
 })
 
 const inputClasses = computed(() => {
@@ -101,46 +136,36 @@ const togglePasswordVisibility = () => {
         class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200"
         :aria-label="showPassword ? 'Hide password' : 'Show password'"
       >
-        <!-- Eye Icon (Show Password) -->
-        <svg
-          v-if="!showPassword"
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-          />
-        </svg>
-
-        <!-- Eye Slash Icon (Hide Password) -->
-        <svg
-          v-else
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-          />
-        </svg>
+        <Eye v-if="!showPassword" :size="18" />
+        <EyeOff v-else :size="18" />
       </button>
+    </div>
+
+    <!-- Password Strength Indicator -->
+    <div v-if="showPasswordStrength && type === 'password' && modelValue" class="mt-2 space-y-2">
+      <!-- Strength Bars -->
+      <div class="flex gap-1.5">
+        <div
+          v-for="i in 4"
+          :key="i"
+          class="h-1.5 flex-1 rounded-full transition-all duration-300"
+          :class="i <= passwordStrength.level ? passwordStrength.color : 'bg-gray-200'"
+        ></div>
+      </div>
+
+      <!-- Strength Text -->
+      <p
+        v-if="passwordStrength.text"
+        class="text-xs font-medium"
+        :class="{
+          'text-red-600': passwordStrength.level === 1,
+          'text-orange-600': passwordStrength.level === 2,
+          'text-yellow-600': passwordStrength.level === 3,
+          'text-green-600': passwordStrength.level === 4,
+        }"
+      >
+        Password Strength: {{ passwordStrength.text }}
+      </p>
     </div>
 
     <p v-if="hint && !error" class="mt-1 text-xs text-gray-500">
