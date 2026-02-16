@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import { CircleCheck, CircleX } from 'lucide-vue-next'
+import BaseButton from '@/components/atoms/BaseButton.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -32,11 +34,6 @@ const verifyEmail = async () => {
   try {
     const result = await verifyEmailMutation.mutateAsync(token.value)
     success.value = result.message || 'Email verified successfully!'
-
-    // Redirect to login after 3 seconds
-    setTimeout(() => {
-      router.push('/login')
-    }, 3000)
   } catch (err: any) {
     const responseData = err.response?.data
 
@@ -90,64 +87,31 @@ const goToLogin = () => {
         </div>
 
         <!-- Success State -->
-        <div v-else-if="success" class="text-center">
-          <div class="text-green-500 text-5xl mb-4">✓</div>
+        <div v-else-if="success" class="text-center flex flex-col items-center">
+          <CircleCheck :stroke-width="1.5" :size="48" class="text-green-500 text-5xl mb-4" />
           <h2 class="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h2>
-          <div
-            class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm mb-4"
-          >
-            {{ success }}
+          <p class="text-gray-600 text-sm mb-6">
+            Your email has been successfully verified. You can now log in to your account.
+          </p>
+          <div class="flex flex-row">
+            <BaseButton variant="primary" full-width @click="goToLogin"> Login </BaseButton>
           </div>
-          <p class="text-gray-600 mb-4">Redirecting to login page...</p>
-          <button
-            @click="goToLogin"
-            class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200"
-          >
-            Go to Login
-          </button>
         </div>
 
         <!-- Error State -->
-        <div v-else-if="error" class="text-center">
-          <div class="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-2">Verification Failed</h2>
+        <div v-else-if="error" class="text-center flex flex-col items-center">
+          <CircleX :stroke-width="1.5" :size="48" class="text-red-500 text-5xl mb-4" />
+          <h2 class="text-xl font-bold text-gray-900 mb-2">Verification Failed</h2>
 
-          <!-- Main Error Message -->
-          <div
-            class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4"
-          >
-            <p class="font-semibold">{{ error }}</p>
-          </div>
-
-          <!-- Validation Errors -->
-          <div
-            v-if="Object.keys(validationErrors).length > 0"
-            class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4 text-left"
-          >
-            <p class="font-semibold mb-2">Details:</p>
-            <ul class="list-disc list-inside space-y-1">
-              <li v-for="(errorMsg, field) in validationErrors" :key="field" class="text-sm">
-                <span class="font-medium capitalize">{{ field }}:</span> {{ errorMsg }}
-              </li>
-            </ul>
-          </div>
-
-          <p class="text-gray-600 mb-6">
+          <p class="text-gray-600 text-sm mb-6">
             The verification link may be invalid or expired. Please try again or contact support if
             the problem persists.
           </p>
-          <button
-            @click="goToLogin"
-            class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition duration-200"
-          >
-            Go to Login
-          </button>
+          <div class="flex flex-row">
+            <BaseButton variant="primary" full-width @click="goToLogin"> Login </BaseButton>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Add any additional custom styles here if needed */
-</style>

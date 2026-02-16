@@ -6,6 +6,8 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
+import AuthModal from '@/components/molecules/AuthModal.vue'
+import { CheckCircle } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -16,7 +18,7 @@ const password = ref('')
 const confirmPassword = ref('')
 const isLoading = ref(false)
 const error = ref('')
-const success = ref('')
+const showSuccessModal = ref(false)
 
 onMounted(() => {
   token.value = route.query.token as string
@@ -27,7 +29,7 @@ onMounted(() => {
 
 const handleSubmit = async () => {
   error.value = ''
-  success.value = ''
+  showSuccessModal.value = false
 
   if (!password.value || !confirmPassword.value) {
     error.value = 'Please fill in all fields'
@@ -47,15 +49,12 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    const result = await resetPasswordMutation.mutateAsync({
+    await resetPasswordMutation.mutateAsync({
       token: token.value,
       newPassword: password.value,
     })
 
-    success.value = result.message || 'Password reset successfully'
-    setTimeout(() => {
-      router.push('/login')
-    }, 2000)
+    showSuccessModal.value = true
   } catch (err: any) {
     error.value =
       err.response?.data?.message || err.message || 'Failed to reset password. Please try again.'
@@ -65,6 +64,12 @@ const handleSubmit = async () => {
 }
 
 const goToLogin = () => {
+  showSuccessModal.value = false
+  router.push('/login')
+}
+
+const closeModal = () => {
+  showSuccessModal.value = false
   router.push('/login')
 }
 </script>
@@ -76,10 +81,6 @@ const goToLogin = () => {
         {{ error }}
       </BaseAlert>
 
-      <BaseAlert v-if="success" type="success">
-        {{ success }}
-      </BaseAlert>
-
       <BaseInput
         id="password"
         v-model="password"
@@ -87,8 +88,8 @@ const goToLogin = () => {
         label="New Password"
         placeholder="••••••••"
         autocomplete="new-password"
-        hint="Must be at least 8 characters"
         :show-password-toggle="true"
+        :show-password-strength="true"
         required
       />
 
@@ -118,4 +119,16 @@ const goToLogin = () => {
       </button>
     </template>
   </AuthLayout>
+
+  <!-- Success Modal -->
+  <AuthModal
+    :show="!showSuccessModal"
+    title="Password Reset Successful!"
+    message="Your password has been successfully reset. You can now login with your new password."
+    :icon="CheckCircle"
+    primary-button-text="Login"
+    secondary-button-text=""
+    @close="closeModal"
+    @primary="goToLogin"
+  />
 </template>

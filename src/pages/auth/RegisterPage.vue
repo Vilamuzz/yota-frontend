@@ -6,6 +6,8 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
+import AuthModal from '@/components/molecules/AuthModal.vue'
+import { MailCheck } from 'lucide-vue-next'
 
 const router = useRouter()
 const { registerMutation, resendVerificationMutation } = useAuth()
@@ -16,12 +18,12 @@ const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
 const error = ref('')
-const success = ref(false)
+const showSuccessModal = ref(false)
 const registeredEmail = ref('')
 
 const handleRegister = async () => {
   error.value = ''
-  success.value = false
+  showSuccessModal.value = false
 
   if (!username.value || !email.value || !password.value || !confirmPassword.value) {
     error.value = 'Please fill in all fields'
@@ -47,8 +49,8 @@ const handleRegister = async () => {
       password: password.value,
     })
 
-    success.value = true
     registeredEmail.value = result.data?.email || email.value
+    showSuccessModal.value = true
   } catch (err: any) {
     error.value =
       err.response?.data?.message || err.message || 'Registration failed. Please try again.'
@@ -74,12 +76,18 @@ const handleResendVerification = async () => {
 }
 
 const goToLogin = () => {
+  showSuccessModal.value = false
+  router.push('/login')
+}
+
+const closeModal = () => {
+  showSuccessModal.value = false
   router.push('/login')
 }
 </script>
 
 <template>
-  <AuthLayout v-if="!success" title="Create Account" subtitle="Sign up to get started">
+  <AuthLayout title="Create Account" subtitle="Sign up to get started">
     <form @submit.prevent="handleRegister" class="space-y-4">
       <BaseAlert v-if="error" type="error" dismissible @dismiss="error = ''">
         {{ error }}
@@ -114,6 +122,7 @@ const goToLogin = () => {
         autocomplete="new-password"
         hint="Must be at least 8 characters"
         :show-password-toggle="true"
+        :show-password-strength="true"
         required
       />
 
@@ -147,34 +156,21 @@ const goToLogin = () => {
     </template>
   </AuthLayout>
 
-  <!-- Success State -->
-  <AuthLayout v-else title="Registration Successful!" subtitle="">
-    <div class="text-center">
-      <div class="text-green-500 text-5xl mb-4">✓</div>
-
-      <BaseAlert type="success" title="Please verify your email">
-        <p>We've sent a verification link to:</p>
-        <p class="font-mono text-xs mt-1">{{ registeredEmail }}</p>
-      </BaseAlert>
-
-      <p class="text-gray-600 text-sm my-6">
-        Click the link in the email to activate your account. If you don't see it, check your spam
-        folder.
-      </p>
-
-      <div class="space-y-3">
-        <BaseButton variant="secondary" full-width @click="goToLogin"> Go to Login </BaseButton>
-
-        <BaseButton
-          variant="outline"
-          full-width
-          :loading="loading"
-          @click="handleResendVerification"
-        >
-          <template #loading>Sending...</template>
-          Resend Verification Email
-        </BaseButton>
-      </div>
-    </div>
-  </AuthLayout>
+  <!-- Success Modal -->
+  <AuthModal
+    :show="showSuccessModal"
+    title="Registration Successful!"
+    message="We've sent a verification email to your inbox. Click the link to activate your account. If you don't see it, check your spam folder."
+    :icon="MailCheck"
+    primary-button-text="Resend Verification Email"
+    secondary-button-text="Go to Login"
+    :primary-button-loading="loading"
+    @close="closeModal"
+    @primary="handleResendVerification"
+    @secondary="goToLogin"
+  >
+    <p class="text-sm text-gray-700 font-mono bg-gray-100 px-4 py-2 rounded-lg">
+      {{ registeredEmail }}
+    </p>
+  </AuthModal>
 </template>

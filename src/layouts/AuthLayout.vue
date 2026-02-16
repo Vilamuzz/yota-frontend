@@ -23,7 +23,7 @@ defineEmits<{
     <!-- Right Section - Form Content -->
     <div class="w-3/4 bg-white flex items-center justify-center p-8">
       <div class="w-full max-w-md">
-        <div class="border border-gray-300 rounded-2xl p-8 bg-white shadow-lg">
+        <div class="border border-gray-300 rounded-lg p-8 bg-white shadow-lg">
           <div class="text-center mb-6">
             <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ title }}</h2>
             <p v-if="subtitle" class="text-gray-600 text-sm">{{ subtitle }}</p>

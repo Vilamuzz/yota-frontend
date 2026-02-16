@@ -21,14 +21,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const buttonClasses = computed(() => {
   const base =
-    'font-semibold rounded-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center'
+    'font-semibold rounded-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center'
 
   const variants = {
     primary: 'bg-[#0E733B] text-white hover:bg-[#0B5C2F] focus:ring-[#0E733B]',
     secondary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    outline:
-      'bg-white text-indigo-600 border-2 border-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500',
+    outline: 'bg-white text-gray-600 border-2 border-gray-600 hover:bg-gray-50 focus:ring-gray-500',
   }
 
   const sizes = {
