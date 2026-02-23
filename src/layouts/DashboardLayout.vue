@@ -106,7 +106,10 @@ const getUserRole = () => {
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Top Navigation Bar -->
       <header class="bg-white z-10">
-        <div class="flex items-center justify-end px-6 py-4">
+        <div class="flex items-center justify-between px-6 py-4">
+        <div class="flex items-center gap-3">
+          <h1 class="text-2xl font-bold">{{ route.meta.title }}</h1>
+        </div>
           <!-- User Profile Section -->
           <div class="relative">
             <button

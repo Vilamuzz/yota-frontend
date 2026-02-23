@@ -8,35 +8,28 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import AuthModal from '@/components/molecules/AuthModal.vue'
 import { MailCheck } from 'lucide-vue-next'
+import { forgetPasswordSchema, getZodErrors } from '@/schemas/auth.schema'
 
 const router = useRouter()
-const { forgetPasswordMutation } = useAuth()
+const { forgetPasswordMutation, forgetPasswordError } = useAuth()
 
 const email = ref('')
-const isLoading = ref(false)
-const error = ref('')
+const fieldErrors = ref<Record<string, string>>({})
 const showSuccessModal = ref(false)
 
 const handleSubmit = async () => {
-  error.value = ''
   showSuccessModal.value = false
 
-  if (!email.value) {
-    error.value = 'Please enter your email address'
-    return
-  }
+  const result = forgetPasswordSchema.safeParse({ email: email.value })
+  fieldErrors.value = getZodErrors(result)
+  if (!result.success) return
 
-  isLoading.value = true
+  const response = await forgetPasswordMutation.mutateAsync(result.data.email).catch(() => null)
+  if (response) showSuccessModal.value = true
+}
 
-  try {
-    await forgetPasswordMutation.mutateAsync(email.value)
-    showSuccessModal.value = true
-  } catch (err: any) {
-    error.value =
-      err.response?.data?.message || err.message || 'Failed to send reset link. Please try again.'
-  } finally {
-    isLoading.value = false
-  }
+const resendResetLink = async () => {
+  await forgetPasswordMutation.mutateAsync(email.value).catch(() => {})
 }
 
 const goToLogin = () => {
@@ -48,20 +41,6 @@ const closeModal = () => {
   showSuccessModal.value = false
   router.push('/login')
 }
-
-const resendResetLink = async () => {
-  error.value = ''
-  isLoading.value = true
-
-  try {
-    await forgetPasswordMutation.mutateAsync(email.value)
-  } catch (err: any) {
-    error.value =
-      err.response?.data?.message || err.message || 'Failed to resend reset link. Please try again.'
-  } finally {
-    isLoading.value = false
-  }
-}
 </script>
 
 <template>
@@ -70,8 +49,13 @@ const resendResetLink = async () => {
     subtitle="Enter your email address and we'll send you a link to reset your password"
   >
     <form @submit.prevent="handleSubmit" class="space-y-4">
-      <BaseAlert v-if="error" type="error" dismissible @dismiss="error = ''">
-        {{ error }}
+      <BaseAlert
+        v-if="forgetPasswordError"
+        type="error"
+        dismissible
+        @dismiss="forgetPasswordError = ''"
+      >
+        {{ forgetPasswordError }}
       </BaseAlert>
 
       <BaseInput
@@ -81,10 +65,15 @@ const resendResetLink = async () => {
         label="Email Address"
         placeholder="you@example.com"
         autocomplete="email"
-        required
+        :error="fieldErrors.email"
       />
 
-      <BaseButton type="submit" variant="primary" full-width :loading="isLoading">
+      <BaseButton
+        type="submit"
+        variant="primary"
+        full-width
+        :loading="forgetPasswordMutation.isPending.value"
+      >
         <template #loading>Sending...</template>
         Send Reset Link
       </BaseButton>
@@ -108,7 +97,7 @@ const resendResetLink = async () => {
     :icon="MailCheck"
     primary-button-text="Resend Reset Link"
     secondary-button-text="Back to Login"
-    :primary-button-loading="isLoading"
+    :primary-button-loading="forgetPasswordMutation.isPending.value"
     @close="closeModal"
     @primary="resendResetLink"
     @secondary="goToLogin"

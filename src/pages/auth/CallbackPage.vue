@@ -1,51 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
-const router = useRouter()
 const route = useRoute()
-const authStore = useAuthStore()
-const { fetchCurrentUser } = useAuth()
-const error = ref('')
-const loading = ref(true)
+const { handleOAuthCallback, callbackError, callbackLoading } = useAuth()
 
-onMounted(async () => {
-  try {
-    // Get token from URL query parameters
-    const token = route.query.token as string
-
-    if (token) {
-      // Save token
-      authStore.setToken(token)
-
-      // Fetch user data using the token
-      const result = await fetchCurrentUser()
-
-      if (result.isSuccess) {
-        // Redirect to dashboard
-        await router.push('/dashboard')
-      } else {
-        error.value = result.error?.message || 'Failed to fetch user data'
-        setTimeout(() => {
-          router.push('/login')
-        }, 3000)
-      }
-    } else {
-      error.value = 'Authentication failed. No token received.'
-      setTimeout(() => {
-        router.push('/login')
-      }, 3000)
-    }
-  } catch (err: unknown) {
-    error.value = (err as Error).message || 'Authentication failed'
-    setTimeout(() => {
-      router.push('/login')
-    }, 3000)
-  } finally {
-    loading.value = false
-  }
+onMounted(() => {
+  handleOAuthCallback(route.query.token as string | undefined)
 })
 </script>
 
@@ -54,7 +16,7 @@ onMounted(async () => {
     class="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100"
   >
     <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-      <div v-if="loading" class="text-center">
+      <div v-if="callbackLoading" class="text-center">
         <svg
           class="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4"
           xmlns="http://www.w3.org/2000/svg"
@@ -79,10 +41,10 @@ onMounted(async () => {
         <p class="text-gray-600">Please wait while we sign you in</p>
       </div>
 
-      <div v-else-if="error" class="text-center">
+      <div v-else-if="callbackError" class="text-center">
         <div class="text-red-500 text-5xl mb-4">⚠️</div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">Authentication Failed</h2>
-        <p class="text-red-600 mb-4">{{ error }}</p>
+        <p class="text-red-600 mb-4">{{ callbackError }}</p>
         <p class="text-gray-600 text-sm">Redirecting to login...</p>
       </div>
 

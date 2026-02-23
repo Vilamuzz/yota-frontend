@@ -7,51 +7,25 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 
 const router = useRouter()
 const route = useRoute()
-const { verifyEmailMutation } = useAuth()
+const { verifyEmailMutation, verifyEmailError } = useAuth()
 
-const token = ref('')
-const isVerifying = ref(false)
-const error = ref('')
-const validationErrors = ref<Record<string, string>>({})
 const success = ref('')
 
 onMounted(async () => {
-  token.value = route.query.token as string
+  const token = route.query.token as string
 
-  if (token.value) {
-    await verifyEmail()
-  } else {
-    error.value = 'Invalid or missing verification token.'
+  if (!token) {
+    verifyEmailError.value = 'Invalid or missing verification token.'
+    return
+  }
+
+  const result = await verifyEmailMutation.mutateAsync(token).catch(() => null)
+  if (result) {
+    success.value = result.message || 'Email verified successfully!'
   }
 })
 
-const verifyEmail = async () => {
-  isVerifying.value = true
-  error.value = ''
-  validationErrors.value = {}
-  success.value = ''
-
-  try {
-    const result = await verifyEmailMutation.mutateAsync(token.value)
-    success.value = result.message || 'Email verified successfully!'
-  } catch (err: any) {
-    const responseData = err.response?.data
-
-    // Set the main error message
-    error.value = responseData?.message || err.message || 'Failed to verify email.'
-
-    // Check if there are validation errors
-    if (responseData?.validation) {
-      validationErrors.value = responseData.validation
-    }
-  } finally {
-    isVerifying.value = false
-  }
-}
-
-const goToLogin = () => {
-  router.push('/login')
-}
+const goToLogin = () => router.push('/login')
 </script>
 
 <template>
@@ -61,7 +35,7 @@ const goToLogin = () => {
     <div class="w-full max-w-md">
       <div class="bg-white rounded-lg shadow-xl p-8">
         <!-- Verifying State -->
-        <div v-if="isVerifying" class="text-center">
+        <div v-if="verifyEmailMutation.isPending.value" class="text-center">
           <svg
             class="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4"
             xmlns="http://www.w3.org/2000/svg"
@@ -99,10 +73,9 @@ const goToLogin = () => {
         </div>
 
         <!-- Error State -->
-        <div v-else-if="error" class="text-center flex flex-col items-center">
+        <div v-else-if="verifyEmailError" class="text-center flex flex-col items-center">
           <CircleX :stroke-width="1.5" :size="48" class="text-red-500 text-5xl mb-4" />
           <h2 class="text-xl font-bold text-gray-900 mb-2">Verification Failed</h2>
-
           <p class="text-gray-600 text-sm mb-6">
             The verification link may be invalid or expired. Please try again or contact support if
             the problem persists.

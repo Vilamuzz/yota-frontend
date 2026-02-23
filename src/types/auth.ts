@@ -38,7 +38,7 @@ export interface UpdateUserPasswordRequest {
   newPassword: string
 }
 
-export interface User {
+export interface UserProfile {
   id: string
   username: string
   email: string
@@ -55,4 +55,4 @@ export interface LoginData {
 
 export type LoginResponse = Response<LoginData>
 export type RegisterResponse = Response<RegisterData>
-export type CurrentUserResponse = Response<User>
+export type CurrentUserResponse = Response<UserProfile>
