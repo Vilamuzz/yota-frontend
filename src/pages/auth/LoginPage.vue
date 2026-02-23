@@ -6,38 +6,27 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
+import { loginSchema, getZodErrors } from '@/schemas/auth.schema'
 
 const router = useRouter()
-const { loginMutation } = useAuth()
+const { loginMutation, loginError } = useAuth()
+
 const email = ref('')
 const password = ref('')
-const error = ref('')
-const loading = ref(false)
+const fieldErrors = ref<Record<string, string>>({})
 
 const handleLogin = async () => {
-  loading.value = true
-  error.value = ''
+  // Client-side validation via Zod
+  const result = loginSchema.safeParse({ email: email.value, password: password.value })
+  fieldErrors.value = getZodErrors(result)
+  if (!result.success) return
 
-  try {
-    await loginMutation.mutateAsync({
-      email: email.value,
-      password: password.value,
-    })
-  } catch (err: any) {
-    error.value = err.response?.data?.message || err.message || 'Login failed'
-  } finally {
-    loading.value = false
-  }
+  // Server call — onError in useAuth handles the error state; .catch() suppresses the re-throw
+  await loginMutation.mutateAsync(result.data).catch(() => {})
 }
 
-const goToRegister = () => {
-  router.push('/register')
-}
-
-const goToForgotPassword = () => {
-  router.push('/forgot-password')
-}
-
+const goToRegister = () => router.push('/register')
+const goToForgotPassword = () => router.push('/forgot-password')
 const handleGoogleLogin = () => {
   window.location.href = 'http://localhost:8080/api/auth/oauth/google'
 }
@@ -51,8 +40,8 @@ const handleGoogleLogin = () => {
     @google-login="handleGoogleLogin"
   >
     <form @submit.prevent="handleLogin" class="space-y-4">
-      <BaseAlert v-if="error" type="error" dismissible @dismiss="error = ''">
-        {{ error }}
+      <BaseAlert v-if="loginError" type="error" dismissible @dismiss="loginError = ''">
+        {{ loginError }}
       </BaseAlert>
 
       <BaseInput
@@ -62,7 +51,7 @@ const handleGoogleLogin = () => {
         label="Email Address"
         placeholder="you@example.com"
         autocomplete="email"
-        required
+        :error="fieldErrors.email"
       />
 
       <BaseInput
@@ -73,7 +62,7 @@ const handleGoogleLogin = () => {
         placeholder="••••••••"
         autocomplete="current-password"
         :show-password-toggle="true"
-        required
+        :error="fieldErrors.password"
       />
 
       <div class="flex items-center justify-end">
@@ -86,7 +75,7 @@ const handleGoogleLogin = () => {
         </button>
       </div>
 
-      <BaseButton type="submit" variant="primary" full-width :loading="loading">
+      <BaseButton type="submit" variant="primary" full-width :loading="loginMutation.isPending.value">
         <template #loading>Signing in...</template>
         Sign In
       </BaseButton>

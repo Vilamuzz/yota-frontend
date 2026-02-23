@@ -8,71 +8,48 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import AuthModal from '@/components/molecules/AuthModal.vue'
 import { MailCheck } from 'lucide-vue-next'
+import { registerSchema, getZodErrors } from '@/schemas/auth.schema'
 
 const router = useRouter()
-const { registerMutation, resendVerificationMutation } = useAuth()
+const { registerMutation, resendVerificationMutation, registerError, resendError } = useAuth()
 
 const username = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
-const loading = ref(false)
-const error = ref('')
+const fieldErrors = ref<Record<string, string>>({})
 const showSuccessModal = ref(false)
 const registeredEmail = ref('')
 
 const handleRegister = async () => {
-  error.value = ''
-  showSuccessModal.value = false
+  // Client-side validation via Zod (includes confirmPassword match)
+  const result = registerSchema.safeParse({
+    username: username.value,
+    email: email.value,
+    password: password.value,
+    confirmPassword: confirmPassword.value,
+  })
 
-  if (!username.value || !email.value || !password.value || !confirmPassword.value) {
-    error.value = 'Please fill in all fields'
-    return
-  }
+  fieldErrors.value = getZodErrors(result)
+  if (!result.success) return
 
-  if (password.value !== confirmPassword.value) {
-    error.value = 'Passwords do not match'
-    return
-  }
-
-  if (password.value.length < 8) {
-    error.value = 'Password must be at least 8 characters long'
-    return
-  }
-
-  loading.value = true
-
-  try {
-    const result = await registerMutation.mutateAsync({
-      username: username.value,
-      email: email.value,
-      password: password.value,
+  // Server call — onError in useAuth handles the error state; .catch() suppresses the re-throw
+  const response = await registerMutation
+    .mutateAsync({
+      username: result.data.username,
+      email: result.data.email,
+      password: result.data.password,
     })
+    .catch(() => null)
 
-    registeredEmail.value = result.data?.email || email.value
+  if (response) {
+    registeredEmail.value = response.data?.email || email.value
     showSuccessModal.value = true
-  } catch (err: any) {
-    error.value =
-      err.response?.data?.message || err.message || 'Registration failed. Please try again.'
-  } finally {
-    loading.value = false
   }
 }
 
 const handleResendVerification = async () => {
-  error.value = ''
-  loading.value = true
-
-  try {
-    await resendVerificationMutation.mutateAsync(registeredEmail.value)
-  } catch (err: any) {
-    error.value =
-      err.response?.data?.message ||
-      err.message ||
-      'Failed to resend verification email. Please try again.'
-  } finally {
-    loading.value = false
-  }
+  await resendVerificationMutation.mutateAsync(registeredEmail.value).catch(() => {})
 }
 
 const goToLogin = () => {
@@ -89,8 +66,8 @@ const closeModal = () => {
 <template>
   <AuthLayout title="Create Account" subtitle="Sign up to get started">
     <form @submit.prevent="handleRegister" class="space-y-4">
-      <BaseAlert v-if="error" type="error" dismissible @dismiss="error = ''">
-        {{ error }}
+      <BaseAlert v-if="registerError" type="error" dismissible @dismiss="registerError = ''">
+        {{ registerError }}
       </BaseAlert>
 
       <BaseInput
@@ -100,7 +77,7 @@ const closeModal = () => {
         label="Username"
         placeholder="johndoe"
         autocomplete="username"
-        required
+        :error="fieldErrors.username"
       />
 
       <BaseInput
@@ -110,7 +87,7 @@ const closeModal = () => {
         label="Email Address"
         placeholder="you@example.com"
         autocomplete="email"
-        required
+        :error="fieldErrors.email"
       />
 
       <BaseInput
@@ -123,7 +100,7 @@ const closeModal = () => {
         hint="Must be at least 8 characters"
         :show-password-toggle="true"
         :show-password-strength="true"
-        required
+        :error="fieldErrors.password"
       />
 
       <BaseInput
@@ -134,10 +111,15 @@ const closeModal = () => {
         placeholder="••••••••"
         autocomplete="new-password"
         :show-password-toggle="true"
-        required
+        :error="fieldErrors.confirmPassword"
       />
 
-      <BaseButton type="submit" variant="primary" full-width :loading="loading">
+      <BaseButton
+        type="submit"
+        variant="primary"
+        full-width
+        :loading="registerMutation.isPending.value"
+      >
         <template #loading>Creating account...</template>
         Create Account
       </BaseButton>
@@ -164,7 +146,7 @@ const closeModal = () => {
     :icon="MailCheck"
     primary-button-text="Resend Verification Email"
     secondary-button-text="Go to Login"
-    :primary-button-loading="loading"
+    :primary-button-loading="resendVerificationMutation.isPending.value"
     @close="closeModal"
     @primary="handleResendVerification"
     @secondary="goToLogin"
@@ -172,5 +154,9 @@ const closeModal = () => {
     <p class="text-sm text-gray-700 font-mono bg-gray-100 px-4 py-2 rounded-lg">
       {{ registeredEmail }}
     </p>
+
+    <BaseAlert v-if="resendError" type="error" class="mt-2">
+      {{ resendError }}
+    </BaseAlert>
   </AuthModal>
 </template>

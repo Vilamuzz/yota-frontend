@@ -8,59 +8,40 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import AuthModal from '@/components/molecules/AuthModal.vue'
 import { CheckCircle } from 'lucide-vue-next'
+import { resetPasswordSchema, getZodErrors } from '@/schemas/auth.schema'
 
 const router = useRouter()
 const route = useRoute()
-const { resetPasswordMutation } = useAuth()
+const { resetPasswordMutation, resetPasswordError } = useAuth()
 
 const token = ref('')
 const password = ref('')
 const confirmPassword = ref('')
-const isLoading = ref(false)
-const error = ref('')
+const fieldErrors = ref<Record<string, string>>({})
 const showSuccessModal = ref(false)
 
 onMounted(() => {
   token.value = route.query.token as string
   if (!token.value) {
-    error.value = 'Invalid or missing reset token'
+    resetPasswordError.value = 'Invalid or missing reset token'
   }
 })
 
 const handleSubmit = async () => {
-  error.value = ''
   showSuccessModal.value = false
 
-  if (!password.value || !confirmPassword.value) {
-    error.value = 'Please fill in all fields'
-    return
-  }
+  const result = resetPasswordSchema.safeParse({
+    password: password.value,
+    confirmPassword: confirmPassword.value,
+  })
+  fieldErrors.value = getZodErrors(result)
+  if (!result.success) return
 
-  if (password.value.length < 8) {
-    error.value = 'Password must be at least 8 characters long'
-    return
-  }
+  const response = await resetPasswordMutation
+    .mutateAsync({ token: token.value, newPassword: result.data.password })
+    .catch(() => null)
 
-  if (password.value !== confirmPassword.value) {
-    error.value = 'Passwords do not match'
-    return
-  }
-
-  isLoading.value = true
-
-  try {
-    await resetPasswordMutation.mutateAsync({
-      token: token.value,
-      newPassword: password.value,
-    })
-
-    showSuccessModal.value = true
-  } catch (err: any) {
-    error.value =
-      err.response?.data?.message || err.message || 'Failed to reset password. Please try again.'
-  } finally {
-    isLoading.value = false
-  }
+  if (response) showSuccessModal.value = true
 }
 
 const goToLogin = () => {
@@ -77,8 +58,13 @@ const closeModal = () => {
 <template>
   <AuthLayout title="Reset Password" subtitle="Enter your new password">
     <form @submit.prevent="handleSubmit" class="space-y-4">
-      <BaseAlert v-if="error" type="error" dismissible @dismiss="error = ''">
-        {{ error }}
+      <BaseAlert
+        v-if="resetPasswordError"
+        type="error"
+        dismissible
+        @dismiss="resetPasswordError = ''"
+      >
+        {{ resetPasswordError }}
       </BaseAlert>
 
       <BaseInput
@@ -90,7 +76,7 @@ const closeModal = () => {
         autocomplete="new-password"
         :show-password-toggle="true"
         :show-password-strength="true"
-        required
+        :error="fieldErrors.password"
       />
 
       <BaseInput
@@ -101,10 +87,15 @@ const closeModal = () => {
         placeholder="••••••••"
         autocomplete="new-password"
         :show-password-toggle="true"
-        required
+        :error="fieldErrors.confirmPassword"
       />
 
-      <BaseButton type="submit" variant="primary" full-width :loading="isLoading">
+      <BaseButton
+        type="submit"
+        variant="primary"
+        full-width
+        :loading="resetPasswordMutation.isPending.value"
+      >
         <template #loading>Resetting...</template>
         Reset Password
       </BaseButton>
@@ -122,7 +113,7 @@ const closeModal = () => {
 
   <!-- Success Modal -->
   <AuthModal
-    :show="!showSuccessModal"
+    :show="showSuccessModal"
     title="Password Reset Successful!"
     message="Your password has been successfully reset. You can now login with your new password."
     :icon="CheckCircle"

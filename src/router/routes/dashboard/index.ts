@@ -5,18 +5,18 @@ export const dashboardRoutes: RouteRecordRaw[] = [
     path: '/dashboard',
     name: 'dashboard',
     component: () => import('@/pages/dashboard/IndexPage.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, title: 'Dashboard' },
   },
   {
     path: '/dashboard/users',
     name: 'dashboard-users',
     component: () => import('@/pages/dashboard/users/IndexPage.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, title: 'Users' },
   },
   {
     path: '/dashboard/news',
     name: 'dashboard-news',
     component: () => import('@/pages/dashboard/news/IndexPage.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, title: 'News' },
   },
 ]
