@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useAuth } from '@/composables/useAuth'
+import { useCurrentUser } from '@/composables/auth/useCurrentUser'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import {
   BarChart3,
@@ -16,7 +16,7 @@ import {
   FileBarChart,
 } from 'lucide-vue-next'
 
-const { user, fetchCurrentUser } = useAuth()
+const { user, fetchCurrentUser } = useCurrentUser()
 const error = ref('')
 const loading = ref(false)
 

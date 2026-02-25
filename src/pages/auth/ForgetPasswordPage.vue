@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { useForgetPassword } from '@/composables/auth/useForgetPassword'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
-import AuthModal from '@/components/molecules/AuthModal.vue'
+import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { MailCheck } from 'lucide-vue-next'
 import { forgetPasswordSchema, getZodErrors } from '@/schemas/auth.schema'
 
 const router = useRouter()
-const { forgetPasswordMutation, forgetPasswordError } = useAuth()
+const { forgetPasswordMutation, forgetPasswordError } = useForgetPassword()
 
 const email = ref('')
 const fieldErrors = ref<Record<string, string>>({})
@@ -90,7 +90,7 @@ const closeModal = () => {
   </AuthLayout>
 
   <!-- Success Modal -->
-  <AuthModal
+  <ConfirmationModal
     :show="showSuccessModal"
     title="Reset Link Sent!"
     message="We've sent a password reset link to your email. Click the link to reset your password. If you don't see it, check your spam folder."
@@ -105,5 +105,5 @@ const closeModal = () => {
     <p class="text-sm text-gray-700 font-mono bg-gray-100 px-4 py-2 rounded-lg">
       {{ email }}
     </p>
-  </AuthModal>
+  </ConfirmationModal>
 </template>

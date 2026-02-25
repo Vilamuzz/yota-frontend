@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { useCurrentUser } from '@/composables/auth/useCurrentUser'
+import { useLogout } from '@/composables/auth/useLogout'
 import {
   Home,
   Newspaper,
@@ -13,7 +14,8 @@ import {
   LogOut,
 } from 'lucide-vue-next'
 
-const { user, logout } = useAuth()
+const { user } = useCurrentUser()
+const { logout } = useLogout()
 const router = useRouter()
 const route = useRoute()
 
@@ -64,7 +66,9 @@ const getUserRole = () => {
 <template>
   <div class="flex h-screen bg-gray-100 overflow-hidden">
     <!-- Sidebar -->
-    <aside class="bg-[#062E18] text-white transition-all duration-300 flex flex-col w-64">
+    <aside
+      class="bg-primary-500 text-white transition-all duration-300 flex flex-col w-64 font-poppins"
+    >
       <!-- Logo Section -->
       <div class="p-4 flex items-center justify-between border-b border-white/10">
         <div class="flex items-center gap-3">
@@ -91,7 +95,7 @@ const getUserRole = () => {
       </nav>
 
       <!-- Toggle Sidebar Button -->
-      <div class="p-4 border-t border-white/10">
+      <div class="p-4">
         <button
           @click="handleLogout"
           class="w-full flex text-white/70 items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/10 hover:text-white transition-all duration-200"
@@ -107,9 +111,9 @@ const getUserRole = () => {
       <!-- Top Navigation Bar -->
       <header class="bg-white z-10">
         <div class="flex items-center justify-between px-6 py-4">
-        <div class="flex items-center gap-3">
-          <h1 class="text-2xl font-bold">{{ route.meta.title }}</h1>
-        </div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold">{{ route.meta.title }}</h1>
+          </div>
           <!-- User Profile Section -->
           <div class="relative">
             <button

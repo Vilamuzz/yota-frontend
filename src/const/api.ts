@@ -8,4 +8,6 @@ export const API = {
   AUTH_GOOGLE: '/api/auth/oauth/google',
   CURRENT_USER: '/api/me',
   CURRENT_USER_PASSWORD: '/api/me/password',
+  USERS: '/api/users',
+  ROLES: '/api/public/users/roles',
 }

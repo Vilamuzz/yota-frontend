@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { useRegister } from '@/composables/auth/useRegister'
+import { useResendVerification } from '@/composables/auth/useResendVerification'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
-import AuthModal from '@/components/molecules/AuthModal.vue'
+import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { MailCheck } from 'lucide-vue-next'
 import { registerSchema, getZodErrors } from '@/schemas/auth.schema'
 
 const router = useRouter()
-const { registerMutation, resendVerificationMutation, registerError, resendError } = useAuth()
+const { registerMutation, registerError } = useRegister()
+const { resendVerificationMutation, resendError } = useResendVerification()
 
 const username = ref('')
 const email = ref('')
@@ -139,7 +141,7 @@ const closeModal = () => {
   </AuthLayout>
 
   <!-- Success Modal -->
-  <AuthModal
+  <ConfirmationModal
     :show="showSuccessModal"
     title="Registration Successful!"
     message="We've sent a verification email to your inbox. Click the link to activate your account. If you don't see it, check your spam folder."
@@ -158,5 +160,5 @@ const closeModal = () => {
     <BaseAlert v-if="resendError" type="error" class="mt-2">
       {{ resendError }}
     </BaseAlert>
-  </AuthModal>
+  </ConfirmationModal>
 </template>
