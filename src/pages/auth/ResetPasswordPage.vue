@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { useResetPassword } from '@/composables/auth/useResetPassword'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
-import AuthModal from '@/components/molecules/AuthModal.vue'
+import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { CheckCircle } from 'lucide-vue-next'
-import { resetPasswordSchema, getZodErrors } from '@/schemas/auth.schema'
+import { resetPasswordSchema } from '@/schemas/auth.schema'
+import { getZodErrors } from '@/utils/zodError'
 
 const router = useRouter()
 const route = useRoute()
-const { resetPasswordMutation, resetPasswordError } = useAuth()
+const { resetPasswordMutation, resetPasswordError } = useResetPassword()
 
 const token = ref('')
 const password = ref('')
@@ -112,7 +113,7 @@ const closeModal = () => {
   </AuthLayout>
 
   <!-- Success Modal -->
-  <AuthModal
+  <ConfirmationModal
     :show="showSuccessModal"
     title="Password Reset Successful!"
     message="Your password has been successfully reset. You can now login with your new password."

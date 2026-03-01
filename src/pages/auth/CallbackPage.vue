@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { useOAuthCallback } from '@/composables/auth/useOAuthCallback'
 import { CircleCheck, CircleX } from 'lucide-vue-next'
 
 const route = useRoute()
-const { handleOAuthCallback, callbackError, callbackLoading } = useAuth()
+const { handleOAuthCallback, callbackError, callbackLoading } = useOAuthCallback()
 
 onMounted(() => {
   handleOAuthCallback(route.query.token as string | undefined)

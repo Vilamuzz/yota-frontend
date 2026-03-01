@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 
 interface Props {

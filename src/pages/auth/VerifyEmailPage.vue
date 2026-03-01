@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { useVerifyEmail } from '@/composables/auth/useVerifyEmail'
 import { CircleCheck, CircleX } from 'lucide-vue-next'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 
 const router = useRouter()
 const route = useRoute()
-const { verifyEmailMutation, verifyEmailError } = useAuth()
+const { verifyEmailMutation, verifyEmailError } = useVerifyEmail()
 
 const success = ref('')
 

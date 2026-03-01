@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { useLogin } from '@/composables/auth/useLogin'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
-import { loginSchema, getZodErrors } from '@/schemas/auth.schema'
+import { loginSchema } from '@/schemas/auth.schema'
+import { getZodErrors } from '@/utils/zodError'
 
 const router = useRouter()
-const { loginMutation, loginError } = useAuth()
+const { loginMutation, loginError } = useLogin()
 
 const email = ref('')
 const password = ref('')
@@ -75,7 +76,12 @@ const handleGoogleLogin = () => {
         </button>
       </div>
 
-      <BaseButton type="submit" variant="primary" full-width :loading="loginMutation.isPending.value">
+      <BaseButton
+        type="submit"
+        variant="primary"
+        full-width
+        :loading="loginMutation.isPending.value"
+      >
         <template #loading>Signing in...</template>
         Sign In
       </BaseButton>

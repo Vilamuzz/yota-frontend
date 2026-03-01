@@ -44,13 +44,3 @@ export type LoginFormData = z.infer<typeof loginSchema>
 export type RegisterFormData = z.infer<typeof registerSchema>
 export type ForgetPasswordFormData = z.infer<typeof forgetPasswordSchema>
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
-
-// Helper to flatten Zod errors into a simple field → message map
-export function getZodErrors(
-  result: { success: false; error: z.ZodError } | { success: true; data: unknown },
-): Record<string, string> {
-  if (result.success) return {}
-  const flat = result.error.flatten()
-  const entries = Object.entries(flat.fieldErrors as Record<string, string[] | undefined>)
-  return Object.fromEntries(entries.map(([key, msgs]) => [key, msgs?.[0] ?? '']))
-}
