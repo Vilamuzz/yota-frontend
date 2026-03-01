@@ -8,7 +8,8 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { CheckCircle } from 'lucide-vue-next'
-import { resetPasswordSchema, getZodErrors } from '@/schemas/auth.schema'
+import { resetPasswordSchema } from '@/schemas/auth.schema'
+import { getZodErrors } from '@/utils/zodError'
 
 const router = useRouter()
 const route = useRoute()

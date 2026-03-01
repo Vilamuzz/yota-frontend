@@ -24,6 +24,7 @@ const showUserMenu = ref(false)
 const menuItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard', name: 'dashboard' },
   { icon: Users, label: 'Users', path: '/dashboard/users', name: 'users' },
+  { icon: Users, label: 'Donations', path: '/dashboard/donations', name: 'donations' },
   { icon: Newspaper, label: 'News', path: '/dashboard/news', name: 'news' },
   { icon: BarChart3, label: 'Analytics', path: '/dashboard/analytics', name: 'analytics' },
   { icon: Settings, label: 'Settings', path: '/dashboard/settings', name: 'settings' },
@@ -109,7 +110,7 @@ const getUserRole = () => {
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Top Navigation Bar -->
-      <header class="bg-white z-10">
+      <header class="bg-white z-10 font-sf-pro">
         <div class="flex items-center justify-between px-6 py-4">
           <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold">{{ route.meta.title }}</h1>
@@ -187,7 +188,7 @@ const getUserRole = () => {
       </header>
 
       <!-- Main Content -->
-      <main class="flex-1 overflow-y-auto bg-white">
+      <main class="flex-1 overflow-y-auto bg-white font-sf-pro">
         <div class="p-6">
           <slot />
         </div>

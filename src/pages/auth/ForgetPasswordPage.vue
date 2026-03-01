@@ -8,7 +8,8 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { MailCheck } from 'lucide-vue-next'
-import { forgetPasswordSchema, getZodErrors } from '@/schemas/auth.schema'
+import { forgetPasswordSchema } from '@/schemas/auth.schema'
+import { getZodErrors } from '@/utils/zodError'
 
 const router = useRouter()
 const { forgetPasswordMutation, forgetPasswordError } = useForgetPassword()

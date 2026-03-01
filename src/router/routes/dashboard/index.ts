@@ -14,6 +14,24 @@ export const dashboardRoutes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, title: 'Users' },
   },
   {
+    path: '/dashboard/donations',
+    name: 'dashboard-donations',
+    component: () => import('@/pages/dashboard/donations/IndexPage.vue'),
+    meta: { requiresAuth: true, title: 'Donations' },
+  },
+  {
+    path: '/dashboard/donations/create',
+    name: 'dashboard-donations-create',
+    component: () => import('@/pages/dashboard/donations/CreatePage.vue'),
+    meta: { requiresAuth: true, title: 'Create Donation' },
+  },
+  {
+    path: '/dashboard/donations/:id',
+    name: 'dashboard-donations-edit',
+    component: () => import('@/pages/dashboard/donations/EditPage.vue'),
+    meta: { requiresAuth: true, title: 'Edit Donation' },
+  },
+  {
     path: '/dashboard/news',
     name: 'dashboard-news',
     component: () => import('@/pages/dashboard/news/IndexPage.vue'),

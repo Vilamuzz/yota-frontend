@@ -6,7 +6,8 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
-import { loginSchema, getZodErrors } from '@/schemas/auth.schema'
+import { loginSchema } from '@/schemas/auth.schema'
+import { getZodErrors } from '@/utils/zodError'
 
 const router = useRouter()
 const { loginMutation, loginError } = useLogin()

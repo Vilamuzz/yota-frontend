@@ -10,4 +10,5 @@ export const API = {
   CURRENT_USER_PASSWORD: '/api/me/password',
   USERS: '/api/users',
   ROLES: '/api/public/users/roles',
+  DONATIONS: '/api/donations',
 }
