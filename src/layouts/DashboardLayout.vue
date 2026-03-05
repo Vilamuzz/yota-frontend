@@ -26,8 +26,6 @@ const menuItems = [
   { icon: Users, label: 'Users', path: '/dashboard/users', name: 'users' },
   { icon: Users, label: 'Donations', path: '/dashboard/donations', name: 'donations' },
   { icon: Newspaper, label: 'News', path: '/dashboard/news', name: 'news' },
-  { icon: BarChart3, label: 'Analytics', path: '/dashboard/analytics', name: 'analytics' },
-  { icon: Settings, label: 'Settings', path: '/dashboard/settings', name: 'settings' },
 ]
 
 const toggleUserMenu = () => {
