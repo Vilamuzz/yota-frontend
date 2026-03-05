@@ -36,7 +36,6 @@ const toggleUserMenu = () => {
 
 const handleLogout = async () => {
   await logout()
-  router.push('/login')
 }
 
 const navigateTo = (path: string) => {
@@ -123,7 +122,7 @@ const getUserRole = () => {
             >
               <!-- Profile Picture -->
               <div
-                class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-md"
+                class="w-10 h-10 rounded-full from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-md"
               >
                 {{ getUserInitials() }}
               </div>

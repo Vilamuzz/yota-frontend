@@ -27,10 +27,13 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      if (!window.location.pathname.includes('/auth') && !window.location.pathname.includes('/login')) {
+      if (
+        !window.location.pathname.includes('/auth') &&
+        !window.location.pathname.includes('/login')
+      ) {
         localStorage.removeItem('token')
         // Use window.location for hard redirect to ensure state is cleared
-        window.location.href = '/auth/login'
+        window.location.href = '/login'
       }
     }
     return Promise.reject(error)

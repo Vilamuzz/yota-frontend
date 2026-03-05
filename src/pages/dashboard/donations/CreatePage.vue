@@ -309,7 +309,6 @@ const formatCurrencyPreview = computed(() => {
                     v-model="fundTarget"
                     type="number"
                     min="1"
-                    step="1000"
                     placeholder="e.g. 50000000"
                     class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     :class="

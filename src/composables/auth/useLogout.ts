@@ -7,7 +7,7 @@ export const useLogout = () => {
 
   const logout = async (): Promise<void> => {
     authStore.clearAuth()
-    await router.push('/login')
+    await router.push('/')
   }
 
   return {

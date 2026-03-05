@@ -54,7 +54,7 @@ watch(
   { immediate: true },
 )
 
-// ─── Image handling ─────────────────────────────────────────────────────────
+// Image handling
 const imageInputRef = ref<HTMLInputElement | null>(null)
 
 const triggerImageInput = () => {
@@ -88,7 +88,7 @@ const removeImage = () => {
   if (imageInputRef.value) imageInputRef.value.value = ''
 }
 
-// ─── Validation ─────────────────────────────────────────────────────────────
+// Validation
 const validate = (): boolean => {
   const result = updateDonationSchema.safeParse({
     title: title.value.trim(),
@@ -103,7 +103,7 @@ const validate = (): boolean => {
   return Object.keys(errors.value).length === 0
 }
 
-// ─── Submit ──────────────────────────────────────────────────────────────────
+// Submit
 const handleSubmit = async (status: boolean) => {
   if (!validate()) return
 
@@ -147,7 +147,7 @@ const formatCurrencyPreview = computed(() => {
 
 <template>
   <DashboardLayout>
-    <div class="max-w-[100%] mx-auto space-y-6">
+    <div class="max-w-full mx-auto space-y-6">
       <!-- Page Header -->
       <div class="flex items-center gap-4">
         <button
@@ -345,7 +345,6 @@ const formatCurrencyPreview = computed(() => {
                       v-model="fundTarget"
                       type="number"
                       min="1"
-                      step="1000"
                       placeholder="e.g. 50000000"
                       class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       :class="

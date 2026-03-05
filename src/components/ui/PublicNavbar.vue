@@ -10,17 +10,26 @@ const handleRegister = () => {
 const handleLogin = () => {
   router.push('/login')
 }
+
+const navLinks = [
+  { label: 'Beranda', href: '/' },
+  { label: 'Tentang', href: '/about' },
+  { label: 'Donasi', href: '/donation' },
+  { label: 'Program Sosial', href: '/social-programs' },
+  { label: 'Anak Asuh', href: '/sponsored-children' },
+  { label: 'Ambulans', href: '/ambulance' },
+  { label: 'Berita', href: '/news' },
+  { label: 'Laporan', href: '/reports' },
+]
 </script>
 
 <template>
-  <nav class="fixed top-4 left-4 right-4 z-50">
-    <div class="bg-white rounded-2xl shadow-lg px-6 py-4">
+  <nav class="fixed top-4 left-4 right-4 z-50 font-sf-pro">
+    <div class="bg-primary-500 text-white rounded-xl shadow-lg px-6 py-4">
       <div class="flex items-center justify-between">
         <!-- Logo -->
         <div class="flex items-center">
-          <h1 class="text-2xl font-bold text-indigo-600 cursor-pointer" @click="router.push('/')">
-            Yota
-          </h1>
+          <h1 class="text-2xl font-bold cursor-pointer" @click="router.push('/')">Yota</h1>
         </div>
 
         <!-- Menu Links & Profile -->
@@ -28,22 +37,12 @@ const handleLogin = () => {
           <!-- Navigation Links -->
           <div class="hidden md:flex items-center gap-6">
             <a
-              href="#features"
-              class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200"
+              v-for="link in navLinks"
+              :key="link.href"
+              :href="link.href"
+              class="hover:text-indigo-200 font-medium transition duration-200"
             >
-              Features
-            </a>
-            <a
-              href="#about"
-              class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200"
-            >
-              About
-            </a>
-            <a
-              href="#contact"
-              class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200"
-            >
-              Contact
+              {{ link.label }}
             </a>
           </div>
 
@@ -51,13 +50,13 @@ const handleLogin = () => {
           <div class="flex items-center gap-3">
             <button
               @click="handleLogin"
-              class="px-6 py-2 text-indigo-600 font-semibold hover:text-indigo-700 transition duration-200"
+              class="px-6 py-2 hover:text-indigo-700 transition duration-200"
             >
               Login
             </button>
             <button
               @click="handleRegister"
-              class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-200"
+              class="px-6 py-2 bg-primary-300 rounded-lg hover:bg-indigo-700 transition duration-200"
             >
               Register
             </button>

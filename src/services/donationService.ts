@@ -9,6 +9,18 @@ import type {
 import { api } from '@/utils/api'
 
 export const donationService = {
+  getPublishedDonations: async (params: DonationParams): Promise<DonationListResponse> => {
+    const response = await api.get<DonationListResponse>(API.DONATIONS_PUBLIC, { params })
+    return response.data
+  },
+
+  getPublishedDonationDetail: async (donationSlug: string): Promise<DonationDetailResponse> => {
+    const response = await api.get<DonationDetailResponse>(
+      `${API.DONATIONS_PUBLIC}/${donationSlug}`,
+    )
+    return response.data
+  },
+
   getDonationList: async (params: DonationParams): Promise<DonationListResponse> => {
     const response = await api.get<DonationListResponse>(API.DONATIONS, { params })
     return response.data
