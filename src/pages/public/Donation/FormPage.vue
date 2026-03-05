@@ -9,6 +9,7 @@ import { useDonationTransactionCreate } from '@/composables/donation/useDonation
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
 
+// Composables
 const { publishedDonationDetailQuery } = usePublishedDonationDetail(slug)
 const { createMutation, createError } = useDonationTransactionCreate()
 
