@@ -2,10 +2,12 @@ import type { Pagination, Response } from './response'
 
 export interface Donation {
   id: string
+  slug: string
   title: string
   description: string
   image_url: string
   category: string
+  collected_fund: number
   fund_target: number
   status: string
   date_end: string

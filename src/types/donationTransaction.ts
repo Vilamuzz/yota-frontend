@@ -1,0 +1,40 @@
+import type { Response, Pagination } from './response'
+
+export interface DonationTransaction {
+  id: string
+  donation_id: string
+  order_id: string
+  donor_name: string
+  donor_email: string
+  gross_amount: number
+  paymentMethod: string
+  transaction_status: string
+  transaction_id: string
+  snap_redirect_url: string
+  paid_at: string | null
+  created_at: string
+}
+
+export interface DonationTransactionList {
+  transactions: DonationTransaction[]
+  pagination: Pagination
+}
+
+export interface DonationTransactionParams {
+  limit?: number
+  next_cursor?: string
+  prev_cursor?: string
+  search?: string
+  donation_id?: string
+}
+
+export interface CreateDonationTransactionRequest {
+  donation_id: string
+  user_id?: string
+  gross_amount: number
+  donor_name?: string
+  donor_email?: string
+}
+
+export type DonationTransactionResponse = Response<DonationTransaction>
+export type DonationTransactionListResponse = Response<DonationTransactionList>
