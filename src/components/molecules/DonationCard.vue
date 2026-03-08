@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { format } from '@/utils/format'
+import { formatCurrency } from '@/utils/format'
 import type { Donation } from '@/types/donation'
-
-const { formatFund } = format()
 
 const props = defineProps<{
   donation: Donation
@@ -49,7 +47,9 @@ const remainingDays = computed(() =>
       <div class="flex flex-row justify-between">
         <div>
           <p class="text-sm text-gray-500">Target</p>
-          <span class="font-semibold text-primary-500">{{ formatFund(donation.fund_target) }}</span>
+          <span class="font-semibold text-primary-500">{{
+            formatCurrency(donation.fund_target)
+          }}</span>
         </div>
         <div>
           <p class="text-sm text-gray-500">Sisa Hari</p>

@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePublishedDonationDetail } from '@/composables/donation/usePublishedDonationDetail'
-import { useDonationTransactionCreate } from '@/composables/donation/useDonationTransactionCreate'
+import { useDonationTransactionCreate } from '@/composables/donationTransaction/useDonationTransactionCreate'
 
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)

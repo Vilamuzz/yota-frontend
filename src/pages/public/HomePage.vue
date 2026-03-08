@@ -141,11 +141,14 @@ const latestNews = [
       <div class="max-w-7xl mx-auto mt-12 px-6 md:px-12 lg:px-24">
         <div class="flex flex-col md:flex-row items-center gap-10">
           <div class="flex-1">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Selamat Datang</h2>
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Selamat Datang di Yayasan Orang Tua Asuh
+            </h2>
             <p class="text-gray-600 leading-relaxed">
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sit quo suscipit velit
-              corrupti eos doloremque accusantium delectus neque possimus, quasi ullam nobis nulla.
-              Similique veritatis quos molestiae debitis maiores nisi?
+              Yayasan Orang Tua Asuh adalah lembaga sosial yang bergerak dalam kegiatan kemanusiaan
+              melalui pendampingan anak asuh, pengelolaan program sosial, dan penyaluran donasi
+              secara transparan. Bersama masyarakat, kami berupaya menghadirkan kepedulian yang
+              berkelanjutan bagi masa depan anak-anak yang membutuhkan
             </p>
           </div>
 
@@ -163,12 +166,17 @@ const latestNews = [
     <!-- Donation Section -->
     <section class="w-full py-16">
       <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">Dukung Kami</h2>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">
+          Donasi Berjalan
+        </h2>
+        <p class="text-gray-600 leading-relaxed mb-6">
+          Donasi yang sedang berlangsung pada Yayasan Orang Tua Asuh.
+        </p>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div
             v-for="donation in featuredDonations"
             :key="donation.title"
-            class="bg-white rounded-xl shadow-md overflow-hidden flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            class="bg-white rounded-xl overflow-hidden flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200"
             @click="router.push('/donate')"
           >
             <!-- Image: top 50% -->
@@ -202,25 +210,35 @@ const latestNews = [
             </div>
           </div>
         </div>
+        <router-link
+          to="/donation"
+          class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
+          >Selengkapnya >></router-link
+        >
       </div>
     </section>
 
     <!-- News Section -->
     <section class="w-full py-16">
       <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">
-          Berita Terbaru
-        </h2>
-        <div class="flex flex-col gap-4">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">Berita Terbaru</h2>
+        <p class="text-gray-600 leading-relaxed mb-6">
+          Berita dan kegiatan terkini Yayasan Orang Tua Asuh.
+        </p>
+        <div class="flex flex-col gap-6 ml-15">
           <div
             v-for="news in latestNews"
             :key="news.title"
-            class="bg-white rounded-xl shadow-md overflow-hidden flex cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            class="bg-white rounded-xl hover:shadow-lg transition-shadow duration-200 overflow-hidden flex cursor-pointer"
             @click="router.push('/news')"
           >
             <!-- Image: left ~30% -->
-            <div class="w-[30%] shrink-0">
-              <img :src="news.image" :alt="news.title" class="w-full h-full object-cover" />
+            <div class="w-[40%] h-64 shrink-0">
+              <img
+                :src="news.image"
+                :alt="news.title"
+                class="w-full h-full object-cover rounded-l-lg"
+              />
             </div>
 
             <!-- Content -->
@@ -230,13 +248,24 @@ const latestNews = [
             </div>
           </div>
         </div>
+        <router-link
+          to="/news"
+          class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
+          >Selengkapnya >></router-link
+        >
       </div>
     </section>
 
     <!-- Gallery Section -->
-    <section class="w-full py-16">
+    <section class="w-full mt-16">
       <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">Galeri</h2>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">
+          Galeri Yayasan OTA
+        </h2>
+        <p class="text-gray-600 leading-relaxed mb-6">
+          Dokumentasi kegiatan sosial, penyaluran donasi, serta momen kebersamaan Yayasan Orang Tua
+          Asuh bersama anak asuh dan masyarakat.
+        </p>
         <div class="flex flex-col gap-4">
           <!-- Row 1: 2 images -->
           <div class="grid grid-cols-2 gap-4">
@@ -267,6 +296,11 @@ const latestNews = [
             </div>
           </div>
         </div>
+        <router-link
+          to="/gallery"
+          class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
+          >Selengkapnya >></router-link
+        >
       </div>
     </section>
   </PublicLayout>
