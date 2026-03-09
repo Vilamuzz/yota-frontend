@@ -19,6 +19,7 @@ export const useLogin = () => {
       loginError.value = ''
       if (data.data?.token) {
         authStore.setToken(data.data.token)
+        await authStore.initUser()
         await router.push('/dashboard')
       }
     },

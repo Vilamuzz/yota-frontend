@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Upload, X } from 'lucide-vue-next'
+import { createDonationSchema } from '@/schemas/donation.schema'
+import { useDonationCreate } from '@/composables/donation/useDonationCreate'
+import { useToast } from '@/composables/ui/useToast'
+import { getZodErrors } from '@/utils/zodError'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import { useDonationCreate } from '@/composables/donation/useDonationCreate'
-import { ArrowLeft, Upload, X, HandHeart } from 'lucide-vue-next'
-import { createDonationSchema } from '@/schemas/donation.schema'
-import { getZodErrors } from '@/utils/zodError'
 
 const router = useRouter()
 const { createMutation, createError } = useDonationCreate()
+const { addToast } = useToast()
 
 // Form fields
 const title = ref('')
@@ -29,7 +31,6 @@ const categories = ['education', 'health', 'environment', 'social', 'disaster']
 const isLoading = computed(() => createMutation.isPending.value)
 const isSuccess = computed(() => createMutation.isSuccess.value)
 
-// ─── Image handling ─────────────────────────────────────────────────────────
 const imageInputRef = ref<HTMLInputElement | null>(null)
 
 const triggerImageInput = () => {
@@ -63,7 +64,6 @@ const removeImage = () => {
   if (imageInputRef.value) imageInputRef.value.value = ''
 }
 
-// ─── Validation ─────────────────────────────────────────────────────────────
 const validate = (): boolean => {
   const result = createDonationSchema.safeParse({
     title: title.value.trim(),
@@ -84,7 +84,6 @@ const validate = (): boolean => {
   return Object.keys(errors.value).length === 0
 }
 
-// ─── Submit ──────────────────────────────────────────────────────────────────
 const handleSubmit = async (status: 'active' | 'draft' = 'active') => {
   if (!validate()) return
 
@@ -99,12 +98,12 @@ const handleSubmit = async (status: 'active' | 'draft' = 'active') => {
   })
 
   if (createMutation.isSuccess.value) {
-    setTimeout(() => router.push({ name: 'dashboard-donations' }), 1200)
+    addToast({
+      type: 'success',
+      message: 'Donation campaign created successfully!',
+    })
+    router.push({ name: 'dashboard-donations' })
   }
-}
-
-const handleCancel = () => {
-  router.push({ name: 'dashboard-donations' })
 }
 
 const handleSaveDraft = () => handleSubmit('draft')
@@ -126,47 +125,6 @@ const formatCurrencyPreview = computed(() => {
 <template>
   <DashboardLayout>
     <div class="max-w-[100%] mx-auto space-y-6">
-      <!-- Page Header -->
-      <div class="flex items-center gap-4">
-        <button
-          @click="handleCancel"
-          class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-150 text-gray-500 hover:text-gray-700"
-          title="Back to donations"
-        >
-          <ArrowLeft :size="20" />
-        </button>
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-primary-50 rounded-lg">
-            <HandHeart :size="24" class="text-primary-400" />
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900">Create Donation Campaign</h2>
-            <p class="text-sm text-gray-500">Fill in the details below to launch a new campaign.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Success Banner -->
-      <transition
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0"
-      >
-        <div
-          v-if="isSuccess"
-          class="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium"
-        >
-          <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Donation campaign created successfully! Redirecting…
-        </div>
-      </transition>
-
       <!-- API Error Banner -->
       <div
         v-if="createError"
@@ -347,7 +305,12 @@ const formatCurrencyPreview = computed(() => {
 
         <!-- Action Buttons -->
         <div class="px-6 pb-4 flex items-center justify-between gap-3">
-          <BaseButton type="button" variant="danger" @click="handleCancel" :disabled="isLoading">
+          <BaseButton
+            type="button"
+            variant="danger"
+            :to="{ name: 'dashboard-donations' }"
+            :disabled="isLoading"
+          >
             Cancel
           </BaseButton>
           <div class="flex items-center gap-3">

@@ -1,10 +1,10 @@
 import type { RouteRecordRaw } from 'vue-router'
 import HomePage from '@/pages/public/HomePage.vue'
 import AboutPage from '@/pages/public/AboutPage.vue'
-import DonationIndexPage from '@/pages/public/Donation/IndexPage.vue'
-import DonationDetailPage from '@/pages/public/Donation/DetailPage.vue'
-import DonationFormPage from '@/pages/public/Donation/FormPage.vue'
-import AmbulanceIndexPage from '@/pages/public/Ambulance/IndexPage.vue'
+import DonationIndexPage from '@/pages/public/donation/IndexPage.vue'
+import DonationDetailPage from '@/pages/public/donation/DetailPage.vue'
+import DonationFormPage from '@/pages/public/donation/FormPage.vue'
+import AmbulanceIndexPage from '@/pages/public/ambulance/IndexPage.vue'
 
 export const publicRoutes: RouteRecordRaw[] = [
   {

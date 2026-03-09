@@ -9,31 +9,36 @@ const router = createRouter({
   routes: [...publicRoutes, ...authRoutes, ...dashboardRoutes],
 })
 
-// Navigation guard
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
 
+  await authStore.initPromise
+
+  const role = authStore.user?.role || ''
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next('/login')
-  } else if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
-    next(authStore.user?.role === 'user' ? '/' : '/dashboard')
-  } else if (to.path.startsWith('/dashboard')) {
-    const role = authStore.user?.role?.toLowerCase() || ''
-    if (role === 'user') {
-      next('/')
-    } else if (to.path.startsWith('/dashboard/users') && role !== 'superadmin') {
-      next('/dashboard')
-    } else if (
-      to.path.startsWith('/dashboard/donations') &&
-      !['superadmin', 'finance'].includes(role)
-    ) {
-      next('/dashboard')
-    } else {
-      next()
-    }
-  } else {
-    next()
+    return next('/login')
   }
+
+  if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
+    return next(role === 'user' ? '/' : '/dashboard')
+  }
+
+  if (to.path.startsWith('/dashboard')) {
+    if (role === 'user') return next('/')
+
+    const requiredRole = to.matched
+      .map((record) => record.meta.role)
+      .filter(Boolean)
+      .pop()
+
+    if (requiredRole) {
+      const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole]
+      if (!allowedRoles.includes(role)) return next('/dashboard')
+    }
+  }
+
+  next()
 })
 
 export default router

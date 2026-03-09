@@ -1,69 +1,44 @@
-import type { Component } from 'vue'
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useCurrentUser } from '@/composables/auth/useCurrentUser'
-import { Home, Newspaper, Users, CirclePoundSterling } from 'lucide-vue-next'
+import { useAuthGuard } from '@/composables/auth/useAuthGuard'
+import { menuConfig, type MenuItemConfig } from '@/config/menuConfig'
 
-export interface MenuItem {
-  icon?: Component
-  label: string
-  path?: string
-  name: string
-  children?: MenuItem[]
-}
+export type { MenuItemConfig as MenuItem }
 
 export function useMenuItems() {
-  const { user } = useCurrentUser()
+  const { userRole } = useAuthGuard()
   const route = useRoute()
 
-  const expandedMenus = ref<Record<string, boolean>>({})
+  const expandedMenus = ref<Record<string, boolean>>(
+    JSON.parse(sessionStorage.getItem('expandedMenus') || '{}'),
+  )
 
-  const toggleSubMenu = (menuName: string) => {
-    expandedMenus.value[menuName] = !expandedMenus.value[menuName]
+  function isAllowed(item: MenuItemConfig): boolean {
+    if (!item.roles) return true
+    const role = userRole.value?.toLowerCase() || ''
+    return item.roles.includes(role)
   }
 
-  const menuItems = computed<MenuItem[]>(() => {
-    const role = user.value?.role?.toLowerCase() || ''
+  const menuItems = computed(() =>
+    menuConfig.filter(isAllowed).map((item) => ({
+      ...item,
+      children: item.children?.filter(isAllowed),
+    })),
+  )
 
-    const items: MenuItem[] = [
-      { icon: Home, label: 'Dashboard', path: '/dashboard', name: 'dashboard' },
-    ]
-
-    if (role === 'superadmin') {
-      items.push({ icon: Users, label: 'Users', path: '/dashboard/users', name: 'users' })
-    }
-
-    if (role === 'superadmin' || role === 'finance') {
-      items.push({ icon: Users, label: 'Donasi', path: '/dashboard/donations', name: 'donations' })
-    }
-
-    if (role === 'superadmin' || role === 'finance') {
-      items.push({
-        icon: CirclePoundSterling,
-        label: 'Pemasukan',
-        name: 'income',
-        children: [
-          { label: 'Donasi', path: '/dashboard/donation-income/', name: 'donation-income' },
-          {
-            label: 'Program Sosial',
-            path: '/dashboard/income/social-program',
-            name: 'social-program',
-          },
-          { label: 'Anak Asuh', path: '/dashboard/income/orphan', name: 'orphan' },
-        ],
-      })
-    }
-
-    items.push({ icon: Newspaper, label: 'News', path: '/dashboard/news', name: 'news' })
-
-    return items
-  })
+  const toggleSubMenu = (name: string) => {
+    expandedMenus.value[name] = !expandedMenus.value[name]
+    sessionStorage.setItem('expandedMenus', JSON.stringify(expandedMenus.value))
+  }
 
   const isActive = (name: string) => {
-    return route.name === name || route.path.startsWith(`/dashboard/${name}`)
+    if (route.meta.activeMenu) {
+      return route.meta.activeMenu === name
+    }
+    return route.name === name
   }
 
-  const isSubMenuActive = (children: MenuItem[]) => {
+  const isSubMenuActive = (children: MenuItemConfig[]) => {
     return children.some((child) => isActive(child.name))
   }
 
