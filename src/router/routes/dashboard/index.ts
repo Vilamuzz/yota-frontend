@@ -89,6 +89,12 @@ export const dashboardRoutes: RouteRecordRaw[] = [
         component: () => import('@/pages/dashboard/income/fosterChildrenTransaction/IndexPage.vue'),
         meta: { title: 'Transaksi Anak Asuh' },
       },
+      {
+        path: 'expense/donation',
+        name: 'dashboard-donation-expense',
+        component: () => import('@/pages/dashboard/expense/donationExpense/DonationPage.vue'),
+        meta: { title: 'Pengeluaran Donasi' },
+      },
     ],
   },
 ]

@@ -10,6 +10,7 @@ export const donationTransactionService = {
     const response = await api.post(`${API.DONATION_TRANSACTION_PUBLIC}`, data)
     return response.data
   },
+
   createOfflineDonationTransaction: async (data: CreateDonationTransactionRequest) => {
     const response = await api.post(`${API.DONATION_TRANSACTION}`, data)
     return response.data

@@ -55,6 +55,19 @@ export const menuConfig: MenuItemConfig[] = [
     ],
   },
   {
+    icon: CirclePoundSterling,
+    label: 'Pengeluaran',
+    name: 'expense',
+    roles: ['finance'],
+    children: [
+      {
+        label: 'Donasi',
+        name: 'dashboard-donation-expense',
+        path: '/dashboard/expense/donation',
+      },
+    ],
+  },
+  {
     icon: Newspaper,
     label: 'News',
     name: 'news',
