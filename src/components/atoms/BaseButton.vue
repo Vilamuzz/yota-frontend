@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { RouteLocationRaw } from 'vue-router'
 
 interface Props {
-  variant?: 'primary' | 'secondary' | 'danger' | 'outline'
+  variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'white'
   size?: 'sm' | 'md' | 'lg'
+  to?: RouteLocationRaw
   loading?: boolean
   disabled?: boolean
   fullWidth?: boolean
@@ -21,12 +23,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const buttonClasses = computed(() => {
   const base =
-    'font-sf-pro rounded-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center'
+    'font-sf-pro rounded-xs transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center'
 
   const variants = {
     primary: 'bg-primary-300 text-white hover:bg-primary-400 focus:ring-primary-300',
     secondary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
     danger: 'bg-danger-500 text-white hover:bg-red-700 focus:ring-red-500',
+    white: 'bg-white text-primary-300 hover:bg-gray-300',
     outline: 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-gray-50 focus:ring-gray-500',
   }
 
@@ -43,7 +46,8 @@ const buttonClasses = computed(() => {
 </script>
 
 <template>
-  <button :type="type" :disabled="disabled || loading" :class="buttonClasses">
+  <router-link v-if="to" :to="to" :class="buttonClasses"> <slot /></router-link>
+  <button v-else :type="type" :disabled="disabled || loading" :class="buttonClasses">
     <span v-if="loading" class="flex items-center justify-center">
       <svg
         class="animate-spin -ml-1 mr-2 h-4 w-4"

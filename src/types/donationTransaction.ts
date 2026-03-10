@@ -7,7 +7,7 @@ export interface DonationTransaction {
   donor_name: string
   donor_email: string
   gross_amount: number
-  paymentMethod: string
+  source: boolean
   transaction_status: string
   transaction_id: string
   snap_redirect_url: string
@@ -22,10 +22,8 @@ export interface DonationTransactionList {
 
 export interface DonationTransactionParams {
   limit?: number
-  next_cursor?: string
-  prev_cursor?: string
-  search?: string
-  donation_id?: string
+  status?: string
+  donation_id: string
 }
 
 export interface CreateDonationTransactionRequest {

@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { Upload, X } from 'lucide-vue-next'
+import type { Donation } from '@/types/donation'
+import { updateDonationSchema } from '@/schemas/donation.schema'
+import { useDonationDetail } from '@/composables/donation/useDonationDetail'
+import { useDonationUpdate } from '@/composables/donation/useDonationUpdate'
+import { useToast } from '@/composables/ui/useToast'
+import { getZodErrors } from '@/utils/zodError'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import { useDonationDetail } from '@/composables/donation/useDonationDetail'
-import { useDonationUpdate } from '@/composables/donation/useDonationUpdate'
-import { ArrowLeft, Upload, X, HandHeart } from 'lucide-vue-next'
-import { updateDonationSchema } from '@/schemas/donation.schema'
-import { getZodErrors } from '@/utils/zodError'
-import type { Donation } from '@/types/donation'
 
 const router = useRouter()
 const route = useRoute()
@@ -17,6 +18,7 @@ const donationId = route.params.id as string
 
 const { donationDetailQuery, donationDetailError } = useDonationDetail(donationId)
 const { updateDonationMutation, updateDonationError } = useDonationUpdate()
+const { addToast } = useToast()
 
 // Form fields
 const title = ref('')
@@ -121,12 +123,12 @@ const handleSubmit = async (status: boolean) => {
   })
 
   if (updateDonationMutation.isSuccess.value) {
-    setTimeout(() => router.push({ name: 'dashboard-donations' }), 1200)
+    addToast({
+      type: 'success',
+      message: 'Donation campaign updated successfully!',
+    })
+    router.push({ name: 'dashboard-donations' })
   }
-}
-
-const handleCancel = () => {
-  router.push({ name: 'dashboard-donations' })
 }
 
 const handleSaveDraft = () => handleSubmit(false)
@@ -148,26 +150,6 @@ const formatCurrencyPreview = computed(() => {
 <template>
   <DashboardLayout>
     <div class="max-w-full mx-auto space-y-6">
-      <!-- Page Header -->
-      <div class="flex items-center gap-4">
-        <button
-          @click="handleCancel"
-          class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-150 text-gray-500 hover:text-gray-700"
-          title="Back to donations"
-        >
-          <ArrowLeft :size="20" />
-        </button>
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-primary-50 rounded-lg">
-            <HandHeart :size="24" class="text-primary-400" />
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900">Edit Donation Campaign</h2>
-            <p class="text-sm text-gray-500">Update the details of your donation campaign.</p>
-          </div>
-        </div>
-      </div>
-
       <!-- Loading skeleton -->
       <div v-if="isFetching" class="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
         <div class="animate-pulse space-y-4">
@@ -181,27 +163,6 @@ const formatCurrencyPreview = computed(() => {
       </div>
 
       <template v-else>
-        <!-- Success Banner -->
-        <transition
-          enter-active-class="transition ease-out duration-300"
-          enter-from-class="opacity-0 -translate-y-2"
-          enter-to-class="opacity-100 translate-y-0"
-        >
-          <div
-            v-if="isSuccess"
-            class="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium"
-          >
-            <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Campaign updated successfully! Redirecting…
-          </div>
-        </transition>
-
         <!-- API Error Banner -->
         <div
           v-if="updateDonationError"
@@ -215,6 +176,20 @@ const formatCurrencyPreview = computed(() => {
             />
           </svg>
           {{ updateDonationError }}
+        </div>
+
+        <div
+          v-if="donationDetailError"
+          class="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+        >
+          <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          {{ donationDetailError }}
         </div>
 
         <!-- Form Card -->
@@ -385,7 +360,12 @@ const formatCurrencyPreview = computed(() => {
 
           <!-- Action Buttons -->
           <div class="px-6 pb-4 flex items-center justify-between gap-3">
-            <BaseButton type="button" variant="danger" @click="handleCancel" :disabled="isLoading">
+            <BaseButton
+              type="button"
+              variant="danger"
+              :to="{ name: 'dashboard-donations' }"
+              :disabled="isLoading"
+            >
               Cancel
             </BaseButton>
             <div class="flex items-center gap-3">

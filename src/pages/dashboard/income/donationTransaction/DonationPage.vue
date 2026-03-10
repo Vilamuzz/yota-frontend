@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { SquarePen, Trash2, HandHeart, Plus } from 'lucide-vue-next'
+import { Eye, HandHeart } from 'lucide-vue-next'
 
 import { useDonationList } from '@/composables/donation/useDonationList'
 import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { Donation, DonationParams } from '@/types/donation'
-import { formatCurrency, formatDate } from '@/utils/format'
+
+const router = useRouter()
 
 const searchQuery = ref('')
 const debouncedSearchQuery = ref('')
@@ -107,14 +108,25 @@ const getStatusColor = (status: string) => {
   }
 }
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(amount)
+}
+
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
 // Delete confirmation modal
 const confirmShow = ref(false)
 const confirmDonation = ref<Donation | null>(null)
-
-const deleteDonation = (donation: Donation) => {
-  confirmDonation.value = donation
-  confirmShow.value = true
-}
 
 const handleConfirmDelete = async () => {
   if (!confirmDonation.value) return
@@ -133,11 +145,15 @@ const clearFilters = () => {
 
 const categories = ['all', 'education', 'health', 'environment', 'social', 'disaster']
 const statuses = ['all', 'active', 'pending', 'completed', 'closed']
+
+const handleDonationTransaction = (id: string) => {
+  router.push({ name: 'dashboard-donation-transaction', params: { id } })
+}
 </script>
 
 <template>
   <DashboardLayout>
-    <template #title>Manajemen Donasi</template>
+    <template #title>Donation Management</template>
 
     <div class="space-y-6">
       <!-- Header Section -->
@@ -193,11 +209,6 @@ const statuses = ['all', 'active', 'pending', 'completed', 'closed']
                   </div>
                 </template>
               </BaseFilter>
-
-              <BaseButton variant="primary" :to="{ name: 'dashboard-donations-create' }">
-                <Plus :size="20" class="mr-1" />
-                Create Donation
-              </BaseButton>
             </div>
           </div>
         </div>
@@ -222,19 +233,19 @@ const statuses = ['all', 'active', 'pending', 'completed', 'closed']
 
         <template #headers>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Title</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Category</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Judul</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Kategori</th>
           <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
-            Fund Target
+            Target Dana
+          </th>
+          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
+            Dana Terkumpul
           </th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">End Date</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Created At
+            Tanggal Berakhir
           </th>
-          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
-            Actions
-          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Aksi</th>
         </template>
 
         <template #rows>
@@ -255,6 +266,9 @@ const statuses = ['all', 'active', 'pending', 'completed', 'closed']
             <td class="px-6 py-4 whitespace-nowrap font-medium text-right">
               {{ formatCurrency(donation.fund_target) }}
             </td>
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-right">
+              {{ formatCurrency(donation.collected_fund) }}
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
                 :class="[
@@ -268,30 +282,13 @@ const statuses = ['all', 'active', 'pending', 'completed', 'closed']
             <td class="px-6 py-4 whitespace-nowrap font-medium">
               {{ formatDate(donation.date_end) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">
-              {{ formatDate(donation.created_at) }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap flex flex-row justify-center gap-2 relative">
-              <!-- <router-link
-                :to="{ name: 'dashboard-donations-edit', params: { id: donation.id } }"
+            <td class="px-6 py-4 whitespace-nowrap text-center relative">
+              <button
+                @click="handleDonationTransaction(donation.id)"
                 class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
                 title="View details"
               >
                 <Eye :size="18" />
-              </router-link> -->
-              <router-link
-                :to="{ name: 'dashboard-donations-edit', params: { id: donation.id } }"
-                class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
-                title="Edit donation"
-              >
-                <SquarePen :size="18" />
-              </router-link>
-              <button
-                @click="deleteDonation(donation)"
-                class="p-1 text-red-600 hover:bg-gray-100 rounded transition-colors duration-150"
-                title="Delete donation"
-              >
-                <Trash2 :size="18" />
               </button>
             </td>
           </tr>

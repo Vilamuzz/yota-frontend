@@ -58,7 +58,7 @@ defineEmits<{
 
     <!-- Pagination -->
     <div
-      v-if="!loading && !isEmpty"
+      v-if="!loading && !isEmpty && (hasPrev || hasNext)"
       class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between"
     >
       <div class="flex items-center gap-2">

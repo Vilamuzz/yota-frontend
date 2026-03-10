@@ -61,8 +61,8 @@ onUnmounted(() => {
     <!-- Vision & Mission Section -->
     <section class="w-full">
       <div class="max-w-7xl mx-auto mt-12 px-6 md:px-12 lg:px-24">
-        <div class="flex flex-col md:flex-row items-center gap-10">
-          <div class="w-40 h-full md:w-56 md:h-full shrink-0">
+        <div class="flex flex-col md:flex-row items-center gap-32">
+          <div class="h-full w-1/4 shrink-0">
             <img
               src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop"
               alt="Welcome"
@@ -70,22 +70,29 @@ onUnmounted(() => {
             />
             <div class="bg-primary-500 rounded-lg text-white text-center py-2 px-4">
               <h2>Pendiri Yayasan OTA</h2>
-              <h3 class="font-bold">John Doe</h3>
+              <h3 class="font-bold">Mulyadi Dwi Haryanto, S.Pd</h3>
             </div>
           </div>
 
           <div class="flex-1">
             <h2 class="text-xl md:text-xl font-bold text-gray-900 mb-4">Visi</h2>
             <p class="text-gray-600 leading-relaxed">
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sit quo suscipit velit
-              corrupti eos doloremque accusantium delectus neque possimus, quasi ullam nobis nulla.
-              Similique veritatis quos molestiae debitis maiores nisi?
+              Mewujudkan masyarakat yang peduli, berdaya, dan berkeadilan melalui pengelolaan
+              kegiatan sosial dan kemanusiaan yang berkelanjutan.
             </p>
             <h2 class="text-xl md:text-xl font-bold text-gray-900 mt-8 mb-4">Misi</h2>
             <ul class="list-disc pl-6 text-gray-600 space-y-2">
-              <li>Meningkatkan kualitas pendidikan di daerah terpencil</li>
-              <li>Membangun komunitas yang kolaboratif dan inovatif</li>
-              <li>Mendorong penggunaan teknologi untuk pembelajaran yang lebih efektif</li>
+              <li>
+                Menyelenggarakan berbagai kegiatan sosial dan kemanusiaan yang berdampak langsung
+                bagi masyarakat yang membutuhkan.
+              </li>
+              <li>
+                Mengelola dan menyalurkan donasi secara transparan, akuntabel, dan tepat sasaran.
+              </li>
+              <li>
+                Mendukung pendampingan sosial, pendidikan, dan kesejahteraan anak asuh serta
+                kelompok rentan lainnya.
+              </li>
             </ul>
           </div>
         </div>
