@@ -1,7 +1,3 @@
-# Environment variables file
-.env
-.env.docker
-
 # Logs
 logs
 *.log
