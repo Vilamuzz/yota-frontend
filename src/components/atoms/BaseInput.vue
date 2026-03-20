@@ -142,7 +142,10 @@ const togglePasswordVisibility = () => {
     </div>
 
     <!-- Password Strength Indicator -->
-    <div v-if="showPasswordStrength && type === 'password' && modelValue" class="mt-2 space-y-2">
+    <div
+      v-if="showPasswordStrength && type === 'password' && modelValue && passwordStrength"
+      class="mt-2 space-y-2"
+    >
       <!-- Strength Bars -->
       <div class="flex gap-1.5">
         <div
