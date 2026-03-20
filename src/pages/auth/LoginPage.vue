@@ -29,7 +29,7 @@ const handleLogin = async () => {
 const goToRegister = () => router.push('/register')
 const goToForgotPassword = () => router.push('/forgot-password')
 const handleGoogleLogin = () => {
-  window.location.href = 'http://localhost:8080/api/auth/oauth/google'
+  window.location.href = '/api/auth/oauth/google'
 }
 </script>
 
