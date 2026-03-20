@@ -14,13 +14,8 @@ RUN pnpm run build
 FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 
-# Remove default nginx files
 RUN rm -rf ./*
-
-# Copy built files from build stage
 COPY --from=build /app/dist ./
-
-# Copy nginx configuration (optional, see below)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
