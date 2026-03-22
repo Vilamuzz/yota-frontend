@@ -7,10 +7,11 @@ export interface DonationTransaction {
   donor_name: string
   donor_email: string
   gross_amount: number
+  prayer_content: string
   source: boolean
   transaction_status: string
   transaction_id: string
-  snap_redirect_url: string
+  snap_token: string
   paid_at: string | null
   created_at: string
 }
@@ -32,6 +33,7 @@ export interface CreateDonationTransactionRequest {
   gross_amount: number
   donor_name?: string
   donor_email?: string
+  prayer_content?: string
 }
 
 export type DonationTransactionResponse = Response<DonationTransaction>
