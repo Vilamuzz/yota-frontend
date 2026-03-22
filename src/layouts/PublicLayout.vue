@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { ref } from 'vue'
+import { Motion } from 'motion-v'
 import BaseButton from '@/components/atoms/BaseButton.vue'
+import { useAuthStore } from '@/stores/auth'
+import { useLogout } from '@/composables/auth/useLogout'
+import { CircleAlert, LogOut } from 'lucide-vue-next'
 
 const router = useRouter()
+const authStore = useAuthStore()
+const { logout } = useLogout()
+const isProfileMenuOpen = ref(false)
 
 const handleRegister = () => {
   router.push('/register')
@@ -10,6 +18,16 @@ const handleRegister = () => {
 
 const handleLogin = () => {
   router.push('/login')
+}
+
+const handleLogout = async () => {
+  await logout()
+  isProfileMenuOpen.value = false
+}
+
+const handleProfileClick = () => {
+  router.push('/profile')
+  isProfileMenuOpen.value = false
 }
 
 const navLinks = [
@@ -46,8 +64,54 @@ const navLinks = [
             </div>
 
             <div class="flex items-center gap-3">
-              <BaseButton variant="white" @click="handleLogin"> Login </BaseButton>
-              <BaseButton variant="primary" @click="handleRegister"> Register </BaseButton>
+              <template v-if="!authStore.isAuthenticated">
+                <BaseButton variant="white" @click="handleLogin"> Login </BaseButton>
+                <BaseButton variant="primary" @click="handleRegister"> Register </BaseButton>
+              </template>
+
+              <template v-else>
+                <div class="relative">
+                  <button
+                    @click="isProfileMenuOpen = !isProfileMenuOpen"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-primary-400 transition"
+                  >
+                    <div
+                      class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary-500 font-bold"
+                    >
+                      {{ authStore.user?.username?.charAt(0).toUpperCase() || 'U' }}
+                    </div>
+                    <span class="text-white text-sm">{{ authStore.user?.username || 'User' }}</span>
+                  </button>
+
+                  <Motion
+                    v-if="isProfileMenuOpen"
+                    :initial="{ opacity: 0, y: -10, scale: 0.95 }"
+                    :animate="{ opacity: 1, y: 0, scale: 1 }"
+                    :exit="{ opacity: 0, y: -10, scale: 0.95 }"
+                    :transition="{ duration: 0.2 }"
+                    class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg overflow-hidden z-50 p-1"
+                    @click.stop
+                  >
+                    <button
+                      @click="handleProfileClick"
+                      class="w-full p-2 rounded-md text-left text-sm text-gray-700 hover:bg-gray-100 transition flex items-center gap-2"
+                    >
+                      <CircleAlert class="w-4 h-4 text-gray-500" />
+                      Profile
+                    </button>
+
+                    <div class="border-t border-gray-300 my-1"></div>
+
+                    <button
+                      @click="handleLogout"
+                      class="w-full p-2 rounded-md text-left text-sm text-red-600 hover:bg-red-50 transition flex items-center gap-2"
+                    >
+                      <LogOut class="w-4 h-4 text-red-600" />
+                      Logout
+                    </button>
+                  </Motion>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -63,7 +127,7 @@ const navLinks = [
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div class="flex-1">
             <h3 class="text-2xl font-bold text-primary-300">Yota</h3>
-            <p class="text-sm mt-2">123 Startup Lane<br />Jakarta, Indonesia 12345</p>
+            <p class="text-sm mt-2">123 Startup Lane<br />Sukoharjo, Indonesia 12345</p>
           </div>
 
           <div class="flex gap-12">
@@ -72,8 +136,8 @@ const navLinks = [
               <ul class="text-sm space-y-2">
                 <li>
                   Email:
-                  <a href="mailto:support@yota.example" class="hover:text-primary-300">
-                    support@yota.example
+                  <a href="mailto:yota@gmail.com" class="hover:text-primary-300">
+                    yota@gmail.com
                   </a>
                 </li>
                 <li>

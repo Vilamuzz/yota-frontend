@@ -24,9 +24,14 @@ export function useToast() {
     toasts.value = toasts.value.filter((t) => t.id !== id)
   }
 
+  const showToast = (message: string, type: ToastType = 'info') => {
+    addToast({ message, type })
+  }
+
   return {
     toasts,
     addToast,
+    showToast,
     removeToast,
   }
 }

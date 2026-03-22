@@ -24,6 +24,52 @@ const manualInput = ref('')
 const manualError = ref('')
 const donorName = ref('')
 const donorEmail = ref('')
+const prayerContent = ref('')
+
+const prayerTemplates = [
+  {
+    label: 'Semoga Lekas Sembuh',
+    text: 'Semoga diberi kesembuhan, kekuatan, dan kemudahan dalam setiap prosesnya. Aamiin.',
+  },
+  {
+    label: 'Semangat & Kuat',
+    text: 'Tetap semangat, semoga selalu dikuatkan dan dipermudah jalannya. Kamu tidak sendiri.',
+  },
+  {
+    label: 'Rezeki & Kemudahan',
+    text: 'Semoga dibukakan pintu rezeki, dipermudah urusannya, dan diberi jalan terbaik.',
+  },
+  {
+    label: 'Untuk Keluarga',
+    text: 'Semoga keluarga diberikan ketabahan, kesehatan, dan kekuatan. Semoga segera ada kabar baik.',
+  },
+  {
+    label: 'Niat Baik',
+    text: 'Semoga niat baik ini menjadi manfaat dan membawa kebaikan bagi semua pihak.',
+  },
+] as const
+
+const selectedPrayerTemplateIndex = ref<number | null>(null)
+
+const applyPrayerTemplate = (index: number) => {
+  const template = prayerTemplates[index]
+  if (!template) return
+  selectedPrayerTemplateIndex.value = index
+  prayerContent.value = template.text
+}
+
+const onPrayerInput = () => {
+  const index = selectedPrayerTemplateIndex.value
+  if (index === null) return
+  const template = prayerTemplates[index]
+  if (!template) {
+    selectedPrayerTemplateIndex.value = null
+    return
+  }
+  if (prayerContent.value !== template.text) {
+    selectedPrayerTemplateIndex.value = null
+  }
+}
 
 const formatDisplay = (amount: number) => new Intl.NumberFormat('id-ID').format(amount)
 
@@ -63,11 +109,28 @@ const handleSubmit = async () => {
     gross_amount: selectedAmount.value,
     donor_name: donorName.value || '',
     donor_email: donorEmail.value || '',
+    prayer_content: prayerContent.value || '',
   })
 
-  const snapUrl = response?.data?.snap_redirect_url
-  if (snapUrl) {
-    window.location.href = snapUrl
+  const snapToken = response?.data?.snap_token
+  if (snapToken && window.snap) {
+    window.snap.pay(snapToken, {
+      onSuccess: function () {
+        window.location.href =
+          '/donation/callback?order_id=' + response.data.order_id + '&transaction_status=settlement'
+      },
+      onPending: function () {
+        window.location.href =
+          '/donation/callback?order_id=' + response.data.order_id + '&transaction_status=pending'
+      },
+      onError: function () {
+        window.location.href =
+          '/donation/callback?order_id=' + response.data.order_id + '&transaction_status=error'
+      },
+      onClose: function () {
+        // Handle when user closes the modal without completing payment
+      },
+    })
   }
 }
 </script>
@@ -160,6 +223,36 @@ const handleSubmit = async () => {
             type="email"
             placeholder="Email Anda"
             class="w-full border-2 border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 focus:border-primary-400 transition-colors"
+          />
+        </div>
+
+        <!-- Prayer Content -->
+        <div class="space-y-2">
+          <label class="text-sm text-gray-500">Doa / Pesan (Opsional)</label>
+
+          <!-- Prayer Templates -->
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button
+              v-for="(tpl, idx) in prayerTemplates"
+              :key="tpl.label"
+              type="button"
+              @click="applyPrayerTemplate(idx)"
+              :class="[
+                'rounded-md border-2 px-3 py-2 text-xs font-semibold transition-colors',
+                selectedPrayerTemplateIndex === idx
+                  ? 'border-primary-400 bg-primary-400 text-white'
+                  : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-400 hover:text-primary-400',
+              ]"
+            >
+              {{ tpl.label }}
+            </button>
+          </div>
+
+          <textarea
+            v-model="prayerContent"
+            @input="onPrayerInput"
+            placeholder="Tulis doa atau pesan untuk penerima manfaat..."
+            class="w-full border-2 border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 focus:border-primary-400 transition-colors resize-none h-24"
           />
         </div>
       </div>

@@ -4,6 +4,7 @@ import AboutPage from '@/pages/public/AboutPage.vue'
 import DonationIndexPage from '@/pages/public/donation/IndexPage.vue'
 import DonationDetailPage from '@/pages/public/donation/DetailPage.vue'
 import DonationFormPage from '@/pages/public/donation/FormPage.vue'
+import DonationCallbackPage from '@/pages/public/donation/CallbackPage.vue'
 import AmbulanceIndexPage from '@/pages/public/ambulance/IndexPage.vue'
 
 export const publicRoutes: RouteRecordRaw[] = [
@@ -31,6 +32,11 @@ export const publicRoutes: RouteRecordRaw[] = [
     path: '/donation/:slug/form',
     name: 'donation-form',
     component: DonationFormPage,
+  },
+  {
+    path: '/donation/callback',
+    name: 'donation-callback',
+    component: DonationCallbackPage,
   },
   {
     path: '/ambulance',
