@@ -14,4 +14,6 @@ export const API = {
   DONATIONS_PUBLIC: '/api/public/donations',
   DONATION_TRANSACTION: '/api/donation-transactions',
   DONATION_TRANSACTION_PUBLIC: '/api/public/donation-transactions',
+  CHILDREN: '/api/children',
+  CHILDREN_PUBLIC: '/api/public/children',
 }

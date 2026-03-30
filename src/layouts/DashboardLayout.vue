@@ -11,6 +11,7 @@ import {
   ChevronDown,
   User,
   Users,
+  PersonStanding,
   LogOut,
 } from 'lucide-vue-next'
 
@@ -25,11 +26,23 @@ const menuItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard', name: 'dashboard' },
   { icon: Users, label: 'Users', path: '/dashboard/users', name: 'users' },
   { icon: Users, label: 'Donations', path: '/dashboard/donations', name: 'donations' },
+  { icon: PersonStanding, label: 'Anak Asuh', name: 'foster-children',
+      children: [
+        { label: 'Data Anak Asuh', path: '/dashboard/foster-children', name: 'foster-children'},
+        { label: 'Ajuan Anak Asuh', path: '/dashboard/foster-children-submissions', name: 'foster-children-submissions'},
+        { label: 'Riwayat Dana', path: '/dashboard/foster-children-funds', name : 'foster-children-funds'}
+      ]
+   },
   { icon: Newspaper, label: 'News', path: '/dashboard/news', name: 'news' },
   { icon: BarChart3, label: 'Analytics', path: '/dashboard/analytics', name: 'analytics' },
   { icon: Settings, label: 'Settings', path: '/dashboard/settings', name: 'settings' },
 ]
 
+const openMenu = ref<string | null>(null)
+
+const toggleMenu = (name: string) => {
+  openMenu.value = openMenu.value === name ? null : name
+}
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
 }
@@ -61,6 +74,7 @@ const getUserInitials = () => {
 const getUserRole = () => {
   return user.value?.role || 'User'
 }
+
 </script>
 
 <template>
@@ -78,20 +92,60 @@ const getUserRole = () => {
 
       <!-- Navigation Menu -->
       <nav class="flex-1 p-4 space-y-2">
-        <button
-          v-for="item in menuItems"
-          :key="item.path"
-          @click="navigateTo(item.path)"
-          :class="[
-            'w-full flex items-center gap-3 px-4 py-2 rounded-sm transition-all duration-200',
-            isActive(item.name)
-              ? 'bg-white/20 text-white'
-              : 'text-white/70 hover:bg-white/10 hover:text-white',
-          ]"
-        >
-          <component :is="item.icon" :size="20" :stroke-width="2" />
-          <span class="font-medium">{{ item.label }}</span>
-        </button>
+        <div v-for="item in menuItems" :key="item.label">
+
+          <!-- MENU TANPA SUBMENU -->
+          <button
+            v-if="!item.children"
+            @click="navigateTo(item.path)"
+            :class="[
+              'w-full flex items-center gap-3 px-4 py-2 rounded-sm transition-all duration-200',
+              isActive(item.name)
+                ? 'bg-white/20 text-white'
+                : 'text-white/70 hover:bg-white/10 hover:text-white'
+            ]"
+          >
+            <component :is="item.icon" :size="20" />
+            <span class="font-medium">{{ item.label }}</span>
+          </button>
+
+          <!-- MENU DENGAN DROPDOWN -->
+          <div v-else>
+            <button
+              @click="toggleMenu(item.name)"
+              class="w-full flex items-center justify-between px-4 py-2 text-white/80 hover:bg-white/10 rounded-sm transition"
+            >
+              <div class="flex items-center gap-3">
+                <component :is="item.icon" :size="20" />
+                <span class="font-medium">{{ item.label }}</span>
+              </div>
+              <ChevronDown
+                :size="16"
+                class="transition-transform duration-200"
+                :class="{ 'rotate-180': openMenu === item.name }"
+              />
+            </button>
+            <!-- SUB MENU -->
+            <div
+              v-show="openMenu === item.name"
+              class="mt-2 space-y-1"
+            >
+              <button
+                v-for="child in item.children"
+                :key="child.path"
+                @click="navigateTo(child.path)"
+                :class="[
+                  'w-full text-left px-11 py-2 rounded-sm transition',
+                  isActive(child.name)
+                    ? 'bg-white/20 text-white'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                ]"
+              >
+                {{ child.label }}
+              </button>
+            </div>
+          </div>
+        </div>
       </nav>
 
       <!-- Toggle Sidebar Button -->
