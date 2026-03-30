@@ -43,6 +43,11 @@ const breadcrumbs = computed(() => {
 
 const showUserMenu = ref(false)
 
+const openMenu = ref<string | null>(null)
+
+const toggleMenu = (name: string) => {
+  openMenu.value = openMenu.value === name ? null : name
+}
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
 }

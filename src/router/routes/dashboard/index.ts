@@ -97,4 +97,22 @@ export const dashboardRoutes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/dashboard/foster-children',
+    name: 'dashboard-foster-children',
+    component: () => import('@/pages/dashboard/fosterchildren/IndexPage.vue'),
+    meta: { requiresAuth: true, title: 'Data Anak Asuh' },
+  },
+  {
+    path: '/dashboard/foster-children/create',
+    name: 'dashboard-foster-children-create',
+    component: () => import('@/pages/dashboard/fosterchildren/CreatePage.vue'),
+    meta: { requiresAuth: true, title: 'Data Anak Asuh' },
+  },
+  {
+    path: '/dashboard/foster-children-submissions',
+    name: 'dashboard-foster-children-submissions',
+    component : () => import('@/pages/dashboard/fosterchildren/SubmissionsPage.vue'),
+    meta: { requiresAuth: true, title: 'Ajuan Anak Asuh'},
+  }
 ]
