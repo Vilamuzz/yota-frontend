@@ -37,4 +37,24 @@ export const dashboardRoutes: RouteRecordRaw[] = [
     component: () => import('@/pages/dashboard/news/IndexPage.vue'),
     meta: { requiresAuth: true, title: 'News' },
   },
+  {
+    path: '/dashboard/socialprogram',
+    name: 'dashboard-socialprogram',
+    component: () => import('@/pages/dashboard/socialprogram/IndexPage.vue'),
+    meta: { requiresAuth: true, title: 'Program Sosial' },
+  },
+  {
+    path: '/dashboard/socialprogram/create',
+    name: 'dashboard-socialprogram-create',
+    component: () => import('@/pages/dashboard/socialprogram/CreatePage.vue'),
+    meta: { requiresAuth: true, title: 'Create Program' },
+  },
+  {
+    path: '/dashboard/socialprogram/:id',
+    name: 'dashboard-socialprogram-edit',
+    component: () => import('@/pages/dashboard/socialprogram/EditPage.vue'),
+    meta: { requiresAuth: true, title: 'Edit Program' },
+  },
 ]
+
+ 

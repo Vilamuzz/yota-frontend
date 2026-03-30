@@ -5,6 +5,9 @@ import DonationIndexPage from '@/pages/public/Donation/IndexPage.vue'
 import DonationDetailPage from '@/pages/public/Donation/DetailPage.vue'
 import DonationFormPage from '@/pages/public/Donation/FormPage.vue'
 import AmbulanceIndexPage from '@/pages/public/Ambulance/IndexPage.vue'
+import SocialProgramIndexPage from '@/pages/public/SocialProgram/IndexPage.vue'
+import SocialProgramDetailPage from '@/pages/public/SocialProgram/DetailPage.vue'
+import SocialProgramFormPage from '@/pages/public/SocialProgram/FormPage.vue'
 
 export const publicRoutes: RouteRecordRaw[] = [
   {
@@ -37,4 +40,19 @@ export const publicRoutes: RouteRecordRaw[] = [
     name: 'ambulance',
     component: AmbulanceIndexPage,
   },
+  {
+  path: '/social-program',
+  name: 'social-program',
+  component: SocialProgramIndexPage,
+  },
+  {
+  path: '/social-program/:slug',
+  name: 'social-program-detail',
+  component: SocialProgramDetailPage,
+  },
+  {
+  path: '/social-program/:slug/form',
+  name: 'social-program-form',
+  component: SocialProgramFormPage,
+  }
 ]
