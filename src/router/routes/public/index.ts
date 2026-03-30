@@ -6,6 +6,7 @@ import DonationDetailPage from '@/pages/public/donation/DetailPage.vue'
 import DonationFormPage from '@/pages/public/donation/FormPage.vue'
 import DonationCallbackPage from '@/pages/public/donation/CallbackPage.vue'
 import AmbulanceIndexPage from '@/pages/public/ambulance/IndexPage.vue'
+import FosterChildrenIndexPage from '@/pages/public/FosterChildren/IndexPage.vue'
 
 export const publicRoutes: RouteRecordRaw[] = [
   {
@@ -43,4 +44,9 @@ export const publicRoutes: RouteRecordRaw[] = [
     name: 'ambulance',
     component: AmbulanceIndexPage,
   },
+  {
+    path: '/foster-children',
+    name: 'foster-children',
+    component: FosterChildrenIndexPage,
+  }
 ]
