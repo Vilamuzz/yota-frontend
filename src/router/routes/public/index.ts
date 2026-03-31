@@ -7,6 +7,9 @@ import DonationFormPage from '@/pages/public/donation/FormPage.vue'
 import DonationCallbackPage from '@/pages/public/donation/CallbackPage.vue'
 import AmbulanceIndexPage from '@/pages/public/ambulance/IndexPage.vue'
 import FosterChildrenIndexPage from '@/pages/public/FosterChildren/IndexPage.vue'
+import SocialProgramIndexPage from '@/pages/public/SocialProgram/IndexPage.vue'
+import SocialProgramDetailPage from '@/pages/public/SocialProgram/DetailPage.vue'
+import SocialProgramFormPage from '@/pages/public/SocialProgram/FormPage.vue'
 
 export const publicRoutes: RouteRecordRaw[] = [
   {
@@ -48,5 +51,20 @@ export const publicRoutes: RouteRecordRaw[] = [
     path: '/foster-children',
     name: 'foster-children',
     component: FosterChildrenIndexPage,
+  },
+  {
+  path: '/social-program',
+  name: 'social-program',
+  component: SocialProgramIndexPage,
+  },
+  {
+  path: '/social-program/:slug',
+  name: 'social-program-detail',
+  component: SocialProgramDetailPage,
+  },
+  {
+  path: '/social-program/:slug/form',
+  name: 'social-program-form',
+  component: SocialProgramFormPage,
   }
 ]
