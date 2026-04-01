@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { childService } from '@/services/childService'
+import { childService } from '@/services/fosterChildren.service'
 import type { CreateChildRequest } from '@/types/child'
 
 export const useChildCreate = () => {

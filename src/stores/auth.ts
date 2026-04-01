@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { jwtDecode } from 'jwt-decode'
-import { authService } from '@/services/authService'
+import { authService } from '@/services/auth.service'
 import type { UserProfile } from '@/types/auth'
 
 export const useAuthStore = defineStore('auth', () => {

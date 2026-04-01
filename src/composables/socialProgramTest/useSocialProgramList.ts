@@ -1,6 +1,6 @@
 import { ref, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { socialProgramService } from '@/services/socialProgramService'
+import { socialProgramService } from '@/services/socialProgram.service'
 import type { SocialProgramParams } from '@/types/socialprogram'
 
 

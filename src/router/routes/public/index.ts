@@ -1,70 +1,84 @@
 import type { RouteRecordRaw } from 'vue-router'
-import HomePage from '@/pages/public/HomePage.vue'
-import AboutPage from '@/pages/public/AboutPage.vue'
-import DonationIndexPage from '@/pages/public/donation/IndexPage.vue'
-import DonationDetailPage from '@/pages/public/donation/DetailPage.vue'
-import DonationFormPage from '@/pages/public/donation/FormPage.vue'
-import DonationCallbackPage from '@/pages/public/donation/CallbackPage.vue'
-import AmbulanceIndexPage from '@/pages/public/ambulance/IndexPage.vue'
-import FosterChildrenIndexPage from '@/pages/public/FosterChildren/IndexPage.vue'
-import SocialProgramIndexPage from '@/pages/public/SocialProgram/IndexPage.vue'
-import SocialProgramDetailPage from '@/pages/public/SocialProgram/DetailPage.vue'
-import SocialProgramFormPage from '@/pages/public/SocialProgram/FormPage.vue'
 
 export const publicRoutes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
-    component: HomePage,
+    component: () => import('@/pages/public/HomePage.vue'),
   },
   {
     path: '/about',
     name: 'about',
-    component: AboutPage,
+    component: () => import('@/pages/public/AboutPage.vue'),
   },
   {
     path: '/donation',
-    name: 'donation',
-    component: DonationIndexPage,
-  },
-  {
-    path: '/donation/:slug',
-    name: 'donation-detail',
-    component: DonationDetailPage,
-  },
-  {
-    path: '/donation/:slug/form',
-    name: 'donation-form',
-    component: DonationFormPage,
-  },
-  {
-    path: '/donation/callback',
-    name: 'donation-callback',
-    component: DonationCallbackPage,
+    children: [
+      {
+        path: '',
+        name: 'donation',
+        component: () => import('@/pages/public/donation/IndexPage.vue'),
+      },
+      {
+        path: ':slug',
+        name: 'donation-detail',
+        component: () => import('@/pages/public/donation/DetailPage.vue'),
+      },
+      {
+        path: ':slug/form',
+        name: 'donation-form',
+        component: () => import('@/pages/public/donation/FormPage.vue'),
+      },
+      {
+        path: 'callback',
+        name: 'donation-callback',
+        component: () => import('@/pages/public/donation/CallbackPage.vue'),
+      },
+    ],
   },
   {
     path: '/ambulance',
     name: 'ambulance',
-    component: AmbulanceIndexPage,
+    component: () => import('@/pages/public/ambulance/IndexPage.vue'),
   },
   {
     path: '/foster-children',
     name: 'foster-children',
-    component: FosterChildrenIndexPage,
+    component: () => import('@/pages/public/fosterChildren/IndexPage.vue'),
   },
   {
-  path: '/social-program',
-  name: 'social-program',
-  component: SocialProgramIndexPage,
+    path: '/social-program',
+    children: [
+      {
+        path: '',
+        name: 'social-program',
+        component: () => import('@/pages/public/socialProgram/IndexPage.vue'),
+      },
+      {
+        path: ':slug',
+        name: 'social-program-detail',
+        component: () => import('@/pages/public/socialProgram/DetailPage.vue'),
+      },
+      {
+        path: ':slug/form',
+        name: 'social-program-form',
+        component: () => import('@/pages/public/socialProgram/FormPage.vue'),
+      },
+    ],
   },
   {
-  path: '/social-program/:slug',
-  name: 'social-program-detail',
-  component: SocialProgramDetailPage,
+    path: '/gallery',
+    name: 'gallery',
+    component: () => import('@/pages/public/gallery/IndexPage.vue'),
   },
   {
-  path: '/social-program/:slug/form',
-  name: 'social-program-form',
-  component: SocialProgramFormPage,
-  }
+    path: '/news',
+    name: 'news',
+    component: () => import('@/pages/public/news/IndexPage.vue'),
+  },
+  {
+    path: '/reports',
+    name: 'reports',
+    component: () => import('@/pages/public/report/IndexPage.vue'),
+  },
 ]

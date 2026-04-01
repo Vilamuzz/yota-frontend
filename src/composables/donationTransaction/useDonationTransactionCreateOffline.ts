@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { donationTransactionService } from '@/services/donationTransactionService'
+import { donationTransactionService } from '@/services/donationTransaction.service'
 import type { CreateDonationTransactionRequest } from '@/types/donationTransaction'
 
 export const useDonationTransactionCreateOffline = () => {

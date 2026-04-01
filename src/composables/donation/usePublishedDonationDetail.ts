@@ -1,6 +1,6 @@
 import { ref, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { donationService } from '@/services/donationService'
+import { donationService } from '@/services/donation.service'
 
 export const usePublishedDonationDetail = (donationSlug: MaybeRefOrGetter<string>) => {
   const publishedDonationDetailError = ref('')

@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useQuery, useMutation } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
-import { authService } from '@/services/authService'
+import { authService } from '@/services/auth.service'
 import type { UpdateUserProfileRequest, UpdateUserPasswordRequest } from '@/types/auth'
 
 export const useCurrentUser = () => {

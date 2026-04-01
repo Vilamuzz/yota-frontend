@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import { useChildCreate } from '@/composables/fosterchildren/useChildCreate'
+import { useChildCreate } from '@/composables/fosterChildrenTest/useChildCreate'
 import { createChildSchema } from '@/schemas/child.schema'
 import { getZodErrors } from '@/utils/zodError'
 import { ArrowLeft, PersonStanding, Trash2, Eye, X, Plus } from 'lucide-vue-next'
@@ -38,17 +38,17 @@ const triggerImageInput = () => {
   imageInputRef.value?.click()
 }
 
-const handleImageChange = (event : Event) => {
+const handleImageChange = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
 
   const allowedTypes = ['image/jpeg', 'image/png']
   if (!allowedTypes.includes(file.type)) {
-    errors.value = {...errors.value, image: 'Format gambar tidak valid. Hanya JPG dan PNG.'}
+    errors.value = { ...errors.value, image: 'Format gambar tidak valid. Hanya JPG dan PNG.' }
     return
   }
   if (file.size > 2 * 1024 * 1024) {
-    errors.value = {...errors.value, image: 'Ukuran gambar terlalu besar. Maksimal 5MB.'}
+    errors.value = { ...errors.value, image: 'Ukuran gambar terlalu besar. Maksimal 5MB.' }
     return
   }
 
@@ -86,14 +86,14 @@ const handleCertificateChange = (event: Event) => {
   const allowedTypes = [
     'application/pdf',
     'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ]
 
   for (const file of Array.from(files)) {
     if (!allowedTypes.includes(file.type)) {
       errors.value = {
         ...errors.value,
-        certificate: 'Format sertifikat harus PDF atau DOC'
+        certificate: 'Format sertifikat harus PDF atau DOC',
       }
       return
     }
@@ -101,7 +101,7 @@ const handleCertificateChange = (event: Event) => {
     if (file.size > 5 * 1024 * 1024) {
       errors.value = {
         ...errors.value,
-        certificate: 'Ukuran maksimal file 5MB'
+        certificate: 'Ukuran maksimal file 5MB',
       }
       return
     }
@@ -134,8 +134,11 @@ const validate = () => {
 
   const zodErrors = getZodErrors(result as Parameters<typeof getZodErrors>[0])
 
-  const imageError: Record<string, string> = image.value ? {} : { image: 'Foto anak asuh wajib diunggah' }
-  const certificateError: Record<string, string> = certificates.value.length > 0 ? {} : {certificate:''}
+  const imageError: Record<string, string> = image.value
+    ? {}
+    : { image: 'Foto anak asuh wajib diunggah' }
+  const certificateError: Record<string, string> =
+    certificates.value.length > 0 ? {} : { certificate: '' }
 
   errors.value = { ...zodErrors, ...imageError, ...certificateError }
   return Object.keys(errors.value).length === 0
@@ -157,10 +160,10 @@ const handleSubmit = async () => {
   })
 
   if (createMutation.isSuccess.value) {
-  setTimeout(() => {
-    router.push({ name: 'dashboard-foster-children' })
-  }, 1200)
-}
+    setTimeout(() => {
+      router.push({ name: 'dashboard-foster-children' })
+    }, 1200)
+  }
 }
 
 const handleCancel = () => {
@@ -180,7 +183,6 @@ const isSubmitDisabled = computed(() => {
     isLoading.value
   )
 })
-
 </script>
 
 <template>
@@ -190,16 +192,19 @@ const isSubmitDisabled = computed(() => {
         <button
           @click="handleCancel"
           class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-150 text-gray-500 hover:text-gray-700"
-          title="Kembali ke anak asuh">
+          title="Kembali ke anak asuh"
+        >
           <ArrowLeft :size="20" />
         </button>
         <div class="flex items-center gap-3">
-          <div class ="p-2 bg-primary-50 rounded-lg">
+          <div class="p-2 bg-primary-50 rounded-lg">
             <PersonStanding :size="24" class="text-primary-400" />
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900">Tambah Anak Asuh Baru</h2>
-            <p class="text-sm text-gray-500">Lengkapi informasi berikut untuk menambahkan anak asuh baru.</p>
+            <p class="text-sm text-gray-500">
+              Lengkapi informasi berikut untuk menambahkan anak asuh baru.
+            </p>
           </div>
         </div>
       </div>
@@ -240,50 +245,70 @@ const isSubmitDisabled = computed(() => {
 
       <form
         @submit.prevent="handleSubmit"
-        class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+      >
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
           <div class="p-6 space-y-5">
-            <BaseInput id="name" v-model="name" label="Nama Anak Asuh" placeholder="Masukkan nama lengkap anak asuh" :required="true" :error="errors.name" />
+            <BaseInput
+              id="name"
+              v-model="name"
+              label="Nama Anak Asuh"
+              placeholder="Masukkan nama lengkap anak asuh"
+              :required="true"
+              :error="errors.name"
+            />
             <div>
               <label for="gender" class="block text-xs font-poppins text-gray-700 mb-1">
                 Jenis Kelamin <span class="text-red-500">*</span>
               </label>
-              <select id="gender" v-model="gender"
+              <select
+                id="gender"
+                v-model="gender"
                 class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 :class="[
                   errors.gender ? 'border-red-300 focus:ring-red-500' : 'border-gray-300',
-                  !gender ? 'text-gray-500' : 'text-gray-700'
-                  ]">
+                  !gender ? 'text-gray-500' : 'text-gray-700',
+                ]"
+              >
                 <option value="" disabled>Pilih jenis kelamin</option>
                 <option v-for="cat in genders" :key="cat" :value="cat">
-                  {{  cat.charAt(0).toUpperCase() + cat.slice(1)  }}
+                  {{ cat.charAt(0).toUpperCase() + cat.slice(1) }}
                 </option>
               </select>
               <p v-if="errors.gender" class="mt-1 text-xs text-red-600">
-                {{  errors.gender }}
+                {{ errors.gender }}
               </p>
             </div>
             <div>
               <label for="category" class="block text-xs font-poppins text-gray-700 mb-1">
                 Kategori <span class="text-red-500">*</span>
               </label>
-              <select id="category" v-model="category"
+              <select
+                id="category"
+                v-model="category"
                 class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 :class="[
                   errors.category ? 'border-red-300 focus:ring-red-500' : 'border-gray-300',
-                  !category ? 'text-gray-500' : 'text-gray-700'
-                  ]">
+                  !category ? 'text-gray-500' : 'text-gray-700',
+                ]"
+              >
                 <option value="" disabled>Pilih kategori anak asuh</option>
                 <option v-for="cat in categories" :key="cat" :value="cat">
-                  {{  cat.charAt(0).toUpperCase() + cat.slice(1)  }}
+                  {{ cat.charAt(0).toUpperCase() + cat.slice(1) }}
                 </option>
               </select>
               <p v-if="errors.category" class="mt-1 text-xs text-red-600">
-                {{  errors.category }}
+                {{ errors.category }}
               </p>
             </div>
-            <BaseInput id="birthplace" v-model="birthplace" label="Tempat Lahir" placeholder="Masukkan tempat lahir anak asuh" :required="true" :error="errors.birthplace" />
+            <BaseInput
+              id="birthplace"
+              v-model="birthplace"
+              label="Tempat Lahir"
+              placeholder="Masukkan tempat lahir anak asuh"
+              :required="true"
+              :error="errors.birthplace"
+            />
             <div>
               <label for="birthdate" class="block text-xs font-poppins text-gray-700 mb-1">
                 Tanggal Lahir <span class="text-red-500">*</span>
@@ -295,11 +320,11 @@ const isSubmitDisabled = computed(() => {
                 class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 :class="[
                   errors.birthdate ? 'border-red-300 focus:ring-red-500' : 'border-gray-300',
-                  !birthdate ? 'text-gray-500' : 'text-gray-700'
+                  !birthdate ? 'text-gray-500' : 'text-gray-700',
                 ]"
               />
               <p v-if="errors.birth_date" class="mt-1 text-xs text-red-600">
-                {{  errors.birth_date }}
+                {{ errors.birth_date }}
               </p>
             </div>
             <div>
@@ -312,11 +337,10 @@ const isSubmitDisabled = computed(() => {
                 rows="5"
                 placeholder="Masukkan alamat lengkap anak asuh"
                 class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                :class="
-                  errors.address ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'"
+                :class="errors.address ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'"
               ></textarea>
               <p v-if="errors.address" class="mt-1 text-xs text-red-600">
-                {{  errors.address }}
+                {{ errors.address }}
               </p>
             </div>
           </div>
@@ -325,35 +349,38 @@ const isSubmitDisabled = computed(() => {
               <p class="text-xs font-poppins text-gray-700 mb-3">
                 Unggah Foto Anak Asuh <span class="text-red-500">*</span>
               </p>
-              <div v-if="imagePreview"
-                  class="group flex items-center justify-between border p-3 rounded-lg">
-                  <div class="flex items-center gap-3">
-                    <img :src="imagePreview" alt="preview" class="w-20 h-20 object-cover rounded" />
-                    <span class="mx-4 text-sm text-gray-500">{{ image?.name }}</span>
-                  </div>
-                  <div class="flex gap-2">
-                    <button type="button"
-                      @click="previewImage"
-                      class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-700"
-                      title="Pratinjau Gambar"
-                    >
-                      <Eye :size="18" />
-                    </button>
-                    <button type="button"
-                      @click="removeImage"
-                      class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-red-500 hover:text-red-600"
-                      title="Hapus Gambar"
-                    >
-                      <Trash2 :size="18" />
-                    </button>
-                  </div>
+              <div
+                v-if="imagePreview"
+                class="group flex items-center justify-between border p-3 rounded-lg"
+              >
+                <div class="flex items-center gap-3">
+                  <img :src="imagePreview" alt="preview" class="w-20 h-20 object-cover rounded" />
+                  <span class="mx-4 text-sm text-gray-500">{{ image?.name }}</span>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    @click="previewImage"
+                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-700"
+                    title="Pratinjau Gambar"
+                  >
+                    <Eye :size="18" />
+                  </button>
+                  <button
+                    type="button"
+                    @click="removeImage"
+                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-red-500 hover:text-red-600"
+                    title="Hapus Gambar"
+                  >
+                    <Trash2 :size="18" />
+                  </button>
+                </div>
               </div>
               <div
                 v-if="showImagePreview"
                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
               >
                 <div class="relative bg-white rounded-lg p-4 max-w-lg w-full">
-
                   <button
                     @click="closeImagePreview"
                     class="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -366,7 +393,6 @@ const isSubmitDisabled = computed(() => {
                     :src="imagePreview"
                     class="w-full max-h-[70vh] object-contain rounded"
                   />
-
                 </div>
               </div>
               <div
@@ -391,14 +417,12 @@ const isSubmitDisabled = computed(() => {
                 @change="handleImageChange"
               />
               <p v-if="errors.image" class="mt-1 text-xs text-red-600">
-                {{  errors.image }}
+                {{ errors.image }}
               </p>
             </div>
 
             <div>
-              <p class="text-xs font-poppins text-gray-700 mb-3">
-                Unggah Piagam Penghargaan
-              </p>
+              <p class="text-xs font-poppins text-gray-700 mb-3">Unggah Piagam Penghargaan</p>
               <div v-if="certificates.length" class="space-y-2 mb-3">
                 <div
                   v-for="(file, index) in certificates"
@@ -414,14 +438,14 @@ const isSubmitDisabled = computed(() => {
                       @click="previewCertificate(file)"
                       class="text-gray-500 hover:text-gray-700"
                     >
-                      <Eye :size="18"/>
+                      <Eye :size="18" />
                     </button>
                     <button
                       type="button"
                       @click="removeCertificate(index)"
                       class="text-red-500 hover:text-red-600"
                     >
-                      <Trash2 :size="18"/>
+                      <Trash2 :size="18" />
                     </button>
                     <BaseButton
                       v-if="index === certificates.length - 1"
@@ -429,7 +453,7 @@ const isSubmitDisabled = computed(() => {
                       variant="primary"
                       @click="triggerCertificateInput"
                     >
-                      <Plus :size="16"/>
+                      <Plus :size="16" />
                     </BaseButton>
                   </div>
                 </div>
@@ -438,7 +462,7 @@ const isSubmitDisabled = computed(() => {
                 v-else
                 @click="triggerCertificateInput"
                 class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150 border-gray-300 bg-gray-50 hover:bg-gray-100"
-                >
+              >
                 <p class="text-sm font-medium text-gray-600">Upload Sertifikat</p>
                 <p class="text-xs text-gray-400 mt-1">PDF / DOC Max 5 MB</p>
               </div>
@@ -460,11 +484,21 @@ const isSubmitDisabled = computed(() => {
               </label>
               <div class="flex gap-12">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" v-model="status" :value="true" class="w-4 h-4 text-green-500 focus:ring-green-500">
+                  <input
+                    type="radio"
+                    v-model="status"
+                    :value="true"
+                    class="w-4 h-4 text-green-500 focus:ring-green-500"
+                  />
                   Aktif
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" v-model="status" :value="false" class="w-4 h-4 text-green-500 focus:ring-green-500">
+                  <input
+                    type="radio"
+                    v-model="status"
+                    :value="false"
+                    class="w-4 h-4 text-green-500 focus:ring-green-500"
+                  />
                   Lulus
                 </label>
               </div>
@@ -475,26 +509,21 @@ const isSubmitDisabled = computed(() => {
           </div>
         </div>
         <div class="px-6 pb-4 flex justify-end gap-3">
-            <BaseButton
-              type="button"
-              variant="danger"
-              @click="handleCancel"
-              :disabled="isLoading"
-            >
-              Batal
-            </BaseButton>
+          <BaseButton type="button" variant="danger" @click="handleCancel" :disabled="isLoading">
+            Batal
+          </BaseButton>
 
-            <BaseButton
-              type="button"
-              variant="primary"
-              :loading="isLoading"
-              :disabled="isSubmitDisabled"
-              class="disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <template #loading>Tambah..</template>
-              Tambahkan Anak Asuh
-            </BaseButton>
-          </div>
+          <BaseButton
+            type="button"
+            variant="primary"
+            :loading="isLoading"
+            :disabled="isSubmitDisabled"
+            class="disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <template #loading>Tambah..</template>
+            Tambahkan Anak Asuh
+          </BaseButton>
+        </div>
       </form>
     </div>
   </DashboardLayout>

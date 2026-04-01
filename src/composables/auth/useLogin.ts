@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMutation } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
-import { authService } from '@/services/authService'
+import { authService } from '@/services/auth.service'
 import type { LoginRequest } from '@/types/auth'
 
 const extractError = (err: any, fallback: string) =>

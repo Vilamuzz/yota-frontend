@@ -34,8 +34,8 @@ const navLinks = [
   { label: 'Beranda', to: '/' },
   { label: 'Tentang', to: '/about' },
   { label: 'Donasi', to: '/donation' },
-  { label: 'Program Sosial', to: '/social-programs' },
-  { label: 'Anak Asuh', to: '/sponsored-children' },
+  { label: 'Program Sosial', to: '/social-program' },
+  { label: 'Anak Asuh', to: '/foster-child' },
   { label: 'Ambulans', to: '/ambulance' },
   { label: 'Berita', to: '/news' },
   { label: 'Laporan', to: '/reports' },
@@ -159,12 +159,12 @@ const navLinks = [
                   <router-link to="/donation" class="hover:text-primary-300">Donasi</router-link>
                 </li>
                 <li>
-                  <router-link to="/social-programs" class="hover:text-primary-300"
+                  <router-link to="/social-program" class="hover:text-primary-300"
                     >Program Sosial</router-link
                   >
                 </li>
                 <li>
-                  <router-link to="/sponsored-child" class="hover:text-primary-300"
+                  <router-link to="/foster-child" class="hover:text-primary-300"
                     >Anak Asuh</router-link
                   >
                 </li>

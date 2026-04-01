@@ -29,7 +29,6 @@ export interface DonationTransactionParams {
 
 export interface CreateDonationTransactionRequest {
   donation_id: string
-  user_id?: string
   gross_amount: number
   donor_name?: string
   donor_email?: string

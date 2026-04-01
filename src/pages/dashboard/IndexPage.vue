@@ -166,7 +166,7 @@ onMounted(() => {
               class="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-150"
             >
               <div
-                class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0"
+                class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0"
               >
                 <Mail :size="20" class="text-blue-600" />
               </div>
@@ -181,7 +181,7 @@ onMounted(() => {
               class="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-150"
             >
               <div
-                class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0"
+                class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0"
               >
                 <CheckCircle :size="20" class="text-green-600" />
               </div>
@@ -196,7 +196,7 @@ onMounted(() => {
               class="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-150"
             >
               <div
-                class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0"
+                class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center shrink-0"
               >
                 <PartyPopper :size="20" class="text-purple-600" />
               </div>

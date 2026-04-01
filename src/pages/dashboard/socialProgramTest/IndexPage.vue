@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Eye, SquarePen, Trash2, Users, Plus } from 'lucide-vue-next'
 
-import { useSocialProgramList } from "@/composables/socialprogram/useSocialProgramList";
+import { useSocialProgramList } from "@/composables/socialProgramTest/useSocialProgramList";
 import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
@@ -71,11 +71,11 @@ const queryClient = useQueryClient()
 // 🔥 FIX DI SINI
 const { socialProgramListQuery } = useSocialProgramList(queryParams)
 
-const programs = computed<SocialProgram[]>(() => 
+const programs = computed<SocialProgram[]>(() =>
   socialProgramListQuery.data.value?.data?.programs || []
 )
 
-const pagination = computed(() => 
+const pagination = computed(() =>
   socialProgramListQuery.data.value?.data?.pagination
 )
 
