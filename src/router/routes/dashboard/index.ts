@@ -114,7 +114,7 @@ export const dashboardRoutes: RouteRecordRaw[] = [
     name: 'dashboard-foster-children-submissions',
     component : () => import('@/pages/dashboard/fosterchildren/SubmissionsPage.vue'),
     meta: { requiresAuth: true, title: 'Ajuan Anak Asuh'},
-  }
+  },
   {
     path: '/dashboard/socialprogram',
     name: 'dashboard-socialprogram',
