@@ -2,26 +2,33 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { jwtDecode } from 'jwt-decode'
 import { authService } from '@/services/auth.service'
-import type { UserProfile } from '@/types/auth'
+import type { UserProfile, UserJWTClaims } from '@/types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('token'))
   const user = ref<UserProfile | null>(null)
 
-  const isAuthenticated = computed(() => {
-    if (!token.value) return false
+  const decodedToken = computed(() => {
+    if (!token.value) return null
     try {
-      const decoded = jwtDecode<{ exp: number }>(token.value)
-      return decoded.exp > Date.now() / 1000
+      return jwtDecode<UserJWTClaims>(token.value)
     } catch {
-      return false
+      return null
     }
   })
 
-  const activeRole = computed(() => user.value?.active_role || null)
-  const roles = computed(() => user.value?.role || [])
+  const isAuthenticated = computed(() => {
+    if (!decodedToken.value) return false
+    return decodedToken.value.exp > Date.now() / 1000
+  })
 
-  const hasRole = (r: string) => roles.value.some((role) => role.toLowerCase() === r.toLowerCase())
+  const activeRole = computed(
+    () => user.value?.active_role || decodedToken.value?.active_role || null,
+  )
+  const roles = computed(() => user.value?.role || decodedToken.value?.role || [])
+
+  const hasRole = (r: string) =>
+    roles.value.some((role: string) => role.toLowerCase() === r.toLowerCase())
 
   const setToken = (newToken: string) => {
     token.value = newToken
