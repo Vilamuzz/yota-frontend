@@ -1,6 +1,6 @@
 import { ref, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { donationService } from '@/services/donationService'
+import { donationService } from '@/services/donation.service'
 import type { DonationParams } from '@/types/donation'
 
 export const usePublishedDonationList = (params: MaybeRefOrGetter<DonationParams>) => {

@@ -1,17 +1,36 @@
 <script setup lang="ts">
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseSkeleton from '@/components/atoms/BaseSkeleton.vue'
+import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { Share2, Flag, Heart, ArrowLeft } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePublishedDonationDetail } from '@/composables/donation/usePublishedDonationDetail'
-import { formatCurrency } from '@/utils/format'
+import { usePrayerList } from '@/composables/prayer/usePrayerList'
+import { usePrayerAmen } from '@/composables/prayer/usePrayerAmen'
+import { usePrayerReport } from '@/composables/prayer/usePrayerReport'
+import { formatCurrency, formatDate } from '@/utils/format'
 
 const route = useRoute()
 const donationSlug = computed(() => route.params.slug as string)
 
 const { publishedDonationDetailQuery, publishedDonationDetailError } =
   usePublishedDonationDetail(donationSlug)
+
+const donationId = computed(() => publishedDonationDetailQuery.data.value?.data?.id)
+const prayerParams = computed(() => ({
+  donation_id: donationId.value,
+}))
+const { prayerListQuery } = usePrayerList(prayerParams)
+
+// Prayer Mutations
+const { createMutation: amenMutation } = usePrayerAmen()
+const { createMutation: reportMutation } = usePrayerReport()
+
+// Report Modal State
+const showReportModal = ref(false)
+const reportPrayerId = ref<string>('')
+const reportReason = ref('')
 
 const program = computed(() => {
   const d = publishedDonationDetailQuery.data.value?.data
@@ -28,23 +47,27 @@ const program = computed(() => {
   }
 })
 
-const prays = [
-  {
-    name: 'Andi Kurniawan',
-    message: 'Semoga program ini sukses dan banyak anak yang terbantu!',
-    date: '2024-06-01',
-  },
-  {
-    name: 'Siti Aminah',
-    message: 'Saya ikut berdonasi, semoga bisa memberikan manfaat besar.',
-    date: '2024-06-02',
-  },
-  {
-    name: 'Budi Santoso',
-    message: 'Terima kasih sudah menginisiasi program yang luar biasa ini!',
-    date: '2024-06-03',
-  },
-]
+const prays = computed(() => {
+  return (
+    prayerListQuery.data.value?.data?.prayers.map((pray) => ({
+      id: pray.id,
+      name: pray.username,
+      message: pray.content,
+      amenCount: pray.amen_count,
+      isAmen: pray.is_amen,
+      date: formatDate(pray.created_at),
+    })) ?? []
+  )
+})
+
+type PrayerView = {
+  id: string
+  name: string
+  message: string
+  amenCount: number
+  isAmen: boolean
+  date: string
+}
 
 const remainingDays = computed(() => {
   const endDate = program.value?.endDate
@@ -72,19 +95,60 @@ const getInitials = (name: string) =>
     .map((word) => word?.[0]?.toUpperCase() ?? '')
     .join('')
 
-const aminCounts = ref<Record<number, number>>(Object.fromEntries(prays.map((_, i) => [i, 0])))
-const aminPublished = ref<Record<number, boolean>>(
-  Object.fromEntries(prays.map((_, i) => [i, false])),
-)
+// Local overrides so initial state comes from API, then user can toggle amen/disamen.
+const amenStateOverrides = ref<Record<string, boolean>>({})
+const amenCountOverrides = ref<Record<string, number>>({})
 
-const toggleAmin = (index: number) => {
-  if (aminPublished.value[index]) {
-    aminCounts.value[index] = (aminCounts.value[index] ?? 0) - 1
-    aminPublished.value[index] = false
-  } else {
-    aminCounts.value[index] = (aminCounts.value[index] ?? 0) + 1
-    aminPublished.value[index] = true
+const isPrayerAmened = (pray: PrayerView) => {
+  const overridden = amenStateOverrides.value[pray.id]
+  return overridden ?? pray.isAmen
+}
+
+const getPrayerAmenCount = (pray: PrayerView) => {
+  const overridden = amenCountOverrides.value[pray.id]
+  return overridden ?? pray.amenCount
+}
+
+const handleAmenPrayer = async (pray: PrayerView) => {
+  const previousState = isPrayerAmened(pray)
+  const previousCount = getPrayerAmenCount(pray)
+
+  const nextState = !previousState
+  const nextCount = nextState ? previousCount + 1 : Math.max(0, previousCount - 1)
+
+  amenStateOverrides.value[pray.id] = nextState
+  amenCountOverrides.value[pray.id] = nextCount
+
+  try {
+    await amenMutation.mutateAsync(pray.id)
+  } catch {
+    amenStateOverrides.value[pray.id] = previousState
+    amenCountOverrides.value[pray.id] = previousCount
   }
+}
+
+const openReportModal = (prayerId: string) => {
+  reportPrayerId.value = prayerId
+  reportReason.value = ''
+  showReportModal.value = true
+}
+
+const closeReportModal = () => {
+  showReportModal.value = false
+  reportPrayerId.value = ''
+  reportReason.value = ''
+}
+
+const handleReportPrayer = async () => {
+  if (!reportReason.value.trim()) {
+    return
+  }
+
+  await reportMutation.mutateAsync({
+    prayerID: reportPrayerId.value,
+    reason: reportReason.value,
+  })
+  closeReportModal()
 }
 
 const handleShare = () => {
@@ -256,8 +320,8 @@ const handleShare = () => {
       <!-- Prays(Comments) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
         <div
-          v-for="(pray, index) in prays"
-          :key="index"
+          v-for="pray in prays"
+          :key="pray.id"
           class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col gap-3"
         >
           <!-- Top: Avatar + Name/Date + Report -->
@@ -279,6 +343,8 @@ const handleShare = () => {
             <button
               class="text-gray-400 hover:text-red-500 transition-colors duration-200 shrink-0 mt-0.5"
               title="Laporkan"
+              :disabled="reportMutation.isPending.value"
+              @click="openReportModal(pray.id)"
             >
               <Flag :size="15" />
             </button>
@@ -292,14 +358,16 @@ const handleShare = () => {
             <button
               class="flex items-center gap-1.5 text-xs transition-colors duration-200"
               :class="
-                aminPublished[index]
+                isPrayerAmened(pray)
                   ? 'text-primary-400 font-semibold'
                   : 'text-gray-400 hover:text-primary-400'
               "
-              @click="toggleAmin(index)"
+              :disabled="amenMutation.isPending.value"
+              @click="handleAmenPrayer(pray)"
             >
-              <Heart :size="14" :fill="aminPublished[index] ? 'currentColor' : 'none'" />
-              <span>Amin{{ (aminCounts[index] ?? 0) > 0 ? ` · ${aminCounts[index]}` : '' }}</span>
+              <span>{{ getPrayerAmenCount(pray) }}</span>
+              <Heart :size="14" :fill="isPrayerAmened(pray) ? 'currentColor' : 'none'" />
+              <span>Amen</span>
             </button>
             <button
               class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary-400 transition-colors duration-200"
@@ -310,6 +378,13 @@ const handleShare = () => {
           </div>
         </div>
       </div>
+
+      <p
+        v-if="!prayerListQuery.isLoading.value && prays.length === 0"
+        class="text-sm text-gray-500 mt-2"
+      >
+        Belum ada doa untuk program ini.
+      </p>
     </div>
   </template>
 
@@ -317,4 +392,27 @@ const handleShare = () => {
   <div v-else class="flex items-center justify-center min-h-screen text-gray-500 text-center px-6">
     Data donasi tidak ditemukan.
   </div>
+
+  <!-- Report Modal -->
+  <ConfirmationModal
+    :show="showReportModal"
+    title="Laporkan Doa"
+    message="Silakan jelaskan mengapa Anda ingin melaporkan doa ini"
+    primary-button-text="Kirim Laporan"
+    secondary-button-text="Batal"
+    :primary-button-loading="reportMutation.isPending.value"
+    @primary="handleReportPrayer"
+    @secondary="closeReportModal"
+    @close="closeReportModal"
+  >
+    <div class="space-y-3">
+      <textarea
+        v-model="reportReason"
+        placeholder="Jelaskan alasan laporan Anda..."
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+        rows="4"
+      />
+      <p v-if="reportMutation.isError.value" class="text-red-500 text-sm">Gagal mengirim laporan</p>
+    </div>
+  </ConfirmationModal>
 </template>

@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import { authService } from '@/services/authService'
+import { authService } from '@/services/auth.service'
 
 const extractError = (err: any, fallback: string) =>
   err.response?.data?.message || err.message || fallback

@@ -1,6 +1,7 @@
 export const API = {
   AUTH_LOGIN: '/api/auth/login',
   AUTH_REGISTER: '/api/auth/register',
+  AUTH_SWITCH_ROLE: '/api/auth/switch-role',
   AUTH_VERIFY_EMAIL: '/api/auth/verify-email',
   AUTH_RESEND_VERIFICATION: '/api/auth/resend-verification',
   AUTH_FORGET_PASSWORD: '/api/auth/forget-password',
@@ -16,4 +17,8 @@ export const API = {
   DONATION_TRANSACTION_PUBLIC: '/api/public/donation-transactions',
   CHILDREN: '/api/children',
   CHILDREN_PUBLIC: '/api/public/children',
+  DONATION_EXPENSES: '/api/donation-expenses',
+  FINANCE_RECORDS: '/api/finance-records',
+  PRAYERS: '/api/prayers',
+  PRAYERS_PROTECTED: '/api/protected/prayers',
 }

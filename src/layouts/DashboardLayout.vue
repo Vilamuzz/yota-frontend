@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { Motion } from 'motion-v'
 import { useRoute, useRouter } from 'vue-router'
 import { useCurrentUser } from '@/composables/auth/useCurrentUser'
-import { ChevronDown, User, Settings, LogOut, ChevronRight } from 'lucide-vue-next'
+import { ChevronDown, User, Settings, LogOut, ChevronRight, Check } from 'lucide-vue-next'
 import { useLogout } from '@/composables/auth/useLogout'
 import { useMenuItems } from '@/composables/navigation/useMenuItems'
+import { useRoleSwitch } from '@/composables/auth/useRoleSwitch'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const { user } = useCurrentUser()
+const { switchRole, isLoading: isSwitchingRole } = useRoleSwitch()
 const route = useRoute()
 const router = useRouter()
 
@@ -43,11 +48,6 @@ const breadcrumbs = computed(() => {
 
 const showUserMenu = ref(false)
 
-const openMenu = ref<string | null>(null)
-
-const toggleMenu = (name: string) => {
-  openMenu.value = openMenu.value === name ? null : name
-}
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
 }
@@ -62,7 +62,7 @@ const getUserInitials = () => {
 }
 
 const getUserRole = () => {
-  return user.value?.role || 'User'
+  return authStore.activeRole || 'User'
 }
 
 const { logout } = useLogout()
@@ -217,46 +217,63 @@ const handleLogout = async () => {
             </button>
 
             <!-- Dropdown Menu -->
-            <transition
-              enter-active-class="transition ease-out duration-100"
-              enter-from-class="transform opacity-0 scale-95"
-              enter-to-class="transform opacity-100 scale-100"
-              leave-active-class="transition ease-in duration-75"
-              leave-from-class="transform opacity-100 scale-100"
-              leave-to-class="transform opacity-0 scale-95"
+            <Motion
+              v-if="showUserMenu"
+              :initial="{ opacity: 0, y: -10, scale: 0.95 }"
+              :animate="{ opacity: 1, y: 0, scale: 1 }"
+              :exit="{ opacity: 0, y: -10, scale: 0.95 }"
+              :transition="{ duration: 0.2 }"
+              class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
             >
-              <div
-                v-if="showUserMenu"
-                class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-              >
-                <!-- User Info in Dropdown -->
-                <div class="px-4 py-3 border-b border-gray-200">
-                  <div class="text-sm font-semibold text-gray-800">
-                    {{ user?.username || 'User' }}
-                  </div>
-                  <div class="text-xs text-gray-500">{{ user?.email }}</div>
+              <div class="px-4 py-3 border-b border-gray-200">
+                <div class="text-sm font-semibold text-gray-800">
+                  {{ user?.username || 'User' }}
                 </div>
-
-                <!-- Menu Items -->
-                <router-link
-                  to="/dashboard/profile"
-                  @click="showUserMenu = false"
-                  class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors duration-150"
-                >
-                  <User :size="16" />
-                  <span>My Profile</span>
-                </router-link>
-
-                <router-link
-                  to="/dashboard/settings"
-                  @click="showUserMenu = false"
-                  class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors duration-150"
-                >
-                  <Settings :size="16" />
-                  <span>Settings</span>
-                </router-link>
+                <div class="text-xs text-gray-500">{{ user?.email }}</div>
               </div>
-            </transition>
+
+              <!-- Role Switcher -->
+              <div v-if="authStore.roles.length > 1" class="py-2 border-b border-gray-200">
+                <div class="px-4 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Switch Role
+                </div>
+                <button
+                  v-for="role in authStore.roles"
+                  :key="role"
+                  @click="(switchRole(role), (showUserMenu = false))"
+                  :disabled="isSwitchingRole || authStore.activeRole === role"
+                  class="w-full text-left px-4 py-2 text-sm text-gray-700 flex items-center justify-between transition-colors duration-150"
+                  :class="[
+                    authStore.activeRole === role
+                      ? 'bg-primary-50 font-medium'
+                      : 'hover:bg-gray-100',
+                    isSwitchingRole ? 'opacity-50 cursor-not-allowed' : '',
+                  ]"
+                >
+                  <span>{{ role }}</span>
+                  <Check v-if="authStore.activeRole === role" :size="16" class="text-primary-600" />
+                </button>
+              </div>
+
+              <!-- Menu Items -->
+              <router-link
+                to="/dashboard/profile"
+                @click="showUserMenu = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors duration-150"
+              >
+                <User :size="16" />
+                <span>My Profile</span>
+              </router-link>
+
+              <router-link
+                to="/dashboard/settings"
+                @click="showUserMenu = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors duration-150"
+              >
+                <Settings :size="16" />
+                <span>Settings</span>
+              </router-link>
+            </Motion>
           </div>
         </div>
       </header>

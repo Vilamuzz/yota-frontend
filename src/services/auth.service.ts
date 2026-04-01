@@ -10,6 +10,7 @@ import type {
   CurrentUserResponse,
   UpdateUserProfileRequest,
   UpdateUserPasswordRequest,
+  SwitchRoleResponse,
 } from '@/types/auth'
 import type { ApiResponse } from '@/types/response'
 
@@ -58,6 +59,11 @@ export const authService = {
 
   updateCurrentUserPassword: async (data: UpdateUserPasswordRequest): Promise<ApiResponse> => {
     const response = await api.put<ApiResponse>(API.CURRENT_USER_PASSWORD, data)
+    return response.data
+  },
+
+  switchRole: async (role: string): Promise<SwitchRoleResponse> => {
+    const response = await api.post<SwitchRoleResponse>(API.AUTH_SWITCH_ROLE, { role })
     return response.data
   },
 }

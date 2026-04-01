@@ -16,7 +16,7 @@ const navLinks = [
   { label: 'Tentang', href: '/about' },
   { label: 'Donasi', href: '/donation' },
   { label: 'Program Sosial', href: '/social-program' },
-  { label: 'Anak Asuh', href: '/foster-children' },
+  { label: 'Anak Asuh', href: '/foster-child' },
   { label: 'Ambulans', href: '/ambulance' },
   { label: 'Berita', href: '/news' },
   { label: 'Laporan', href: '/reports' },
