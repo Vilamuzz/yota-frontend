@@ -18,6 +18,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   })
 
+  const activeRole = computed(() => user.value?.active_role || null)
+  const roles = computed(() => user.value?.role || [])
+
+  const hasRole = (r: string) => roles.value.some((role) => role.toLowerCase() === r.toLowerCase())
+
   const setToken = (newToken: string) => {
     token.value = newToken
     localStorage.setItem('token', newToken)
@@ -62,6 +67,9 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     user,
+    activeRole,
+    roles,
+    hasRole,
     isAuthenticated,
     isInitialized,
     initPromise,

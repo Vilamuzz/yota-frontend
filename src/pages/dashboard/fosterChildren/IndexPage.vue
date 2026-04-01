@@ -3,14 +3,14 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Eye, SquarePen, Trash2, PersonStanding, Plus } from 'lucide-vue-next'
-import { useChildList } from '@/composables/fosterChildrenTest/useChildList'
+import { useChildList } from '@/composables/fosterChildren/useFosterChildrenList'
 import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import type { Child, ChildParams } from '@/types/child'
+import type { Child, ChildParams } from '@/types/fosterChildren'
 
 const router = useRouter()
 

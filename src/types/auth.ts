@@ -42,7 +42,18 @@ export interface UserProfile {
   id: string
   username: string
   email: string
-  role: string
+  role: string[]
+  active_role: string
+}
+
+export interface UserJWTClaims {
+  user_id: string
+  role: string[]
+  active_role: string
+  exp: number
+  iat: number
+  iss: string
+  sub: string
 }
 
 export interface RegisterData {
@@ -53,6 +64,11 @@ export interface LoginData {
   token: string
 }
 
+export interface SwitchRoleData {
+  token: string
+}
+
 export type LoginResponse = Response<LoginData>
 export type RegisterResponse = Response<RegisterData>
 export type CurrentUserResponse = Response<UserProfile>
+export type SwitchRoleResponse = Response<SwitchRoleData>

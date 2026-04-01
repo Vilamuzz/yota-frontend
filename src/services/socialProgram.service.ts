@@ -1,12 +1,7 @@
-import type {
-  SocialProgramListResponse,
-  SocialProgramParams,
-} from '@/types/socialprogram'
+import type { SocialProgramListResponse, SocialProgramParams } from '@/types/socialProgram'
 
 export const socialProgramService = {
-  getSocialProgramList: async (
-    params: SocialProgramParams,
-  ): Promise<SocialProgramListResponse> => {
+  getSocialProgramList: async (params: SocialProgramParams): Promise<SocialProgramListResponse> => {
     // simulasi delay biar berasa API 😏
     await new Promise((resolve) => setTimeout(resolve, 500))
 

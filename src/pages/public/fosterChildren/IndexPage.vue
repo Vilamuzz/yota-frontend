@@ -5,7 +5,7 @@ import BaseLoading from '@/components/atoms/BaseLoading.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import ChildrenCard from '@/components/molecules/ChildrenCard.vue'
 import { computed, ref } from 'vue'
-import { usePublishedChildList } from '@/composables/fosterChildrenTest/usePublishedChildList'
+import { usePublishedChildList } from '@/composables/fosterChildren/usePublishedFosterChildrenList'
 
 const searchQuery = ref('')
 

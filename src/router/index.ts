@@ -14,7 +14,7 @@ router.beforeEach(async (to, _from, next) => {
 
   await authStore.initPromise
 
-  const role = authStore.user?.role || ''
+  const role = authStore.activeRole || ''
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return next('/login')

@@ -38,7 +38,7 @@ const goToForm = () => {
     </button>
 
     <!-- Title -->
-    <h1 class="text-lg md:text-xl font-bold text-[var(--color-primary-500)] line-clamp-1">
+    <h1 class="text-lg md:text-xl font-bold text-primary-500 line-clamp-1">
       {{ program.title }}
     </h1>
   </div>
@@ -51,14 +51,14 @@ const goToForm = () => {
   <!-- Content -->
   <div class="max-w-5xl mx-auto px-6 py-8 font-[Poppins]">
     <!-- Title -->
-    <h1 class="text-2xl font-bold text-[var(--color-primary-500)] mb-6">
+    <h1 class="text-2xl font-bold text-primary-500 mb-6">
       {{ program.title }}
     </h1>
 
     <!-- Minimum -->
     <div class="mb-4">
       <span class="text-gray-500 text-sm">Minimal</span>
-      <span class="text-[var(--color-primary-300)] font-bold text-2xl ml-2">
+      <span class="text-primary-300 font-bold text-2xl ml-2">
         Rp {{ formatRupiah(program.minimum) }}
       </span>
     </div>
