@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @font-face {
   font-family: 'Poppins';
   src: url('../fonts/poppins.medium.ttf') format('truetype');

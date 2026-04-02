@@ -37,15 +37,17 @@ defineEmits<{
 
     <div
       v-else-if="isEmpty"
-      class="p-6 text-center text-gray-500 min-h-[50vh] flex flex-col items-center justify-center"
+      class="p-6 text-center text-gray-500 min-h-[50vh] flex flex-col items-center justify-center dark:bg-[#121212] dark:border-gray-700"
     >
       <slot name="empty-icon" />
-      <p class="text-lg font-bold text-gray-700">{{ emptyMessage }}</p>
+      <p class="text-lg font-bold text-gray-700 dark:text-white">{{ emptyMessage }}</p>
     </div>
 
     <div v-else class="overflow-x-auto">
       <table class="w-full">
-        <thead class="bg-gray-100 border-b border-gray-200 text-gray-500">
+        <thead
+          class="bg-gray-100 border-b border-gray-200 text-gray-500 dark:bg-[#121212] dark:border-gray-700 dark:text-white"
+        >
           <tr>
             <slot name="headers" />
           </tr>

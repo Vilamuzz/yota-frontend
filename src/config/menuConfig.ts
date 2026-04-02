@@ -71,6 +71,7 @@ export const menuConfig: MenuItemConfig[] = [
     icon: Newspaper,
     label: 'News',
     name: 'news',
+    roles: ['publication_manager'],
     path: '/dashboard/news',
   },
 ]
