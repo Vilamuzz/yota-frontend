@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { userService } from '@/services/userService'
+import { userService } from '@/services/user.service'
 
 export const useDetailUser = (userId: string) => {
   const userDetailError = ref('')

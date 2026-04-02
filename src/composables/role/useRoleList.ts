@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { roleService } from '@/services/roleService'
+import { roleService } from '@/services/role.service'
 
 export const useRoleList = () => {
   const roleListError = ref('')

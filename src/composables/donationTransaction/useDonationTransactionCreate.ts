@@ -1,24 +1,13 @@
 import { ref } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import { donationTransactionService } from '@/services/donationTransactionService'
+import { donationTransactionService } from '@/services/donationTransaction.service'
 import type { CreateDonationTransactionRequest } from '@/types/donationTransaction'
-import { useAuthStore } from '@/stores/auth'
 
 export const useDonationTransactionCreate = () => {
-  const authStore = useAuthStore()
   const createError = ref('')
-
-  const getUserId = (): string => {
-    return authStore.user?.id ?? ''
-  }
-
   const createMutation = useMutation({
-    mutationFn: async (payload: Omit<CreateDonationTransactionRequest, 'user_id'>) => {
-      const data: CreateDonationTransactionRequest = {
-        ...payload,
-        user_id: getUserId(),
-      }
-
+    mutationFn: async (payload: CreateDonationTransactionRequest) => {
+      const data: CreateDonationTransactionRequest = { ...payload }
       try {
         const response = await donationTransactionService.createDonationTransaction(data)
         return response
@@ -40,6 +29,5 @@ export const useDonationTransactionCreate = () => {
   return {
     createMutation,
     createError,
-    getUserId,
   }
 }

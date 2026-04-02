@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import { authService } from '@/services/authService'
+import { authService } from '@/services/auth.service'
 import type { RegisterRequest } from '@/types/auth'
 
 const extractError = (err: any, fallback: string) =>

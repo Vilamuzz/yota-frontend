@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
-import { authService } from '@/services/authService'
+import { authService } from '@/services/auth.service'
 
 export const useOAuthCallback = () => {
   const authStore = useAuthStore()

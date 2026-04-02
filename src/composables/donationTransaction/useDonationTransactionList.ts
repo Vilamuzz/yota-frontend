@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { donationTransactionService } from '@/services/donationTransactionService'
+import { donationTransactionService } from '@/services/donationTransaction.service'
 import type { DonationTransactionParams } from '@/types/donationTransaction'
 
 export const useDonationTransactionList = (params: DonationTransactionParams) => {

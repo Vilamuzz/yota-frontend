@@ -45,14 +45,14 @@ const getIconClasses = (type: string) => {
 </script>
 
 <template>
-  <div class="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
+  <div class="fixed bottom-6 right-6 z-100 flex flex-col gap-3 pointer-events-none">
     <TransitionGroup
       enter-active-class="transition duration-300 ease-out"
-      enter-from-class="transform translate-y-8 opacity-0"
-      enter-to-class="transform translate-y-0 opacity-100"
-      leave-active-class="transition duration-200 ease-in absolute w-full"
-      leave-from-class="transform translate-y-0 opacity-100"
-      leave-to-class="transform translate-y-8 opacity-0"
+      enter-from-class="transform translate-x-16 opacity-0"
+      enter-to-class="transform translate-x-0 opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="transform translate-x-0 opacity-100"
+      leave-to-class="transform translate-x-16 opacity-0"
       move-class="transition duration-300 ease-in-out"
     >
       <div

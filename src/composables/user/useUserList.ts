@@ -1,6 +1,6 @@
 import { ref, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { userService } from '@/services/userService'
+import { userService } from '@/services/user.service'
 import type { UsersParams } from '@/types/users'
 
 export const useUserList = (params: MaybeRefOrGetter<UsersParams>) => {
