@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useToast } from '@/composables/ui/useToast'
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-vue-next'
+import { Motion, AnimatePresence } from 'motion-v'
 
 const { toasts, removeToast } = useToast()
 
@@ -46,18 +47,15 @@ const getIconClasses = (type: string) => {
 
 <template>
   <div class="fixed bottom-6 right-6 z-100 flex flex-col gap-3 pointer-events-none">
-    <TransitionGroup
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="transform translate-x-16 opacity-0"
-      enter-to-class="transform translate-x-0 opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="transform translate-x-0 opacity-100"
-      leave-to-class="transform translate-x-16 opacity-0"
-      move-class="transition duration-300 ease-in-out"
-    >
-      <div
+    <AnimatePresence>
+      <Motion
         v-for="toast in toasts"
         :key="toast.id"
+        :initial="{ opacity: 0, x: 20 }"
+        :animate="{ opacity: 1, x: 0 }"
+        :exit="{ opacity: 0, x: 20, scale: 0.95 }"
+        :transition="{ duration: 0.3 }"
+        layout
         class="pointer-events-auto flex items-start gap-3 w-80 p-4 shadow-lg rounded-r-lg border border-y border-r border-gray-100"
         :class="getToastClasses(toast.type)"
       >
@@ -72,7 +70,7 @@ const getIconClasses = (type: string) => {
         >
           <X class="w-4 h-4" />
         </button>
-      </div>
-    </TransitionGroup>
+      </Motion>
+    </AnimatePresence>
   </div>
 </template>
