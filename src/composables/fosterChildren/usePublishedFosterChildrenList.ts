@@ -1,7 +1,7 @@
 import { ref, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { childService } from '@/services/childService'
-import type { ChildParams } from '@/types/child'
+import { childService } from '@/services/fosterChildren.service'
+import type { ChildParams } from '@/types/fosterChildren'
 
 export const usePublishedChildList = (params: MaybeRefOrGetter<ChildParams>) => {
   const publishedChildListError = ref('')

@@ -5,14 +5,13 @@ import BaseLoading from '@/components/atoms/BaseLoading.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import ChildrenCard from '@/components/molecules/ChildrenCard.vue'
 import { computed, ref } from 'vue'
-import { usePublishedChildList } from '@/composables/fosterchildren/usePublishedChildList'
+import { usePublishedChildList } from '@/composables/fosterChildren/usePublishedFosterChildrenList'
 
 const searchQuery = ref('')
 
 const params = computed(() => ({
   search: searchQuery.value || undefined,
 }))
-
 
 const { publishedChildListQuery, publishedChildListError } = usePublishedChildList(params)
 

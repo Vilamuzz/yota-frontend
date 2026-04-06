@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import { donationService } from '@/services/donationService'
+import { donationService } from '@/services/donation.service'
 import type { UpdateDonationRequest } from '@/types/donation'
 
 export const useDonationUpdate = () => {

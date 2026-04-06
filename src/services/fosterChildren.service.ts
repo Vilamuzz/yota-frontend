@@ -4,7 +4,7 @@ import type {
   ChildListResponse,
   ChildResponse,
   ChildParams,
-} from '@/types/child'
+} from '@/types/fosterChildren'
 import { api } from '@/utils/api'
 
 export const childService = {

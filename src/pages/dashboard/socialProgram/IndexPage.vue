@@ -4,14 +4,14 @@ import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Eye, SquarePen, Trash2, Users, Plus } from 'lucide-vue-next'
 
-import { useSocialProgramList } from "@/composables/socialprogram/useSocialProgramList";
+import { useSocialProgramList } from '@/composables/socialProgram/useSocialProgramList'
 import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import type { SocialProgram, SocialProgramParams } from '@/types/socialprogram'
+import type { SocialProgram, SocialProgramParams } from '@/types/socialProgram'
 
 const router = useRouter()
 
@@ -71,13 +71,11 @@ const queryClient = useQueryClient()
 // 🔥 FIX DI SINI
 const { socialProgramListQuery } = useSocialProgramList(queryParams)
 
-const programs = computed<SocialProgram[]>(() => 
-  socialProgramListQuery.data.value?.data?.programs || []
+const programs = computed<SocialProgram[]>(
+  () => socialProgramListQuery.data.value?.data?.programs || [],
 )
 
-const pagination = computed(() => 
-  socialProgramListQuery.data.value?.data?.pagination
-)
+const pagination = computed(() => socialProgramListQuery.data.value?.data?.pagination)
 
 const handleNextPage = () => {
   if (pagination.value?.has_next && pagination.value.next_cursor) {
@@ -160,32 +158,22 @@ const handleEdit = (program: SocialProgram) => {
     <template #title>
       <div>
         <h1 class="text-2xl font-semibold text-gray-800">Data Program</h1>
-        <p class="text-sm text-gray-400 mt-1">
-          Manajemen Program > Data Program
-        </p>
+        <p class="text-sm text-gray-400 mt-1">Manajemen Program > Data Program</p>
       </div>
     </template>
 
     <!-- CONTAINER -->
     <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
-
       <!-- CARD -->
       <div class="bg-white rounded-xl border border-gray-200 px-6 py-5">
-
         <!-- TOP BAR -->
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-base font-semibold text-gray-700">
-            Kelola Data Program Sosial
-          </h2>
+          <h2 class="text-base font-semibold text-gray-700">Kelola Data Program Sosial</h2>
 
           <div class="flex items-center gap-2">
-
             <!-- SEARCH -->
             <div class="w-64">
-              <BaseSearch
-                v-model="searchQuery"
-                placeholder="Cari Program"
-              />
+              <BaseSearch v-model="searchQuery" placeholder="Cari Program" />
             </div>
 
             <!-- FILTER -->
@@ -231,13 +219,11 @@ const handleEdit = (program: SocialProgram) => {
               <Plus :size="16" />
               Tambah Program
             </BaseButton>
-
           </div>
         </div>
 
         <!-- TABLE -->
         <div class="overflow-hidden rounded-lg border border-gray-200">
-
           <BaseTable
             :loading="socialProgramListQuery.isPending.value"
             loading-message="Loading programs..."
@@ -251,14 +237,14 @@ const handleEdit = (program: SocialProgram) => {
             @next="handleNextPage"
           >
             <!-- HEADER -->
-                <template #headers>
-                <th class="px-5 py-3 text-left">No</th>
-                <th class="px-5 py-3 text-left">Nama Program</th>
-                <th class="px-5 py-3 text-right">Total Subscriber</th>
-                <th class="px-5 py-3 text-center">Status</th>
-                <th class="px-5 py-3 text-left">Tanggal Ditambahkan</th>
-                <th class="px-5 py-3 text-center">Aksi</th>
-                </template>
+            <template #headers>
+              <th class="px-5 py-3 text-left">No</th>
+              <th class="px-5 py-3 text-left">Nama Program</th>
+              <th class="px-5 py-3 text-right">Total Subscriber</th>
+              <th class="px-5 py-3 text-center">Status</th>
+              <th class="px-5 py-3 text-left">Tanggal Ditambahkan</th>
+              <th class="px-5 py-3 text-center">Aksi</th>
+            </template>
 
             <!-- ROW -->
             <template #rows>
@@ -282,19 +268,16 @@ const handleEdit = (program: SocialProgram) => {
                 <!-- STATUS -->
                 <td class="px-5 py-4 text-center">
                   <span
-                    :class="[
-                      'px-2.5 py-1 text-xs rounded-full',
-                      getStatusColor(program.status)
-                    ]"
+                    :class="['px-2.5 py-1 text-xs rounded-full', getStatusColor(program.status)]"
                   >
                     {{
-                    program.status === 'active'
+                      program.status === 'active'
                         ? 'Berjalan'
                         : program.status === 'pending'
-                        ? 'Pending'
-                        : program.status === 'completed'
-                        ? 'Selesai'
-                        : program.status
+                          ? 'Pending'
+                          : program.status === 'completed'
+                            ? 'Selesai'
+                            : program.status
                     }}
                   </span>
                 </td>
@@ -321,7 +304,6 @@ const handleEdit = (program: SocialProgram) => {
             </template>
           </BaseTable>
         </div>
-
       </div>
     </div>
   </DashboardLayout>

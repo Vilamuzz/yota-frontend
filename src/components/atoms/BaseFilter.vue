@@ -21,7 +21,7 @@ const closeDropdown = () => {
   <div class="relative">
     <button
       @click="showFilterDropdown = !showFilterDropdown"
-      class="flex items-center gap-2 p-2 border border-gray-300 rounded-sm bg-primary-300 hover:bg-primary-400 transition-colors duration-150 text-sm font-medium text-white h-9.5"
+      class="flex items-center gap-2 p-2 border border-gray-300 rounded-sm bg-primary-300 hover:bg-primary-400 transition-colors duration-150 text-sm font-medium text-white h-9.5 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
       :class="hasActiveFilters ? 'ring-2 ring-primary-500 ring-offset-1' : ''"
     >
       <Filter :size="18" />

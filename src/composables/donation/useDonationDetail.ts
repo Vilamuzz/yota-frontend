@@ -1,4 +1,4 @@
-import { donationService } from '@/services/donationService'
+import { donationService } from '@/services/donation.service'
 import { useQuery } from '@tanstack/vue-query'
 import { ref } from 'vue'
 
