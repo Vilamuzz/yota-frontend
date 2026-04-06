@@ -18,8 +18,10 @@ defineEmits<{
 
 const router = useRouter()
 
-const formAjuanAnakAsuh = () => {
-  router.push('/form-ajuan-anak-asuh')
+const handleForm = () => {
+  router.push({name: 'foster-children-form',
+              params: {
+                slug: 'foster-children-submission' }})
 }
 </script>
 
@@ -45,7 +47,7 @@ const formAjuanAnakAsuh = () => {
       </div>
 
       <!-- button -->
-      <BaseButton color="primary" class="flex items-center gap-2" @click="formAjuanAnakAsuh">
+      <BaseButton color="primary" class="flex items-center gap-2" @click="handleForm">
         <Plus :size="16" />
         Ajukan Anak Asuh
       </BaseButton>
