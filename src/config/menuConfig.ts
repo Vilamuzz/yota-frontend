@@ -1,5 +1,5 @@
 import type { Component } from 'vue'
-import { Home, Newspaper, Users, CirclePoundSterling } from 'lucide-vue-next'
+import { Home, Newspaper, Users, CirclePoundSterling, Notebook, NotebookIcon, NotebookTabs, NotepadText } from 'lucide-vue-next'
 
 export interface MenuItemConfig {
   icon?: Component
@@ -65,6 +65,16 @@ export const menuConfig: MenuItemConfig[] = [
         name: 'dashboard-donation-expense',
         path: '/dashboard/expense/donation',
       },
+      {
+        label: 'Program Sosial',
+        name: 'social-program-expense',
+        path: '/dashboard/expense/social-program',
+      },
+      {
+        label: 'Anak Asuh',
+        name: 'foster-children-expense',
+        path: '/dashboard/expense/foster-children',
+      },
     ],
   },
   {
@@ -73,5 +83,30 @@ export const menuConfig: MenuItemConfig[] = [
     name: 'news',
     roles: ['publication_manager'],
     path: '/dashboard/news',
+  },
+
+  // PROGRAM SOSIAL
+  {
+    icon: NotepadText,
+    label: 'Manajemen Program',
+    name: 'social-program-group',
+    roles: ['social_manager'],
+    children: [
+      {
+        label: 'Data Program',
+        name: 'dashboard-social-program', // Sinkron dengan router
+        path: '/dashboard/social-program', // Sinkron dengan router
+      },
+      {
+        label: 'Riwayat Langganan',
+        name: 'dashboard-social-program-subscriptions', // Sinkron dengan router
+        path: '/dashboard/social-program/subscriptions', // Sinkron dengan router
+      },
+      {
+        label: 'Riwayat Pelanggan',
+        name: 'dashboard-social-program-customers', // Sinkron dengan router
+        path: '/dashboard/social-program/customers', // Sinkron dengan router
+      },
+    ],
   },
 ]
