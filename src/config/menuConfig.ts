@@ -71,7 +71,7 @@ export const menuConfig: MenuItemConfig[] = [
     icon: PersonStanding,
     label: 'Anak Asuh',
     name: 'foster-children',
-    roles: ['social-manager'],
+    roles: ['social_manager'],
     children: [
       {
         label: 'Data Anak Asuh',
