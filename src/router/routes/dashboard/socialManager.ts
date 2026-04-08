@@ -53,6 +53,18 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         component: () => import('@/pages/dashboard/socialProgram/EditPage.vue'),
         meta: { requiresAuth: true, title: 'Edit Program' },
       },
+      {
+        path: 'social-program/subscriptions',
+        name: 'dashboard-social-program-subscriptions',
+        component: () => import('@/pages/dashboard/socialProgram/SubscriptionHistoryPage.vue'),
+        meta: { requiresAuth: true, title: 'Riwayat Langganan' },
+      },
+      {
+        path: 'social-program/customers',
+        name: 'dashboard-social-program-customers',
+        component: () => import('@/pages/dashboard/socialProgram/CustomerHistoryPage.vue'),
+        meta: { requiresAuth: true, title: 'Riwayat Pelanggan' },
+      },
     ],
   },
 ]
