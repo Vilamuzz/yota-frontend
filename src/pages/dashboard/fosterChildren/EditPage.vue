@@ -1,17 +1,41 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import { useChildCreate } from '@/composables/fosterChildren/useFosterChildrenCreate'
+import { useFosterChildrenUpdate } from '@/composables/fosterChildren/useFosterChildrenUpdate'
+import { useFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenDetail'
 import { createChildSchema } from '@/schemas/fosterChildren.schema'
 import { getZodErrors } from '@/utils/zodError'
 import { ArrowLeft, PersonStanding, Trash2, Eye, X, Plus } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import router from '@/router'
 
-const router = useRouter()
-const { createMutation, createError } = useChildCreate()
+const route = useRoute()
+const childId = route.params.id as string
 
+const { updateFosterChildMutation, updateError } = useFosterChildrenUpdate()
+const { childDetailQuery } = useFosterChildrenDetail(childId)
+
+watch(
+  () => childDetailQuery.data.value,
+  (response) => {
+    if (response?.data) {
+      const child = response.data
+      name.value = child.name
+      gender.value = child.gender as 'laki-laki' | 'perempuan'
+      category.value = child.category as 'yatim' | 'piatu' | 'yatim-piatu'
+      birthplace.value = child.birthplace
+      birthdate.value = child.birth_date
+      address.value = child.address
+      achievements.value = child.achievements || []
+      status.value = Boolean(child.status)
+      imagePreview.value = child.image_url
+      certificatePreviews.value = child.certificates?.map((cert) => cert.file_url) || []
+    }
+  },
+  { immediate: true }
+)
 const name = ref('')
 const gender = ref<'laki-laki' | 'perempuan' | ''>('')
 const category = ref<'yatim' | 'piatu' | 'yatim-piatu' | ''>('')
@@ -28,26 +52,22 @@ const certificatePreviews = ref<string[]>([])
 const status = ref<boolean | null>(null)
 const errors = ref<Record<string, string>>({})
 
+const addAchievement = () => {
+  if (achievementInput.value.trim()) {
+    achievements.value.push(achievementInput.value.trim())
+    achievementInput.value = ''
+  }
+}
+const removeAchievement = (index: number) => {
+  achievements.value.splice(index, 1)
+}
+
 const genders = ['laki-laki', 'perempuan']
 
 const categories = ['yatim', 'piatu', 'yatim piatu']
 
-const isLoading = computed(() => createMutation.isPending.value)
-const isSuccess = computed(() => createMutation.isSuccess.value)
-
-const addAchievement = () => {
-  if (achievementInput.value.trim()) {
-    achievements.value.push(
-      achievementInput.value.trim()
-    )
-
-    achievementInput.value = ''
-  }
-}
-
-const removeAchievement = (index: number) => {
-  achievements.value.splice(index, 1)
-}
+const isLoading = computed(() => updateFosterChildMutation.isPending.value)
+const isSuccess = computed(() => updateFosterChildMutation.isSuccess.value)
 
 const imageInputRef = ref<HTMLInputElement | null>(null)
 
@@ -170,7 +190,9 @@ const validate = () => {
 const handleSubmit = async () => {
   if (!validate()) return
 
-  await createMutation.mutateAsync({
+  await updateFosterChildMutation.mutateAsync({
+  childId,
+  data: {
     name: name.value.trim(),
     gender: gender.value as 'laki-laki' | 'perempuan',
     category: category.value as 'yatim' | 'piatu' | 'yatim-piatu',
@@ -179,11 +201,12 @@ const handleSubmit = async () => {
     address: address.value.trim(),
     achievements: achievements.value,
     image: image.value!,
-    certificates: certificates.value!,
+    certificates: certificates.value,
     status: status.value!,
-  })
+  }
+})
 
-  if (createMutation.isSuccess.value) {
+  if (updateFosterChildMutation.isSuccess.value) {
     setTimeout(() => {
       router.push({ name: 'dashboard-foster-children' })
     }, 1200)
@@ -225,9 +248,9 @@ const isSubmitDisabled = computed(() => {
             <PersonStanding :size="24" class="text-primary-400" />
           </div>
           <div>
-            <h2 class="text-xl font-bold text-gray-900">Tambah Anak Asuh Baru</h2>
+            <h2 class="text-xl font-bold text-gray-900">Edit Anak Asuh</h2>
             <p class="text-sm text-gray-500">
-              Lengkapi informasi berikut untuk menambahkan anak asuh baru.
+              Perbarui informasi berikut untuk mengubah anak asuh.
             </p>
           </div>
         </div>
@@ -249,12 +272,12 @@ const isSubmitDisabled = computed(() => {
               clip-rule="evenodd"
             />
           </svg>
-          Anak Asuh berhasil ditambahkan
+          Anak Asuh berhasil diubah
         </div>
       </transition>
 
       <div
-        v-if="createError"
+        v-if="updateError"
         class="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
       >
         <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -264,7 +287,7 @@ const isSubmitDisabled = computed(() => {
             clip-rule="evenodd"
           />
         </svg>
-        {{ createError }}
+        {{ updateError }}
       </div>
 
       <form
@@ -605,8 +628,8 @@ const isSubmitDisabled = computed(() => {
             :disabled="isSubmitDisabled"
             class="disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <template #loading>Tambah..</template>
-            Tambahkan Anak Asuh
+            <template #loading>Simpan..</template>
+            Simpan Anak Asuh
           </BaseButton>
         </div>
       </form>

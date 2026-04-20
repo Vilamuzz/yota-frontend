@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 export const socialManagerRoutes: RouteRecordRaw[] = [
   {
     path: '',
-    meta: { role: 'social-manager' },
+    meta: { role: 'social_manager' },
     children: [
       {
         path: 'foster-children',
@@ -15,7 +15,19 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         path: 'foster-children/create',
         name: 'dashboard-foster-children-create',
         component: () => import('@/pages/dashboard/fosterChildren/CreatePage.vue'),
-        meta: { requiresAuth: true, title: 'Data Anak Asuh' },
+        meta: { title: ' Tambah Data Anak Asuh', activeMenu:'dashboard-foster-children' },
+      },
+      {
+        path: 'foster-children/:id/edit',
+        name: 'dashboard-foster-children-edit',
+        component: () => import('@/pages/dashboard/fosterChildren/EditPage.vue'),
+        meta: { title: 'Edit Data Anak Asuh', activeMenu:'dashboard-foster-children' },
+      },
+      {
+        path: 'foster-children/:id/detail',
+        name: 'dashboard-foster-children-detail',
+        component: () => import('@/pages/dashboard/fosterChildren/DetailPage.vue'),
+        meta: { title: 'Detail Anak Asuh', activeMenu:'dashboard-foster-children' },
       },
       {
         path: 'foster-children/submissions',

@@ -8,8 +8,9 @@ export interface Child {
   birthplace: string
   birth_date: string
   address: string
-  gender: 'laki-laki' | 'perempuan'
-  category: 'yatim' | 'piatu' | 'yatim-piatu'
+  gender: 'Laki-laki' | 'Perempuan'
+  category: 'Yatim' | 'Piatu' | 'Yatim Piatu'
+  achievements: string[]
   status: string
   image_url: string
   certificates: Certificates[]
@@ -46,6 +47,21 @@ export interface CreateChildRequest {
   address?: string
   gender?: 'laki-laki' | 'perempuan'
   category?: 'yatim' | 'piatu' | 'yatim-piatu'
+  achievements?: string[]
+  status?: boolean
+  image?: File
+  certificates?: File[]
+}
+
+export interface UpdateChildRequest {
+  name?: string
+  age?: number
+  birthplace?: string
+  birth_date?: string
+  address?: string
+  gender?: 'laki-laki' | 'perempuan'
+  category?: 'yatim' | 'piatu' | 'yatim-piatu'
+  achievements?: string[]
   status?: boolean
   image?: File
   certificates?: File[]

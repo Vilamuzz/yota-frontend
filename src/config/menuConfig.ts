@@ -1,5 +1,5 @@
 import type { Component } from 'vue'
-import { Home, Newspaper, Users, CirclePoundSterling } from 'lucide-vue-next'
+import { Home, Newspaper, Users, CirclePoundSterling, PersonStanding } from 'lucide-vue-next'
 
 export interface MenuItemConfig {
   icon?: Component
@@ -64,6 +64,24 @@ export const menuConfig: MenuItemConfig[] = [
         label: 'Donasi',
         name: 'dashboard-donation-expense',
         path: '/dashboard/expense/donation',
+      },
+    ],
+  },
+  {
+    icon: PersonStanding,
+    label: 'Anak Asuh',
+    name: 'foster-children',
+    roles: ['social_manager'],
+    children: [
+      {
+        label: 'Data Anak Asuh',
+        name: 'dashboard-foster-children',
+        path: '/dashboard/foster-children',
+      },
+      {
+        label: 'Ajuan Anak Asuh',
+        name: 'dashboard-foster-children-submissions',
+        path: '/dashboard/foster-children/submissions',
       },
     ],
   },

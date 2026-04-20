@@ -4,6 +4,7 @@ import type {
   ChildListResponse,
   ChildResponse,
   ChildParams,
+  UpdateChildRequest,
 } from '@/types/fosterChildren'
 import { api } from '@/utils/api'
 
@@ -25,6 +26,13 @@ export const childService = {
 
   createChild: async (data: CreateChildRequest) => {
     const response = await api.post(`${API.CHILDREN}/`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+
+  updateChild: async (childId: string, data: UpdateChildRequest) => {
+    const response = await api.put(`${API.CHILDREN}/${childId}`, data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data

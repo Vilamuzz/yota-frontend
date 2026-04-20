@@ -1,21 +1,18 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Eye, SquarePen, Trash2, PersonStanding, Plus } from 'lucide-vue-next'
-import { useChildList } from '@/composables/fosterChildren/useFosterChildrenList'
-import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import type { Child, ChildParams } from '@/types/fosterChildren'
+import type { Child } from '@/types/fosterChildren'
 
 const router = useRouter()
 
 const searchQuery = ref('')
-const debouncedSearchQuery = ref('')
 const selectedGender = ref('all')
 const selectedCategory = ref('all')
 const selectedStatus = ref('all')
@@ -23,71 +20,66 @@ const selectedStatus = ref('all')
 const limit = ref(10)
 const limitOptions = [10, 25, 50, 100]
 
-let searchTimeout: ReturnType<typeof setTimeout>
-watch(searchQuery, (newValue) => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    debouncedSearchQuery.value = newValue
-  }, 500)
-})
-
-const currentNextCursor = ref<string | undefined>(undefined)
-const currentPrevCursor = ref<string | undefined>(undefined)
-const direction = ref<'next' | 'prev' | undefined>(undefined)
 const pageOffset = ref(0)
 
-const queryParams = computed<ChildParams>(() => {
-  const params: ChildParams = { limit: limit.value }
-
-  if (direction.value === 'next' && currentNextCursor.value) {
-    params.next_cursor = currentNextCursor.value
-  } else if (direction.value === 'prev' && currentPrevCursor.value) {
-    params.prev_cursor = currentPrevCursor.value
+const children = ref<Child[]>([
+  {
+    id: '1',
+    name: 'Faris Ahad',
+    slug: 'faris-ahad',
+    gender: 'Laki-laki',
+    category: 'Yatim',
+    age: 10,
+    birthplace: 'Bandung',
+    birth_date: '2014-05-10',
+    address: 'Jl. Melati No. 12 Bandung',
+    image_url: 'https://i.pravatar.cc/150?img=1',
+    achievements: ['Juara 1 Lomba Menggambar 2023', 'Juara 2 Lomba Cerdas Cermat 2024'],
+    certificates: [],
+    status: 'aktif',
+    created_at: '2024-01-01',
+  },
+  {
+    id: '2',
+    name: 'Tia Mutiara',
+    slug: 'tia-mutiara',
+    gender: 'Perempuan',
+    category: 'Piatu',
+    age: 9,
+    birthplace: 'Garut',
+    birth_date: '2015-02-15',
+    address: 'Jl. Mawar No. 5 Garut',
+    image_url: 'https://i.pravatar.cc/150?img=2',
+    achievements: ['Juara 3 Lomba Menulis Cerpen 2023'],
+    certificates: [],
+    status: 'aktif',
+    created_at: '2024-01-02',
+  },
+  {
+    id: '3',
+    name: 'Ahmad Rizki',
+    slug: 'ahmad-rizki',
+    gender: 'Laki-laki',
+    category: 'Yatim Piatu',
+    age: 11,
+    birthplace: 'Tasikmalaya',
+    birth_date: '2013-08-20',
+    address: 'Jl. Anggrek No. 9 Tasikmalaya',
+    image_url: 'https://i.pravatar.cc/150?img=3',
+    achievements: ['Juara 1 Lomba Pidato 2023', 'Juara 2 Lomba Matematika 2024'],
+    certificates: [],
+    status: 'lulus',
+    created_at: '2024-01-03',
   }
+])
 
-  if (debouncedSearchQuery.value) {
-    params.search = debouncedSearchQuery.value
-  }
-
-  if (selectedStatus.value !== 'all') {
-    params.status = selectedStatus.value
-  }
-
-  return params
+const pagination = ref({
+  has_prev: false,
+  has_next: false
 })
 
-const resetPagination = () => {
-  currentNextCursor.value = undefined
-  currentPrevCursor.value = undefined
-  direction.value = undefined
-  pageOffset.value = 0
-}
-
-watch([debouncedSearchQuery, selectedStatus, limit], () => {
-  resetPagination()
-})
-
-const queryClient = useQueryClient()
-
-const { childListQuery } = useChildList(queryParams)
-const children = computed<Child[]>(() => (childListQuery.data.value?.data?.child as Child[]) ?? [])
-const pagination = computed(() => childListQuery.data.value?.data?.pagination)
-
-const handleNextPage = () => {
-  if (pagination.value?.has_next && pagination.value.next_cursor) {
-    currentNextCursor.value = pagination.value.next_cursor
-    direction.value = 'next'
-    pageOffset.value += 1
-  }
-}
-
-const handlePrevPage = () => {
-  if (pagination.value?.has_prev && pagination.value.prev_cursor) {
-    currentPrevCursor.value = pagination.value.prev_cursor
-    direction.value = 'prev'
-    pageOffset.value -= 1
-  }
-}
+const handleNextPage = () => {}
+const handlePrevPage = () => {}
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -108,14 +100,12 @@ const deleteChild = (child: Child) => {
 
 const handleConfirmDelete = async () => {
   if (!confirmChild.value) return
-  queryClient.invalidateQueries({ queryKey: ['child'] })
   confirmShow.value = false
   confirmChild.value = null
 }
 
 const clearFilters = () => {
   searchQuery.value = ''
-  debouncedSearchQuery.value = ''
   selectedGender.value = 'all'
   selectedCategory.value = 'all'
   selectedStatus.value = 'all'
@@ -126,7 +116,7 @@ const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
 const statuses = ['all', 'aktif', 'lulus']
 
 const handleView = (child: Child) => {
-  console.log('Lihat anak asuh:', child.id)
+  router.push({ name: 'dashboard-foster-children-detail', params: { id: child.id } })
 }
 const handleCreate = () => {
   router.push({ name: 'dashboard-foster-children-create' })
@@ -219,7 +209,8 @@ const handleEdit = (child: Child) => {
     </div>
 
     <BaseTable
-      :loading="childListQuery.isPending.value"
+      class="mt-6"
+      :loading="false"
       loading-message="Memuat data anak asuh..."
       :is-empty="children.length === 0"
       empty-message="Tidak ada anak asuh yang ditemukan."
@@ -235,19 +226,19 @@ const handleEdit = (child: Child) => {
       </template>
 
       <template #headers>
-        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
-        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+        <th class="px-6 py-2 text-center text-xs font-medium uppercase tracking-wider">No</th>
+        <th class="px-6 py-2 text-center text-xs font-medium uppercase tracking-wider">
           Nama Anak Asuh
         </th>
-        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+        <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
           Jenis Kelamin
         </th>
-        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Kategori</th>
-        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+        <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Kategori</th>
+        <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
           Tanggal Ditambahkan
         </th>
-        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
-        <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Aksi</th>
+        <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
+        <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Aksi</th>
       </template>
 
       <template #rows>
