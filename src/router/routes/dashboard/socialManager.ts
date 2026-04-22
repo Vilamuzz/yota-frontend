@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 export const socialManagerRoutes: RouteRecordRaw[] = [
   {
     path: '',
-    meta: { role: 'social_manager' },
+    meta: { role: 'social_manager' }, // Sinkronisasi dengan menuConfig yang menggunakan underscore
     children: [
       {
         path: 'foster-children',

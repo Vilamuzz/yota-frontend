@@ -139,8 +139,9 @@ const clearFilters = () => {
 
 const statuses = ['all', 'active', 'pending', 'completed']
 
+// Navigasi ke halaman create program
 const handleCreate = () => {
-  router.push({ name: 'dashboard-socialprogram-create' })
+  router.push({ name: 'dashboard-social-program-create' }) // Sinkron dengan router di socialManager.ts
 }
 
 const handleView = (program: SocialProgram) => {
@@ -148,7 +149,7 @@ const handleView = (program: SocialProgram) => {
 }
 
 const handleEdit = (program: SocialProgram) => {
-  router.push({ name: 'dashboard-socialprogram-edit', params: { id: program.id } })
+  router.push({ name: 'dashboard-social-program-edit', params: { id: program.id } }) // Sinkron dengan router
 }
 </script>
 
