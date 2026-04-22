@@ -145,11 +145,19 @@ const handleCreate = () => {
 }
 
 const handleView = (program: SocialProgram) => {
-  console.log('View program:', program.id)
+  router.push({
+    name: 'dashboard-social-program-detail',
+    params: { id: program.id.toString() },
+    query: { program: JSON.stringify(program) },
+  })
 }
 
 const handleEdit = (program: SocialProgram) => {
-  router.push({ name: 'dashboard-social-program-edit', params: { id: program.id } }) // Sinkron dengan router
+  router.push({
+    name: 'dashboard-social-program-edit',
+    params: { id: program.id.toString() },
+    query: { program: JSON.stringify(program) },
+  })
 }
 </script>
 

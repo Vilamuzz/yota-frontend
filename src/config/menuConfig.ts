@@ -96,24 +96,6 @@ export const menuConfig: MenuItemConfig[] = [
     ],
   },
   {
-    icon: PersonStanding,
-    label: 'Anak Asuh',
-    name: 'foster-children',
-    roles: ['social_manager'],
-    children: [
-      {
-        label: 'Data Anak Asuh',
-        name: 'dashboard-foster-children',
-        path: '/dashboard/foster-children',
-      },
-      {
-        label: 'Ajuan Anak Asuh',
-        name: 'dashboard-foster-children-submissions',
-        path: '/dashboard/foster-children/submissions',
-      },
-    ],
-  },
-  {
     icon: Newspaper,
     label: 'News',
     name: 'news',

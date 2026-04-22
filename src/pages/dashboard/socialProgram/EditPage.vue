@@ -1,22 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { ArrowLeft, Upload, X } from 'lucide-vue-next'
 
-// ⬇️ nanti ini kamu bikin (mirip donation)
-//import { useSocialProgramDetail } from '@/composables/socialProgram/useSocialProgramDetail'
-//import { useSocialProgramUpdate } from '@/composables/socialProgram/useSocialProgramUpdate'
-
 const router = useRouter()
 const route = useRoute()
 const programId = route.params.id as string
-
-// API
-//const { socialProgramDetailQuery } = useSocialProgramDetail(programId)
-//const { updateSocialProgramMutation } = useSocialProgramUpdate()
+const program = route.query.program ? JSON.parse(route.query.program as string) : null
 
 // FORM
 const name = ref('')
@@ -33,23 +26,27 @@ const status = ref('pending')
 const errors = ref<Record<string, string>>({})
 
 // LOADING
-const isFetching = computed(() => socialProgramDetailQuery.isPending.value)
-const isLoading = computed(() => updateSocialProgramMutation.isPending.value)
+const isFetching = ref(false)
+const isLoading = ref(false)
 
 // PREFILL DATA 🔥
-import { onMounted } from 'vue'
-
 onMounted(() => {
-  // 🎭 dummy data
-  name.value = 'Program Beasiswa Anak Negeri'
-  description.value = 'Program bantuan pendidikan untuk anak kurang mampu'
-  minPayment.value = '50000'
-  billingDate.value = '2026-04-10'
+  if (program) {
+    // Load data dari program yang dikirim
+    name.value = program.name || ''
+    description.value = program.description || ''
+    minPayment.value = program.min_payment || ''
+    billingDate.value = program.billing_date || ''
+    status.value = program.status || 'pending'
+  } else {
+    // 🎭 dummy data jika tidak ada data dari route
+    name.value = 'Program Beasiswa Anak Negeri'
+    description.value = 'Program bantuan pendidikan untuk anak kurang mampu'
+    minPayment.value = '50000'
+    billingDate.value = '2026-04-10'
+  }
 
-  previews.value = [
-    'dummy-file-1.jpg',
-    'dummy-file-2.mp4'
-  ]
+  previews.value = program?.media || []
 })
 
 // FILE HANDLER
@@ -98,19 +95,20 @@ const handleSubmit = async () => {
     min_payment: Number(minPayment.value),
     billing_date: billingDate.value,
     media: mediaFiles.value,
+    status: status.value,
   })
 
   // simulasi loading
   isLoading.value = true
   setTimeout(() => {
     isLoading.value = false
-    router.push({ name: 'dashboard-socialprogram' })
+    router.push({ name: 'dashboard-social-program' })
   }, 800)
 }
 
 // CANCEL
 const handleCancel = () => {
-  router.push({ name: 'dashboard-socialprogram' })
+  router.push({ name: 'dashboard-social-program' })
 }
 </script>
 
@@ -129,13 +127,20 @@ const handleCancel = () => {
       Loading...
     </div>
 
-    <div v-else class="mt-6 bg-gray-50 p-5 rounded-2xl">
-      <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+      <div v-else class="mt-6 bg-gray-50 p-5 rounded-2xl space-y-5">
 
-        <h2 class="font-semibold text-gray-700">Edit Program Sosial</h2>
+        <!-- HEADER CARD -->
+        <div class="bg-white rounded-xl border border-gray-200 px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-800">
+            Edit Program Sosial
+          </h2>
+        </div>
 
-        <!-- GRID -->
-        <div class="grid grid-cols-2 gap-6">
+        <!-- FORM CARD -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+
+          <!-- GRID -->
+          <div class="grid grid-cols-2 gap-6">
 
           <!-- LEFT -->
           <div class="space-y-4">
@@ -200,12 +205,29 @@ const handleCancel = () => {
 
             <!-- STATUS -->
             <div>
-              <label class="text-xs text-gray-600">Status Program</label>
-              <div class="flex gap-4 mt-2 text-sm text-gray-400">
-                <label><input type="radio" disabled /> Berjalan</label>
-                <label><input type="radio" disabled checked /> Pending</label>
-                <label><input type="radio" disabled /> Selesai</label>
-              </div>
+                          <label class="text-xs text-gray-600">Status Program</label>
+                          <div class="flex gap-6 mt-2 text-sm">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" value="active" v-model="status" />
+                <span :class="status === 'active' ? 'text-green-600 font-medium' : 'text-gray-500'">
+                  Berjalan
+                </span>
+              </label>
+
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" value="pending" v-model="status" />
+                <span :class="status === 'pending' ? 'text-yellow-600 font-medium' : 'text-gray-500'">
+                  Pending
+                </span>
+              </label>
+
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" value="completed" v-model="status" />
+                <span :class="status === 'completed' ? 'text-red-600 font-medium' : 'text-gray-500'">
+                  Selesai
+                </span>
+              </label>
+            </div>
             </div>
           </div>
         </div>
