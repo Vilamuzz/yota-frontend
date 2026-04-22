@@ -76,8 +76,13 @@ const handleSubmit = () => {
 
 // CANCEL
 const handleCancel = () => {
-  router.push({ name: 'dashboard-socialprogram' })
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push({ name: 'dashboard-social-program' }) // ⬅️ GANTI sesuai path index kamu
+  }
 }
+
 </script>
 
 <template>
@@ -90,12 +95,18 @@ const handleCancel = () => {
       </div>
     </template>
 
-    <!-- CONTAINER -->
     <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
+
+      <!-- HEADER -->
+      <div class="bg-white rounded-xl border border-gray-200 px-6 py-4 mb-5">
+        <h2 class="font-semibold text-gray-700">
+          Data Program Sosial
+        </h2>
+      </div>
+
+      <!-- CONTAINER -->
       <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
-
-        <h2 class="font-semibold text-gray-700">Data Program Sosial</h2>
-
+        
         <!-- GRID -->
         <div class="grid grid-cols-2 gap-6">
 
@@ -223,7 +234,7 @@ const handleCancel = () => {
 
         <!-- BUTTON -->
         <div class="flex justify-end gap-3">
-          <BaseButton variant="danger" @click="handleCancel">
+        <BaseButton variant="danger" @click="handleCancel">
             Batal
           </BaseButton>
 
