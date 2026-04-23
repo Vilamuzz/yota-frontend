@@ -1,22 +1,204 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { Eye } from 'lucide-vue-next'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faChildren } from '@fortawesome/free-solid-svg-icons'
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import BaseSearch from '@/components/atoms/BaseSearch.vue';
 import BaseFilter from '@/components/atoms/BaseFilter.vue';
 import BaseTable from '@/components/molecules/BaseTable.vue';
+import type { Submission } from '@/types/submissionChildren'
+import router from '@/router'
+
 
 const searchQuery = ref('')
 const selectedGender = ref('all')
 const selectedCategory = ref('all')
+const selectedStatus = ref('all')
 
 const clearFilters = () => {
   searchQuery.value = ''
   selectedGender.value = 'all'
   selectedCategory.value = 'all'
+  selectedStatus.value = 'all'
+
 }
 
 const genders = ['all', 'laki-laki', 'perempuan']
 const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
+
+const rawRole = localStorage.getItem('role')
+
+const role = ref(
+  rawRole ? rawRole.toLowerCase() : 'social_manager'
+)
+if (window.location.pathname.includes('chairman')) {
+  role.value = 'chairman'
+}
+const statusByRole: Record<string, string[]> = {
+  chairman: ['Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
+  social_manager: ['Diajukan', 'Menunggu Verifikasi', 'Disetujui', 'Ditolak']
+}
+const statuses = computed(() => {
+  return ['all', ...(statusByRole[role.value] ?? [])]
+})
+
+const limit = ref(10)
+const pageOffset = ref(0)
+const pagination = ref({
+  has_prev: false,
+  has_next: false
+})
+
+const handleNextPage = () => {}
+const handlePrevPage = () => {}
+
+const children = ref<Submission[]>([
+  {
+    id: '1',
+    applicant_name: 'Choi Youngjae',
+    number_phone: '081234567890',
+    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    child_name: 'Faris Ahad',
+    gender: 'Laki-laki',
+    category: 'Yatim',
+    birthplace: 'Bandung',
+    birthdate: '2014-05-10',
+    address: 'Jl. Melati No. 12 Bandung',
+    image_url: 'https://i.pravatar.cc/150?img=1',
+    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    certificates: [],
+    status: 'Diajukan',
+    created_at: '2024-01-01',
+  },
+  {
+    id: '2',
+    applicant_name: 'Jung Woojin',
+    number_phone: '081234567891',
+    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    child_name: 'Tia Mutiara',
+    gender: 'Perempuan',
+    category: 'Piatu',
+    birthplace: 'Garut',
+    birthdate: '2015-02-15',
+    address: 'Jl. Mawar No. 5 Garut',
+    image_url: 'https://i.pravatar.cc/150?img=2',
+    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    certificates: [],
+    status: 'Menunggu Verifikasi',
+    created_at: '2024-01-02',
+  },
+  {
+    id: '3',
+    applicant_name: 'Jang Juwang',
+    number_phone: '081234567892',
+    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    child_name: 'Ahmad Rizki',
+    gender: 'Laki-laki',
+    category: 'Yatim Piatu',
+    birthplace: 'Tasikmalaya',
+    birthdate: '2013-08-20',
+    address: 'Jl. Anggrek No. 9 Tasikmalaya',
+    image_url: 'https://i.pravatar.cc/150?img=4',
+    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    certificates: [],
+    status: 'Disetujui',
+    created_at: '2024-01-03',
+  },
+  {
+    id: '4',
+    applicant_name: 'Park Sungho',
+    number_phone: '081234567893',
+    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    child_name: 'Laila Salsabila',
+    gender: 'Perempuan',
+    category: 'Yatim',
+    birthplace: 'Cimahi',
+    birthdate: '2016-11-30',
+    address: 'Jl. Dahlia No. 3 Cimahi',
+    image_url: 'https://i.pravatar.cc/150?img=5',
+    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    certificates: [],
+    status: 'Ditolak',
+    created_at: '2024-01-04',
+  }
+])
+
+const filteredChildren = computed(() => {
+   let data = [...children.value]
+  if (role.value === 'chairman') {
+    data = data.filter(child =>
+      child.status !== 'Diajukan'
+    )
+  }
+  if (selectedStatus.value !== 'all') {
+    data = data.filter(child =>
+      child.status === selectedStatus.value
+    )
+  }
+  if (selectedGender.value !== 'all') {
+    data = data.filter(child =>
+      child.gender === selectedGender.value
+    )
+  }
+  if (selectedCategory.value !== 'all') {
+    data = data.filter(child =>
+      child.category === selectedCategory.value
+    )
+  }
+  if (searchQuery.value) {
+    data = data.filter(child =>
+      child.child_name
+        .toLowerCase()
+        .includes(searchQuery.value.toLowerCase())
+    )
+  }
+
+  return data
+
+})
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'Disetujui':
+      return 'bg-green-100 text-green-800'
+    case 'Menunggu Verifikasi':
+      return 'bg-purple-100 text-purple-800'
+    case 'Diajukan':
+      return 'bg-yellow-100 text-yellow-800'
+    default:
+      return 'bg-red-100 text-red-800'
+  }
+}
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+}
+
+const handleView = (child: Submission) => {
+
+  if (role.value === 'chairman') {
+    router.push({
+      name: 'chairman-foster-children-submissions-detail',
+      params: { id: child.id }
+    })
+  } else {
+    router.push({
+      name: 'dashboard-foster-children-submissions-detail',
+      params: { id: child.id }
+    })
+  }
+
+}
 </script>
 
 <template>
@@ -54,6 +236,18 @@ const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
                       </select>
                     </div>
 
+                    <div>
+                      <label class="block text-xs text-gray-700 mb-2">Status</label>
+                      <select
+                        v-model="selectedStatus"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        <option v-for="status in statuses" :key="status" :value="status">
+                          {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                        </option>
+                      </select>
+                    </div>
+
                     <div class="flex gap-2 pt-2">
                       <button
                         @click="clearFilters"
@@ -75,6 +269,72 @@ const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
       </div>
     </div>
 
-    <BaseTable></BaseTable>
+    <BaseTable
+      class="mt-6"
+      :loading="false"
+      loading.message="Memuat data ajuan anak asuh..."
+      :is-empty="filteredChildren.length === 0"
+      empty-message="Belum ada data ajuan anak asuh"
+      :has-prev="pagination?.has_prev"
+      :has-next="pagination?.has_next"
+      v-model.limit="limit"
+      @prev="handlePrevPage"
+      @next="handleNextPage">
+      <template #empty-icon>
+        <FontAwesomeIcon :icon="faChildren" size="6x" class="text-gray-400"/>
+      </template>
+
+      <template #headers>
+        <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">No</th>
+        <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Nama Anak Asuh</th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Jenis Kelamin</th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Kategori</th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Tanggal Pengajuan</th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Status</th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Aksi</th>
+      </template>
+
+      <template #rows>
+        <tr
+          v-for="(child, index) in filteredChildren"
+          :key="child.id"
+          class="bg-white hover:bg-gray-50 transition-colors duration-150">
+          <td class="px-6 py-4 whitespace-nowrap font-poppins">
+            {{  pageOffset * limit + index + 1 }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap font-poppins max-w-50 truncate">
+            {{ child.child_name }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap font-poppins">
+            {{ child.gender }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap font-poppins">
+            {{ child.category }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap font-poppins">
+            {{ formatDate(child.created_at) }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-center">
+            <span
+              :class="[
+                'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-poppins border',
+                getStatusColor(child.status),
+              ]"
+            >
+              {{ child.status.charAt(0).toUpperCase() + child.status.slice(1) }}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-center relative">
+            <button
+              @click="handleView(child)"
+              class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
+              title="Lihat Detail"
+            >
+              <Eye :size="18" />
+            </button>
+          </td>
+        </tr>
+      </template>
+    </BaseTable>
   </DashboardLayout>
 </template>

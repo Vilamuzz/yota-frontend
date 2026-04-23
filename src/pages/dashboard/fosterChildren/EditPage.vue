@@ -7,7 +7,9 @@ import { useFosterChildrenUpdate } from '@/composables/fosterChildren/useFosterC
 import { useFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenDetail'
 import { createChildSchema } from '@/schemas/fosterChildren.schema'
 import { getZodErrors } from '@/utils/zodError'
-import { ArrowLeft, PersonStanding, Trash2, Eye, X, Plus } from 'lucide-vue-next'
+import { ArrowLeft, Trash2, Eye, X, Plus } from 'lucide-vue-next'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faChildren } from '@fortawesome/free-solid-svg-icons'
 import { useRoute } from 'vue-router'
 import router from '@/router'
 
@@ -64,7 +66,7 @@ const removeAchievement = (index: number) => {
 
 const genders = ['laki-laki', 'perempuan']
 
-const categories = ['yatim', 'piatu', 'yatim piatu']
+const categories = ['yatim', 'piatu', 'yatim-piatu']
 
 const isLoading = computed(() => updateFosterChildMutation.isPending.value)
 const isSuccess = computed(() => updateFosterChildMutation.isSuccess.value)
@@ -245,7 +247,7 @@ const isSubmitDisabled = computed(() => {
         </button>
         <div class="flex items-center gap-3">
           <div class="p-2 bg-primary-50 rounded-lg">
-            <PersonStanding :size="24" class="text-primary-400" />
+            <FontAwesomeIcon :icon="faChildren" size="lg" class="text-primary-400"/>
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900">Edit Anak Asuh</h2>

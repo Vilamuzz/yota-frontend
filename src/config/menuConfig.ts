@@ -1,5 +1,8 @@
 import type { Component } from 'vue'
-import { Home, Newspaper, Users, CirclePoundSterling, PersonStanding } from 'lucide-vue-next'
+import { Home, Newspaper, Users, CirclePoundSterling } from 'lucide-vue-next'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faChildren } from '@fortawesome/free-solid-svg-icons'
+import { h } from 'vue'
 
 export interface MenuItemConfig {
   icon?: Component
@@ -68,7 +71,7 @@ export const menuConfig: MenuItemConfig[] = [
     ],
   },
   {
-    icon: PersonStanding,
+    icon: h(FontAwesomeIcon, { icon: faChildren }),
     label: 'Anak Asuh',
     name: 'foster-children',
     roles: ['social_manager'],
@@ -83,6 +86,11 @@ export const menuConfig: MenuItemConfig[] = [
         name: 'dashboard-foster-children-submissions',
         path: '/dashboard/foster-children/submissions',
       },
+      {
+        label: 'Riwayat Donasi Anak Asuh',
+        name: 'dashboard-foster-children-donations',
+        path: '/dashboard/foster-children/donations',
+      },
     ],
   },
   {
@@ -92,4 +100,11 @@ export const menuConfig: MenuItemConfig[] = [
     roles: ['publication_manager'],
     path: '/dashboard/news',
   },
+  {
+  icon: h(FontAwesomeIcon, { icon: faChildren }),
+  label: 'Anak Asuh',
+  name: 'chairman-foster-children-submissions',
+  roles: ['chairman'],
+  path: '/dashboard/chairman/foster-children/submissions',
+  }
 ]
