@@ -1,5 +1,8 @@
 import type { Component } from 'vue'
-import { Home, Newspaper, Users, CirclePoundSterling, PersonStanding, NotepadText } from 'lucide-vue-next'
+import { Home, Newspaper, Users, CirclePoundSterling } from 'lucide-vue-next'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faChildren } from '@fortawesome/free-solid-svg-icons'
+import { h } from 'vue'
 
 export interface MenuItemConfig {
   icon?: Component
@@ -96,7 +99,7 @@ export const menuConfig: MenuItemConfig[] = [
     ],
   },
   {
-    icon: PersonStanding,
+    icon: h(FontAwesomeIcon, { icon: faChildren }),
     label: 'Anak Asuh',
     name: 'foster-children',
     roles: ['social_manager'],
@@ -111,6 +114,11 @@ export const menuConfig: MenuItemConfig[] = [
         name: 'dashboard-foster-children-submissions',
         path: '/dashboard/foster-children/submissions',
       },
+      {
+        label: 'Riwayat Donasi Anak Asuh',
+        name: 'dashboard-foster-children-donations',
+        path: '/dashboard/foster-children/donations',
+      },
     ],
   },
   {
@@ -119,30 +127,5 @@ export const menuConfig: MenuItemConfig[] = [
     name: 'news',
     roles: ['publication_manager'],
     path: '/dashboard/news',
-  },
-
-  // PROGRAM SOSIAL
-  {
-    icon: NotepadText,
-    label: 'Manajemen Program',
-    name: 'social-program-group',
-    roles: ['social_manager'],
-    children: [
-      {
-        label: 'Data Program',
-        name: 'dashboard-social-program', // Sinkron dengan router
-        path: '/dashboard/social-program', // Sinkron dengan router
-      },
-      {
-        label: 'Riwayat Langganan',
-        name: 'dashboard-social-program-subscriptions', // Sinkron dengan router
-        path: '/dashboard/social-program/subscriptions', // Sinkron dengan router
-      },
-      {
-        label: 'Riwayat Pelanggan',
-        name: 'dashboard-social-program-customers', // Sinkron dengan router
-        path: '/dashboard/social-program/customers', // Sinkron dengan router
-      },
-    ],
   },
 ]

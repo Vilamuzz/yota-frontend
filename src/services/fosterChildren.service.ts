@@ -2,7 +2,7 @@ import { API } from '@/const/api'
 import type {
   CreateChildRequest,
   ChildListResponse,
-  ChildResponse,
+  ChildDetailResponse,
   ChildParams,
   UpdateChildRequest,
 } from '@/types/fosterChildren'
@@ -14,8 +14,8 @@ export const childService = {
     return response.data
   },
 
-  getChildDetail: async (childSlug: string): Promise<ChildResponse> => {
-    const response = await api.get<ChildResponse>(`${API.CHILDREN_PUBLIC}/${childSlug}`)
+  getChildDetail: async (childSlug: string): Promise<ChildDetailResponse> => {
+    const response = await api.get<ChildDetailResponse>(`${API.CHILDREN_PUBLIC}/${childSlug}`)
     return response.data
   },
 

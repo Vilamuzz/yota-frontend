@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BaseButton from '@/components/atoms/BaseButton.vue'
+import { ref, watch } from 'vue'
 
 interface Props {
   show: boolean
@@ -11,17 +12,32 @@ interface Props {
   primaryButtonLoading?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
-  primaryButtonText: 'Confirm',
+const props = withDefaults(defineProps<Props>(), {
+  primaryButtonText: 'Reject',
   secondaryButtonText: 'Cancel',
   primaryButtonLoading: false,
 })
 
 const emit = defineEmits<{
   close: []
-  primary: []
+  primary: [reason : string]
   secondary: []
 }>()
+
+const reason = ref('')
+
+watch(
+  () => props.show,
+  (val) => {
+    if (!val) {
+      reason.value = ''
+    }
+  }
+)
+
+const handlePrimary = () => {
+  emit('primary', reason.value)
+}
 </script>
 
 <template>
@@ -64,6 +80,16 @@ const emit = defineEmits<{
               {{ message }}
             </p>
 
+            <div class="mb-6 text-left">
+              <label class="block text-xs font-poppins text-gray-700 mb-1">Alasan Penolakan</label>
+              <textarea
+                v-model="reason"
+                rows="3"
+                placeholder="Masukkan alasan penolakan pengajuan anak asuh"
+                class="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none">
+              </textarea>
+            </div>
+
             <!-- Custom Content Slot -->
             <div v-if="$slots.default" class="mb-6">
               <slot />
@@ -81,10 +107,11 @@ const emit = defineEmits<{
               </BaseButton>
 
               <BaseButton
-                variant="primary"
+                variant="danger"
                 full-width
+                :disabled="!reason"
                 :loading="primaryButtonLoading"
-                @click="emit('primary')"
+                @click="handlePrimary"
               >
                 <template #loading>Loading...</template>
                 {{ primaryButtonText }}
