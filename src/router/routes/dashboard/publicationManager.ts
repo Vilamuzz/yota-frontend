@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 export const publicationManagerRoutes: RouteRecordRaw[] = [
   {
     path: '',
-    meta: { role: 'publication-manager' },
+    meta: { role: 'publication_manager' }, // Sinkronisasi dengan menuConfig yang menggunakan underscore
     children: [
       {
         path: 'news',
