@@ -4,7 +4,8 @@ export interface User {
   id: string
   username: string
   email: string
-  role: Role
+  default_role: string
+  roles: string[]
   status: boolean
   created_at: string
 }
