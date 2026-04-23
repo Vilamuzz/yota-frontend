@@ -81,7 +81,7 @@ export const menuConfig: MenuItemConfig[] = [
     ],
   },
   {
-    icon: PersonStanding,
+    icon: h(FontAwesomeIcon, { icon: faChildren }),
     label: 'Anak Asuh',
     name: 'foster-children',
     roles: ['social_manager'],
