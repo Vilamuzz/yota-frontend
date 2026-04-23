@@ -9,6 +9,7 @@ export const createChildSchema = z.object({
   category: z.enum(['yatim', 'piatu', 'yatim-piatu'], 'Category is required'),
   status: z.boolean().refine((val) => val === true, { message: 'Status must be true' }),
   image: z.instanceof(File, { message: 'Image file is required' }),
+  achievements: z.array(z.string()).optional(),
   certificates: z.array(z.instanceof(File)).optional(),
 })
 
@@ -23,6 +24,7 @@ export const updateChildSchema = z.object({
   category: z.enum(['yatim', 'piatu', 'yatim-piatu'], 'Category is required'),
   status: z.boolean(),
   image: z.instanceof(File).optional(),
+  achievements: z.array(z.string()).optional(),
   certificates: z.array(z.instanceof(File)).optional(),
 })
 

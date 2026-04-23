@@ -50,6 +50,11 @@ export const publicRoutes: RouteRecordRaw[] = [
         component: () => import('@/pages/public/fosterChildren/IndexPage.vue'),
       },
       {
+        path: ':slug',
+        name: 'foster-children-detail',
+        component: () => import('@/pages/public/fosterChildren/DetailPage.vue'),
+      },
+      {
         path: ':slug/form',
         name: 'foster-children-form',
         component: () => import('@/pages/public/fosterChildren/FormSubmission.vue'),

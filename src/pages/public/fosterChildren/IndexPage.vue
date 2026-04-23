@@ -2,52 +2,76 @@
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import BaseSearchChildren from '@/components/atoms/BaseSearchChildren.vue'
 import ChildrenCard from '@/components/molecules/ChildrenCard.vue'
-import ChildModal from '@/components/molecules/ChildModal.vue'
 import type { Child } from '@/types/fosterChildren'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const searchQuery = ref('')
 const children = ref<Child[]>([
   {
     id: '1',
-    slug: 'faris-ahad',
     name: 'Faris Ahad',
-    age: 11,
-    birthplace: 'Sragen',
-    birth_date: '2013-01-01',
-    address: 'Sragen',
+    slug: 'faris-ahad',
     gender: 'Laki-laki',
     category: 'Yatim',
-    achievements: ['Juara 1 Lomba Menggambar 2023', 'Juara 2 Lomba Cerdas Cermat 2024'],
-    status: 'aktif',
+    birthplace: 'Bandung',
+    birth_date: '10-05-2014',
+    address: 'Jl. Melati No. 12 Bandung',
     image_url: 'https://i.pravatar.cc/150?img=1',
-    certificates: [],
+    achievements: ['Juara 1 Lomba Menggambar 2023', 'Juara 2 Lomba Cerdas Cermat 2024'],
+    certificates: [
+      {
+        id: '1',
+        title: 'Juara 1 Lomba Menggambar 2023',
+        file_name: 'Juara 1 Lomba Menggambar.pdf',
+        file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+      },
+      {
+        id: '2',
+        title: 'Juara 2 Lomba Cerdas Cermat 2024',
+        file_name: 'Juara 2 Lomba Cerdas Cermat.pdf',
+        file_url: 'https://www.africau.edu/images/default/sample.pdf'
+      }
+    ],
+    status: 'aktif',
     created_at: '2024-01-01',
   },
   {
     id: '2',
-    slug: 'tia-mutiara',
     name: 'Tia Mutiara',
-    age: 9,
-    birthplace: 'Solo',
-    birth_date: '2015-01-01',
-    address: 'Solo',
+    slug: 'tia-mutiara',
     gender: 'Perempuan',
     category: 'Piatu',
+    birthplace: 'Garut',
+    birth_date: '15-02-2015',
+    address: 'Jl. Mawar No. 5 Garut',
+    image_url: 'https://i.pravatar.cc/150?img=2',
     achievements: ['Juara 3 Lomba Menulis Cerpen 2023'],
-    status: 'aktif',
-    image_url: 'https://i.pravatar.cc/150?img=5',
     certificates: [],
-    created_at: '2024-01-01',
+    status: 'lulus',
+    created_at: '2024-01-02',
+  },
+  {
+    id: '3',
+    name: 'Ahmad Rizki',
+    slug: 'ahmad-rizki',
+    gender: 'Laki-laki',
+    category: 'Yatim Piatu',
+    birthplace: 'Tasikmalaya',
+    birth_date: '20-03-2013',
+    address: 'Jl. Anggrek No. 9 Tasikmalaya',
+    image_url: 'https://i.pravatar.cc/150?img=4',
+    achievements: ['Juara 1 Lomba Pidato 2023', 'Juara 2 Lomba Matematika 2024'],
+    certificates: [],
+    status: 'nonaktif',
+    created_at: '2024-01-03',
   }
 ])
 
-const detailChild = ref(false)
-const selectedChild = ref<Child | null>(null)
 
 const handleView = (child: Child) => {
-  selectedChild.value = child
-  detailChild.value = true
+  router.push({ name: 'foster-children-detail', params: { slug: child.slug } })
 }
 </script>
 
@@ -71,10 +95,5 @@ const handleView = (child: Child) => {
         </div>
       </div>
     </div>
-    <ChildModal
-      :show="detailChild"
-      :child="selectedChild"
-      @close="detailChild = false"
-    />
   </PublicLayout>
 </template>

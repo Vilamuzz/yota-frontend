@@ -13,7 +13,7 @@ const handleBack = () => {
 
 const currentStep = ref(1)
 
-const name = ref('')
+const applicantName = ref('')
 const numberPhone = ref('')
 const ktp = ref<File | null>(null)
 const ktpPreview = ref<string | null>(null)
@@ -209,8 +209,8 @@ const previewCertificate = (file: File) => {
 
         <div v-if="currentStep === 1">
           <form class="p-6 space-y-5">
-            <BaseInput id="name" v-model="name" label="Nama Pemohon" placeholder="Masukkan nama lengkap pemohon" :required="true"/>
-            <BaseInput id="numberPhone" v-model="numberPhone" label="Nomor Telepon" placeholder="Masukkan nomor telepon pemohon" :required="true"/>
+            <BaseInput id="applicantName" size="sm" v-model="applicantName" label="Nama Pemohon" placeholder="Masukkan nama lengkap pemohon" :required="true"/>
+            <BaseInput id="numberPhone" size="sm" v-model="numberPhone" label="Nomor Telepon" placeholder="Masukkan nomor telepon pemohon" :required="true"/>
             <div>
             <p class="text-xs font-poppins text-gray-700 mb-3">
                 Unggah KTP <span class="text-red-500">*</span>
@@ -306,7 +306,7 @@ const previewCertificate = (file: File) => {
 
         <div v-if="currentStep === 2">
           <form class="p-6 space-y-5">
-            <BaseInput id="childname" v-model="childName" label="Nama Anak Asuh" placeholder="Masukkan nama lengkap anak asuh" :required="true"/>
+            <BaseInput id="childname" size="sm" v-model="childName" label="Nama Anak Asuh" placeholder="Masukkan nama lengkap anak asuh" :required="true"/>
 
             <div>
               <label for="gender" class="block text-xs font-poppins text-gray-700 mb-1">
@@ -348,7 +348,7 @@ const previewCertificate = (file: File) => {
               </p>
             </div>
 
-            <BaseInput id="birthplace" v-model="birthplace" label="Tempat Lahir" placeholder="Masukkan tempat lahir anak asuh" :required="true" :error="errors.birthplace" />
+            <BaseInput id="birthplace" size="sm" v-model="birthplace" label="Tempat Lahir" placeholder="Masukkan tempat lahir anak asuh" :required="true" :error="errors.birthplace" />
 
             <div>
               <label for="birthdate" class="block text-xs font-poppins text-gray-700 mb-1">

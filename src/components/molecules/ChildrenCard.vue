@@ -10,6 +10,35 @@ const emit = defineEmits(['view'])
 const handleView = (child: Child) => {
   emit('view', child)
 }
+
+function calculateAge(birthDate: string): number {
+  if (!birthDate) return 0
+
+  // Format: DD-MM-YYYY
+  const [dayStr, monthStr, yearStr] = birthDate.split('-')
+
+  const day = Number(dayStr)
+  const month = Number(monthStr)
+  const year = Number(yearStr)
+
+  if (!day || !month || !year) return 0
+
+  const today = new Date()
+  const birth = new Date(year, month - 1, day)
+
+  let age = today.getFullYear() - birth.getFullYear()
+
+  const isBeforeBirthday =
+    today.getMonth() < birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() &&
+      today.getDate() < birth.getDate())
+
+  if (isBeforeBirthday) {
+    age--
+  }
+
+  return age
+}
 </script>
 
 <template>
@@ -31,7 +60,7 @@ const handleView = (child: Child) => {
 
     <div class="flex text-sm divide-x">
           <span class="font-bold px-1">{{ children.category }}</span>
-          <span class="font-normal px-1">{{ children.age }} Tahun</span>
+          <span class="font-normal px-1">{{ calculateAge(children.birth_date) }} Tahun</span>
     </div>
 
     </div>

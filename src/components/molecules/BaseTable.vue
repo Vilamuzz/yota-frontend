@@ -32,12 +32,12 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="bg-white overflow-hidden">
+  <div class="bg-white overflow-hidden dark:bg-gray-800 dark:rounded-2xl">
     <BaseLoading v-if="loading" :message="loadingMessage" />
 
     <div
       v-else-if="isEmpty"
-      class="p-6 text-center text-gray-500 min-h-[50vh] flex flex-col items-center justify-center dark:bg-[#121212] dark:border-gray-700"
+      class="p-6 text-center text-gray-500 min-h-[50vh] flex flex-col items-center justify-center dark:bg-[#121212] dark:border-gray-700 dark:text-white"
     >
       <slot name="empty-icon" />
       <p class="text-lg font-bold text-gray-700 dark:text-white">{{ emptyMessage }}</p>
@@ -46,13 +46,13 @@ defineEmits<{
     <div v-else class="overflow-x-auto">
       <table class="w-full">
         <thead
-          class="bg-gray-100 border-b border-gray-200 text-gray-500 dark:bg-[#121212] dark:border-gray-700 dark:text-white"
+          class="bg-gray-100 border-b border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
         >
           <tr>
             <slot name="headers" />
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 text-gray-700 text-sm">
+        <tbody class="divide-y divide-gray-200 text-gray-700 text-sm dark:text-white">
           <slot name="rows" />
         </tbody>
       </table>

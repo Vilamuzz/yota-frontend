@@ -4,7 +4,6 @@ export interface Child {
   id: string
   slug: string
   name: string
-  age: number
   birthplace: string
   birth_date: string
   address: string
@@ -69,3 +68,4 @@ export interface UpdateChildRequest {
 
 export type ChildResponse = Response<Child>
 export type ChildListResponse = Response<ChildList>
+export type ChildDetailResponse = Response<Child>

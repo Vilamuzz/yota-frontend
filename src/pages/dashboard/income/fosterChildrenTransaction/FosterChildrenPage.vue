@@ -2,11 +2,10 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Plus } from 'lucide-vue-next'
+import { Eye, SquarePen, Trash2 } from 'lucide-vue-next'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
-import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { Child } from '@/types/fosterChildren'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -305,10 +304,7 @@ const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
 const statuses = ['all', 'aktif', 'lulus']
 
 const handleView = (child: Child) => {
-  router.push({ name: 'dashboard-foster-children-detail', params: { id: child.id } })
-}
-const handleCreate = () => {
-  router.push({ name: 'dashboard-foster-children-create' })
+  router.push({ name: 'dashboard-foster-children-donations-detail', params: { id: child.id } })
 }
 
 const handleEdit = (child: Child) => {
@@ -386,11 +382,6 @@ const handleEdit = (child: Child) => {
                   </div>
                 </template>
               </BaseFilter>
-
-              <BaseButton variant="primary" @click="handleCreate">
-                <Plus :size="20" class="mr-1" />
-                Tambah Anak Asuh
-              </BaseButton>
             </div>
           </div>
         </div>

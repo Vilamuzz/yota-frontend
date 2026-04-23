@@ -6,7 +6,9 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useChildCreate } from '@/composables/fosterChildren/useFosterChildrenCreate'
 import { createChildSchema } from '@/schemas/fosterChildren.schema'
 import { getZodErrors } from '@/utils/zodError'
-import { ArrowLeft, PersonStanding, Trash2, Eye, X, Plus } from 'lucide-vue-next'
+import { ArrowLeft, Trash2, Eye, X, Plus } from 'lucide-vue-next'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faChildren } from '@fortawesome/free-solid-svg-icons'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -25,7 +27,7 @@ const imagePreview = ref<string | null>(null)
 const showImagePreview = ref(false)
 const certificates = ref<File[]>([])
 const certificatePreviews = ref<string[]>([])
-const status = ref<boolean | null>(null)
+const status = ref<'aktif' | 'lulus'>('aktif')
 const errors = ref<Record<string, string>>({})
 
 const genders = ['laki-laki', 'perempuan']
@@ -180,7 +182,7 @@ const handleSubmit = async () => {
     achievements: achievements.value,
     image: image.value!,
     certificates: certificates.value!,
-    status: status.value!,
+    status: status.value === 'aktif',
   })
 
   if (createMutation.isSuccess.value) {
@@ -203,7 +205,7 @@ const isSubmitDisabled = computed(() => {
     !birthdate.value ||
     !address.value ||
     !image.value ||
-    status.value === null ||
+    !status.value ||
     isLoading.value
   )
 })
@@ -222,7 +224,7 @@ const isSubmitDisabled = computed(() => {
         </button>
         <div class="flex items-center gap-3">
           <div class="p-2 bg-primary-50 rounded-lg">
-            <PersonStanding :size="24" class="text-primary-400" />
+            <FontAwesomeIcon :icon="faChildren" size="lg" class="text-primary-400"/>
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900">Tambah Anak Asuh Baru</h2>
@@ -572,7 +574,7 @@ const isSubmitDisabled = computed(() => {
                   <input
                     type="radio"
                     v-model="status"
-                    :value="true"
+                    value="aktif"
                     class="w-4 h-4 text-green-500 focus:ring-green-500"
                   />
                   Aktif
@@ -581,7 +583,7 @@ const isSubmitDisabled = computed(() => {
                   <input
                     type="radio"
                     v-model="status"
-                    :value="false"
+                    value="lulus"
                     class="w-4 h-4 text-green-500 focus:ring-green-500"
                   />
                   Lulus

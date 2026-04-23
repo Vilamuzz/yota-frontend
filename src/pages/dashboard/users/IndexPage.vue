@@ -287,7 +287,7 @@ const statuses = ['all', 'active', 'banned']
             </td>
             <td class="px-6 py-4 whitespace-nowrap font-medium">{{ user.username }}</td>
             <td class="px-6 py-4 whitespace-nowrap font-medium">{{ user.email }}</td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">{{ user.role.role }}</td>
+            <td class="px-6 py-4 whitespace-nowrap font-medium">{{ user.default_role }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
                 :class="[
