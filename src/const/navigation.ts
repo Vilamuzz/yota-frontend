@@ -1,4 +1,4 @@
-import { Home, Newspaper, Users, CirclePoundSterling, Baby } from 'lucide-vue-next'
+import { Home, Newspaper, Users, CirclePoundSterling, Baby, NotepadText } from 'lucide-vue-next'
 import type { NavItem } from '@/types/navigation'
 import { ROLES } from './roles'
 
@@ -82,5 +82,30 @@ export const dashboardNavigation: NavItem[] = [
     label: 'News',
     roles: [ROLES.PUBLICATION_MANAGER],
     route: '/dashboard/news',
+  },
+  {
+    icon: NotepadText,
+    label: 'Manajemen Program',
+    roles: [ROLES.SOCIAL_MANAGER],
+    children: [
+      {
+        label: 'Data Program',
+        route: '/dashboard/social-program',
+      },
+      {
+        label: 'Riwayat Langganan',
+        route: '/dashboard/social-program/subscriptions',
+      },
+      {
+        label: 'Riwayat Pelanggan',
+        route: '/dashboard/social-program/customers',
+      },
+    ],
+  },
+  {
+    icon: NotepadText,
+    label: 'Program Ketua',
+    roles: [ROLES.CHAIRMAN],
+    route: '/dashboard/social-program',
   },
 ]

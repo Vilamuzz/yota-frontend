@@ -1,10 +1,10 @@
 export const ROLES = {
-  ORANG_TUA_ASUH: 'orang_tua_asuh',
-  CHAIRMAN: 'chairman',
-  SOCIAL_MANAGER: 'social_manager',
-  FINANCE: 'finance',
-  AMBULANCE_MANAGER: 'ambulance_manager',
-  AMBULANCE_DRIVER: 'ambulance_driver',
-  PUBLICATION_MANAGER: 'publication_manager',
-  SUPERADMIN: 'superadmin',
+  ORANG_TUA_ASUH: 'Orang Tua Asuh',
+  CHAIRMAN: 'Ketua Yayasan',
+  SOCIAL_MANAGER: 'Koordinator Sosial',
+  FINANCE: 'Finance',
+  AMBULANCE_MANAGER: 'Ambulance Manager',
+  AMBULANCE_DRIVER: 'Ambulance Driver',
+  PUBLICATION_MANAGER: 'Publication Manager',
+  SUPERADMIN: 'Superadmin',
 } as const
