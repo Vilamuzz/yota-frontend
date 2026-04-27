@@ -1,48 +1,13 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
-import { computed } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { ArrowLeft, SquarePen, Trash2, Users } from 'lucide-vue-next'
+import { ArrowLeft } from 'lucide-vue-next'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 
 const router = useRouter()
 const route = useRoute()
 const programId = route.params.id as string
 const program = route.query.program ? JSON.parse(route.query.program as string) : null
-
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'bg-[#D1FAE5] text-[#10B981]'
-    case 'pending':
-      return 'bg-[#FEF3C7] text-[#F8B641]'
-    case 'completed':
-      return 'bg-[#FFE4E6] text-[#F43F5E]'
-    default:
-      return 'bg-gray-100 text-gray-600'
-  }
-}
-
-const getStatusLabel = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'Berjalan'
-    case 'pending':
-      return 'Pending'
-    case 'completed':
-      return 'Selesai'
-    default:
-      return status
-  }
-}
 
 const handleEdit = () => {
   router.push({
@@ -90,7 +55,7 @@ const handleBack = () => {
         <h3 class="text-lg font-semibold text-gray-800 mb-6">Overview</h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             <!-- LEFT -->
             <div>
             <!-- Nama Program -->
@@ -178,7 +143,7 @@ const handleBack = () => {
         </div>
 
         <!-- BUTTON -->
-        <div class="flex justify-end mt-8">   
+        <div class="flex justify-end mt-8">
         <BaseButton variant="primary" @click="handleEdit" :loading="isLoading">
             Edit
           </BaseButton>

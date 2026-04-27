@@ -1,24 +1,19 @@
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
 import { authService } from '@/services/auth.service'
-
-const extractError = (err: any, fallback: string) =>
-  err.response?.data?.message || err.message || fallback
+import type { ApiError, ApiResponse } from '@/types/response'
 
 export const useForgetPassword = () => {
-  const forgetPasswordError = ref('')
-  const forgetPasswordMutation = useMutation({
-    mutationFn: (email: string) => authService.forgetPassword({ email }),
-    onSuccess: () => {
-      forgetPasswordError.value = ''
-    },
-    onError: (err: any) => {
-      forgetPasswordError.value = extractError(err, 'Failed to send reset link. Please try again.')
-    },
+  const forgetPasswordMutation = useMutation<ApiResponse, ApiError, string>({
+    mutationFn: (email: string) => authService.forgetPassword(email),
   })
 
+  const validationErrors = computed(
+    () => forgetPasswordMutation.error.value?.response?.data?.validation ?? null,
+  )
+
   return {
-    forgetPasswordError,
     forgetPasswordMutation,
+    validationErrors,
   }
 }

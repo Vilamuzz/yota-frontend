@@ -1,27 +1,19 @@
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
 import { authService } from '@/services/auth.service'
-
-const extractError = (err: any, fallback: string) =>
-  err.response?.data?.message || err.message || fallback
+import type { ApiError, ApiResponse } from '@/types/response'
 
 export const useResendVerification = () => {
-  const resendError = ref('')
-  const resendVerificationMutation = useMutation({
-    mutationFn: (email: string) => authService.resendVerification({ email }),
-    onSuccess: () => {
-      resendError.value = ''
-    },
-    onError: (err: any) => {
-      resendError.value = extractError(
-        err,
-        'Failed to resend verification email. Please try again.',
-      )
-    },
+  const resendVerificationMutation = useMutation<ApiResponse, ApiError, string>({
+    mutationFn: (email: string) => authService.resendVerification(email),
   })
 
+  const validationErrors = computed(
+    () => resendVerificationMutation.error.value?.response?.data?.validation ?? null,
+  )
+
   return {
-    resendError,
     resendVerificationMutation,
+    validationErrors,
   }
 }

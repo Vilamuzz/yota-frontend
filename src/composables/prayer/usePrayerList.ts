@@ -1,34 +1,24 @@
-import { ref, toValue, type MaybeRefOrGetter } from 'vue'
+import { computed, toValue } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { prayerService } from '@/services/prayer.service'
-import type { PrayerParams } from '@/types/prayer'
+import type { PrayerListResponse } from '@/types/prayer'
+import type { ApiError } from '@/types/response'
 
-export const usePrayerList = (params: MaybeRefOrGetter<PrayerParams> = {}) => {
-  const prayerListError = ref('')
-  const prayerListQuery = useQuery({
-    queryKey: ['prayers', params],
-    queryFn: async () => {
-      try {
-        const response = await prayerService.getListPrayer(toValue(params))
-        return response
-      } catch (err: unknown) {
-        prayerListError.value = err instanceof Error ? err.message : 'Failed to fetch prayers'
-        throw err
-      }
-    },
-    enabled: () => {
-      const resolvedParams = toValue(params)
-      if ('donation_id' in resolvedParams) {
-        return !!resolvedParams.donation_id
-      }
-
-      return true
-    },
+export const usePrayerList = (donationSlug: string) => {
+  const prayerListQuery = useQuery<PrayerListResponse, ApiError>({
+    queryKey: ['prayers', donationSlug],
+    queryFn: () => prayerService.getListPrayer(toValue(donationSlug)),
+    enabled: computed(() => !!toValue(donationSlug)),
     retry: 1,
   })
 
+  const prayers = computed(() => prayerListQuery.data.value?.data?.prayers || [])
+  const pagination = computed(() => prayerListQuery.data.value?.data?.pagination)
+
   return {
-    prayerListError,
     prayerListQuery,
+    prayers,
+    pagination,
+    isLoading: prayerListQuery.isPending,
   }
 }

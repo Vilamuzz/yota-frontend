@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { ArrowLeft, Eye, X } from 'lucide-vue-next'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faChildren } from '@fortawesome/free-solid-svg-icons'
+import { ArrowLeft, Eye, X, Baby } from 'lucide-vue-next'
 import router from '@/router'
 import { ref, computed } from 'vue'
-import type { Submission } from '@/types/submissionChildren'
+import type { Submission } from '@/types/fosterChildrenCandidate'
 import { useRoute } from 'vue-router'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
@@ -90,7 +88,7 @@ const children = ref<Submission[]>([
     certificates: [],
     status: 'Ditolak',
     created_at: '2024-01-04',
-  }
+  },
 ])
 
 const showImagePreview = ref(false)
@@ -118,14 +116,13 @@ const getShortFileName = (url: string, label: string) => {
 const handleCancel = () => {
   if (role.value === 'chairman') {
     router.push({
-      name: 'chairman-foster-children-submissions'
+      name: 'chairman-foster-children-submissions',
     })
   } else {
     router.push({
-      name: 'dashboard-foster-children-submissions'
+      name: 'dashboard-foster-children-submissions',
     })
   }
-
 }
 
 const confirmVerify = ref(false)
@@ -137,7 +134,6 @@ if (window.location.pathname.includes('chairman')) {
 } else {
   role.value = 'social_manager'
 }
-
 
 const verifyConfig = computed(() => {
   if (role.value === 'chairman') {
@@ -207,7 +203,7 @@ const verifyRejectConfig = computed(() => {
         </button>
         <div class="flex items-center gap-3">
           <div class="p-2 bg-primary-50 rounded-lg">
-            <FontAwesomeIcon :icon="faChildren" size="lg" class="text-primary-400"/>
+            <Baby :size="24" class="text-primary-400" />
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900">Detail Ajuan Anak Asuh</h2>
@@ -217,17 +213,18 @@ const verifyRejectConfig = computed(() => {
 
       <div
         v-if="child"
-        class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+      >
         <div class="grid grid-cols-1 md:grid-cols-2 items-start">
           <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden m-4">
             <div class="p-6 space-y-5">
               <h2 class="text-lg font-semibold text-gray-900">Identitas Anak Asuh</h2>
               <div class="grid grid-cols-[180px_auto] gap-y-3 gap-x-2 text-sm">
                 <div class="text-gray-500">Nama Anak Asuh</div>
-                <div>: {{  child.child_name }}</div>
+                <div>: {{ child.child_name }}</div>
 
                 <div class="text-gray-500">Jenis Kelamin</div>
-                <div>: {{  child.gender }}</div>
+                <div>: {{ child.gender }}</div>
 
                 <div class="text-gray-500">Tempat Lahir</div>
                 <div>: {{ child.birthplace }}</div>
@@ -244,24 +241,24 @@ const verifyRejectConfig = computed(() => {
                 <div class="text-gray-500">Foto Anak</div>
                 <div class="flex items-center gap-2">
                   <span>: </span>
-                  <div
-                    v-if="child.image_url"
-                    class="flex items-center gap-3">
+                  <div v-if="child.image_url" class="flex items-center gap-3">
                     <img
                       :src="child.image_url"
                       :alt="child.child_name"
-                      class="w-10 h-10 rounded border shrink-0">
-                      <button
-                        @click="previewImage(child.image_url)"
-                        class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat Foto">
-                        <Eye :size="18" />
-                      </button>
+                      class="w-10 h-10 rounded border shrink-0"
+                    />
+                    <button
+                      @click="previewImage(child.image_url)"
+                      class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
+                      title="Lihat Foto"
+                    >
+                      <Eye :size="18" />
+                    </button>
                   </div>
                   <div
                     v-if="showImagePreview"
                     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-                    >
+                  >
                     <div class="relative bg-white rounded-lg p-4 max-w-lg w-full">
                       <button
                         @click="closeImagePreview"
@@ -282,36 +279,34 @@ const verifyRejectConfig = computed(() => {
                 <div class="text-gray-500">Kartu Keluarga</div>
                 <div class="flex items-start gap-2">
                   <span>: </span>
-                  <div
-                    v-if="child.familyCard_url"
-                    class="space-y-2">
+                  <div v-if="child.familyCard_url" class="space-y-2">
                     <div class="flex items-center gap-3">
-                      <span class="text-sm">{{ getShortFileName(child.familyCard_url, 'Kartu_Keluarga') }}</span>
+                      <span class="text-sm">{{
+                        getShortFileName(child.familyCard_url, 'Kartu_Keluarga')
+                      }}</span>
                       <button
                         @click="previewFile(child.familyCard_url)"
                         class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat Kartu Keluarga">
+                        title="Lihat Kartu Keluarga"
+                      >
                         <Eye :size="18" />
                       </button>
                     </div>
                   </div>
-                  <div v-else class="flex items-center text-sm">
-                    Tidak ada kartu keluarga
-                  </div>
+                  <div v-else class="flex items-center text-sm">Tidak ada kartu keluarga</div>
                 </div>
 
                 <div class="text-gray-500">SKTM</div>
                 <div class="flex items-start gap-2">
                   <span>: </span>
-                  <div
-                    v-if="child.sktm_url"
-                    class="space-y-2">
-                    <div class ="flex items-center gap-3">
+                  <div v-if="child.sktm_url" class="space-y-2">
+                    <div class="flex items-center gap-3">
                       <span class="text-sm">{{ getShortFileName(child.sktm_url, 'SKTM') }}</span>
                       <button
                         @click="previewFile(child.sktm_url)"
                         class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat SKTM">
+                        title="Lihat SKTM"
+                      >
                         <Eye :size="18" />
                       </button>
                     </div>
@@ -321,27 +316,25 @@ const verifyRejectConfig = computed(() => {
                 <div class="text-gray-500">Piagam Penghargaan</div>
                 <div class="flex items-start gap-2">
                   <span>: </span>
-                  <div
-                    v-if="child.certificates?.length"
-                    class="space-y-2">
+                  <div v-if="child.certificates?.length" class="space-y-2">
                     <div
                       v-for="(cert, index) in child.certificates"
                       :key="index"
-                      class="flex items-center gap-3">
+                      class="flex items-center gap-3"
+                    >
                       <span class="text-sm">
                         {{ cert.file_name || 'Sertifikat' }}
                       </span>
                       <button
                         @click="previewFile(cert.file_url)"
                         class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat Sertifikat">
-                      <Eye :size="18" />
+                        title="Lihat Sertifikat"
+                      >
+                        <Eye :size="18" />
                       </button>
                     </div>
                   </div>
-                  <div v-else class="flex items-center text-sm">
-                    Tidak ada sertifikat
-                  </div>
+                  <div v-else class="flex items-center text-sm">Tidak ada sertifikat</div>
                 </div>
               </div>
             </div>
@@ -360,53 +353,50 @@ const verifyRejectConfig = computed(() => {
                 <div class="text-gray-500">KTP Pengaju</div>
                 <div class="flex items-start gap-2">
                   <span>: </span>
-                  <div
-                    v-if="child.ktp_url"
-                    class="space-y-2">
+                  <div v-if="child.ktp_url" class="space-y-2">
                     <div class="flex items-center gap-3">
                       <span class="text-sm">{{ getShortFileName(child.ktp_url, 'KTP') }}</span>
                       <button
                         @click="previewFile(child.ktp_url)"
                         class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat KTP">
+                        title="Lihat KTP"
+                      >
                         <Eye :size="18" />
                       </button>
                     </div>
                   </div>
-                  <div v-else class="flex items-center text-sm">
-                    Tidak ada KTP pengaju
-                  </div>
+                  <div v-else class="flex items-center text-sm">Tidak ada KTP pengaju</div>
                 </div>
 
                 <div class="text-gray-500">Status Pengajuan</div>
-                <span :class="[
-                  'inline-block w-fit ml-2 px-3 py-1 text-xs rounded-full',
-                  child.status === 'Diajukan'
-                    ? 'bg-yellow-100 text-yellow-800'
-                  : child.status === 'Menunggu Verifikasi'
-                    ? 'bg-purple-100 text-purple-800'
-                  : child.status === 'Disetujui'
-                    ? 'bg-green-100 text-green-800'
-                  : child.status === 'Ditolak'
-                    ? 'bg-red-100 text-red-800'
-                  : 'bg-gray-100 text-gray-800'
-                ]">
-                  {{  child.status }}
+                <span
+                  :class="[
+                    'inline-block w-fit ml-2 px-3 py-1 text-xs rounded-full',
+                    child.status === 'Diajukan'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : child.status === 'Menunggu Verifikasi'
+                        ? 'bg-purple-100 text-purple-800'
+                        : child.status === 'Disetujui'
+                          ? 'bg-green-100 text-green-800'
+                          : child.status === 'Ditolak'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800',
+                  ]"
+                >
+                  {{ child.status }}
                 </span>
-                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="px-6 pb-4 flex justify-end gap-3">
-        <BaseButton type="button" variant="danger" @click="openRejectModal">
-          Tolak
-        </BaseButton>
+          <BaseButton type="button" variant="danger" @click="openRejectModal"> Tolak </BaseButton>
 
-        <BaseButton type="button" variant="primary" @click="openVerifyModal">
-           {{ verifyConfig.buttonText }}
-        </BaseButton>
-      </div>
+          <BaseButton type="button" variant="primary" @click="openVerifyModal">
+            {{ verifyConfig.buttonText }}
+          </BaseButton>
+        </div>
       </div>
     </div>
   </DashboardLayout>

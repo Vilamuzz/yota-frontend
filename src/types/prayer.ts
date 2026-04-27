@@ -4,21 +4,14 @@ export interface Prayer {
   id: string
   username: string
   content: string
-  amen_count: number
-  is_amen: boolean
-  created_at: string
+  amenCount: number
+  isAmen: boolean
+  createdAt: string
 }
 
 export interface PrayerList {
   prayers: Prayer[]
   pagination: Pagination
-}
-
-export interface PrayerParams {
-  donation_id?: string
-  limit?: number
-  next_cursor?: string
-  prev_cursor?: string
 }
 
 export interface ReportPrayer {

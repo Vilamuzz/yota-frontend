@@ -6,9 +6,7 @@ import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
-import { Plus, Eye } from 'lucide-vue-next'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faChildren } from '@fortawesome/free-solid-svg-icons'
+import { Plus, Eye, Baby } from 'lucide-vue-next'
 import type { DonationChild } from '@/types/donationChildren'
 
 const router = useRouter()
@@ -218,7 +216,7 @@ const getStatusColor = (status: string) => {
       @next="handleNextPage"
     >
       <template #empty-icon>
-        <FontAwesomeIcon :icon="faChildren" size="6x" class="text-gray-400"/>
+        <Baby :size="64" class="text-gray-400" />
       </template>
 
       <template #headers>

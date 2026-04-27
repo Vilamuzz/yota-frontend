@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/auth'
 import { publicRoutes } from '@/router/routes/public'
 import { authRoutes } from '@/router/routes/auth'
 import { dashboardRoutes } from '@/router/routes/dashboard'
+import { ROLES } from '@/const/roles'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,22 +11,24 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, _from, next) => {
+  console.time('RouterGuard')
   const authStore = useAuthStore()
 
-  await authStore.initPromise
+  if (!authStore.isInitialized) {
+    await authStore.initUser()
+  }
 
   const role = authStore.activeRole || ''
-
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return next('/login')
   }
 
   if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
-    return next(role === 'user' ? '/' : '/dashboard')
+    return next(role === ROLES.ORANG_TUA_ASUH ? '/' : '/dashboard')
   }
 
   if (to.path.startsWith('/dashboard')) {
-    if (role === 'user') return next('/')
+    if (role === ROLES.ORANG_TUA_ASUH) return next('/')
 
     const requiredRole = to.matched
       .map((record) => record.meta.role)
@@ -38,6 +41,7 @@ router.beforeEach(async (to, _from, next) => {
     }
   }
 
+  console.timeEnd('RouterGuard')
   next()
 })
 

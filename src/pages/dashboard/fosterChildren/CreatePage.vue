@@ -6,9 +6,7 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useChildCreate } from '@/composables/fosterChildren/useFosterChildrenCreate'
 import { createChildSchema } from '@/schemas/fosterChildren.schema'
 import { getZodErrors } from '@/utils/zodError'
-import { ArrowLeft, Trash2, Eye, X, Plus } from 'lucide-vue-next'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faChildren } from '@fortawesome/free-solid-svg-icons'
+import { ArrowLeft, Trash2, Eye, X, Plus, Baby } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -224,7 +222,7 @@ const isSubmitDisabled = computed(() => {
         </button>
         <div class="flex items-center gap-3">
           <div class="p-2 bg-primary-50 rounded-lg">
-            <FontAwesomeIcon :icon="faChildren" size="lg" class="text-primary-400"/>
+            <Baby :size="24" class="text-primary-400" />
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900">Tambah Anak Asuh Baru</h2>

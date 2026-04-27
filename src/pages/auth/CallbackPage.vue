@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useOAuthCallback } from '@/composables/auth/useOAuthCallback'
 import { CircleCheck, CircleX } from 'lucide-vue-next'
+import { motion } from 'motion-v'
 
 const route = useRoute()
 const { handleOAuthCallback, callbackError, callbackLoading } = useOAuthCallback()
@@ -20,26 +21,17 @@ onMounted(() => {
       <div class="bg-white rounded-lg shadow-xl p-8">
         <!-- Loading State -->
         <div v-if="callbackLoading" class="text-center">
-          <svg
-            class="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
+          <div class="flex justify-center items-center mb-4">
+            <motion.div
+              class="spinner"
+              :animate="{ transform: 'rotate(360deg)' }"
+              :transition="{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: 'linear',
+              }"
+            />
+          </div>
           <h2 class="text-xl font-semibold text-gray-900 mb-2">Authenticating...</h2>
           <p class="text-gray-600">Please wait while we sign you in</p>
         </div>
@@ -62,3 +54,14 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid #e5e7eb;
+  border-top-color: #0e733b;
+  will-change: transform;
+}
+</style>

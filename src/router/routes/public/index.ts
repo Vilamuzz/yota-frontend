@@ -17,22 +17,22 @@ export const publicRoutes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'donation',
-        component: () => import('@/pages/public/donation/IndexPage.vue'),
+        component: () => import('@/pages/public/donationProgram/IndexPage.vue'),
       },
       {
         path: ':slug',
         name: 'donation-detail',
-        component: () => import('@/pages/public/donation/DetailPage.vue'),
+        component: () => import('@/pages/public/donationProgram/DetailPage.vue'),
       },
       {
         path: ':slug/form',
         name: 'donation-form',
-        component: () => import('@/pages/public/donation/FormPage.vue'),
+        component: () => import('@/pages/public/donationProgram/FormPage.vue'),
       },
       {
         path: 'callback',
         name: 'donation-callback',
-        component: () => import('@/pages/public/donation/CallbackPage.vue'),
+        component: () => import('@/pages/public/donationProgram/CallbackPage.vue'),
       },
     ],
   },

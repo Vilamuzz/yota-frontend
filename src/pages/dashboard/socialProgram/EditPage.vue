@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
@@ -180,7 +180,7 @@ const handleCancel = () => {
                 Nominal Minimal Pembayaran <span class="text-red-500">*</span>
               </label>
 
-              <BaseInput v-model="minPayment" />
+              <BaseInput />
 
               <p v-if="errors.minPayment" class="text-xs text-red-500 mt-1">
                 {{ errors.minPayment }}
@@ -255,7 +255,7 @@ const handleCancel = () => {
             >
               <span class="text-sm">{{ preview }}</span>
               <button @click="removeFile(index)">
-                <X size="16" class="text-red-500" />
+                <X :size="16" class="text-red-500" />
               </button>
             </div>
           </div>

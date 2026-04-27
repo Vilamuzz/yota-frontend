@@ -1,35 +1,43 @@
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMutation } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/auth.service'
-import type { LoginRequest } from '@/types/auth'
-
-const extractError = (err: any, fallback: string) =>
-  err.response?.data?.message || err.message || fallback
+import type { LoginRequest, LoginResponse } from '@/types/auth'
+import type { ApiError } from '@/types/response'
 
 export const useLogin = () => {
   const authStore = useAuthStore()
   const router = useRouter()
 
-  const loginError = ref('')
-  const loginMutation = useMutation({
-    mutationFn: (credentials: LoginRequest) => authService.login(credentials),
+  const loginMutation = useMutation<LoginResponse, ApiError, LoginRequest>({
+    mutationFn: (credentials) => authService.login(credentials),
     onSuccess: async (data) => {
-      loginError.value = ''
       if (data.data?.token) {
         authStore.setToken(data.data.token)
         await authStore.initUser()
         await router.push('/dashboard')
       }
     },
-    onError: (err: any) => {
-      loginError.value = extractError(err, 'Login failed. Please try again.')
+    onError: (err, variables) => {
+      if (
+        err.response?.status === 403 &&
+        err.response?.data?.message === 'Please verify your email before logging in'
+      ) {
+        router.push({
+          name: 'resend-verification',
+          query: { email: variables.email },
+        })
+      }
     },
   })
 
+  const validationErrors = computed(
+    () => loginMutation.error.value?.response?.data?.validation ?? null,
+  )
+
   return {
-    loginError,
     loginMutation,
+    validationErrors,
   }
 }

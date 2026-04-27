@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Eye } from 'lucide-vue-next'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faChildren } from '@fortawesome/free-solid-svg-icons'
-import DashboardLayout from '@/layouts/DashboardLayout.vue';
-import BaseSearch from '@/components/atoms/BaseSearch.vue';
-import BaseFilter from '@/components/atoms/BaseFilter.vue';
-import BaseTable from '@/components/molecules/BaseTable.vue';
-import type { Submission } from '@/types/submissionChildren'
+import { Eye, Baby } from 'lucide-vue-next'
+import DashboardLayout from '@/layouts/DashboardLayout.vue'
+import BaseSearch from '@/components/atoms/BaseSearch.vue'
+import BaseFilter from '@/components/atoms/BaseFilter.vue'
+import BaseTable from '@/components/molecules/BaseTable.vue'
+import type { Submission } from '@/types/fosterChildrenCandidate'
 import router from '@/router'
-
 
 const searchQuery = ref('')
 const selectedGender = ref('all')
@@ -21,7 +18,6 @@ const clearFilters = () => {
   selectedGender.value = 'all'
   selectedCategory.value = 'all'
   selectedStatus.value = 'all'
-
 }
 
 const genders = ['all', 'laki-laki', 'perempuan']
@@ -29,15 +25,13 @@ const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
 
 const rawRole = localStorage.getItem('role')
 
-const role = ref(
-  rawRole ? rawRole.toLowerCase() : 'social_manager'
-)
+const role = ref(rawRole ? rawRole.toLowerCase() : 'social_manager')
 if (window.location.pathname.includes('chairman')) {
   role.value = 'chairman'
 }
 const statusByRole: Record<string, string[]> = {
   chairman: ['Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
-  social_manager: ['Diajukan', 'Menunggu Verifikasi', 'Disetujui', 'Ditolak']
+  social_manager: ['Diajukan', 'Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
 }
 const statuses = computed(() => {
   return ['all', ...(statusByRole[role.value] ?? [])]
@@ -47,7 +41,7 @@ const limit = ref(10)
 const pageOffset = ref(0)
 const pagination = ref({
   has_prev: false,
-  has_next: false
+  has_next: false,
 })
 
 const handleNextPage = () => {}
@@ -125,41 +119,30 @@ const children = ref<Submission[]>([
     certificates: [],
     status: 'Ditolak',
     created_at: '2024-01-04',
-  }
+  },
 ])
 
 const filteredChildren = computed(() => {
-   let data = [...children.value]
+  let data = [...children.value]
   if (role.value === 'chairman') {
-    data = data.filter(child =>
-      child.status !== 'Diajukan'
-    )
+    data = data.filter((child) => child.status !== 'Diajukan')
   }
   if (selectedStatus.value !== 'all') {
-    data = data.filter(child =>
-      child.status === selectedStatus.value
-    )
+    data = data.filter((child) => child.status === selectedStatus.value)
   }
   if (selectedGender.value !== 'all') {
-    data = data.filter(child =>
-      child.gender === selectedGender.value
-    )
+    data = data.filter((child) => child.gender === selectedGender.value)
   }
   if (selectedCategory.value !== 'all') {
-    data = data.filter(child =>
-      child.category === selectedCategory.value
-    )
+    data = data.filter((child) => child.category === selectedCategory.value)
   }
   if (searchQuery.value) {
-    data = data.filter(child =>
-      child.child_name
-        .toLowerCase()
-        .includes(searchQuery.value.toLowerCase())
+    data = data.filter((child) =>
+      child.child_name.toLowerCase().includes(searchQuery.value.toLowerCase()),
     )
   }
 
   return data
-
 })
 
 const getStatusColor = (status: string) => {
@@ -180,24 +163,22 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
 const handleView = (child: Submission) => {
-
   if (role.value === 'chairman') {
     router.push({
       name: 'chairman-foster-children-submissions-detail',
-      params: { id: child.id }
+      params: { id: child.id },
     })
   } else {
     router.push({
       name: 'dashboard-foster-children-submissions-detail',
-      params: { id: child.id }
+      params: { id: child.id },
     })
   }
-
 }
 </script>
 
@@ -209,7 +190,7 @@ const handleView = (child: Submission) => {
       <div class="">
         <div class="flex flex-col md:flex-col gap-4">
           <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-            <BaseSearch v-model="searchQuery" placeholder="Cari anak asuh..."/>
+            <BaseSearch v-model="searchQuery" placeholder="Cari anak asuh..." />
             <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
               <BaseFilter
                 :has-active-filters="selectedGender !== 'all' || selectedCategory !== 'all'"
@@ -218,21 +199,25 @@ const handleView = (child: Submission) => {
                   <div class="space-y-4">
                     <div>
                       <label class="block text-xs text-gray-700 mb-2">Jenis Kelamin</label>
-                      <select v-model="selectedGender"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                      <option v-for="gender in genders" :key="gender" :value="gender">
-                        {{  gender.charAt(0).toUpperCase() + gender.slice(1) }}
-                      </option>
+                      <select
+                        v-model="selectedGender"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        <option v-for="gender in genders" :key="gender" :value="gender">
+                          {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
+                        </option>
                       </select>
                     </div>
 
                     <div>
                       <label class="block text-xs text-gray-700 mb-2">Kategori</label>
-                      <select v-model="selectedCategory"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                      <option v-for="category in categories" :key="category" :value="category">
-                        {{  category.charAt(0).toUpperCase() + category.slice(1) }}
-                      </option>
+                      <select
+                        v-model="selectedCategory"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        <option v-for="category in categories" :key="category" :value="category">
+                          {{ category.charAt(0).toUpperCase() + category.slice(1) }}
+                        </option>
                       </select>
                     </div>
 
@@ -251,12 +236,14 @@ const handleView = (child: Submission) => {
                     <div class="flex gap-2 pt-2">
                       <button
                         @click="clearFilters"
-                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
+                      >
                         Clear
                       </button>
                       <button
                         @click="closeDropdown"
-                        class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150">
+                        class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150"
+                      >
                         Apply
                       </button>
                     </div>
@@ -279,17 +266,26 @@ const handleView = (child: Submission) => {
       :has-next="pagination?.has_next"
       v-model.limit="limit"
       @prev="handlePrevPage"
-      @next="handleNextPage">
+      @next="handleNextPage"
+    >
       <template #empty-icon>
-        <FontAwesomeIcon :icon="faChildren" size="6x" class="text-gray-400"/>
+        <Baby :size="64" class="text-gray-400" />
       </template>
 
       <template #headers>
         <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">No</th>
-        <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Nama Anak Asuh</th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Jenis Kelamin</th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Kategori</th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Tanggal Pengajuan</th>
+        <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">
+          Nama Anak Asuh
+        </th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
+          Jenis Kelamin
+        </th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
+          Kategori
+        </th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
+          Tanggal Pengajuan
+        </th>
         <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Status</th>
         <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Aksi</th>
       </template>
@@ -298,9 +294,10 @@ const handleView = (child: Submission) => {
         <tr
           v-for="(child, index) in filteredChildren"
           :key="child.id"
-          class="bg-white hover:bg-gray-50 transition-colors duration-150">
+          class="bg-white hover:bg-gray-50 transition-colors duration-150"
+        >
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{  pageOffset * limit + index + 1 }}
+            {{ pageOffset * limit + index + 1 }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins max-w-50 truncate">
             {{ child.child_name }}

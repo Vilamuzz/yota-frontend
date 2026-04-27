@@ -1,36 +1,56 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useForgetPassword } from '@/composables/auth/useForgetPassword'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { MailCheck } from 'lucide-vue-next'
 import { forgetPasswordSchema } from '@/schemas/auth.schema'
 import { getZodErrors } from '@/utils/zodError'
+import { useToast } from '@/composables/ui/useToast'
+import { extractError } from '@/utils/error'
 
 const router = useRouter()
-const { forgetPasswordMutation, forgetPasswordError } = useForgetPassword()
-
+const { showToast } = useToast()
+const { forgetPasswordMutation, validationErrors } = useForgetPassword()
 const email = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 const showSuccessModal = ref(false)
+const emailError = computed(() => fieldErrors.value.email || validationErrors.value?.email || '')
 
-const handleSubmit = async () => {
+watch(email, () => {
+  if (fieldErrors.value.email) fieldErrors.value.email = ''
+  if (forgetPasswordMutation.isError.value) forgetPasswordMutation.reset()
+})
+
+const handleSubmit = () => {
   showSuccessModal.value = false
 
   const result = forgetPasswordSchema.safeParse({ email: email.value })
   fieldErrors.value = getZodErrors(result)
   if (!result.success) return
 
-  const response = await forgetPasswordMutation.mutateAsync(result.data.email).catch(() => null)
-  if (response) showSuccessModal.value = true
+  forgetPasswordMutation.mutate(result.data.email, {
+    onSuccess: () => {
+      showSuccessModal.value = true
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Failed to forget password. Please try again.'), 'error')
+    },
+  })
 }
 
-const resendResetLink = async () => {
-  await forgetPasswordMutation.mutateAsync(email.value).catch(() => {})
+const resendResetLink = () => {
+  forgetPasswordMutation.mutate(email.value, {
+    onSuccess: () => {
+      showSuccessModal.value = true
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Failed to forget password. Please try again.'), 'error')
+    },
+  })
 }
 
 const goToLogin = () => {
@@ -50,15 +70,6 @@ const closeModal = () => {
     subtitle="Enter your email address and we'll send you a link to reset your password"
   >
     <form @submit.prevent="handleSubmit" class="space-y-4">
-      <BaseAlert
-        v-if="forgetPasswordError"
-        type="error"
-        dismissible
-        @dismiss="forgetPasswordError = ''"
-      >
-        {{ forgetPasswordError }}
-      </BaseAlert>
-
       <BaseInput
         id="email"
         v-model="email"
@@ -66,7 +77,7 @@ const closeModal = () => {
         label="Email Address"
         placeholder="you@example.com"
         autocomplete="email"
-        :error="fieldErrors.email"
+        :error="emailError"
       />
 
       <BaseButton

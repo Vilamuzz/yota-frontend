@@ -5,65 +5,45 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  ForgetPasswordRequest,
   ResetPasswordRequest,
-  CurrentUserResponse,
-  UpdateUserProfileRequest,
-  UpdateUserPasswordRequest,
+  Role,
   SwitchRoleResponse,
 } from '@/types/auth'
 import type { ApiResponse } from '@/types/response'
 
 export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>(API.AUTH_LOGIN, credentials)
+    const response = await api.post<LoginResponse>(`${API.AUTH}/login`, credentials)
     return response.data
   },
 
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
-    const response = await api.post<RegisterResponse>(API.AUTH_REGISTER, data)
+    const response = await api.post<RegisterResponse>(`${API.AUTH}/register`, data)
     return response.data
   },
 
-  verifyEmail: async (data: { token: string }): Promise<ApiResponse> => {
-    const response = await api.post<ApiResponse>(API.AUTH_VERIFY_EMAIL, data)
+  verifyEmail: async (token: string): Promise<ApiResponse> => {
+    const response = await api.post<ApiResponse>(`${API.AUTH}/verify-email`, { token })
     return response.data
   },
 
-  resendVerification: async (data: { email: string }): Promise<ApiResponse> => {
-    const response = await api.post<ApiResponse>(API.AUTH_RESEND_VERIFICATION, data)
+  resendVerification: async (email: string): Promise<ApiResponse> => {
+    const response = await api.post<ApiResponse>(`${API.AUTH}/resend-verification`, { email })
     return response.data
   },
 
-  forgetPassword: async (data: ForgetPasswordRequest): Promise<ApiResponse> => {
-    const response = await api.post<ApiResponse>(API.AUTH_FORGET_PASSWORD, data)
+  forgetPassword: async (email: string): Promise<ApiResponse> => {
+    const response = await api.post<ApiResponse>(`${API.AUTH}/forget-password`, { email })
     return response.data
   },
 
   resetPassword: async (data: ResetPasswordRequest): Promise<ApiResponse> => {
-    const response = await api.post<ApiResponse>(API.AUTH_RESET_PASSWORD, data)
+    const response = await api.post<ApiResponse>(`${API.AUTH}/reset-password`, data)
     return response.data
   },
 
-  getCurrentUser: async (): Promise<CurrentUserResponse> => {
-    const response = await api.get<CurrentUserResponse>(API.CURRENT_USER)
-    return response.data
-  },
-
-  updateCurrentUserProfile: async (
-    data: UpdateUserProfileRequest,
-  ): Promise<CurrentUserResponse> => {
-    const response = await api.put<CurrentUserResponse>(API.CURRENT_USER, data)
-    return response.data
-  },
-
-  updateCurrentUserPassword: async (data: UpdateUserPasswordRequest): Promise<ApiResponse> => {
-    const response = await api.put<ApiResponse>(API.CURRENT_USER_PASSWORD, data)
-    return response.data
-  },
-
-  switchRole: async (role: string): Promise<SwitchRoleResponse> => {
-    const response = await api.post<SwitchRoleResponse>(API.AUTH_SWITCH_ROLE, { role })
+  switchRole: async (role: Role): Promise<SwitchRoleResponse> => {
+    const response = await api.post<SwitchRoleResponse>(`${API.AUTH}/switch-role`, { role })
     return response.data
   },
 }

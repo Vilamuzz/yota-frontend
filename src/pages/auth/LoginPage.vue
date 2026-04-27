@@ -1,33 +1,51 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { reactive, computed, watch, ref } from 'vue'
 import { useLogin } from '@/composables/auth/useLogin'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import BaseAlert from '@/components/atoms/BaseAlert.vue'
+import { useToast } from '@/composables/ui/useToast'
 import { loginSchema } from '@/schemas/auth.schema'
 import { getZodErrors } from '@/utils/zodError'
+import { extractError } from '@/utils/error'
 
-const router = useRouter()
-const { loginMutation, loginError } = useLogin()
+const { loginMutation, validationErrors } = useLogin()
+const form = reactive({
+  email: '',
+  password: '',
+})
 
-const email = ref('')
-const password = ref('')
 const fieldErrors = ref<Record<string, string>>({})
+const emailError = computed(() => fieldErrors.value.email || validationErrors.value?.email || '')
+const passwordError = computed(
+  () => fieldErrors.value.password || validationErrors.value?.password || '',
+)
 
-const handleLogin = async () => {
-  // Client-side validation via Zod
-  const result = loginSchema.safeParse({ email: email.value, password: password.value })
-  fieldErrors.value = getZodErrors(result)
-  if (!result.success) return
+watch(
+  form,
+  () => {
+    if (Object.keys(fieldErrors.value).length > 0) {
+      fieldErrors.value = {}
+    }
+    if (loginMutation.isError.value) {
+      loginMutation.reset()
+    }
+  },
+  { deep: true },
+)
 
-  // Server call — onError in useAuth handles the error state; .catch() suppresses the re-throw
-  await loginMutation.mutateAsync(result.data).catch(() => {})
+const { showToast } = useToast()
+const handleLogin = () => {
+  const response = loginSchema.safeParse({ email: form.email, password: form.password })
+  fieldErrors.value = getZodErrors(response)
+  if (!response.success) return
+  loginMutation.mutate(response.data, {
+    onError: (err) => {
+      showToast(extractError(err, 'Login failed. Please try again.'), 'error')
+    },
+  })
 }
 
-const goToRegister = () => router.push('/register')
-const goToForgotPassword = () => router.push('/forgot-password')
 const handleGoogleLogin = () => {
   window.location.href = '/api/auth/oauth/google'
 }
@@ -41,39 +59,34 @@ const handleGoogleLogin = () => {
     @google-login="handleGoogleLogin"
   >
     <form @submit.prevent="handleLogin" class="space-y-4">
-      <BaseAlert v-if="loginError" type="error" dismissible @dismiss="loginError = ''">
-        {{ loginError }}
-      </BaseAlert>
-
       <BaseInput
         id="email"
-        v-model="email"
+        v-model="form.email"
         type="email"
         label="Email Address"
         placeholder="you@example.com"
         autocomplete="email"
-        :error="fieldErrors.email"
+        :error="emailError"
       />
 
       <BaseInput
         id="password"
-        v-model="password"
+        v-model="form.password"
         type="password"
         label="Password"
         placeholder="••••••••"
         autocomplete="current-password"
         :show-password-toggle="true"
-        :error="fieldErrors.password"
+        :error="passwordError"
       />
 
-      <div class="flex items-center justify-end">
-        <button
-          type="button"
-          @click="goToForgotPassword"
+      <div class="flex items-center justify-start">
+        <RouterLink
+          to="/forgot-password"
           class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition duration-200"
         >
           Forgot password?
-        </button>
+        </RouterLink>
       </div>
 
       <BaseButton
@@ -90,12 +103,12 @@ const handleGoogleLogin = () => {
     <template #footer>
       <p class="text-xs text-gray-600">
         Don't have an account?
-        <button
-          @click="goToRegister"
+        <RouterLink
+          to="/register"
           class="text-indigo-600 hover:text-indigo-800 font-semibold transition duration-200"
         >
           Register now
-        </button>
+        </RouterLink>
       </p>
     </template>
   </AuthLayout>

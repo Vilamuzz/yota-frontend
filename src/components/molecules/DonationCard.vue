@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatCurrency } from '@/utils/format'
-import type { Donation } from '@/types/donation'
+import type { Donation } from '@/types/donationProgram'
 
 const props = defineProps<{
   donation: Donation

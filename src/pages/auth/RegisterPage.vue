@@ -1,101 +1,109 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRegister } from '@/composables/auth/useRegister'
-import { useResendVerification } from '@/composables/auth/useResendVerification'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import BaseAlert from '@/components/atoms/BaseAlert.vue'
-import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import { MailCheck } from 'lucide-vue-next'
 import { registerSchema } from '@/schemas/auth.schema'
 import { getZodErrors } from '@/utils/zodError'
+import { useToast } from '@/composables/ui/useToast'
+import { extractError } from '@/utils/error'
 
 const router = useRouter()
-const { registerMutation, registerError } = useRegister()
-const { resendVerificationMutation, resendError } = useResendVerification()
+const { registerMutation, validationErrors } = useRegister()
+const form = reactive({
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+})
 
-const username = ref('')
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
 const fieldErrors = ref<Record<string, string>>({})
-const showSuccessModal = ref(false)
-const registeredEmail = ref('')
+const usernameError = computed(
+  () => fieldErrors.value.username || validationErrors.value?.username || '',
+)
+const emailError = computed(() => fieldErrors.value.email || validationErrors.value?.email || '')
+const passwordError = computed(
+  () => fieldErrors.value.password || validationErrors.value?.password || '',
+)
+const confirmPasswordError = computed(
+  () => fieldErrors.value.confirmPassword || validationErrors.value?.confirmPassword || '',
+)
 
-const handleRegister = async () => {
-  // Client-side validation via Zod (includes confirmPassword match)
+watch(
+  form,
+  () => {
+    if (Object.keys(fieldErrors.value).length > 0) {
+      fieldErrors.value = {}
+    }
+    if (registerMutation.isError.value) {
+      registerMutation.reset()
+    }
+  },
+  { deep: true },
+)
+
+const { showToast } = useToast()
+const handleRegister = () => {
   const result = registerSchema.safeParse({
-    username: username.value,
-    email: email.value,
-    password: password.value,
-    confirmPassword: confirmPassword.value,
+    username: form.username,
+    email: form.email,
+    password: form.password,
+    confirmPassword: form.confirmPassword,
   })
 
   fieldErrors.value = getZodErrors(result)
   if (!result.success) return
 
-  // Server call — onError in useAuth handles the error state; .catch() suppresses the re-throw
-  const response = await registerMutation
-    .mutateAsync({
+  registerMutation.mutate(
+    {
       username: result.data.username,
       email: result.data.email,
       password: result.data.password,
-    })
-    .catch(() => null)
-
-  if (response) {
-    registeredEmail.value = response.data?.email || email.value
-    showSuccessModal.value = true
-  }
-}
-
-const handleResendVerification = async () => {
-  await resendVerificationMutation.mutateAsync(registeredEmail.value).catch(() => {})
-}
-
-const goToLogin = () => {
-  showSuccessModal.value = false
-  router.push('/login')
-}
-
-const closeModal = () => {
-  showSuccessModal.value = false
-  router.push('/login')
+    },
+    {
+      onSuccess: (data) => {
+        const registeredEmail = data.data?.email || form.email
+        router.push({
+          name: 'resend-verification',
+          query: { email: registeredEmail },
+        })
+      },
+      onError: (err) => {
+        showToast(extractError(err, 'Registration failed. Please try again.'), 'error')
+      },
+    },
+  )
 }
 </script>
 
 <template>
   <AuthLayout title="Create Account" subtitle="Sign up to get started">
     <form @submit.prevent="handleRegister" class="space-y-4">
-      <BaseAlert v-if="registerError" type="error" dismissible @dismiss="registerError = ''">
-        {{ registerError }}
-      </BaseAlert>
-
       <BaseInput
         id="username"
-        v-model="username"
+        v-model="form.username"
         type="text"
         label="Username"
         placeholder="johndoe"
         autocomplete="username"
-        :error="fieldErrors.username"
+        :error="usernameError"
       />
 
       <BaseInput
         id="email"
-        v-model="email"
+        v-model="form.email"
         type="email"
         label="Email Address"
         placeholder="you@example.com"
         autocomplete="email"
-        :error="fieldErrors.email"
+        :error="emailError"
       />
 
       <BaseInput
         id="password"
-        v-model="password"
+        v-model="form.password"
         type="password"
         label="Password"
         placeholder="••••••••"
@@ -103,18 +111,18 @@ const closeModal = () => {
         hint="Must be at least 8 characters"
         :show-password-toggle="true"
         :show-password-strength="true"
-        :error="fieldErrors.password"
+        :error="passwordError"
       />
 
       <BaseInput
         id="confirmPassword"
-        v-model="confirmPassword"
+        v-model="form.confirmPassword"
         type="password"
         label="Confirm Password"
         placeholder="••••••••"
         autocomplete="new-password"
         :show-password-toggle="true"
-        :error="fieldErrors.confirmPassword"
+        :error="confirmPasswordError"
       />
 
       <BaseButton
@@ -131,35 +139,13 @@ const closeModal = () => {
     <template #footer>
       <p class="text-xs text-gray-600">
         Already have an account?
-        <button
-          @click="goToLogin"
+        <RouterLink
+          to="/login"
           class="text-indigo-600 hover:text-indigo-800 font-semibold transition duration-200"
         >
           Sign in
-        </button>
+        </RouterLink>
       </p>
     </template>
   </AuthLayout>
-
-  <!-- Success Modal -->
-  <ConfirmationModal
-    :show="showSuccessModal"
-    title="Registration Successful!"
-    message="We've sent a verification email to your inbox. Click the link to activate your account. If you don't see it, check your spam folder."
-    :icon="MailCheck"
-    primary-button-text="Resend Verification Email"
-    secondary-button-text="Go to Login"
-    :primary-button-loading="resendVerificationMutation.isPending.value"
-    @close="closeModal"
-    @primary="handleResendVerification"
-    @secondary="goToLogin"
-  >
-    <p class="text-sm text-gray-700 font-mono bg-gray-100 px-4 py-2 rounded-lg">
-      {{ registeredEmail }}
-    </p>
-
-    <BaseAlert v-if="resendError" type="error" class="mt-2">
-      {{ resendError }}
-    </BaseAlert>
-  </ConfirmationModal>
 </template>

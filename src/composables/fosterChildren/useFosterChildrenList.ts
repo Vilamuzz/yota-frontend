@@ -1,26 +1,23 @@
-import { ref, toValue, type MaybeRefOrGetter } from 'vue'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { childService } from '@/services/fosterChildren.service'
-import type { ChildParams } from '@/types/fosterChildren'
+import { fosterChildrenService } from '@/services/fosterChildren.service'
+import type { FosterChildrenParams, FosterChildrenListResponse } from '@/types/fosterChildren'
+import type { ApiError } from '@/types/response'
 
-export const useChildList = (params: MaybeRefOrGetter<ChildParams>) => {
-  const childListError = ref('')
-  const childListQuery = useQuery({
-    queryKey: ['children', params],
-    queryFn: async () => {
-      try {
-        const response = await childService.getChildList(toValue(params))
-        return response
-      } catch (err: unknown) {
-        childListError.value = err instanceof Error ? err.message : 'Failed to fetch children'
-        throw err
-      }
-    },
+export const useFosterChildrenList = (params: MaybeRefOrGetter<FosterChildrenParams>) => {
+  const fosterChildrenListQuery = useQuery<FosterChildrenListResponse, ApiError>({
+    queryKey: ['fosterChildren', params],
+    queryFn: () => fosterChildrenService.getFosterChildrenList(toValue(params)),
     retry: 1,
   })
 
+  const fosterChildren = computed(() => fosterChildrenListQuery.data.value?.data?.fosterChildren || [])
+  const pagination = computed(() => fosterChildrenListQuery.data.value?.data?.pagination)
+
   return {
-    childListError,
-    childListQuery,
+    fosterChildrenListQuery,
+    fosterChildren,
+    pagination,
+    isLoading: fosterChildrenListQuery.isPending,
   }
 }

@@ -1,32 +1,21 @@
-import { ref } from 'vue'
-import { useMutation } from '@tanstack/vue-query'
-import { childService } from '@/services/fosterChildren.service'
-import type { UpdateChildRequest } from '@/types/fosterChildren'
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
+import { fosterChildrenService } from '@/services/fosterChildren.service'
+import type { UpdateFosterChildrenRequest } from '@/types/fosterChildren'
+import type { ApiError } from '@/types/response'
+import { computed } from 'vue'
 
 export const useFosterChildrenUpdate = () => {
-  const updateError = ref('')
+  const queryClient = useQueryClient()
 
-  const updateFosterChildMutation = useMutation({
-    mutationFn: async ({
-      childId,
-      data,
-    }: {
-      childId: string
-      data: UpdateChildRequest
-    }) => {
-      try {
-        const response = await childService.updateChild(childId, data)
-        return response
-      } catch (error: unknown) {
-        updateError.value =
-          error instanceof Error ? error.message : 'Failed to update foster child'
-        throw error
-      }
-    },
+  const updateFosterChildMutation = useMutation<any, ApiError, { childId: string; data: UpdateFosterChildrenRequest }>({
+    mutationFn: ({ childId, data }) => fosterChildrenService.updateFosterChildren(childId, data),
     onSuccess: () => {
-      updateError.value = ''
+      queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
     },
   })
+
+  const updateError = computed(() => updateFosterChildMutation.error.value?.message)
+
   return {
     updateFosterChildMutation,
     updateError,

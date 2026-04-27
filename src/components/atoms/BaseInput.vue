@@ -116,6 +116,14 @@ const togglePasswordVisibility = () => {
     </label>
 
     <div class="relative">
+      <!-- Prefix Slot -->
+      <div
+        v-if="$slots.prefix"
+        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+      >
+        <slot name="prefix" />
+      </div>
+
       <input
         :id="id"
         :type="inputType"
@@ -124,9 +132,21 @@ const togglePasswordVisibility = () => {
         :required="required"
         :autocomplete="autocomplete"
         :disabled="disabled"
-        :class="inputClasses"
+        :class="[
+          inputClasses,
+          $slots.prefix ? 'pl-10' : '',
+          $slots.suffix || (showPasswordToggle && type === 'password') ? 'pr-10' : '',
+        ]"
         @input="handleInput"
       />
+
+      <!-- Suffix Slot -->
+      <div
+        v-if="$slots.suffix"
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+      >
+        <slot name="suffix" />
+      </div>
 
       <!-- Password Toggle Button -->
       <button
@@ -171,12 +191,13 @@ const togglePasswordVisibility = () => {
       </p>
     </div>
 
-    <p v-if="hint && !error" class="mt-1 text-xs text-gray-500">
-      {{ hint }}
-    </p>
-
-    <p v-if="error" class="mt-1 text-xs text-red-600">
-      {{ error }}
-    </p>
+    <div class="min-h-5 mt-1">
+      <p v-if="error" class="text-xs text-red-600">
+        {{ error }}
+      </p>
+      <p v-else-if="hint" class="text-xs text-gray-500">
+        {{ hint }}
+      </p>
+    </div>
   </div>
 </template>

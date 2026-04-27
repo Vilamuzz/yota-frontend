@@ -1,50 +1,51 @@
 import type { RouteRecordRaw } from 'vue-router'
+import { ROLES } from '@/const/roles'
 
 export const financeRoutes: RouteRecordRaw[] = [
   {
     path: '',
-    meta: { role: 'finance' },
+    meta: { role: ROLES.FINANCE },
     children: [
       {
-        path: 'donations',
-        name: 'dashboard-donations',
-        component: () => import('@/pages/dashboard/donations/IndexPage.vue'),
+        path: 'donation-programs',
+        name: 'dashboard-donation-programs',
+        component: () => import('@/pages/dashboard/donationPrograms/IndexPage.vue'),
         meta: { title: 'Donasi' },
       },
       {
-        path: 'donations/create',
-        name: 'dashboard-donations-create',
-        component: () => import('@/pages/dashboard/donations/CreatePage.vue'),
-        meta: { title: 'Tambah Donasi', activeMenu: 'dashboard-donations' },
+        path: 'donation-programs/create',
+        name: 'dashboard-donation-programs-create',
+        component: () => import('@/pages/dashboard/donationPrograms/CreatePage.vue'),
+        meta: { title: 'Tambah Donasi', activeMenu: 'dashboard-donation-programs' },
       },
       {
-        path: 'donations/:id',
-        name: 'dashboard-donations-edit',
-        component: () => import('@/pages/dashboard/donations/EditPage.vue'),
-        meta: { title: 'Edit Donasi', activeMenu: 'dashboard-donations' },
+        path: 'donation-programs/:id',
+        name: 'dashboard-donation-programs-edit',
+        component: () => import('@/pages/dashboard/donationPrograms/EditPage.vue'),
+        meta: { title: 'Edit Donasi', activeMenu: 'dashboard-donation-programs' },
       },
       {
-        path: 'income/donation',
+        path: 'income/donation-programs',
         name: 'dashboard-donation-income',
-        component: () => import('@/pages/dashboard/income/donationTransaction/DonationPage.vue'),
+        component: () => import('@/pages/dashboard/income/donationProgramTransaction/DonationProgramPage.vue'),
         meta: { title: 'Pemasukan Donasi' },
       },
       {
-        path: 'income/donation/donation-transaction/:id',
-        name: 'dashboard-donation-transaction',
-        component: () => import('@/pages/dashboard/income/donationTransaction/IndexPage.vue'),
+        path: 'income/donation-programs/:id',
+        name: 'dashboard-donation-program-transaction',
+        component: () => import('@/pages/dashboard/income/donationProgramTransaction/IndexPage.vue'),
         meta: { title: 'Transaksi Donasi', activeMenu: 'dashboard-donation-income' },
       },
       {
-        path: 'income/donation/donation-transaction/:id/create',
+        path: 'income/donation-programs/:id/create',
         name: 'dashboard-donation-transaction-create',
-        component: () => import('@/pages/dashboard/income/donationTransaction/CreatePage.vue'),
+        component: () => import('@/pages/dashboard/income/donationProgramTransaction/CreatePage.vue'),
         meta: { title: 'Tambah Transaksi Donasi', activeMenu: 'dashboard-donation-income' },
       },
       {
-        path: 'income/donation/donation-transaction/:id/edit',
+        path: 'income/donation-programs/:id/edit',
         name: 'dashboard-donation-transaction-edit',
-        component: () => import('@/pages/dashboard/income/donationTransaction/EditPage.vue'),
+        component: () => import('@/pages/dashboard/income/donationProgramTransaction/EditPage.vue'),
         meta: { title: 'Edit Transaksi Donasi', activeMenu: 'dashboard-donation-income' },
       },
       {
@@ -60,9 +61,9 @@ export const financeRoutes: RouteRecordRaw[] = [
         meta: { title: 'Transaksi Anak Asuh' },
       },
       {
-        path: 'expense/donation',
+        path: 'expense/donation-programs',
         name: 'dashboard-donation-expense',
-        component: () => import('@/pages/dashboard/expense/donationExpense/DonationPage.vue'),
+        component: () => import('@/pages/dashboard/expense/donationExpense/DonationProgramPage.vue'),
         meta: { title: 'Pengeluaran Donasi' },
       },
     ],

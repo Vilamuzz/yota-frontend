@@ -1,9 +1,10 @@
 import type { RouteRecordRaw } from 'vue-router'
+import { ROLES } from '@/const/roles'
 
 export const socialManagerRoutes: RouteRecordRaw[] = [
   {
     path: '',
-    meta: { role: 'social_manager' }, // Sinkronisasi dengan menuConfig yang menggunakan underscore
+    meta: { role: ROLES.SOCIAL_MANAGER },
     children: [
       {
         path: 'foster-children',
@@ -15,19 +16,19 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         path: 'foster-children/create',
         name: 'dashboard-foster-children-create',
         component: () => import('@/pages/dashboard/fosterChildren/CreatePage.vue'),
-        meta: { title: ' Tambah Data Anak Asuh', activeMenu:'dashboard-foster-children' },
+        meta: { title: ' Tambah Data Anak Asuh', activeMenu: 'dashboard-foster-children' },
       },
       {
         path: 'foster-children/:id/edit',
         name: 'dashboard-foster-children-edit',
         component: () => import('@/pages/dashboard/fosterChildren/EditPage.vue'),
-        meta: { title: 'Edit Data Anak Asuh', activeMenu:'dashboard-foster-children' },
+        meta: { title: 'Edit Data Anak Asuh', activeMenu: 'dashboard-foster-children' },
       },
       {
         path: 'foster-children/:id/detail',
         name: 'dashboard-foster-children-detail',
         component: () => import('@/pages/dashboard/fosterChildren/DetailPage.vue'),
-        meta: { title: 'Detail Anak Asuh', activeMenu:'dashboard-foster-children' },
+        meta: { title: 'Detail Anak Asuh', activeMenu: 'dashboard-foster-children' },
       },
       {
         path: 'foster-children/submissions',
@@ -39,19 +40,26 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         path: 'foster-children/submissions/:id/detail',
         name: 'dashboard-foster-children-submissions-detail',
         component: () => import('@/pages/dashboard/fosterChildren/SubmissionsDetailPage.vue'),
-        meta: { title: 'Detail Ajuan Anak Asuh', activeMenu:'dashboard-foster-children-submissions' },
+        meta: {
+          title: 'Detail Ajuan Anak Asuh',
+          activeMenu: 'dashboard-foster-children-submissions',
+        },
       },
       {
         path: 'foster-children/donations',
         name: 'dashboard-foster-children-donations',
-        component: () => import('@/pages/dashboard/income/fosterChildrenTransaction/FosterChildrenPage.vue'),
+        component: () =>
+          import('@/pages/dashboard/income/fosterChildrenTransaction/FosterChildrenPage.vue'),
         meta: { requiresAuth: true, title: 'Riwayat Donasi Anak Asuh' },
       },
       {
         path: 'foster-children/donations/:id/detail',
         name: 'dashboard-foster-children-donations-detail',
         component: () => import('@/pages/dashboard/income/fosterChildrenTransaction/IndexPage.vue'),
-        meta: { title: 'Detail Riwayat Donasi Anak Asuh', activeMenu:'dashboard-foster-children-donations' },
+        meta: {
+          title: 'Detail Riwayat Donasi Anak Asuh',
+          activeMenu: 'dashboard-foster-children-donations',
+        },
       },
       {
         path: 'social-program',
@@ -75,9 +83,13 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         path: 'social-program/subscriptions/:id',
         name: 'dashboard-social-program-subscription-detail',
         component: () => import('@/pages/dashboard/socialProgram/SubscriptionDetailPage.vue'),
-        meta: { requiresAuth: true, title: 'Detail Langganan', activeMenu: 'dashboard-social-program-subscriptions' },
+        meta: {
+          requiresAuth: true,
+          title: 'Detail Langganan',
+          activeMenu: 'dashboard-social-program-subscriptions',
+        },
       },
-    
+
       {
         path: 'social-program/customers',
         name: 'dashboard-social-program-customers',
@@ -88,20 +100,32 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         path: 'social-program/customers/:id',
         name: 'dashboard-social-program-customers-detail',
         component: () => import('@/pages/dashboard/socialProgram/CustomerDetailPage.vue'),
-        meta: { requiresAuth: true, title: 'Detail Pelanggan', activeMenu: 'dashboard-social-program-customers' },
+        meta: {
+          requiresAuth: true,
+          title: 'Detail Pelanggan',
+          activeMenu: 'dashboard-social-program-customers',
+        },
       },
       {
         path: 'social-program/customers/:customerId/program/:programId',
         name: 'dashboard-social-program-customers-detail-detail',
         component: () => import('@/pages/dashboard/socialProgram/CustomerDetailDetailPage.vue'),
-        meta: { requiresAuth: true, title: 'Detail Program Pelanggan', activeMenu: 'dashboard-social-program-customers' },
+        meta: {
+          requiresAuth: true,
+          title: 'Detail Program Pelanggan',
+          activeMenu: 'dashboard-social-program-customers',
+        },
       },
 
       {
         path: 'social-program/:id/detail',
         name: 'dashboard-social-program-detail',
         component: () => import('@/pages/dashboard/socialProgram/DetailPage.vue'),
-        meta: { requiresAuth: true, title: 'Detail Program', activeMenu: 'dashboard-social-program' },
+        meta: {
+          requiresAuth: true,
+          title: 'Detail Program',
+          activeMenu: 'dashboard-social-program',
+        },
       },
       {
         path: 'social-program/:id',

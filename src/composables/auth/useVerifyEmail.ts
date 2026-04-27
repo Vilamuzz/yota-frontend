@@ -1,24 +1,19 @@
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
 import { authService } from '@/services/auth.service'
-
-const extractError = (err: any, fallback: string) =>
-  err.response?.data?.message || err.message || fallback
+import type { ApiError, ApiResponse } from '@/types/response'
 
 export const useVerifyEmail = () => {
-  const verifyEmailError = ref('')
-  const verifyEmailMutation = useMutation({
-    mutationFn: (token: string) => authService.verifyEmail({ token }),
-    onSuccess: () => {
-      verifyEmailError.value = ''
-    },
-    onError: (err: any) => {
-      verifyEmailError.value = extractError(err, 'Failed to verify email. Please try again.')
-    },
+  const verifyEmailMutation = useMutation<ApiResponse, ApiError, string>({
+    mutationFn: (token: string) => authService.verifyEmail(token),
   })
 
+  const validationErrors = computed(
+    () => verifyEmailMutation.error.value?.response?.data?.validation ?? null,
+  )
+
   return {
-    verifyEmailError,
     verifyEmailMutation,
+    validationErrors,
   }
 }

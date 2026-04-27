@@ -1,3 +1,4 @@
+import { ROLES } from '@/const/roles'
 import type { Response } from './response'
 
 export interface LoginRequest {
@@ -5,22 +6,8 @@ export interface LoginRequest {
   password: string
 }
 
-export interface RegisterRequest {
+export interface RegisterRequest extends LoginRequest {
   username: string
-  email: string
-  password: string
-}
-
-export interface VerifyEmailRequest {
-  token: string
-}
-
-export interface ResendVerificationRequest {
-  email: string
-}
-
-export interface ForgetPasswordRequest {
-  email: string
 }
 
 export interface ResetPasswordRequest {
@@ -28,28 +15,12 @@ export interface ResetPasswordRequest {
   newPassword: string
 }
 
-export interface UpdateUserProfileRequest {
-  username?: string
-  email?: string
-}
-
-export interface UpdateUserPasswordRequest {
-  currentPassword: string
-  newPassword: string
-}
-
-export interface UserProfile {
-  id: string
-  username: string
-  email: string
-  role: string[]
-  active_role: string
-}
+export type Role = (typeof ROLES)[keyof typeof ROLES]
 
 export interface UserJWTClaims {
-  user_id: string
-  role: string[]
-  active_role: string
+  accountId: string
+  roles: Role[]
+  activeRole: Role
   exp: number
   iat: number
   iss: string
@@ -60,15 +31,10 @@ export interface RegisterData {
   email: string
 }
 
-export interface LoginData {
+export interface AuthResponse {
   token: string
 }
 
-export interface SwitchRoleData {
-  token: string
-}
-
-export type LoginResponse = Response<LoginData>
+export type LoginResponse = Response<AuthResponse>
 export type RegisterResponse = Response<RegisterData>
-export type CurrentUserResponse = Response<UserProfile>
-export type SwitchRoleResponse = Response<SwitchRoleData>
+export type SwitchRoleResponse = Response<AuthResponse>

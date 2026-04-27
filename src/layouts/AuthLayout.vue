@@ -13,7 +13,7 @@ defineEmits<{
 <template>
   <div class="min-h-screen flex">
     <!-- Left Section - Logo -->
-    <div class="w-2/4 flex items-center justify-center bg-[#062e18]">
+    <div class="w-2/4 flex items-center justify-center bg-primary-500">
       <div class="text-center">
         <h1 class="text-6xl font-bold text-white mb-4">YOTA</h1>
         <p class="text-white text-xl opacity-80">Your Online Travel Assistant</p>

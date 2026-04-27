@@ -1,32 +1,19 @@
-import { ref } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { prayerService } from '@/services/prayer.service'
+import type { PrayerResponse } from '@/types/prayer'
+import type { ApiError } from '@/types/response'
 
 export const usePrayerReport = () => {
   const queryClient = useQueryClient()
-  const createError = ref('')
 
-  const createMutation = useMutation({
-    mutationFn: async (report: { prayerID: string; reason: string }) => {
-      try {
-        const response = await prayerService.reportPrayer(report.prayerID, report.reason)
-        return response
-      } catch (error: unknown) {
-        createError.value = error instanceof Error ? error.message : 'Failed to report prayer'
-        throw error
-      }
-    },
+  const createMutation = useMutation<PrayerResponse, ApiError, { prayerID: string; reason: string }>({
+    mutationFn: (report) => prayerService.reportPrayer(report.prayerID, report.reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prayers'] })
-      createError.value = ''
-    },
-    onError: (err: unknown) => {
-      createError.value = err instanceof Error ? err.message : 'Failed to report prayer'
     },
   })
 
   return {
     createMutation,
-    createError,
   }
 }

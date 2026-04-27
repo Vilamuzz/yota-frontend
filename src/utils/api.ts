@@ -26,15 +26,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      if (
-        !window.location.pathname.includes('/auth') &&
-        !window.location.pathname.includes('/login')
-      ) {
-        localStorage.removeItem('token')
-        // Use window.location for hard redirect to ensure state is cleared
-        window.location.href = '/login'
-      }
+    const isAuthRoute =
+      window.location.pathname.includes('/auth') || window.location.pathname.includes('/login')
+
+    if (error.response?.status === 401 && !isAuthRoute) {
+      localStorage.removeItem('token')
+      window.location.href = '/login?message=session_expired'
     }
     return Promise.reject(error)
   },

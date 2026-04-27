@@ -1,41 +1,47 @@
+import type { Pagination, PaginationParams, Response } from './response'
+
 export interface SocialProgram {
-  id: number
-  name: string
-  total_subscriber: number
+  id: string
+  slug: string
+  title: string
+  description: string
+  coverImage: string
   status: string
-  created_at: string
+  minimumAmount: number
+  billingDay: number
 }
 
-export interface SocialProgramListResponse {
-  data: {
-    programs: SocialProgram[]
-    pagination: {
-      has_next: boolean
-      has_prev: boolean
-      next_cursor?: string
-      prev_cursor?: string
-    }
-  }
+export interface SocialProgramList {
+  socialPrograms: SocialProgram[]
+  pagination: Pagination
 }
 
-export interface SocialProgramDetailResponse {
-  data: SocialProgram
+export interface SocialProgramDetail {
+  socialProgram: SocialProgram
 }
 
-export interface SocialProgramParams {
-  limit?: number
-  search?: string
+export interface SocialProgramParams extends PaginationParams {
   status?: string
-  next_cursor?: string
-  prev_cursor?: string
 }
 
 export interface CreateSocialProgramRequest {
-  name: string
+  title: string
+  coverImage: File
+  description: string
   status: string
+  minimumAmount: number
+  billingDay: number
 }
 
 export interface UpdateSocialProgramRequest {
-  name?: string
+  title?: string
+  coverImage?: File
+  description?: string
   status?: string
+  minimumAmount?: number
+  billingDay?: number
 }
+
+export type SocialProgramResponse = Response<SocialProgram>
+export type SocialProgramListResponse = Response<SocialProgramList>
+export type SocialProgramDetailResponse = Response<SocialProgram>

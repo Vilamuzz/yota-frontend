@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useCurrentUser } from '@/composables/auth/useCurrentUser'
+import { useCurrentUser } from '@/composables/account/useCurrentUser'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 
 const { user, fetchCurrentUser } = useCurrentUser()

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { reactive, computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useResetPassword } from '@/composables/auth/useResetPassword'
 import AuthLayout from '@/layouts/AuthLayout.vue'
@@ -10,39 +10,73 @@ import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { CheckCircle } from 'lucide-vue-next'
 import { resetPasswordSchema } from '@/schemas/auth.schema'
 import { getZodErrors } from '@/utils/zodError'
+import { useToast } from '@/composables/ui/useToast'
+import { extractError } from '@/utils/error'
 
 const router = useRouter()
 const route = useRoute()
-const { resetPasswordMutation, resetPasswordError } = useResetPassword()
-
+const { showToast } = useToast()
+const { resetPasswordMutation, validationErrors } = useResetPassword()
 const token = ref('')
-const password = ref('')
-const confirmPassword = ref('')
+const form = reactive({
+  password: '',
+  confirmPassword: '',
+})
+
 const fieldErrors = ref<Record<string, string>>({})
+const initError = ref('')
 const showSuccessModal = ref(false)
+const passwordError = computed(
+  () => fieldErrors.value.password || validationErrors.value?.password || '',
+)
+const confirmPasswordError = computed(
+  () => fieldErrors.value.confirmPassword || validationErrors.value?.confirmPassword || '',
+)
 
 onMounted(() => {
   token.value = route.query.token as string
   if (!token.value) {
-    resetPasswordError.value = 'Invalid or missing reset token'
+    initError.value = 'Invalid or missing reset token. Please request a new one.'
   }
 })
 
-const handleSubmit = async () => {
+watch(
+  form,
+  () => {
+    if (Object.keys(fieldErrors.value).length > 0) {
+      fieldErrors.value = {}
+    }
+    if (resetPasswordMutation.isError.value) {
+      resetPasswordMutation.reset()
+    }
+  },
+  { deep: true },
+)
+
+const handleSubmit = () => {
   showSuccessModal.value = false
 
   const result = resetPasswordSchema.safeParse({
-    password: password.value,
-    confirmPassword: confirmPassword.value,
+    password: form.password,
+    confirmPassword: form.confirmPassword,
   })
   fieldErrors.value = getZodErrors(result)
   if (!result.success) return
 
-  const response = await resetPasswordMutation
-    .mutateAsync({ token: token.value, newPassword: result.data.password })
-    .catch(() => null)
-
-  if (response) showSuccessModal.value = true
+  resetPasswordMutation.mutate(
+    {
+      token: token.value,
+      newPassword: result.data.password,
+    },
+    {
+      onSuccess: () => {
+        showSuccessModal.value = true
+      },
+      onError: (err) => {
+        showToast(extractError(err, 'Failed to reset password. Please try again.'), 'error')
+      },
+    },
+  )
 }
 
 const goToLogin = () => {
@@ -59,36 +93,30 @@ const closeModal = () => {
 <template>
   <AuthLayout title="Reset Password" subtitle="Enter your new password">
     <form @submit.prevent="handleSubmit" class="space-y-4">
-      <BaseAlert
-        v-if="resetPasswordError"
-        type="error"
-        dismissible
-        @dismiss="resetPasswordError = ''"
-      >
-        {{ resetPasswordError }}
+      <BaseAlert v-if="initError" type="error">
+        {{ initError }}
       </BaseAlert>
-
       <BaseInput
         id="password"
-        v-model="password"
+        v-model="form.password"
         type="password"
         label="New Password"
         placeholder="••••••••"
         autocomplete="new-password"
         :show-password-toggle="true"
         :show-password-strength="true"
-        :error="fieldErrors.password"
+        :error="passwordError"
       />
 
       <BaseInput
         id="confirmPassword"
-        v-model="confirmPassword"
+        v-model="form.confirmPassword"
         type="password"
         label="Confirm New Password"
         placeholder="••••••••"
         autocomplete="new-password"
         :show-password-toggle="true"
-        :error="fieldErrors.confirmPassword"
+        :error="confirmPasswordError"
       />
 
       <BaseButton

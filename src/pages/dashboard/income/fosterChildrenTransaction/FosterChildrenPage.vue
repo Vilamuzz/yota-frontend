@@ -2,14 +2,12 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2 } from 'lucide-vue-next'
+import { Eye, SquarePen, Trash2, Baby } from 'lucide-vue-next'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { Child } from '@/types/fosterChildren'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faChildren } from '@fortawesome/free-solid-svg-icons'
 
 const router = useRouter()
 
@@ -402,7 +400,7 @@ const handleEdit = (child: Child) => {
       @next="handleNextPage"
     >
       <template #empty-icon>
-        <FontAwesomeIcon :icon="faChildren" size="6x" class="text-gray-400"/>
+        <Baby :size="64" class="text-gray-400" />
       </template>
 
       <template #headers>

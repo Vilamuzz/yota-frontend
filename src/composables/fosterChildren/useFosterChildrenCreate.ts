@@ -1,30 +1,20 @@
-import { ref } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { childService } from '@/services/fosterChildren.service'
-import type { CreateChildRequest } from '@/types/fosterChildren'
+import { fosterChildrenService } from '@/services/fosterChildren.service'
+import type { CreateFosterChildrenRequest } from '@/types/fosterChildren'
+import type { ApiError } from '@/types/response'
+import { computed } from 'vue'
 
 export const useChildCreate = () => {
   const queryClient = useQueryClient()
-  const createError = ref('')
 
-  const createMutation = useMutation({
-    mutationFn: async (data: CreateChildRequest) => {
-      try {
-        const response = await childService.createChild(data)
-        return response
-      } catch (error: unknown) {
-        createError.value = error instanceof Error ? error.message : 'Failed to create child'
-        throw error
-      }
-    },
+  const createMutation = useMutation<any, ApiError, CreateFosterChildrenRequest>({
+    mutationFn: (data) => fosterChildrenService.createFosterChildren(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['children'] })
-      createError.value = ''
-    },
-    onError: (err: unknown) => {
-      createError.value = err instanceof Error ? err.message : 'Failed to create child'
+      queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
     },
   })
+
+  const createError = computed(() => createMutation.error.value?.message)
 
   return {
     createMutation,

@@ -1,38 +1,38 @@
 import { API } from '@/const/api'
 import type {
-  CreateChildRequest,
-  ChildListResponse,
-  ChildDetailResponse,
-  ChildParams,
-  UpdateChildRequest,
+  CreateFosterChildrenRequest,
+  FosterChildrenListResponse,
+  FosterChildrenDetailResponse,
+  FosterChildrenParams,
+  UpdateFosterChildrenRequest,
 } from '@/types/fosterChildren'
 import { api } from '@/utils/api'
 
-export const childService = {
-  getPublishedChildren: async (params: ChildParams): Promise<ChildListResponse> => {
-    const response = await api.get<ChildListResponse>(API.CHILDREN_PUBLIC, { params })
+export const fosterChildrenService = {
+  getFosterChildren: async (params: FosterChildrenParams): Promise<FosterChildrenListResponse> => {
+    const response = await api.get<FosterChildrenListResponse>(API.FOSTER_CHILDREN, { params })
     return response.data
   },
 
-  getChildDetail: async (childSlug: string): Promise<ChildDetailResponse> => {
-    const response = await api.get<ChildDetailResponse>(`${API.CHILDREN_PUBLIC}/${childSlug}`)
+  getFosterChildrenDetail: async (childSlug: string): Promise<FosterChildrenDetailResponse> => {
+    const response = await api.get<FosterChildrenDetailResponse>(`${API.FOSTER_CHILDREN}/${childSlug}`)
     return response.data
   },
 
-  getChildList: async (params: ChildParams): Promise<ChildListResponse> => {
-    const response = await api.get<ChildListResponse>(API.CHILDREN, { params })
+  getFosterChildrenList: async (params: FosterChildrenParams): Promise<FosterChildrenListResponse> => {
+    const response = await api.get<FosterChildrenListResponse>(API.FOSTER_CHILDREN, { params })
     return response.data
   },
 
-  createChild: async (data: CreateChildRequest) => {
-    const response = await api.post(`${API.CHILDREN}/`, data, {
+  createFosterChildren: async (data: CreateFosterChildrenRequest) => {
+    const response = await api.post(`${API.FOSTER_CHILDREN_ADMIN}`, data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data
   },
 
-  updateChild: async (childId: string, data: UpdateChildRequest) => {
-    const response = await api.put(`${API.CHILDREN}/${childId}`, data, {
+  updateFosterChildren: async (childId: string, data: UpdateFosterChildrenRequest) => {
+    const response = await api.put(`${API.FOSTER_CHILDREN_ADMIN}/${childId}`, data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data

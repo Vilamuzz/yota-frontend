@@ -1,77 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useCurrentUser } from '@/composables/auth/useCurrentUser'
+import { useCurrentUser } from '@/composables/account/useCurrentUser'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 
-const { user, fetchCurrentUser } = useCurrentUser()
-const error = ref('')
-const loading = ref(false)
-
-// Fetch current user data
-const getUserData = async () => {
-  loading.value = true
-  error.value = ''
-
-  const result = await fetchCurrentUser()
-
-  if (result.isError) {
-    error.value = result.error?.message || 'Failed to fetch user data'
-  }
-
-  loading.value = false
-}
-
-// Fetch user data on component mount
-onMounted(() => {
-  getUserData()
-})
+const { user } = useCurrentUser()
 </script>
 
 <template>
   <DashboardLayout>
     <template #title>Dashboard</template>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center items-center h-64">
-      <svg
-        class="animate-spin h-12 w-12 text-indigo-600"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          class="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          stroke-width="4"
-        ></circle>
-        <path
-          class="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        ></path>
-      </svg>
-    </div>
-
-    <!-- Error State -->
-    <div
-      v-else-if="error"
-      class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg"
-    >
-      <h2 class="text-lg font-semibold mb-2">Error loading user data</h2>
-      <p>{{ error }}</p>
-      <button
-        @click="getUserData"
-        class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
-      >
-        Retry
-      </button>
-    </div>
-
-    <!-- Success State -->
-    <div v-else class="space-y-6">
+    <div class="space-y-6">
       <!-- Welcome Card -->
       <div
         class="bg-white rounded-xl shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700"

@@ -1,27 +1,18 @@
-import { childService } from '@/services/fosterChildren.service'
+import { toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { ref } from 'vue'
+import { fosterChildrenService } from '@/services/fosterChildren.service'
+import type { FosterChildrenDetailResponse } from '@/types/fosterChildren'
+import type { ApiError } from '@/types/response'
 
-export const useFosterChildrenDetail = (id: string) => {
-  const childDetailError = ref('')
-  const childDetailQuery = useQuery({
-    queryKey: ['childDetail', id],
-    queryFn: async () => {
-      try {
-        const response = await childService.getChildDetail(id)
-        return response
-      } catch (err: unknown) {
-        childDetailError.value =
-          err instanceof Error ? err.message : 'Failed to fetch foster child detail'
-        throw err
-      }
-    },
-    enabled: !!id,
+export const useFosterChildrenDetail = (slug: MaybeRefOrGetter<string>) => {
+  const childDetailQuery = useQuery<FosterChildrenDetailResponse, ApiError>({
+    queryKey: ['fosterChildren', slug],
+    queryFn: () => fosterChildrenService.getFosterChildrenDetail(toValue(slug)),
     retry: 1,
   })
 
   return {
-    childDetailError,
     childDetailQuery,
+    isLoading: childDetailQuery.isPending,
   }
 }

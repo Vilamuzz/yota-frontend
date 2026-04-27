@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
@@ -69,7 +69,7 @@ const handleSubmit = () => {
     min_payment: minPayment.value,
     billing_date: billingDate.value,
     media: mediaFiles.value,
-    status: status.value
+    status: status.value,
   })
   //NANTI SAMBUNG KE API
 }
@@ -82,7 +82,6 @@ const handleCancel = () => {
     router.push({ name: 'dashboard-social-program' }) // ⬅️ GANTI sesuai path index kamu
   }
 }
-
 </script>
 
 <template>
@@ -96,84 +95,73 @@ const handleCancel = () => {
     </template>
 
     <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
-
       <!-- HEADER -->
       <div class="bg-white rounded-xl border border-gray-200 px-6 py-4 mb-5">
-        <h2 class="font-semibold text-gray-700">
-          Data Program Sosial
-        </h2>
+        <h2 class="font-semibold text-gray-700">Data Program Sosial</h2>
       </div>
 
       <!-- CONTAINER -->
       <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
-        
         <!-- GRID -->
         <div class="grid grid-cols-2 gap-6">
-
           <!-- LEFT -->
-            <div class="space-y-4">
+          <div class="space-y-4">
             <div>
-                <label class="text-xs text-gray-600">
+              <label class="text-xs text-gray-600">
                 Nama Program <span class="text-red-500">*</span>
-                </label>
+              </label>
 
-                <BaseInput
-                v-model="name"
-                placeholder="Masukkan nama program"
-                />
+              <BaseInput id="name" v-model="name" placeholder="Masukkan nama program" />
 
-                <p v-if="errors.name" class="text-xs text-red-500 mt-1">
+              <p v-if="errors.name" class="text-xs text-red-500 mt-1">
                 {{ errors.name }}
-                </p>
+              </p>
             </div>
 
             <div>
-                <label class="text-xs text-gray-600">
+              <label class="text-xs text-gray-600">
                 Detail Program <span class="text-red-500">*</span>
-                </label>
+              </label>
 
-                <textarea
+              <textarea
                 v-model="description"
                 rows="4"
                 class="w-full mt-1 px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500"
-                />
+              />
 
-                <p v-if="errors.description" class="text-xs text-red-500 mt-1">
+              <p v-if="errors.description" class="text-xs text-red-500 mt-1">
                 {{ errors.description }}
-                </p>
+              </p>
             </div>
-            </div>
+          </div>
 
           <!-- RIGHT -->
           <div class="space-y-4">
             <div>
-            <label class="text-xs text-gray-600">
+              <label class="text-xs text-gray-600">
                 Nominal Minimal Pembayaran <span class="text-red-500">*</span>
-            </label>
+              </label>
 
-            <BaseInput
-                v-model="minPayment"
-                placeholder="Rp500.000"
-            />
+              <BaseInput id="minPayment" v-model="minPayment" placeholder="Rp500.000" />
 
-            <p v-if="errors.minPayment" class="text-xs text-red-500 mt-1">
+              <p v-if="errors.minPayment" class="text-xs text-red-500 mt-1">
                 {{ errors.minPayment }}
-            </p>
+              </p>
             </div>
 
             <div>
-                <label class="text-xs text-gray-600">
-                    Ditagihkan Setiap <span class="text-red-500">*</span>
-                </label> 
-                    <input
+              <label class="text-xs text-gray-600">
+                Ditagihkan Setiap <span class="text-red-500">*</span>
+              </label>
+              <input
                 type="date"
                 v-model="billingDate"
                 class="w-full mt-1 px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
-                />
-                <p v-if="errors.billingDate" class="text-xs text-red-500 mt-1">
-                    {{ errors.billingDate }}
-                </p>
-                </div>
+              />
+              <p v-if="errors.billingDate" class="text-xs text-red-500 mt-1">
+                {{ errors.billingDate }}
+              </p>
+            </div>
 
             <!-- STATUS (DISABLED) -->
             <div>
@@ -195,12 +183,12 @@ const handleCancel = () => {
 
         <!-- UPLOAD -->
         <div>
-            <label class="text-xs text-gray-600">
+          <label class="text-xs text-gray-600">
             Unggah Foto & Video <span class="text-red-500">*</span>
-            </label>            
-            <p v-if="errors.media" class="text-xs text-red-500 mt-1">
+          </label>
+          <p v-if="errors.media" class="text-xs text-red-500 mt-1">
             {{ errors.media }}
-            </p>
+          </p>
           <div
             @click="triggerFileInput"
             class="mt-2 border-2 border-dashed rounded-lg h-32 flex flex-col items-center justify-center cursor-pointer text-gray-400"
@@ -226,7 +214,7 @@ const handleCancel = () => {
             >
               <span class="text-sm text-gray-600">{{ file.name }}</span>
               <button @click="removeFile(index)">
-                <X size="16" class="text-red-500" />
+                <X :size="16" class="text-red-500" />
               </button>
             </div>
           </div>
@@ -234,15 +222,10 @@ const handleCancel = () => {
 
         <!-- BUTTON -->
         <div class="flex justify-end gap-3">
-        <BaseButton variant="danger" @click="handleCancel">
-            Batal
-          </BaseButton>
+          <BaseButton variant="danger" @click="handleCancel"> Batal </BaseButton>
 
-          <BaseButton variant="primary" @click="handleSubmit">
-            Ajukan
-          </BaseButton>
+          <BaseButton variant="primary" @click="handleSubmit"> Ajukan </BaseButton>
         </div>
-
       </div>
     </div>
   </DashboardLayout>

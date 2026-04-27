@@ -1,71 +1,127 @@
-import type { Pagination, Response } from './response'
+import type { Pagination, PaginationParams, Response } from './response'
 
-export interface Child {
+export interface FosterChildren {
   id: string
   slug: string
   name: string
-  birthplace: string
-  birth_date: string
+  profilePicture: string
+  gender: Gender
+  category: Category
   address: string
-  gender: 'Laki-laki' | 'Perempuan'
-  category: 'Yatim' | 'Piatu' | 'Yatim Piatu'
-  achievements: string[]
-  status: string
-  image_url: string
-  certificates: Certificates[]
-  created_at: string
+  birthPlace: string
+  birthDate: string
+  isGraduated: boolean
+  familyCard: string
+  sktm: string
+  achievements: Achievement[]
+  createdAt: string
 }
 
-export interface Certificates {
+export interface FosterChildrenCandidate {
+  id: string
+  slug: string
+  name: string
+  profilePicture: string
+  gender: Gender
+  category: Category
+  address: string
+  birthPlace: string
+  birthDate: string
+  isGraduated: boolean
+  familyCard: string
+  sktm: string
+  submitterName: string
+  submitterPhone: string
+  submitterAddress: string
+  submitterIdCard: string
+  submittedBy: string
+  status: string
+  rejectionReason: string
+  createdAt: string
+}
+
+export enum Gender {
+  male = 'male',
+  female = 'female',
+}
+
+export enum Category {
+  yatim = 'yatim',
+  piatu = 'piatu',
+  yatimPiatu = 'yatim-piatu',
+}
+
+export interface Achievement {
   id: string
   title: string
-  file_url: string
-  file_name: string
-  created_at? : string
+  url: string
+  alt: string
 }
 
-export interface ChildList {
-  child: Child[]
+export interface FosterChildrenList {
+  fosterChildren: FosterChildren[]
   pagination: Pagination
 }
 
-export interface ChildParams {
-  limit?: number
-  next_cursor?: string
-  prev_cursor?: string
-  search?: string
-  category?: string
-  status?: string
+export interface FosterChildrenCandidateList {
+  fosterChildrenCandidates: FosterChildrenCandidate[]
+  pagination: Pagination
 }
 
-export interface CreateChildRequest {
+export interface FosterChildrenParams extends PaginationParams {
+  category?: Category
+  isGraduated?: boolean
+}
+
+export interface CreateFosterChildrenRequest {
+  name: string
+  profilePicture: File
+  gender: Gender
+  address: string
+  birthPlace: string
+  birthDate: string
+  category: Category
+  familyCard: File
+  sktm: File
+  achievements: Achievement[]
+  isGraduated: boolean
+}
+
+export interface UpdateFosterChildrenRequest {
   name?: string
-  age?: number
-  birthplace?: string
-  birth_date?: string
+  profilePicture?: File
+  gender?: Gender
   address?: string
-  gender?: 'laki-laki' | 'perempuan'
-  category?: 'yatim' | 'piatu' | 'yatim-piatu'
-  achievements?: string[]
-  status?: boolean
-  image?: File
-  certificates?: File[]
+  birthPlace?: string
+  birthDate?: string
+  category?: Category
+  familyCard?: File
+  sktm?: File
+  achievements?: Achievement[]
+  isGraduated?: boolean
 }
 
-export interface UpdateChildRequest {
-  name?: string
-  age?: number
-  birthplace?: string
-  birth_date?: string
-  address?: string
-  gender?: 'laki-laki' | 'perempuan'
-  category?: 'yatim' | 'piatu' | 'yatim-piatu'
-  achievements?: string[]
-  status?: boolean
-  image?: File
-  certificates?: File[]
+export interface CreateFosterChildrenCandidateRequest {
+  name: string
+  profilePicture: File
+  gender: Gender
+  address: string
+  birthPlace: string
+  birthDate: string
+  category: Category
+  familyCard: File
+  sktm: File
+  achievements: Achievement[]
+  isGraduated: boolean
+  submitterName: string
+  submitterPhone: string
+  submitterAddress: string
+  submitterIdCard: File
 }
 
-export type ChildResponse = Response<Child>
-export type ChildListResponse = Response<ChildList>
-export type ChildDetailResponse = Response<Child>
+export type FosterChildrenResponse = Response<FosterChildren>
+export type FosterChildrenListResponse = Response<FosterChildrenList>
+export type FosterChildrenDetailResponse = Response<FosterChildren>
+export type FosterChildrenCandidateResponse = Response<FosterChildrenCandidate>
+export type FosterChildrenCandidateListResponse = Response<FosterChildrenCandidateList>
+export type FosterChildrenCandidateDetailResponse = Response<FosterChildrenCandidate>

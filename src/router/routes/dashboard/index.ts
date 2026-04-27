@@ -26,13 +26,11 @@ export const dashboardRoutes: RouteRecordRaw[] = [
         path: 'profile',
         name: 'profile',
         component: () => import('@/pages/dashboard/ProfilePage.vue'),
-        meta: { requiresAuth: true },
       },
       {
         path: 'settings',
         name: 'settings',
         component: () => import('@/pages/dashboard/SettingsPage.vue'),
-        meta: { requiresAuth: true },
       },
     ],
   },
