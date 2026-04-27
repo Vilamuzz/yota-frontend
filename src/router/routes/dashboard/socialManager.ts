@@ -4,7 +4,7 @@ import { ROLES } from '@/const/roles'
 export const socialManagerRoutes: RouteRecordRaw[] = [
   {
     path: '',
-    meta: { role: ROLES.SOCIAL_MANAGER },
+    meta: { role: ['social_manager', 'chairman'] }, // Sinkronisasi dengan menuConfig yang menggunakan underscore
     children: [
       {
         path: 'foster-children',

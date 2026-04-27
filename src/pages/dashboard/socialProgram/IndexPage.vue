@@ -13,6 +13,16 @@ import BaseTable from '@/components/molecules/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { SocialProgram, SocialProgramParams } from '@/types/socialProgram'
 
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+// ambil dari meta router (rekomended)
+const role = computed(() => route.meta.role)
+
+// helper biar enak dipake
+const isChairman = computed(() => role.value === 'chairman')
+
 const router = useRouter()
 
 const searchQuery = ref('')
@@ -249,7 +259,12 @@ const handleEdit = (program: SocialProgram) => {
             <template #headers>
               <th class="px-5 py-3 text-left">No</th>
               <th class="px-5 py-3 text-left">Nama Program</th>
-              <th class="px-5 py-3 text-right">Total Subscriber</th>
+
+              <!-- DINAMIS -->
+              <th class="px-5 py-3 text-right">
+                {{ isChairman ? 'Nominal Minimal' : 'Total Subscriber' }}
+              </th>
+
               <th class="px-5 py-3 text-center">Status</th>
               <th class="px-5 py-3 text-left">Tanggal Ditambahkan</th>
               <th class="px-5 py-3 text-center">Aksi</th>
@@ -271,22 +286,32 @@ const handleEdit = (program: SocialProgram) => {
                 </td>
 
                 <td class="px-5 py-4 text-sm text-gray-600 text-right">
-                  {{ program.total_subscriber }}
+                  <span v-if="isChairman">
+                    {{ program.minimum_nominal }}
+                  </span>
+                  <span v-else>
+                    {{ program.total_subscriber }}
+                  </span>
                 </td>
 
                 <!-- STATUS -->
                 <td class="px-5 py-4 text-center">
                   <span
-                    :class="['px-2.5 py-1 text-xs rounded-full', getStatusColor(program.status)]"
+                    :class="[
+                      'px-2.5 py-1 text-xs rounded-full',
+                      getStatusColor(isChairman ? program.submission_status : program.status)
+                    ]"
                   >
                     {{
-                      program.status === 'active'
-                        ? 'Berjalan'
-                        : program.status === 'pending'
-                          ? 'Pending'
-                          : program.status === 'completed'
-                            ? 'Selesai'
-                            : program.status
+                      isChairman
+                        ? program.submission_status
+                        : program.status === 'active'
+                          ? 'Berjalan'
+                          : program.status === 'pending'
+                            ? 'Pending'
+                            : program.status === 'completed'
+                              ? 'Selesai'
+                              : program.status
                     }}
                   </span>
                 </td>
@@ -297,18 +322,23 @@ const handleEdit = (program: SocialProgram) => {
 
                 <!-- ACTION -->
                 <td class="px-5 py-4">
-                  <div class="flex justify-center items-center gap-3 text-gray-400">
-                    <button @click="handleView(program)" class="hover:text-gray-600">
-                      <Eye :size="18" />
-                    </button>
+                <div class="flex justify-center items-center gap-3 text-gray-400">
+                  
+                  <button @click="handleView(program)" class="hover:text-gray-600">
+                    <Eye :size="18" />
+                  </button>
+
+                  <template v-if="!isChairman">
                     <button @click="handleEdit(program)" class="hover:text-gray-600">
                       <SquarePen :size="18" />
                     </button>
                     <button @click="deleteProgram(program)" class="hover:text-red-500">
                       <Trash2 :size="18" />
                     </button>
-                  </div>
-                </td>
+                  </template>
+
+                </div>
+              </td>
               </tr>
             </template>
           </BaseTable>
