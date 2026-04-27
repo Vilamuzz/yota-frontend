@@ -4,7 +4,7 @@ import { ROLES } from '@/const/roles'
 export const socialManagerRoutes: RouteRecordRaw[] = [
   {
     path: '',
-    meta: { role: ROLES.SOCIAL_MANAGER },
+    meta: { role: [ROLES.SOCIAL_MANAGER, ROLES.CHAIRMAN] },
     children: [
       {
         path: 'foster-children',
