@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Users, Plus } from 'lucide-vue-next'
+import { Eye, SquarePen, Trash2, Plus } from 'lucide-vue-next'
 
 import { useSocialProgramList } from '@/composables/socialProgram/useSocialProgramList'
 import { useQueryClient } from '@tanstack/vue-query'
@@ -12,16 +12,15 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { SocialProgram, SocialProgramParams } from '@/types/socialProgram'
+import { ROLES } from '@/const/roles'
 
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+import { useAuthStore } from '@/stores/auth'
 
-// ambil dari meta router (rekomended)
-const role = computed(() => route.meta.role)
-
-// helper biar enak dipake
-const isChairman = computed(() => role.value === 'chairman')
+const authStore = useAuthStore()
+const isChairman = computed(() => authStore.activeRole === ROLES.CHAIRMAN)
 
 const router = useRouter()
 
@@ -39,7 +38,6 @@ watch(searchQuery, (newVal) => {
   }, 500)
 })
 
-// Cursor pagination
 const currentNextCursor = ref<string | undefined>(undefined)
 const currentPrevCursor = ref<string | undefined>(undefined)
 const direction = ref<'next' | 'prev' | undefined>(undefined)
@@ -59,7 +57,12 @@ const queryParams = computed<SocialProgramParams>(() => {
   }
 
   if (selectedStatus.value !== 'all') {
-    params.status = selectedStatus.value
+    // ✅ KS filter by status program, Ketua filter by submission_status
+    if (isChairman.value) {
+      params.submission_status = selectedStatus.value
+    } else {
+      params.status = selectedStatus.value
+    }
   }
 
   return params
@@ -77,14 +80,11 @@ watch([debouncedSearchQuery, selectedStatus, limit], () => {
 })
 
 const queryClient = useQueryClient()
-
-// 🔥 FIX DI SINI
 const { socialProgramListQuery } = useSocialProgramList(queryParams)
 
 const programs = computed<SocialProgram[]>(
   () => socialProgramListQuery.data.value?.data?.programs || [],
 )
-
 const pagination = computed(() => socialProgramListQuery.data.value?.data?.pagination)
 
 const handleNextPage = () => {
@@ -103,21 +103,37 @@ const handlePrevPage = () => {
   }
 }
 
-const getStatusColor = (status: string) => {
+// ✅ Status color: KS pakai status program, Ketua pakai submission_status
+const getStatusProgramColor = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'active':
-      return 'bg-[#D1FAE5] text-[#10B981] border-transparent'
-    case 'pending':
-      return 'bg-[#FEF3C7] text-[#F8B641] border-transparent'
-    case 'completed':
-      return 'bg-[#FFE4E6] text-[#F43F5E] border-transparent'
-    default:
-      return 'bg-gray-100 text-gray-600 border-transparent'
+    case 'active':   return 'bg-[#D1FAE5] text-[#10B981]'
+    case 'pending':  return 'bg-[#FEF3C7] text-[#F8B641]'
+    case 'completed': return 'bg-[#FFE4E6] text-[#F43F5E]'
+    default:         return 'bg-gray-100 text-gray-600'
+  }
+}
+
+const getSubmissionStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'disetujui': return 'bg-[#D1FAE5] text-[#10B981]'
+    case 'diajukan':  return 'bg-[#EFF6FF] text-[#3B82F6]'
+    case 'ditolak':   return 'bg-[#FFE4E6] text-[#F43F5E]'
+    case 'draft':     return 'bg-gray-100 text-gray-500'
+    default:          return 'bg-gray-100 text-gray-600'
+  }
+}
+
+const getStatusProgramLabel = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'active':    return 'Berjalan'
+    case 'pending':   return 'Pending'
+    case 'completed': return 'Selesai'
+    default:          return status
   }
 }
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return new Date(dateStr).toLocaleDateString('id-ID', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -147,13 +163,14 @@ const clearFilters = () => {
   selectedStatus.value = 'all'
 }
 
-const statuses = ['all', 'active', 'pending', 'completed']
+// ✅ Filter options beda per role
+const statusesKS = ['all', 'active', 'pending', 'completed']
+const statusesKetua = ['all', 'draft', 'diajukan', 'disetujui', 'ditolak']
+const statuses = computed(() => isChairman.value ? statusesKetua : statusesKS)
 
-// Navigasi ke halaman create program
 const handleCreate = () => {
-  router.push({ name: 'dashboard-social-program-create' }) // Sinkron dengan router di socialManager.ts
+  router.push({ name: 'dashboard-social-program-create' })
 }
-
 const handleView = (program: SocialProgram) => {
   router.push({
     name: 'dashboard-social-program-detail',
@@ -161,7 +178,6 @@ const handleView = (program: SocialProgram) => {
     query: { program: JSON.stringify(program) },
   })
 }
-
 const handleEdit = (program: SocialProgram) => {
   router.push({
     name: 'dashboard-social-program-edit',
@@ -173,7 +189,6 @@ const handleEdit = (program: SocialProgram) => {
 
 <template>
   <DashboardLayout>
-    <!-- TITLE -->
     <template #title>
       <div>
         <h1 class="text-2xl font-semibold text-gray-800">Data Program</h1>
@@ -181,26 +196,25 @@ const handleEdit = (program: SocialProgram) => {
       </div>
     </template>
 
-    <!-- CONTAINER -->
     <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
-      <!-- CARD -->
       <div class="bg-white rounded-xl border border-gray-200 px-6 py-5">
         <!-- TOP BAR -->
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-base font-semibold text-gray-700">Kelola Data Program Sosial</h2>
 
           <div class="flex items-center gap-2">
-            <!-- SEARCH -->
             <div class="w-64">
               <BaseSearch v-model="searchQuery" placeholder="Cari Program" />
             </div>
 
-            <!-- FILTER -->
             <BaseFilter :has-active-filters="selectedStatus !== 'all'">
               <template #default="{ closeDropdown }">
                 <div class="space-y-4">
                   <div>
-                    <label class="text-xs text-gray-500">Status</label>
+                    <!-- ✅ Label filter beda per role -->
+                    <label class="text-xs text-gray-500">
+                      {{ isChairman ? 'Status Pengajuan' : 'Status Program' }}
+                    </label>
                     <select
                       v-model="selectedStatus"
                       class="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
@@ -210,7 +224,6 @@ const handleEdit = (program: SocialProgram) => {
                       </option>
                     </select>
                   </div>
-
                   <div class="flex gap-2">
                     <button
                       @click="clearFilters"
@@ -229,8 +242,9 @@ const handleEdit = (program: SocialProgram) => {
               </template>
             </BaseFilter>
 
-            <!-- BUTTON -->
+            <!-- ✅ Tombol tambah hanya untuk KS -->
             <BaseButton
+              v-if="!isChairman"
               variant="primary"
               class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700"
               @click="handleCreate"
@@ -247,7 +261,7 @@ const handleEdit = (program: SocialProgram) => {
             :loading="socialProgramListQuery.isPending.value"
             loading-message="Loading programs..."
             :is-empty="programs.length === 0"
-            empty-message="No programs available"
+            empty-message="Tidak ada program tersedia"
             :has-prev="pagination?.has_prev"
             :has-next="pagination?.has_next"
             v-model:limit="limit"
@@ -255,22 +269,29 @@ const handleEdit = (program: SocialProgram) => {
             @prev="handlePrevPage"
             @next="handleNextPage"
           >
-            <!-- HEADER -->
+            <!-- ✅ HEADER: beda kolom per role -->
             <template #headers>
-              <th class="px-5 py-3 text-left">No</th>
-              <th class="px-5 py-3 text-left">Nama Program</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">No</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama Program</th>
 
-              <!-- DINAMIS -->
-              <th class="px-5 py-3 text-right">
+              <!-- KS: Total Subscriber | Ketua: Nominal Minimal -->
+              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 {{ isChairman ? 'Nominal Minimal' : 'Total Subscriber' }}
               </th>
 
-              <th class="px-5 py-3 text-center">Status</th>
-              <th class="px-5 py-3 text-left">Tanggal Ditambahkan</th>
-              <th class="px-5 py-3 text-center">Aksi</th>
+              <!-- KS: Status Program + Status Pengajuan | Ketua: Status Pengajuan saja -->
+              <th v-if="!isChairman" class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Status Program
+              </th>
+              <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Status Pengajuan
+              </th>
+
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Tanggal Ditambahkan</th>
+              <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksi</th>
             </template>
 
-            <!-- ROW -->
+            <!-- ✅ ROWS: beda konten per role -->
             <template #rows>
               <tr
                 v-for="(program, index) in programs"
@@ -285,34 +306,27 @@ const handleEdit = (program: SocialProgram) => {
                   {{ program.name }}
                 </td>
 
+                <!-- KS: Total Subscriber | Ketua: Nominal Minimal -->
                 <td class="px-5 py-4 text-sm text-gray-600 text-right">
                   <span v-if="isChairman">
-                    {{ program.minimum_nominal }}
+                    Rp {{ program.minimum_nominal?.toLocaleString('id-ID') }}
                   </span>
                   <span v-else>
                     {{ program.total_subscriber }}
                   </span>
                 </td>
 
-                <!-- STATUS -->
+                <!-- Status Program — hanya KS -->
+                <td v-if="!isChairman" class="px-5 py-4 text-center">
+                  <span :class="['px-2.5 py-1 text-xs rounded-full', getStatusProgramColor(program.status)]">
+                    {{ getStatusProgramLabel(program.status) }}
+                  </span>
+                </td>
+
+                <!-- Status Pengajuan — KS dan Ketua -->
                 <td class="px-5 py-4 text-center">
-                  <span
-                    :class="[
-                      'px-2.5 py-1 text-xs rounded-full',
-                      getStatusColor(isChairman ? program.submission_status : program.status)
-                    ]"
-                  >
-                    {{
-                      isChairman
-                        ? program.submission_status
-                        : program.status === 'active'
-                          ? 'Berjalan'
-                          : program.status === 'pending'
-                            ? 'Pending'
-                            : program.status === 'completed'
-                              ? 'Selesai'
-                              : program.status
-                    }}
+                  <span :class="['px-2.5 py-1 text-xs rounded-full', getSubmissionStatusColor(program.submission_status)]">
+                    {{ program.submission_status }}
                   </span>
                 </td>
 
@@ -320,25 +334,24 @@ const handleEdit = (program: SocialProgram) => {
                   {{ formatDate(program.created_at) }}
                 </td>
 
-                <!-- ACTION -->
+                <!-- Aksi -->
                 <td class="px-5 py-4">
-                <div class="flex justify-center items-center gap-3 text-gray-400">
-                  
-                  <button @click="handleView(program)" class="hover:text-gray-600">
-                    <Eye :size="18" />
-                  </button>
-
-                  <template v-if="!isChairman">
-                    <button @click="handleEdit(program)" class="hover:text-gray-600">
-                      <SquarePen :size="18" />
+                  <div class="flex justify-center items-center gap-3 text-gray-400">
+                    <button @click="handleView(program)" class="hover:text-gray-600" title="Lihat detail">
+                      <Eye :size="18" />
                     </button>
-                    <button @click="deleteProgram(program)" class="hover:text-red-500">
-                      <Trash2 :size="18" />
-                    </button>
-                  </template>
 
-                </div>
-              </td>
+                    <!-- Edit & Delete hanya untuk KS -->
+                    <template v-if="!isChairman">
+                      <button @click="handleEdit(program)" class="hover:text-gray-600" title="Edit">
+                        <SquarePen :size="18" />
+                      </button>
+                      <button @click="deleteProgram(program)" class="hover:text-red-500" title="Hapus">
+                        <Trash2 :size="18" />
+                      </button>
+                    </template>
+                  </div>
+                </td>
               </tr>
             </template>
           </BaseTable>
@@ -347,13 +360,12 @@ const handleEdit = (program: SocialProgram) => {
     </div>
   </DashboardLayout>
 
-  <!-- MODAL -->
   <ConfirmationModal
     :show="confirmShow"
-    :title="`Delete ${confirmProgram?.name}?`"
-    message="This program will be permanently deleted."
-    primary-button-text="Delete"
-    secondary-button-text="Cancel"
+    :title="`Hapus ${confirmProgram?.name}?`"
+    message="Program ini akan dihapus secara permanen."
+    primary-button-text="Hapus"
+    secondary-button-text="Batal"
     @primary="handleConfirmDelete"
     @secondary="confirmShow = false"
     @close="confirmShow = false"
