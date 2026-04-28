@@ -6,11 +6,12 @@ import {
   DonationProgramStatusEnum,
   type DonationProgramCategoryEnum,
 } from '@/types/donationProgram'
-import { updateDonationSchema } from '@/schemas/donation.schema'
+import { updateDonationSchema } from '@/schemas/donationProgram.schema'
 import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
 import { useDonationProgramUpdate } from '@/composables/donationProgram/useDonationProgramUpdate'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
+import { extractError } from '@/utils/error'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -20,7 +21,7 @@ const route = useRoute()
 const donationId = route.params.id as string
 
 const { donationDetailQuery } = useDonationProgramDetail(donationId)
-const { updateDonationMutation } = useDonationProgramUpdate()
+const { updateDonationMutation, validationErrors } = useDonationProgramUpdate()
 const { showToast } = useToast()
 
 // Form fields
@@ -28,12 +29,33 @@ const title = ref('')
 const description = ref('')
 const category = ref('')
 const fundTarget = ref('')
+const startDate = ref('')
 const dateEnd = ref('')
 const imageFile = ref<File | null>(null)
 const imagePreview = ref<string | null>(null)
 
 // Validation errors
-const errors = ref<Record<string, string>>({})
+const fieldErrors = ref<Record<string, string>>({})
+
+const titleError = computed(() => fieldErrors.value.title || validationErrors.value?.title || '')
+const descriptionError = computed(
+  () => fieldErrors.value.description || validationErrors.value?.description || '',
+)
+const categoryError = computed(
+  () => fieldErrors.value.category || validationErrors.value?.category || '',
+)
+const fundTargetError = computed(
+  () => fieldErrors.value.fund_target || validationErrors.value?.fundTarget || '',
+)
+const startDateError = computed(
+  () => fieldErrors.value.date_start || validationErrors.value?.startDate || '',
+)
+const dateEndError = computed(
+  () => fieldErrors.value.date_end || validationErrors.value?.endDate || '',
+)
+const imageError = computed(
+  () => fieldErrors.value.image || validationErrors.value?.coverImage || '',
+)
 
 const categories = ['education', 'health', 'environment', 'social', 'disaster']
 
@@ -52,6 +74,7 @@ watch(
     category.value = donation.category ?? ''
     fundTarget.value = donation.fundTarget ? String(donation.fundTarget) : ''
     // Normalise date to YYYY-MM-DD for the date input
+    startDate.value = donation.startDate ? (donation.startDate.split('T')[0] ?? '') : ''
     dateEnd.value = donation.endDate ? (donation.endDate.split('T')[0] ?? '') : ''
     // Show existing image as preview (URL, not a File)
     if (donation.coverImage) imagePreview.value = donation.coverImage
@@ -60,10 +83,10 @@ watch(
 )
 
 // Image handling
-const imageInputRef = ref<HTMLInputElement | null>(null)
+const coverImageInputRef = ref<HTMLInputElement | null>(null)
 
 const triggerImageInput = () => {
-  imageInputRef.value?.click()
+  coverImageInputRef.value?.click()
 }
 
 const handleImageChange = (event: Event) => {
@@ -72,17 +95,20 @@ const handleImageChange = (event: Event) => {
 
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
-    errors.value = { ...errors.value, image: 'Only JPG, PNG, or WebP images are allowed.' }
+    fieldErrors.value = {
+      ...fieldErrors.value,
+      image: 'Only JPG, PNG, or WebP images are allowed.',
+    }
     return
   }
   if (file.size > 5 * 1024 * 1024) {
-    errors.value = { ...errors.value, image: 'Image must be smaller than 5 MB.' }
+    fieldErrors.value = { ...fieldErrors.value, image: 'Image must be smaller than 5 MB.' }
     return
   }
 
-  const newErrors = { ...errors.value }
+  const newErrors = { ...fieldErrors.value }
   delete newErrors.image
-  errors.value = newErrors
+  fieldErrors.value = newErrors
   imageFile.value = file
   imagePreview.value = URL.createObjectURL(file)
 }
@@ -90,7 +116,7 @@ const handleImageChange = (event: Event) => {
 const removeImage = () => {
   imageFile.value = null
   imagePreview.value = null
-  if (imageInputRef.value) imageInputRef.value.value = ''
+  if (coverImageInputRef.value) coverImageInputRef.value.value = ''
 }
 
 // Validation
@@ -100,35 +126,43 @@ const validate = (): boolean => {
     description: description.value.trim(),
     category: category.value,
     fund_target: Number(fundTarget.value),
+    date_start: startDate.value,
     date_end: dateEnd.value,
   })
 
   const zodErrors = getZodErrors(result as Parameters<typeof getZodErrors>[0])
-  errors.value = { ...zodErrors }
-  return Object.keys(errors.value).length === 0
+  fieldErrors.value = { ...zodErrors }
+  return Object.keys(fieldErrors.value).length === 0
 }
 
 // Submit
 const handleSubmit = async (status: boolean) => {
   if (!validate()) return
 
-  await updateDonationMutation.mutateAsync({
-    donationId: donationId,
-    data: {
-      title: title.value.trim(),
-      description: description.value.trim(),
-      category: category.value as DonationProgramCategoryEnum,
-      fundTarget: Number(fundTarget.value),
-      endDate: dateEnd.value,
-      ...(imageFile.value ? { coverImage: imageFile.value } : {}),
-      status: status ? DonationProgramStatusEnum.ACTIVE : DonationProgramStatusEnum.DRAFT,
+  await updateDonationMutation.mutateAsync(
+    {
+      donationId: donationId,
+      data: {
+        title: title.value.trim(),
+        description: description.value.trim(),
+        category: category.value as DonationProgramCategoryEnum,
+        fundTarget: Number(fundTarget.value),
+        startDate: startDate.value,
+        endDate: dateEnd.value,
+        ...(imageFile.value ? { coverImage: imageFile.value } : {}),
+        status: status ? DonationProgramStatusEnum.ACTIVE : DonationProgramStatusEnum.DRAFT,
+      },
     },
-  })
-
-  if (updateDonationMutation.isSuccess.value) {
-    showToast('Donation campaign updated successfully!', 'success')
-    router.push({ name: 'dashboard-donations' })
-  }
+    {
+      onSuccess: () => {
+        showToast('Donation campaign updated successfully!', 'success')
+        router.push({ name: 'dashboard-donation-programs' })
+      },
+      onError: (err) => {
+        showToast(extractError(err, 'Failed to update donation campaign.'), 'error')
+      },
+    },
+  )
 }
 
 const handleSaveDraft = () => handleSubmit(false)
@@ -151,65 +185,41 @@ const formatCurrencyPreview = computed(() => {
   <DashboardLayout>
     <div class="max-w-full mx-auto space-y-6">
       <!-- Loading skeleton -->
-      <div v-if="isFetching" class="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+      <div
+        v-if="isFetching"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-8"
+      >
         <div class="animate-pulse space-y-4">
-          <div class="h-4 bg-gray-200 rounded w-1/3"></div>
-          <div class="h-36 bg-gray-200 rounded"></div>
-          <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div class="h-10 bg-gray-200 rounded"></div>
-          <div class="h-4 bg-gray-200 rounded w-1/4"></div>
-          <div class="h-10 bg-gray-200 rounded"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+          <div class="h-36 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+          <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
 
       <template v-else>
-        <!-- API Error Banner -->
-        <div
-          v-if="updateDonationMutation.error.value"
-          class="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
-        >
-          <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          {{ updateDonationMutation.error.value.message }}
-        </div>
-
-        <div
-          v-if="donationDetailQuery.error.value"
-          class="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
-        >
-          <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          {{ donationDetailQuery.error.value.message }}
-        </div>
-
         <!-- Form Card -->
         <form
           @submit.prevent="() => handleSubmit(true)"
-          class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+          class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
         >
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="p-6 space-y-5">
               <!-- Campaign Image Upload -->
               <div>
-                <p class="text-xs font-medium text-gray-700 mb-3">
+                <p class="text-xs font-medium text-gray-700 dark:text-gray-200 mb-3">
                   Campaign Image
-                  <span class="text-gray-400 font-normal">(leave unchanged to keep current)</span>
+                  <span class="text-gray-400 dark:text-gray-500 font-normal"
+                    >(leave unchanged to keep current)</span
+                  >
                 </p>
 
                 <!-- Preview area -->
                 <div
                   v-if="imagePreview"
-                  class="relative w-full h-52 rounded-lg overflow-hidden group"
+                  class="relative w-full h-52 rounded-lg overflow-hidden group border border-gray-200 dark:border-gray-700"
                 >
                   <img :src="imagePreview" alt="Preview" class="w-full h-full object-cover" />
                   <div
@@ -230,26 +240,28 @@ const formatCurrencyPreview = computed(() => {
                 <div
                   v-else
                   @click="triggerImageInput"
-                  class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150"
+                  class="flex flex-col items-center justify-center w-full h-52 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150"
                   :class="
-                    errors.image
-                      ? 'border-red-300 bg-red-50 hover:bg-red-50/70'
-                      : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                    imageError
+                      ? 'border-red-300 bg-red-50 dark:bg-red-900/20'
+                      : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'
                   "
                 >
-                  <Upload :size="28" class="text-gray-400 mb-2" />
-                  <p class="text-sm font-medium text-gray-600">Click to upload image</p>
+                  <Upload :size="32" class="text-gray-400 mb-2" />
+                  <p class="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    Click to upload image
+                  </p>
                   <p class="text-xs text-gray-400 mt-1">JPG, PNG, WebP &bull; Max 5 MB</p>
                 </div>
 
                 <input
-                  ref="imageInputRef"
+                  ref="coverImageInputRef"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   class="hidden"
                   @change="handleImageChange"
                 />
-                <p v-if="errors.image" class="mt-1 text-xs text-red-600">{{ errors.image }}</p>
+                <p v-if="imageError" class="mt-1 text-xs text-red-600">{{ imageError }}</p>
               </div>
 
               <!-- Title -->
@@ -258,8 +270,7 @@ const formatCurrencyPreview = computed(() => {
                 v-model="title"
                 label="Title"
                 placeholder="e.g. Help Build a School in Lombok"
-                :required="true"
-                :error="errors.title"
+                :error="titleError"
               />
             </div>
             <div>
@@ -267,21 +278,24 @@ const formatCurrencyPreview = computed(() => {
               <div class="p-6 space-y-5">
                 <!-- Description -->
                 <div>
-                  <label for="description" class="block text-xs font-medium text-gray-700 mb-1">
-                    Description <span class="text-red-500">*</span>
+                  <label
+                    for="description"
+                    class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  >
+                    Description
                   </label>
                   <textarea
                     id="description"
                     v-model="description"
                     rows="5"
                     placeholder="Describe the goal of this donation campaign…"
-                    class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                    class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     :class="
-                      errors.description ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+                      descriptionError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
                     "
                   />
-                  <p v-if="errors.description" class="mt-1 text-xs text-red-600">
-                    {{ errors.description }}
+                  <p v-if="descriptionError" class="mt-1 text-xs text-red-600">
+                    {{ descriptionError }}
                   </p>
                 </div>
 
@@ -289,15 +303,18 @@ const formatCurrencyPreview = computed(() => {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <!-- Category -->
                   <div>
-                    <label for="category" class="block text-xs font-medium text-gray-700 mb-1">
-                      Category <span class="text-red-500">*</span>
+                    <label
+                      for="category"
+                      class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1"
+                    >
+                      Category
                     </label>
                     <select
                       id="category"
                       v-model="category"
-                      class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600"
                       :class="
-                        errors.category ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+                        categoryError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
                       "
                     >
                       <option value="" disabled>Select a category</option>
@@ -305,65 +322,58 @@ const formatCurrencyPreview = computed(() => {
                         {{ cat.charAt(0).toUpperCase() + cat.slice(1) }}
                       </option>
                     </select>
-                    <p v-if="errors.category" class="mt-1 text-xs text-red-600">
-                      {{ errors.category }}
+                    <p v-if="categoryError" class="mt-1 text-xs text-red-600">
+                      {{ categoryError }}
                     </p>
                   </div>
 
                   <!-- Fund Target -->
                   <div>
-                    <label for="fund-target" class="block text-xs font-medium text-gray-700 mb-1">
-                      Fund Target (IDR) <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="fund-target"
+                    <BaseInput
+                      id="fundTarget"
                       v-model="fundTarget"
                       type="number"
-                      min="1"
+                      label="Fund Target (IDR)"
                       placeholder="e.g. 50000000"
-                      class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      :class="
-                        errors.fund_target ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
-                      "
+                      :error="fundTargetError"
+                      :hint="formatCurrencyPreview ? `≈ ${formatCurrencyPreview}` : undefined"
                     />
-                    <p v-if="formatCurrencyPreview" class="mt-1 text-xs text-gray-500">
-                      ≈ {{ formatCurrencyPreview }}
-                    </p>
-                    <p v-if="errors.fund_target" class="mt-1 text-xs text-red-600">
-                      {{ errors.fund_target }}
-                    </p>
                   </div>
                 </div>
 
-                <!-- End Date -->
-                <div>
-                  <label for="date-end" class="block text-xs font-medium text-gray-700 mb-1">
-                    Campaign End Date <span class="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="date-end"
+                <!-- Dates -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <!-- Start Date -->
+                  <BaseInput
+                    id="startDate"
+                    v-model="startDate"
+                    type="date"
+                    label="Campaign Start Date"
+                    :error="startDateError"
+                  />
+
+                  <!-- End Date -->
+                  <BaseInput
+                    id="dateEnd"
                     v-model="dateEnd"
                     type="date"
-                    :min="todayStr"
-                    class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    :class="
-                      errors.date_end ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
-                    "
+                    label="Campaign End Date"
+                    :min="startDate || todayStr"
+                    :error="dateEndError"
                   />
-                  <p v-if="errors.date_end" class="mt-1 text-xs text-red-600">
-                    {{ errors.date_end }}
-                  </p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Action Buttons -->
-          <div class="px-6 pb-4 flex items-center justify-between gap-3">
+          <div
+            class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3"
+          >
             <BaseButton
               type="button"
               variant="danger"
-              :to="{ name: 'dashboard-donations' }"
+              :to="{ name: 'dashboard-donation-programs' }"
               :disabled="isLoading"
             >
               Cancel

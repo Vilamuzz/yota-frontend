@@ -159,7 +159,7 @@ function handleConfirmAction() {
 
         <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
           <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default="{ closeDropdown }">
+            <template #default>
               <div class="space-y-4">
                 <!-- Role filter -->
                 <div>
@@ -195,12 +195,6 @@ function handleConfirmAction() {
                   >
                     Clear
                   </button>
-                  <button
-                    @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150"
-                  >
-                    Apply
-                  </button>
                 </div>
               </div>
             </template>
@@ -227,7 +221,6 @@ function handleConfirmAction() {
 
         <template #headers>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Username</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
             Default Role
@@ -250,7 +243,6 @@ function handleConfirmAction() {
             <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-500 dark:text-gray-200">
               {{ pageOffset * (queryParams.limit || 10) + index + 1 }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">{{ account.username }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-200">
               {{ account.email }}
             </td>

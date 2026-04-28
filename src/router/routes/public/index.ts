@@ -17,29 +17,29 @@ export const publicRoutes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'donation',
-        component: () => import('@/pages/public/donationProgram/IndexPage.vue'),
+        component: () => import('@/pages/public/donationPrograms/IndexPage.vue'),
       },
       {
         path: ':slug',
         name: 'donation-detail',
-        component: () => import('@/pages/public/donationProgram/DetailPage.vue'),
+        component: () => import('@/pages/public/donationPrograms/DetailPage.vue'),
       },
       {
         path: ':slug/form',
         name: 'donation-form',
-        component: () => import('@/pages/public/donationProgram/FormPage.vue'),
+        component: () => import('@/pages/public/donationPrograms/FormPage.vue'),
       },
       {
         path: 'callback',
         name: 'donation-callback',
-        component: () => import('@/pages/public/donationProgram/CallbackPage.vue'),
+        component: () => import('@/pages/public/donationPrograms/CallbackPage.vue'),
       },
     ],
   },
   {
     path: '/ambulance',
     name: 'ambulance',
-    component: () => import('@/pages/public/ambulance/IndexPage.vue'),
+    component: () => import('@/pages/public/ambulances/IndexPage.vue'),
   },
   {
     path: '/foster-children',
@@ -67,24 +67,24 @@ export const publicRoutes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'social-program',
-        component: () => import('@/pages/public/socialProgram/IndexPage.vue'),
+        component: () => import('@/pages/public/socialPrograms/IndexPage.vue'),
       },
       {
         path: ':slug',
         name: 'social-program-detail',
-        component: () => import('@/pages/public/socialProgram/DetailPage.vue'),
+        component: () => import('@/pages/public/socialPrograms/DetailPage.vue'),
       },
       {
         path: ':slug/form',
         name: 'social-program-form',
-        component: () => import('@/pages/public/socialProgram/FormPage.vue'),
+        component: () => import('@/pages/public/socialPrograms/FormPage.vue'),
       },
     ],
   },
   {
     path: '/gallery',
     name: 'gallery',
-    component: () => import('@/pages/public/gallery/IndexPage.vue'),
+    component: () => import('@/pages/public/galleries/IndexPage.vue'),
   },
   {
     path: '/news',
