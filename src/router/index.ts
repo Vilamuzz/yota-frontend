@@ -11,7 +11,6 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, _from, next) => {
-  console.time('RouterGuard')
   const authStore = useAuthStore()
 
   if (!authStore.isInitialized) {
@@ -41,7 +40,6 @@ router.beforeEach(async (to, _from, next) => {
     }
   }
 
-  console.timeEnd('RouterGuard')
   next()
 })
 

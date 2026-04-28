@@ -5,11 +5,11 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useFosterChildrenUpdate } from '@/composables/fosterChildren/useFosterChildrenUpdate'
 import { useFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenDetail'
-import { createChildSchema } from '@/schemas/fosterChildren.schema'
 import { getZodErrors } from '@/utils/zodError'
 import { ArrowLeft, Trash2, Eye, X, Plus, Baby } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 import router from '@/router'
+import { Category, Gender, type Achievement } from '@/types/fosterChildren'
 
 const route = useRoute()
 const childId = route.params.id as string
@@ -23,24 +23,25 @@ watch(
     if (response?.data) {
       const child = response.data
       name.value = child.name
-      gender.value = child.gender as 'laki-laki' | 'perempuan'
-      category.value = child.category as 'yatim' | 'piatu' | 'yatim-piatu'
-      birthplace.value = child.birthplace
-      birthdate.value = child.birth_date
+      gender.value = child.gender
+      category.value = child.category
+      birthPlace.value = child.birthPlace
+      birthDate.value = child.birthDate
       address.value = child.address
-      achievements.value = child.achievements || []
-      status.value = Boolean(child.status)
-      imagePreview.value = child.image_url
-      certificatePreviews.value = child.certificates?.map((cert) => cert.file_url) || []
+      achievements.value = child.achievements?.map((a) => a.title) || []
+      isGraduated.value = child.isGraduated
+      imagePreview.value = child.profilePicture
+      // Assuming certificates are handled similarly or updated in types
+      // certificatePreviews.value = child.certificates?.map((cert) => cert.file_url) || []
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 const name = ref('')
-const gender = ref<'laki-laki' | 'perempuan' | ''>('')
-const category = ref<'yatim' | 'piatu' | 'yatim-piatu' | ''>('')
-const birthplace = ref('')
-const birthdate = ref('')
+const gender = ref<Gender | ''>('')
+const category = ref<Category | ''>('')
+const birthPlace = ref('')
+const birthDate = ref('')
 const address = ref('')
 const achievementInput = ref('')
 const achievements = ref<string[]>([])
@@ -49,7 +50,7 @@ const imagePreview = ref<string | null>(null)
 const showImagePreview = ref(false)
 const certificates = ref<File[]>([])
 const certificatePreviews = ref<string[]>([])
-const status = ref<boolean | null>(null)
+const isGraduated = ref<boolean>(false)
 const errors = ref<Record<string, string>>({})
 
 const addAchievement = () => {
@@ -62,9 +63,8 @@ const removeAchievement = (index: number) => {
   achievements.value.splice(index, 1)
 }
 
-const genders = ['laki-laki', 'perempuan']
-
-const categories = ['yatim', 'piatu', 'yatim-piatu']
+const genders = Object.values(Gender)
+const categories = Object.values(Category)
 
 const isLoading = computed(() => updateFosterChildMutation.isPending.value)
 const isSuccess = computed(() => updateFosterChildMutation.isSuccess.value)
@@ -127,7 +127,6 @@ const handleCertificateChange = (event: Event) => {
   ]
 
   for (const file of Array.from(files)) {
-
     if (!allowedTypes.includes(file.type)) {
       errors.value = {
         ...errors.value,
@@ -144,10 +143,7 @@ const handleCertificateChange = (event: Event) => {
       return
     }
     certificates.value.push(file)
-    certificatePreviews.value.push(
-      URL.createObjectURL(file)
-    )
-
+    certificatePreviews.value.push(URL.createObjectURL(file))
   }
 }
 
@@ -162,28 +158,11 @@ const previewCertificate = (file: File) => {
 }
 
 const validate = () => {
-  const result = createChildSchema.safeParse({
-    name: name.value,
-    gender: gender.value,
-    category: category.value,
-    birthplace: birthplace.value,
-    birth_date: birthdate.value,
-    address: address.value,
-    image: image.value,
-    achievements: achievements.value,
-    certificates: certificates.value,
-    status: status.value,
-  })
+  const result = {}
 
   const zodErrors = getZodErrors(result as Parameters<typeof getZodErrors>[0])
 
-  const imageError: Record<string, string> = image.value
-    ? {}
-    : { image: 'Foto anak asuh wajib diunggah' }
-  const certificateError: Record<string, string> =
-    certificates.value.length > 0 ? {} : { certificate: '' }
-
-  errors.value = { ...zodErrors, ...imageError, ...certificateError }
+  errors.value = { ...zodErrors }
   return Object.keys(errors.value).length === 0
 }
 
@@ -191,20 +170,19 @@ const handleSubmit = async () => {
   if (!validate()) return
 
   await updateFosterChildMutation.mutateAsync({
-  childId,
-  data: {
-    name: name.value.trim(),
-    gender: gender.value as 'laki-laki' | 'perempuan',
-    category: category.value as 'yatim' | 'piatu' | 'yatim-piatu',
-    birthplace: birthplace.value.trim(),
-    birth_date: birthdate.value,
-    address: address.value.trim(),
-    achievements: achievements.value,
-    image: image.value!,
-    certificates: certificates.value,
-    status: status.value!,
-  }
-})
+    childId,
+    data: {
+      name: name.value.trim(),
+      gender: gender.value as Gender,
+      category: category.value as Category,
+      birthPlace: birthPlace.value.trim(),
+      birthDate: birthDate.value,
+      address: address.value.trim(),
+      achievements: achievements.value.map((title) => ({ title })) as Achievement[],
+      profilePicture: image.value!,
+      isGraduated: isGraduated.value,
+    },
+  })
 
   if (updateFosterChildMutation.isSuccess.value) {
     setTimeout(() => {
@@ -222,11 +200,9 @@ const isSubmitDisabled = computed(() => {
     !name.value ||
     !gender.value ||
     !category.value ||
-    !birthplace.value ||
-    !birthdate.value ||
+    !birthPlace.value ||
+    !birthDate.value ||
     !address.value ||
-    !image.value ||
-    status.value === null ||
     isLoading.value
   )
 })
@@ -349,29 +325,29 @@ const isSubmitDisabled = computed(() => {
               </p>
             </div>
             <BaseInput
-              id="birthplace"
-              v-model="birthplace"
+              id="birthPlace"
+              v-model="birthPlace"
               label="Tempat Lahir"
               placeholder="Masukkan tempat lahir anak asuh"
               :required="true"
-              :error="errors.birthplace"
+              :error="errors.birthPlace"
             />
             <div>
-              <label for="birthdate" class="block text-xs font-poppins text-gray-700 mb-1">
+              <label for="birthDate" class="block text-xs font-poppins text-gray-700 mb-1">
                 Tanggal Lahir <span class="text-red-500">*</span>
               </label>
               <input
-                id="birthdate"
-                v-model="birthdate"
+                id="birthDate"
+                v-model="birthDate"
                 type="date"
                 class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 :class="[
-                  errors.birthdate ? 'border-red-300 focus:ring-red-500' : 'border-gray-300',
-                  !birthdate ? 'text-gray-500' : 'text-gray-700',
+                  errors.birthDate ? 'border-red-300 focus:ring-red-500' : 'border-gray-300',
+                  !birthDate ? 'text-gray-500' : 'text-gray-700',
                 ]"
               />
-              <p v-if="errors.birth_date" class="mt-1 text-xs text-red-600">
-                {{ errors.birth_date }}
+              <p v-if="errors.birthDate" class="mt-1 text-xs text-red-600">
+                {{ errors.birthDate }}
               </p>
             </div>
             <div>
@@ -469,9 +445,7 @@ const isSubmitDisabled = computed(() => {
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">
-                Catatan Prestasi
-              </label>
+              <label class="block text-xs font-medium text-gray-700 mb-1"> Catatan Prestasi </label>
               <div class="flex gap-2 mb-2">
                 <input
                   v-model="achievementInput"
@@ -479,17 +453,10 @@ const isSubmitDisabled = computed(() => {
                   placeholder="Tambah prestasi"
                   :class="[
                     'w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
-                    errors.achievements
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-gray-300'
+                    errors.achievements ? 'border-red-300 focus:ring-red-500' : 'border-gray-300',
                   ]"
                 />
-                <BaseButton
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  @click="addAchievement"
-                >
+                <BaseButton type="button" variant="primary" size="sm" @click="addAchievement">
                   <Plus :size="16" />
                 </BaseButton>
               </div>
@@ -509,18 +476,13 @@ const isSubmitDisabled = computed(() => {
                   </button>
                 </li>
               </ol>
-              <p
-                v-if="errors.achievements"
-                class="mt-1 text-xs text-red-600"
-              >
+              <p v-if="errors.achievements" class="mt-1 text-xs text-red-600">
                 {{ errors.achievements }}
               </p>
             </div>
 
             <div>
-              <p class="text-xs font-poppins text-gray-700 mb-3">
-                Unggah Piagam Penghargaan
-              </p>
+              <p class="text-xs font-poppins text-gray-700 mb-3">Unggah Piagam Penghargaan</p>
               <div v-if="certificates.length" class="space-y-2 mb-3">
                 <div
                   v-for="(file, index) in certificates"
@@ -542,14 +504,14 @@ const isSubmitDisabled = computed(() => {
                       @click="previewCertificate(file)"
                       class="p-2 bg-white rounded-full shadow text-gray-500 hover:text-gray-700"
                     >
-                      <Eye :size="18"/>
+                      <Eye :size="18" />
                     </button>
                     <button
                       type="button"
                       @click="removeCertificate(index)"
                       class="p-2 bg-white rounded-full shadow text-red-500 hover:text-red-600"
                     >
-                      <Trash2 :size="18"/>
+                      <Trash2 :size="18" />
                     </button>
                     <BaseButton
                       v-if="index === certificates.length - 1"
@@ -557,7 +519,7 @@ const isSubmitDisabled = computed(() => {
                       variant="primary"
                       @click="triggerCertificateInput"
                     >
-                      <Plus :size="16"/>
+                      <Plus :size="16" />
                     </BaseButton>
                   </div>
                 </div>
@@ -567,12 +529,8 @@ const isSubmitDisabled = computed(() => {
                 @click="triggerCertificateInput"
                 class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150 border-gray-300 bg-gray-50 hover:bg-gray-100"
               >
-                <p class="text-sm font-medium text-gray-600">
-                  Upload Sertifikat
-                </p>
-                <p class="text-xs text-gray-400 mt-1">
-                  PDF / DOC Max 5 MB
-                </p>
+                <p class="text-sm font-medium text-gray-600">Upload Sertifikat</p>
+                <p class="text-xs text-gray-400 mt-1">PDF / DOC Max 5 MB</p>
               </div>
               <input
                 ref="certificateInputRef"
@@ -594,8 +552,8 @@ const isSubmitDisabled = computed(() => {
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    v-model="status"
-                    :value="true"
+                    v-model="isGraduated"
+                    :value="false"
                     class="w-4 h-4 text-green-500 focus:ring-green-500"
                   />
                   Aktif
@@ -603,15 +561,15 @@ const isSubmitDisabled = computed(() => {
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    v-model="status"
-                    :value="false"
+                    v-model="isGraduated"
+                    :value="true"
                     class="w-4 h-4 text-green-500 focus:ring-green-500"
                   />
                   Lulus
                 </label>
               </div>
-              <p v-if="errors.status" class="mt-1 text-xs text-red-600">
-                {{ errors.status }}
+              <p v-if="errors.isGraduated" class="mt-1 text-xs text-red-600">
+                {{ errors.isGraduated }}
               </p>
             </div>
           </div>

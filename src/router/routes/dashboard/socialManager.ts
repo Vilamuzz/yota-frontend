@@ -4,7 +4,7 @@ import { ROLES } from '@/const/roles'
 export const socialManagerRoutes: RouteRecordRaw[] = [
   {
     path: '',
-    meta: { role: ROLES.SOCIAL_MANAGER },
+    meta: { role: [ROLES.SOCIAL_MANAGER, ROLES.CHAIRMAN] },
     children: [
       {
         path: 'foster-children',
@@ -49,13 +49,13 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         path: 'foster-children/donations',
         name: 'dashboard-foster-children-donations',
         component: () =>
-          import('@/pages/dashboard/income/fosterChildrenTransaction/FosterChildrenPage.vue'),
+          import('@/pages/dashboard/income/fosterChildrenTransactions/FosterChildrenPage.vue'),
         meta: { requiresAuth: true, title: 'Riwayat Donasi Anak Asuh' },
       },
       {
         path: 'foster-children/donations/:id/detail',
         name: 'dashboard-foster-children-donations-detail',
-        component: () => import('@/pages/dashboard/income/fosterChildrenTransaction/IndexPage.vue'),
+        component: () => import('@/pages/dashboard/income/fosterChildrenTransactions/IndexPage.vue'),
         meta: {
           title: 'Detail Riwayat Donasi Anak Asuh',
           activeMenu: 'dashboard-foster-children-donations',
@@ -64,25 +64,25 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
       {
         path: 'social-program',
         name: 'dashboard-social-program',
-        component: () => import('@/pages/dashboard/socialProgram/IndexPage.vue'),
+        component: () => import('@/pages/dashboard/socialPrograms/IndexPage.vue'),
         meta: { requiresAuth: true, title: 'Program Sosial' },
       },
       {
         path: 'social-program/create',
         name: 'dashboard-social-program-create',
-        component: () => import('@/pages/dashboard/socialProgram/CreatePage.vue'),
+        component: () => import('@/pages/dashboard/socialPrograms/CreatePage.vue'),
         meta: { requiresAuth: true, title: 'Create Program' },
       },
       {
         path: 'social-program/subscriptions',
         name: 'dashboard-social-program-subscriptions',
-        component: () => import('@/pages/dashboard/socialProgram/SubscriptionHistoryPage.vue'),
+        component: () => import('@/pages/dashboard/socialPrograms/SubscriptionHistoryPage.vue'),
         meta: { requiresAuth: true, title: 'Riwayat Langganan' },
       },
       {
         path: 'social-program/subscriptions/:id',
         name: 'dashboard-social-program-subscription-detail',
-        component: () => import('@/pages/dashboard/socialProgram/SubscriptionDetailPage.vue'),
+        component: () => import('@/pages/dashboard/socialPrograms/SubscriptionDetailPage.vue'),
         meta: {
           requiresAuth: true,
           title: 'Detail Langganan',
@@ -93,13 +93,13 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
       {
         path: 'social-program/customers',
         name: 'dashboard-social-program-customers',
-        component: () => import('@/pages/dashboard/socialProgram/CustomerHistoryPage.vue'),
+        component: () => import('@/pages/dashboard/socialPrograms/CustomerHistoryPage.vue'),
         meta: { requiresAuth: true, title: 'Riwayat Pelanggan' },
       },
       {
         path: 'social-program/customers/:id',
         name: 'dashboard-social-program-customers-detail',
-        component: () => import('@/pages/dashboard/socialProgram/CustomerDetailPage.vue'),
+        component: () => import('@/pages/dashboard/socialPrograms/CustomerDetailPage.vue'),
         meta: {
           requiresAuth: true,
           title: 'Detail Pelanggan',
@@ -109,7 +109,7 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
       {
         path: 'social-program/customers/:customerId/program/:programId',
         name: 'dashboard-social-program-customers-detail-detail',
-        component: () => import('@/pages/dashboard/socialProgram/CustomerDetailDetailPage.vue'),
+        component: () => import('@/pages/dashboard/socialPrograms/CustomerDetailDetailPage.vue'),
         meta: {
           requiresAuth: true,
           title: 'Detail Program Pelanggan',
@@ -120,7 +120,7 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
       {
         path: 'social-program/:id/detail',
         name: 'dashboard-social-program-detail',
-        component: () => import('@/pages/dashboard/socialProgram/DetailPage.vue'),
+        component: () => import('@/pages/dashboard/socialPrograms/DetailPage.vue'),
         meta: {
           requiresAuth: true,
           title: 'Detail Program',
@@ -130,7 +130,7 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
       {
         path: 'social-program/:id',
         name: 'dashboard-social-program-edit',
-        component: () => import('@/pages/dashboard/socialProgram/EditPage.vue'),
+        component: () => import('@/pages/dashboard/socialPrograms/EditPage.vue'),
         meta: { requiresAuth: true, title: 'Edit Program' },
       },
     ],

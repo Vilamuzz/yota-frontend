@@ -44,7 +44,7 @@ export const donationProgramService = {
   },
 
   createDonationProgram: async (data: CreateDonationProgramRequest) => {
-    const response = await api.post(`${API.DONATION_PROGRAMS_ADMIN}/`, data, {
+    const response = await api.post(`${API.DONATION_PROGRAMS_ADMIN}`, data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data
