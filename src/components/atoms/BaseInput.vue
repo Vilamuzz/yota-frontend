@@ -74,7 +74,7 @@ const passwordStrength = computed(() => {
 
 const inputClasses = computed(() => {
   const base =
-    'w-full border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed'
+    'w-full border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600'
 
   const sizes = {
     sm: 'px-3 py-1.5 text-xs',
@@ -95,7 +95,7 @@ const labelClasses = computed(() => {
     lg: 'text-sm',
   }
 
-  return `block font-medium text-gray-700 mb-1 ${sizes[props.size]}`
+  return `block font-medium text-gray-700 mb-1 dark:text-gray-200 ${sizes[props.size]}`
 })
 
 const handleInput = (event: Event) => {

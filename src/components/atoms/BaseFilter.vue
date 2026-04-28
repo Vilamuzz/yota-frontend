@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Filter } from 'lucide-vue-next'
 
 interface Props {
@@ -11,14 +11,29 @@ withDefaults(defineProps<Props>(), {
 })
 
 const showFilterDropdown = ref(false)
+const filterRef = ref<HTMLElement | null>(null)
 
 const closeDropdown = () => {
   showFilterDropdown.value = false
 }
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (filterRef.value && !filterRef.value.contains(event.target as Node)) {
+    closeDropdown()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('mousedown', handleClickOutside)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('mousedown', handleClickOutside)
+})
 </script>
 
 <template>
-  <div class="relative">
+  <div class="relative" ref="filterRef">
     <button
       @click="showFilterDropdown = !showFilterDropdown"
       class="flex items-center gap-2 p-2 border border-gray-300 rounded-sm bg-primary-300 hover:bg-primary-400 transition-colors duration-150 text-sm font-medium text-white h-9.5 dark:border-gray-700 dark:text-white"
@@ -27,10 +42,9 @@ const closeDropdown = () => {
       <Filter :size="18" />
     </button>
 
-    <!-- Filter Dropdown Menu -->
     <div
       v-if="showFilterDropdown"
-      class="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-50 text-left"
+      class="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 z-50 text-left"
     >
       <slot :close-dropdown="closeDropdown" />
     </div>

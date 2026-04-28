@@ -32,13 +32,11 @@ const { addRoleMutation, updateRoleMutation, updateBanStatusMutation } = useAcco
 
 const { accountDetailQuery } = useAccountDetail(computed(() => props.user?.id || ''))
 
-// Combine prop data with detail data
 const displayUser = computed(() => accountDetailQuery.data.value?.data || props.user)
 const isDetailLoading = computed(() => accountDetailQuery.isLoading.value && props.show)
 
-// Local editable state
 const localMode = ref<'view' | 'edit'>(props.mode)
-const selectedRole = ref<number | undefined>(undefined) // Keeps track of default role
+const selectedRole = ref<number | undefined>(undefined)
 const showAddRole = ref(false)
 const newRoleId = ref<number | undefined>(undefined)
 
@@ -48,7 +46,6 @@ const availableRolesToAdd = computed(() => {
   return props.roles.filter((r) => !existingRoleIds.includes(r.id))
 })
 
-// Sync when user or mode prop changes
 watch(
   () => [displayUser.value, props.show, props.mode],
   () => {
@@ -67,36 +64,6 @@ watch(
 )
 
 const isEdit = computed(() => localMode.value === 'edit')
-
-const isDirty = computed(() => {
-  if (!displayUser.value) return false
-  return selectedRole.value !== displayUser.value.roles.find((r) => r.isDefault)?.roleId
-})
-
-const handleSave = () => {
-  if (!displayUser.value || !selectedRole.value) return
-
-  // Currently we use addRoleMutation to set/change default role if needed
-  // or we could add more update logic here if other fields were editable
-  addRoleMutation.mutate(
-    {
-      accountId: String(displayUser.value.id),
-      roleId: selectedRole.value,
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['accounts'] })
-        queryClient.invalidateQueries({ queryKey: ['accountDetail', displayUser.value?.id] })
-        showToast('Account updated successfully', 'success')
-        emit('saved')
-        emit('close')
-      },
-      onError: (err) => {
-        showToast(extractError(err as ApiError, 'Failed to update user.'), 'error')
-      },
-    },
-  )
-}
 
 const handleToggleRole = (role: AccountRole) => {
   if (!displayUser.value) return
@@ -148,10 +115,6 @@ const handleClose = () => {
   if (updateBanStatusMutation.isError.value) updateBanStatusMutation.reset()
   if (updateRoleMutation.isError.value) updateRoleMutation.reset()
   emit('close')
-}
-
-const enterEditMode = () => {
-  localMode.value = 'edit'
 }
 
 const formatDate = (dateStr: string) =>
@@ -404,7 +367,6 @@ const formatDate = (dateStr: string) =>
             <!-- VIEW mode -->
             <template v-if="!isEdit">
               <BaseButton variant="outline" @click="handleClose"> Close </BaseButton>
-              <BaseButton variant="primary" @click="enterEditMode" class="px-6"> Edit </BaseButton>
             </template>
 
             <!-- EDIT mode -->
@@ -414,15 +376,7 @@ const formatDate = (dateStr: string) =>
                 @click="handleClose"
                 :disabled="addRoleMutation.isPending.value"
               >
-                Batal
-              </BaseButton>
-              <BaseButton
-                variant="primary"
-                @click="handleSave"
-                :loading="addRoleMutation.isPending.value"
-                :disabled="addRoleMutation.isPending.value || !isDirty"
-              >
-                Simpan
+                Selesai
               </BaseButton>
             </template>
           </div>

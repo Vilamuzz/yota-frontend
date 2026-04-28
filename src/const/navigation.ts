@@ -1,4 +1,15 @@
-import { Home, Newspaper, Users, CirclePoundSterling, Baby } from 'lucide-vue-next'
+import {
+  Home,
+  Newspaper,
+  Users,
+  CirclePoundSterling,
+  Baby,
+  GalleryHorizontal,
+  Ambulance,
+  MessageCircleHeart,
+  HandHeart,
+  MessageCircleMore,
+} from 'lucide-vue-next'
 import type { NavItem } from '@/types/navigation'
 import { ROLES } from './roles'
 
@@ -15,9 +26,15 @@ export const dashboardNavigation: NavItem[] = [
     roles: [ROLES.SUPERADMIN],
   },
   {
-    icon: Users,
-    label: 'Donasi',
-    route: '/dashboard/donations',
+    icon: HandHeart,
+    label: 'Program Donasi',
+    route: '/dashboard/donation-programs',
+    roles: [ROLES.FINANCE],
+  },
+  {
+    icon: MessageCircleHeart,
+    label: 'Moderasi Doa',
+    route: '/dashboard/prayers',
     roles: [ROLES.FINANCE],
   },
   {
@@ -26,12 +43,12 @@ export const dashboardNavigation: NavItem[] = [
     roles: [ROLES.FINANCE],
     children: [
       {
-        label: 'Donasi',
-        route: '/dashboard/income/donation',
+        label: 'Program Donasi',
+        route: '/dashboard/income/donation-programs',
       },
       {
         label: 'Program Sosial',
-        route: '/dashboard/income/social-program',
+        route: '/dashboard/income/social-programs',
       },
       {
         label: 'Anak Asuh',
@@ -45,18 +62,24 @@ export const dashboardNavigation: NavItem[] = [
     roles: [ROLES.FINANCE],
     children: [
       {
-        label: 'Donasi',
-        route: '/dashboard/expense/donation',
+        label: 'Program Donasi',
+        route: '/dashboard/expenses/donation-programs',
       },
       {
         label: 'Program Sosial',
-        route: '/dashboard/expense/social-program',
+        route: '/dashboard/expenses/social-programs',
       },
       {
         label: 'Anak Asuh',
-        route: '/dashboard/expense/foster-children',
+        route: '/dashboard/expenses/foster-children',
       },
     ],
+  },
+  {
+    icon: CirclePoundSterling,
+    label: 'Program Sosial',
+    route: '/dashboard/social-programs',
+    roles: [ROLES.SOCIAL_MANAGER],
   },
   {
     icon: Baby,
@@ -79,8 +102,32 @@ export const dashboardNavigation: NavItem[] = [
   },
   {
     icon: Newspaper,
-    label: 'News',
+    label: 'Berita',
     roles: [ROLES.PUBLICATION_MANAGER],
     route: '/dashboard/news',
+  },
+  {
+    icon: MessageCircleMore,
+    label: 'Moderasi Komentar',
+    roles: [ROLES.PUBLICATION_MANAGER],
+    route: '/dashboard/comments',
+  },
+  {
+    icon: GalleryHorizontal,
+    label: 'Galeri',
+    route: '/dashboard/galleries',
+    roles: [ROLES.PUBLICATION_MANAGER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Kelola Ambulans',
+    route: '/dashboard/ambulance',
+    roles: [ROLES.AMBULANCE_MANAGER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Layanan Ambulans',
+    route: '/dashboard/ambulance-services',
+    roles: [ROLES.AMBULANCE_MANAGER],
   },
 ]
