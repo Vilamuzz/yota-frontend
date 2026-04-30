@@ -98,15 +98,15 @@ export const financeRoutes: RouteRecordRaw[] = [
                 path: '',
                 name: 'dashboard-foster-children-transaction',
                 component: () =>
-                  import('@/pages/dashboard/income/fosterChildrenTransactions/IndexPage.vue'),
+                  import('@/pages/dashboard/income/fosterChildrenTransactions/FosterChildrenPage.vue'),
                 meta: { title: 'Transaksi Anak Asuh' },
               },
               {
                 path: 'id',
-                name: 'dashboard-foster-children-transaction-create',
+                name: 'dashboard-foster-children-transaction-detail',
                 component: () =>
-                  import('@/pages/dashboard/income/fosterChildrenTransactions/CreatePage.vue'),
-                meta: { title: 'Tambah Transaksi Anak Asuh' },
+                  import('@/pages/dashboard/income/fosterChildrenTransactions/IndexPage.vue'),
+                meta: { title: 'Riwayat Transaksi Anak Asuh', activeMenu:'dashboatd-foster-children-transaction' },
               },
               {
                 path: 'id/create',

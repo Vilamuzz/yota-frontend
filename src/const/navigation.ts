@@ -155,4 +155,10 @@ export const dashboardNavigation: NavItem[] = [
     roles: [ROLES.CHAIRMAN],
     route: '/dashboard/social-program',
   },
+  {
+    icon: Baby,
+    label: 'Anak Asuh',
+    roles: [ROLES.CHAIRMAN],
+    route: '/dashboard/chairman/foster-children/submissions'
+  }
 ]

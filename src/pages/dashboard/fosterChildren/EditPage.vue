@@ -9,7 +9,7 @@ import { getZodErrors } from '@/utils/zodError'
 import { ArrowLeft, Trash2, Eye, X, Plus, Baby } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 import router from '@/router'
-import { Category, Gender, type Achievement } from '@/types/fosterChildren'
+import { Category, Gender } from '@/types/fosterChildren'
 
 const route = useRoute()
 const childId = route.params.id as string
@@ -28,39 +28,49 @@ watch(
       birthPlace.value = child.birthPlace
       birthDate.value = child.birthDate
       address.value = child.address
-      achievements.value = child.achievements?.map((a) => a.title) || []
-      isGraduated.value = child.isGraduated
-      imagePreview.value = child.profilePicture
-      // Assuming certificates are handled similarly or updated in types
-      // certificatePreviews.value = child.certificates?.map((cert) => cert.file_url) || []
+      profilePicturePreview.value = child.profilePicture
+      familyCardPreview.value = child.familyCard
+      sktmPreview.value = child.sktm
+      achievementTitles.value = child.achievements?.map((a) => a.title) || []
+      achievementPreviews.value = child.achievements?.map((a) => a.url) || []
+      isGraduated.value = child.isGraduated ?? false
     }
   },
   { immediate: true },
 )
+
 const name = ref('')
-const gender = ref<Gender | ''>('')
+const gender = ref<Gender |''>('')
 const category = ref<Category | ''>('')
 const birthPlace = ref('')
 const birthDate = ref('')
 const address = ref('')
+const profilePicture = ref<File | null>(null)
+const profilePicturePreview = ref<string | null>(null)
+const showProfilePicturePreview = ref(false)
 const achievementInput = ref('')
-const achievements = ref<string[]>([])
-const image = ref<File | null>(null)
-const imagePreview = ref<string | null>(null)
-const showImagePreview = ref(false)
-const certificates = ref<File[]>([])
-const certificatePreviews = ref<string[]>([])
+const achievementTitles = ref<string[]>([])
+const achievementFiles = ref<File[]>([])
+const achievementPreviews = ref<string[]>([])
+const familyCard = ref<File |null>(null)
+const familyCardPreview = ref<string | null>(null)
+const familyCardInputRef = ref<HTMLInputElement | null>(null)
+const sktmInputRef = ref<HTMLInputElement | null>(null)
+const sktm = ref<File | null>(null)
+const sktmPreview = ref<string | null>(null)
 const isGraduated = ref<boolean>(false)
 const errors = ref<Record<string, string>>({})
 
 const addAchievement = () => {
-  if (achievementInput.value.trim()) {
-    achievements.value.push(achievementInput.value.trim())
-    achievementInput.value = ''
-  }
+  if (!achievementInput.value.trim()) return
+  achievementTitles.value.push(
+    achievementInput.value.trim()
+  )
+  achievementInput.value = ''
 }
+
 const removeAchievement = (index: number) => {
-  achievements.value.splice(index, 1)
+  achievementTitles.value.splice(index, 1)
 }
 
 const genders = Object.values(Gender)
@@ -92,22 +102,22 @@ const handleImageChange = (event: Event) => {
   const { image: _, ...rest } = errors.value
   void _
   errors.value = rest
-  image.value = file
-  imagePreview.value = URL.createObjectURL(file)
+  profilePicture.value = file
+  profilePicturePreview.value = URL.createObjectURL(file)
 }
 
 const removeImage = () => {
-  image.value = null
-  imagePreview.value = null
+  profilePicture.value = null
+  profilePicturePreview.value = null
   if (imageInputRef.value) imageInputRef.value.value = ''
 }
 
 const previewImage = () => {
-  showImagePreview.value = true
+  showProfilePicturePreview.value = true
 }
 
-const closeImagePreview = () => {
-  showImagePreview.value = false
+const closeprofilePicturePreview = () => {
+  showProfilePicturePreview.value = false
 }
 
 const certificateInputRef = ref<HTMLInputElement | null>(null)
@@ -142,19 +152,70 @@ const handleCertificateChange = (event: Event) => {
       }
       return
     }
-    certificates.value.push(file)
-    certificatePreviews.value.push(URL.createObjectURL(file))
+    achievementFiles.value.push(file)
+    achievementPreviews.value.push(URL.createObjectURL(file))
   }
 }
 
-const removeCertificate = (index: number) => {
-  certificates.value.splice(index, 1)
-  certificatePreviews.value.splice(index, 1)
+const removeAchievementsFile = (index: number) => {
+  achievementFiles.value.splice(index, 1)
+  achievementPreviews.value.splice(index, 1)
 }
 
-const previewCertificate = (file: File) => {
+const triggerInput = (
+  inputRef: HTMLInputElement | null
+) => {
+  inputRef?.click()
+}
+
+const previewFile = (file: File) => {
   const url = URL.createObjectURL(file)
   window.open(url)
+}
+
+const removeSingleFile = (
+  type: 'familyCard' | 'sktm'
+) => {
+  if (type === 'familyCard') {
+    familyCard.value = null
+    familyCardPreview.value = null
+  }
+
+  if (type === 'sktm') {
+    sktm.value = null
+    sktmPreview.value = null
+  }
+}
+
+const handleSingleFileChange = (
+  event: Event,
+  type: 'familyCard' | 'sktm'
+) => {
+  const file =
+    (event.target as HTMLInputElement)
+      .files?.[0]
+
+  if (!file) return
+
+  if (file.size > 5 * 1024 * 1024) {
+    errors.value = {
+      ...errors.value,
+      [type]: 'Ukuran maksimal file 5MB',
+    }
+    return
+  }
+
+  if (type === 'familyCard') {
+    familyCard.value = file
+    familyCardPreview.value =
+      URL.createObjectURL(file)
+  }
+
+  if (type === 'sktm') {
+    sktm.value = file
+    sktmPreview.value =
+      URL.createObjectURL(file)
+  }
 }
 
 const validate = () => {
@@ -178,8 +239,18 @@ const handleSubmit = async () => {
       birthPlace: birthPlace.value.trim(),
       birthDate: birthDate.value,
       address: address.value.trim(),
-      achievements: achievements.value.map((title) => ({ title })) as Achievement[],
-      profilePicture: image.value!,
+      profilePicture: profilePicture.value || undefined,
+      familyCard: familyCard.value || undefined,
+      sktm: sktm.value || undefined,
+      achievements: achievementTitles.value.map(
+        (title, index) => ({
+          id: `edit-${index}`,
+          title,
+          url:
+            achievementPreviews.value[index] || '',
+          alt: title,
+        })
+      ),
       isGraduated: isGraduated.value,
     },
   })
@@ -280,6 +351,7 @@ const isSubmitDisabled = computed(() => {
               :required="true"
               :error="errors.name"
             />
+
             <div>
               <label for="gender" class="block text-xs font-poppins text-gray-700 mb-1">
                 Jenis Kelamin <span class="text-red-500">*</span>
@@ -302,6 +374,7 @@ const isSubmitDisabled = computed(() => {
                 {{ errors.gender }}
               </p>
             </div>
+
             <div>
               <label for="category" class="block text-xs font-poppins text-gray-700 mb-1">
                 Kategori <span class="text-red-500">*</span>
@@ -324,6 +397,7 @@ const isSubmitDisabled = computed(() => {
                 {{ errors.category }}
               </p>
             </div>
+
             <BaseInput
               id="birthPlace"
               v-model="birthPlace"
@@ -332,6 +406,7 @@ const isSubmitDisabled = computed(() => {
               :required="true"
               :error="errors.birthPlace"
             />
+
             <div>
               <label for="birthDate" class="block text-xs font-poppins text-gray-700 mb-1">
                 Tanggal Lahir <span class="text-red-500">*</span>
@@ -350,6 +425,7 @@ const isSubmitDisabled = computed(() => {
                 {{ errors.birthDate }}
               </p>
             </div>
+
             <div>
               <label for="address" class="block text-xs font-medium text-gray-700 mb-1">
                 Alamat <span class="text-red-500">*</span>
@@ -366,19 +442,18 @@ const isSubmitDisabled = computed(() => {
                 {{ errors.address }}
               </p>
             </div>
-          </div>
-          <div class="p-6 space-y-5">
+
             <div>
               <p class="text-xs font-poppins text-gray-700 mb-3">
                 Unggah Foto Anak Asuh <span class="text-red-500">*</span>
               </p>
               <div
-                v-if="imagePreview"
+                v-if="profilePicturePreview"
                 class="group flex items-center justify-between border p-3 rounded-lg"
               >
                 <div class="flex items-center gap-3">
-                  <img :src="imagePreview" alt="preview" class="w-20 h-20 object-cover rounded" />
-                  <span class="mx-4 text-sm text-gray-500">{{ image?.name }}</span>
+                  <img :src="profilePicturePreview" alt="preview" class="w-20 h-20 object-cover rounded" />
+                  <span class="mx-4 text-sm text-gray-500">{{ profilePicture?.name }}</span>
                 </div>
                 <div class="flex gap-2">
                   <button
@@ -400,26 +475,26 @@ const isSubmitDisabled = computed(() => {
                 </div>
               </div>
               <div
-                v-if="showImagePreview"
+                v-if="showProfilePicturePreview"
                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
               >
                 <div class="relative bg-white rounded-lg p-4 max-w-lg w-full">
                   <button
-                    @click="closeImagePreview"
+                    @click="closeprofilePicturePreview"
                     class="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
                   >
                     <X :size="20" />
                   </button>
 
                   <img
-                    v-if="imagePreview"
-                    :src="imagePreview"
+                    v-if="profilePicturePreview"
+                    :src="profilePicturePreview"
                     class="w-full max-h-[70vh] object-contain rounded"
                   />
                 </div>
               </div>
               <div
-                v-if="!imagePreview"
+                v-if="!profilePicturePreview"
                 @click="triggerImageInput"
                 class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150"
                 :class="
@@ -443,6 +518,115 @@ const isSubmitDisabled = computed(() => {
                 {{ errors.image }}
               </p>
             </div>
+          </div>
+
+          <div class="p-6 space-y-5">
+            <div>
+              <p class="text-xs-font-poppins text-gray-700 mb-3">
+                Unggah Kartu Keluarga <span class="text-red-500">*</span>
+              </p>
+              <div v-if="familyCardPreview"
+                    class="group flex items-center justify-between border p-3 rounded-lg">
+                    <div class="flex items-center gap-3">
+                      <iframe :src="familyCardPreview" alt="preview" class="w-20 h-20 object-cover rounded" />
+                      <span class="mx-4 text-sm text-gray-500">{{ familyCard?.name || 'family-card.pdf' }}</span>
+                    </div>
+                    <div class="flex gap-2">
+                    <button type="button"
+                      @click="previewFile(familyCard!)"
+                      class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-700"
+                      title="Pratinjau Kartu Keluarga"
+                    >
+                      <Eye :size="18" />
+                    </button>
+                    <button type="button"
+                      @click="removeSingleFile('familyCard')"
+                      class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-red-500 hover:text-red-600"
+                      title="Hapus Kartu Keluarga"
+                    >
+                      <Trash2 :size="18" />
+                    </button>
+                  </div>
+              </div>
+               <div
+                  v-if="!familyCardPreview"
+                    @click="triggerInput(familyCardInputRef)"
+                    class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150"
+                    :class="
+                      errors.familyCard
+                        ? 'border-red-300 bg-red-50 hover:bg-red-50/70'
+                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                    "
+                >
+                  <p class="text-sm font-medium text-gray-600">Click to upload file</p>
+                  <p class="text-xs text-gray-400 mt-1">PDF Max 5 MB</p>
+              </div>
+
+              <input
+                ref="familyCardInputRef"
+                type="file"
+                accept="application/pdf"
+                class="hidden"
+                @change="(e) => handleSingleFileChange(e, 'familyCard')"
+              />
+                <p v-if="errors.familyCard" class="mt-1 text-xs text-red-600">
+                  {{  errors.familyCard }}
+                </p>
+            </div>
+
+            <div>
+            <p class="text-xs font-poppins text-gray-700 mb-3">
+                Unggah SKTM <span class="text-red-500">*</span>
+            </p>
+            <div v-if="sktmPreview"
+                  class="group flex items-center justify-between border p-3 rounded-lg">
+                  <div class="flex items-center gap-3">
+                    <iframe :src="sktmPreview" alt="preview" class="w-20 h-20 object-cover rounded" />
+                    <span class="mx-4 text-sm text-gray-500">{{ sktm?.name }}</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="button"
+                      @click="previewFile(sktm!)"
+                      class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-700"
+                      title="Pratinjau SKTM"
+                    >
+                      <Eye :size="18" />
+                    </button>
+                    <button type="button"
+                      @click="removeSingleFile('sktm')"
+                      class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-red-500 hover:text-red-600"
+                      title="Hapus SKTM"
+                    >
+                      <Trash2 :size="18" />
+                    </button>
+                  </div>
+            </div>
+
+            <div
+              v-if="!sktmPreview"
+              @click="triggerInput(sktmInputRef)"
+              class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150"
+              :class="
+                errors.sktm
+                  ? 'border-red-300 bg-red-50 hover:bg-red-50/70'
+                  : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+              "
+            >
+              <p class="text-sm font-medium text-gray-600">Click to upload file</p>
+              <p class="text-xs text-gray-400 mt-1">PDF Max 5 MB</p>
+            </div>
+
+            <input
+              ref="sktmInputRef"
+              type="file"
+              accept="application/pdf"
+              class="hidden"
+              @change="(e) => handleSingleFileChange(e, 'sktm')"
+            />
+            <p v-if="errors.sktm" class="mt-1 text-xs text-red-600">
+              {{  errors.sktm }}
+            </p>
+            </div>
 
             <div>
               <label class="block text-xs font-medium text-gray-700 mb-1"> Catatan Prestasi </label>
@@ -462,7 +646,7 @@ const isSubmitDisabled = computed(() => {
               </div>
               <ol class="list-decimal list-inside space-y-1 text-sm">
                 <li
-                  v-for="(item, index) in achievements"
+                  v-for="(item, index) in achievementTitles"
                   :key="index"
                   class="flex justify-between items-center"
                 >
@@ -483,15 +667,15 @@ const isSubmitDisabled = computed(() => {
 
             <div>
               <p class="text-xs font-poppins text-gray-700 mb-3">Unggah Piagam Penghargaan</p>
-              <div v-if="certificates.length" class="space-y-2 mb-3">
+              <div v-if="achievementFiles.length" class="space-y-2 mb-3">
                 <div
-                  v-for="(file, index) in certificates"
+                  v-for="(file, index) in achievementFiles"
                   :key="index"
                   class="group flex items-center justify-between border p-3 rounded-lg bg-white"
                 >
                   <div class="flex items-center gap-3 min-w-0">
                     <iframe
-                      :src="certificatePreviews[index]"
+                      :src="achievementPreviews[index]"
                       class="w-20 h-20 rounded border shrink-0"
                     />
                     <span class="text-sm text-gray-600 truncate">
@@ -501,20 +685,20 @@ const isSubmitDisabled = computed(() => {
                   <div class="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
-                      @click="previewCertificate(file)"
+                      @click="previewFile(file)"
                       class="p-2 bg-white rounded-full shadow text-gray-500 hover:text-gray-700"
                     >
                       <Eye :size="18" />
                     </button>
                     <button
                       type="button"
-                      @click="removeCertificate(index)"
+                      @click="removeAchievementsFile(index)"
                       class="p-2 bg-white rounded-full shadow text-red-500 hover:text-red-600"
                     >
                       <Trash2 :size="18" />
                     </button>
                     <BaseButton
-                      v-if="index === certificates.length - 1"
+                      v-if="index === achievementFiles.length - 1"
                       size="sm"
                       variant="primary"
                       @click="triggerCertificateInput"

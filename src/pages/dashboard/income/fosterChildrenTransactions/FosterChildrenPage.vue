@@ -2,16 +2,102 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Baby } from 'lucide-vue-next'
+import { Eye, Baby } from 'lucide-vue-next'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import type { Child } from '@/types/fosterChildren'
+import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
+import { Category, Gender, type FosterChildren, type FosterChildrenParams } from '@/types/fosterChildren'
 
 const router = useRouter()
 
+const children = ref<FosterChildren[]>([
+  {
+    id: '1',
+    name: 'Faris Ahad',
+    slug: 'faris-ahad',
+    gender: Gender.male,
+    category: Category.yatim,
+    birthPlace: 'Bandung',
+    birthDate: '10-05-2014',
+    address: 'Jl. Melati No. 12 Bandung',
+    profilePicture: 'https://i.pravatar.cc/150?img=1',
+    achievements: [
+      {
+        id: '1',
+        title: 'Juara 1 Lomba Menggambar 2023',
+        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        alt: 'Juara 1 Lomba Menggambar.pdf',
+      },
+      {
+        id: '2',
+        title: 'Juara 2 Lomba Cerdas Cermat 2024',
+        url: 'https://www.africau.edu/images/default/sample.pdf',
+        alt: 'Juara 2 Lomba Cerdas Cermat.pdf',
+      },
+    ],
+    isGraduated: false,
+    familyCard: '',
+    sktm: '',
+    createdAt: '2024-01-01',
+  },
+  {
+    id: '2',
+    name: 'Tia Mutiara',
+    slug: 'tia-mutiara',
+    gender: Gender.female,
+    category: Category.piatu,
+    birthPlace: 'Garut',
+    birthDate: '15-02-2015',
+    address: 'Jl. Mawar No. 5 Garut',
+    profilePicture: 'https://i.pravatar.cc/150?img=2',
+    achievements: [
+      {
+        id: '3',
+        title: 'Juara 3 Lomba Menulis Cerpen 2023',
+        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        alt: 'Juara 3 Lomba Menulis Cerpen.pdf',
+      }
+    ],
+    isGraduated: false,
+    familyCard: '',
+    sktm: '',
+    createdAt: '2024-01-02',
+  },
+  {
+    id: '3',
+    name: 'Ahmad Rizki',
+    slug: 'ahmad-rizki',
+    gender: Gender.male,
+    category: Category.yatimPiatu,
+    birthPlace: 'Tasikmalaya',
+    birthDate: '20-03-2013',
+    address: 'Jl. Anggrek No. 9 Tasikmalaya',
+    profilePicture: 'https://i.pravatar.cc/150?img=4',
+    achievements: [
+      {
+        id: '4',
+        title: 'Juara 1 Lomba Pidato 2023',
+        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        alt: 'Juara 1 Lomba Pidato.pdf',
+      },
+      {
+        id: '5',
+        title: 'Juara 2 Lomba Matematika 2024',
+        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        alt: 'Juara 2 Lomba Matematika.pdf',
+      }
+    ],
+    isGraduated: true,
+    familyCard: '',
+    sktm: '',
+    createdAt: '2024-01-03',
+  },
+])
+
 const searchQuery = ref('')
+const debouncedSearchQuery = ref('')
 const selectedGender = ref('all')
 const selectedCategory = ref('all')
 const selectedStatus = ref('all')
@@ -19,273 +105,95 @@ const selectedStatus = ref('all')
 const limit = ref(10)
 const limitOptions = [10, 25, 50, 100]
 
+let searchTimeout: ReturnType<typeof setTimeout>
+watch(searchQuery, (newVal) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    debouncedSearchQuery.value = newVal
+  }, 500)
+})
+
+// Cursor pagination state
+const currentNextCursor = ref<string | undefined>(undefined)
+const currentPrevCursor = ref<string | undefined>(undefined)
+const direction = ref<'next' | 'prev' | undefined>(undefined)
 const pageOffset = ref(0)
 
-const children = ref<Child[]>([
-  {
-    id: '1',
-    name: 'Faris Ahad',
-    slug: 'faris-ahad',
-    gender: 'Laki-laki',
-    category: 'Yatim',
-    birthplace: 'Bandung',
-    birth_date: '2014-05-10',
-    address: 'Jl. Melati No. 12 Bandung',
-    image_url: 'https://i.pravatar.cc/150?img=1',
-    achievements: ['Juara 1 Lomba Menggambar 2023', 'Juara 2 Lomba Cerdas Cermat 2024'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-01',
-  },
-  {
-    id: '2',
-    name: 'Tia Mutiara',
-    slug: 'tia-mutiara',
-    gender: 'Perempuan',
-    category: 'Piatu',
-    birthplace: 'Garut',
-    birth_date: '2015-02-15',
-    address: 'Jl. Mawar No. 5 Garut',
-    image_url: 'https://i.pravatar.cc/150?img=2',
-    achievements: ['Juara 3 Lomba Menulis Cerpen 2023'],
-    certificates: [],
-    status: 'lulus',
-    created_at: '2024-01-02',
-  },
-  {
-    id: '3',
-    name: 'Ahmad Rizki',
-    slug: 'ahmad-rizki',
-    gender: 'Laki-laki',
-    category: 'Yatim Piatu',
-    birthplace: 'Tasikmalaya',
-    birth_date: '2013-08-20',
-    address: 'Jl. Anggrek No. 9 Tasikmalaya',
-    image_url: 'https://i.pravatar.cc/150?img=4',
-    achievements: ['Juara 1 Lomba Pidato 2023', 'Juara 2 Lomba Matematika 2024'],
-    certificates: [],
-    status: 'lulus',
-    created_at: '2024-01-03',
-  },
-  {
-    id: '4',
-    name: 'Siti Nurhaliza',
-    slug: 'siti-nurhaliza',
-    gender: 'Perempuan',
-    category: 'Yatim',
-    birthplace: 'Bogor',
-    birth_date: '2016-11-05',
-    address: 'Jl. Kenanga No. 7 Bogor',
-    image_url: 'https://i.pravatar.cc/150?img=3',
-    achievements: ['Juara 2 Lomba Menyanyi 2023'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-04',
-  },
-  {
-    id: '5',
-    name: 'Rizky Ramadhan',
-    slug: 'rizky-ramadhan',
-    gender: 'Laki-laki',
-    category: 'Piatu',
-    birthplace: 'Depok',
-    birth_date: '2012-09-12',
-    address: 'Jl. Melati No. 15 Depok',
-    image_url: 'https://i.pravatar.cc/150?img=5',
-    achievements: ['Juara 1 Lomba Sepak Bola 2023'],
-    certificates: [],
-    status: 'lulus',
-    created_at: '2024-01-05',
-  },
-  {
-    id: '6',
-    name: 'Dewi Sartika',
-    slug: 'dewi-sartika',
-    gender: 'Perempuan',
-    category: 'Yatim Piatu',
-    birthplace: 'Sukabumi',
-    birth_date: '2014-03-18',
-    address: 'Jl. Anggrek No. 12 Sukabumi',
-    image_url: 'https://i.pravatar.cc/150?img=6',
-    achievements: ['Juara 3 Lomba Tari 2023'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-06',
-  },
-  {
-    id: '7',
-    name: 'Budi Santoso',
-    slug: 'budi-santoso',
-    gender: 'Laki-laki',
-    category: 'Yatim',
-    birthplace: 'Cirebon',
-    birth_date: '2013-06-22',
-    address: 'Jl. Mawar No. 10 Cirebon',
-    image_url: 'https://i.pravatar.cc/150?img=7',
-    achievements: ['Juara 2 Lomba Lari 2023'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-07',
-  },
-  {
-    id: '8',
-    name: 'Ani Wulandari',
-    slug: 'ani-wulandari',
-    gender: 'Perempuan',
-    category: 'Piatu',
-    birthplace: 'Purwakarta',
-    birth_date: '2015-01-30',
-    address: 'Jl. Dahlia No. 8 Purwakarta',
-    image_url: 'https://i.pravatar.cc/150?img=8',
-    achievements: ['Juara 1 Lomba Membaca Puisi 2024'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-08',
-  },
-  {
-    id: '9',
-    name: 'Rina Kartika',
-    slug: 'rina-kartika',
-    gender: 'Perempuan',
-    category: 'Yatim Piatu',
-    birthplace: 'Majalengka',
-    birth_date: '2012-12-05',
-    address: 'Jl. Kenanga No. 6 Majalengka',
-    image_url: 'https://i.pravatar.cc/150?img=9',
-    achievements: ['Juara 2 Lomba Tari Tradisional 2023'],
-    certificates: [],
-    status: 'lulus',
-    created_at: '2024-01-09',
-  },
-  {
-    id: '10',
-    name: 'Rian Saputra',
-    slug: 'Rian-saputra',
-    gender: 'Laki-laki',
-    category: 'Yatim',
-    birthplace: 'Subang',
-    birth_date: '2013-04-17',
-    address: 'Jl. Melati No. 20 Subang',
-    image_url: 'https://i.pravatar.cc/150?img=10',
-    achievements: ['Juara 3 Lomba Catur 2024'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-10',
-  },
-  {
-    id: '11',
-    name: 'Putri Lestari',
-    slug: 'putri-lestari',
-    gender: 'Perempuan',
-    category: 'Piatu',
-    birthplace: 'Indramayu',
-    birth_date: '2014-10-09',
-    address: 'Jl. Anggrek No. 14 Indramayu',
-    image_url: 'https://i.pravatar.cc/150?img=11',
-    achievements: ['Juara 1 Lomba Menyanyi 2024'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-11',
+const queryParams = computed<FosterChildrenParams>(() => {
+  const params: FosterChildrenParams = { limit: limit.value }
+
+  if (direction.value === 'next' && currentNextCursor.value) {
+    params.nextCursor = currentNextCursor.value
+  } else if (direction.value === 'prev' && currentPrevCursor.value) {
+    params.prevCursor = currentPrevCursor.value
   }
-])
 
-const pagination = ref({
-  has_prev: false,
-  has_next: false
+  if (debouncedSearchQuery.value) {
+    params.search = debouncedSearchQuery.value
+  }
+
+  if (selectedGender.value !== 'all') {
+    params.gender = selectedGender.value as Gender
+  }
+
+  if (selectedCategory.value !== 'all') {
+    params.category = selectedCategory.value as Category
+  }
+
+  if (selectedStatus.value !== 'all') {
+    params.isGraduated = selectedStatus.value === 'lulus'
+  }
+
+  return params
 })
 
-const filteredChildren = computed(() => {
-  return children.value.filter(child => {
-    const matchSearch =
-      child.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchGender =
-      selectedGender.value === 'all' ||
-      child.gender.toLowerCase() === selectedGender.value
-    const matchCategory =
-      selectedCategory.value === 'all' ||
-      child.category.toLowerCase() === selectedCategory.value
-
-    const matchStatus =
-      selectedStatus.value === 'all' ||
-      child.status.toLowerCase() === selectedStatus.value
-
-    return (
-      matchSearch &&
-      matchGender &&
-      matchCategory &&
-      matchStatus
-    )
-  })
-})
-
-const paginatedChildren = computed(() => {
-  const start = pageOffset.value * limit.value
-  const end = start + limit.value
-  return filteredChildren.value.slice(start, end)
-})
-
-watch([pageOffset, limit, filteredChildren], () => {
-  pagination.value.has_prev = pageOffset.value > 0
-  pagination.value.has_next =
-    (pageOffset.value + 1) * limit.value < filteredChildren.value.length
-}, { immediate: true })
-
-watch(limit, () => {
+const resetPagination = () => {
+  currentNextCursor.value = undefined
+  currentPrevCursor.value = undefined
+  direction.value = undefined
   pageOffset.value = 0
+}
 
-  pagination.value.has_prev = false
-  pagination.value.has_next =
-    limit.value < filteredChildren.value.length
+watch([debouncedSearchQuery, selectedGender, selectedCategory, selectedStatus, limit], () => {
+  resetPagination()
 })
 
-watch(
-  [searchQuery, selectedGender, selectedCategory, selectedStatus],
-  () => {
-    pageOffset.value = 0
-  }
-)
+// Fetch foster children via composable
+const { fosterChildrenListQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
+
+const displayChildren = computed(() => {
+  // kalau API kosong → pakai dummy
+  return fosterChildren.value.length
+    ? fosterChildren.value
+    : children.value
+})
 
 const handleNextPage = () => {
-  if (pagination.value.has_next) {
-    pageOffset.value++
+  if (pagination.value?.nextCursor) {
+    currentNextCursor.value = pagination.value.nextCursor
+    direction.value = 'next'
+    pageOffset.value += 1
   }
 }
 
 const handlePrevPage = () => {
-  if (pagination.value.has_prev) {
-    pageOffset.value--
+  if (pagination.value?.prevCursor) {
+    currentPrevCursor.value = pagination.value.prevCursor
+    direction.value = 'prev'
+    pageOffset.value -= 1
   }
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'aktif':
-      return 'bg-green-100 text-green-800'
-    default:
-      return 'bg-blue-100 text-blue-800'
-  }
+const getStatusColor = (isGraduated: boolean) => {
+  return isGraduated ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-green-100 text-green-800 border-green-200'
 }
 
 const confirmShow = ref(false)
-const confirmChild = ref<Child | null>(null)
-
-const deleteChild = (child: Child) => {
-  confirmChild.value = child
-  confirmShow.value = true
-}
+const confirmChild = ref<FosterChildren | null>(null)
 
 const handleConfirmDelete = async () => {
   if (!confirmChild.value) return
-
-  const childId = confirmChild.value.id
-
-  const index = children.value.findIndex(
-    c => c.id === childId
-  )
-  if (index !== -1 && children.value[index]) {
-  children.value[index].status = 'nonaktif'
-}
-
+  // TODO: Implement delete mutation
   confirmShow.value = false
   confirmChild.value = null
 }
@@ -297,17 +205,14 @@ const clearFilters = () => {
   selectedStatus.value = 'all'
 }
 
-const genders = ['all', 'laki-laki', 'perempuan']
-const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
+const genders = ['all', Gender.male, Gender.female]
+const categories = ['all', Category.yatim, Category.piatu, Category.yatimPiatu]
 const statuses = ['all', 'aktif', 'lulus']
 
-const handleView = (child: Child) => {
+const handleView = (child: FosterChildren) => {
   router.push({ name: 'dashboard-foster-children-donations-detail', params: { id: child.id } })
 }
 
-const handleEdit = (child: Child) => {
-  router.push({ name: 'dashboard-foster-children-edit', params: { id: child.id } })
-}
 </script>
 
 <template>
@@ -380,6 +285,7 @@ const handleEdit = (child: Child) => {
                   </div>
                 </template>
               </BaseFilter>
+
             </div>
           </div>
         </div>
@@ -388,13 +294,13 @@ const handleEdit = (child: Child) => {
 
     <BaseTable
       class="mt-6"
-      :loading="false"
+      :loading="fosterChildrenListQuery.isPending.value && displayChildren.length === 0"
       loading-message="Memuat data anak asuh..."
-      :is-empty="filteredChildren.length === 0"
+      :is-empty="displayChildren.length === 0"
       empty-message="Tidak ada anak asuh yang ditemukan."
-      :has-prev="pagination?.has_prev"
-      :has-next="pagination?.has_next"
-      v-model.limit="limit"
+      :has-prev="!!pagination?.prevCursor"
+      :has-next="!!pagination?.nextCursor"
+      v-model:limit="limit"
       :limit-options="limitOptions"
       @prev="handlePrevPage"
       @next="handleNextPage"
@@ -421,7 +327,7 @@ const handleEdit = (child: Child) => {
 
       <template #rows>
         <tr
-          v-for="(child, index) in paginatedChildren"
+          v-for="(child, index) in displayChildren"
           :key="child.id"
           class="bg-white hover:bg-gray-50 transition-colors duration-150"
         >
@@ -431,7 +337,7 @@ const handleEdit = (child: Child) => {
           <td class="px-6 py-4 whitespace-nowrap font-poppins max-w-50 truncate">
             {{ child.name }}
           </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
+          <td class="px-6 py-4 whitespace-nowrap font-poppins capitalize">
             {{ child.gender }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
@@ -439,7 +345,7 @@ const handleEdit = (child: Child) => {
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
             {{
-              new Date(child.created_at).toLocaleDateString('id-ID', {
+              new Date(child.createdAt).toLocaleDateString('id-ID', {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric',
@@ -450,10 +356,10 @@ const handleEdit = (child: Child) => {
             <span
               :class="[
                 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-poppins border',
-                getStatusColor(child.status),
+                getStatusColor(child.isGraduated),
               ]"
             >
-              {{ child.status.charAt(0).toUpperCase() + child.status.slice(1) }}
+              {{ child.isGraduated ? 'Lulus' : 'Aktif' }}
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-center relative">
@@ -463,20 +369,6 @@ const handleEdit = (child: Child) => {
               title="Lihat Detail"
             >
               <Eye :size="18" />
-            </button>
-            <button
-              @click="handleEdit(child)"
-              class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
-              title="Edit Anak Asuh"
-            >
-              <SquarePen :size="18" />
-            </button>
-            <button
-              @click="deleteChild(child)"
-              class="p-1 text-red-600 hover:bg-gray-100 rounded transition-colors duration-150"
-              title="Delete Anak Asuh"
-            >
-              <Trash2 :size="18" />
             </button>
           </td>
         </tr>

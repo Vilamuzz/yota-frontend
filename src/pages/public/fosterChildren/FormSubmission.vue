@@ -1,7 +1,7 @@
 <script setup lang ="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, Eye, Trash2, X, Plus } from 'lucide-vue-next'
+import { ArrowLeft, Eye, Trash2, X} from 'lucide-vue-next'
 import BaseStepper from '@/components/atoms/BaseStepper.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -31,8 +31,7 @@ const familyCard = ref<File | null>(null)
 const familyCardPreview = ref<string | null>(null)
 const sktm = ref<File | null>(null)
 const sktmPreview = ref<string | null>(null)
-const certificates = ref<File[]>([])
-const certificatePreviews = ref<string[]>([])
+
 
 const genders = ['laki-laki', 'perempuan']
 
@@ -133,57 +132,6 @@ const closeImagePreview = () => {
   showImagePreview.value = false
 }
 
-const certificateInputRef = ref<HTMLInputElement | null>(null)
-
-const triggerCertificateInput = () => {
-  certificateInputRef.value?.click()
-}
-
-const handleCertificateChange = (event: Event) => {
-  const files = (event.target as HTMLInputElement).files
-  if (!files) return
-
-  const allowedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  ]
-
-  for (const file of Array.from(files)) {
-    if (!allowedTypes.includes(file.type)) {
-      errors.value = {
-        ...errors.value,
-        certificate: 'Format sertifikat harus PDF atau DOC'
-      }
-      return
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      errors.value = {
-        ...errors.value,
-        certificate: 'Ukuran maksimal file 5MB'
-      }
-      return
-    }
-
-    certificates.value.push(file)
-
-    // ✅ Tambah preview PDF
-    certificatePreviews.value.push(
-      URL.createObjectURL(file)
-    )
-  }
-}
-const removeCertificate = (index: number) => {
-  certificates.value.splice(index, 1)
-  certificatePreviews.value.splice(index, 1)
-}
-
-const previewCertificate = (file: File) => {
-  const url = URL.createObjectURL(file)
-  window.open(url)
-}
-
 </script>
 
 <template>
@@ -211,6 +159,23 @@ const previewCertificate = (file: File) => {
           <form class="p-6 space-y-5">
             <BaseInput id="applicantName" size="sm" v-model="applicantName" label="Nama Pemohon" placeholder="Masukkan nama lengkap pemohon" :required="true"/>
             <BaseInput id="numberPhone" size="sm" v-model="numberPhone" label="Nomor Telepon" placeholder="Masukkan nomor telepon pemohon" :required="true"/>
+            <div>
+              <label for="address" class="block text-xs font-medium text-gray-700 mb-1">
+                Alamat <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                id="address"
+                v-model="address"
+                rows="5"
+                placeholder="Masukkan alamat lengkap pemohon"
+                class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                :class="
+                  errors.address ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'"
+              ></textarea>
+              <p v-if="errors.address" class="mt-1 text-xs text-red-600">
+                {{  errors.address }}
+              </p>
+            </div>
             <div>
             <p class="text-xs font-poppins text-gray-700 mb-3">
                 Unggah KTP <span class="text-red-500">*</span>
@@ -565,81 +530,6 @@ const previewCertificate = (file: File) => {
             <p v-if="errors.sktm" class="mt-1 text-xs text-red-600">
               {{  errors.sktm }}
             </p>
-            </div>
-             <div>
-              <p class="text-xs font-poppins text-gray-700 mb-3">
-                Unggah Piagam Penghargaan
-              </p>
-              <div v-if="certificates.length" class="space-y-2 mb-3">
-                <div
-                  v-for="(file, index) in certificates"
-                  :key="index"
-                  class="group flex items-center justify-between border p-3 rounded-lg bg-white"
-                >
-                  <!-- Preview seperti KK -->
-                  <div class="flex items-center gap-3 min-w-0">
-
-                    <iframe
-                      :src="certificatePreviews[index]"
-                      class="w-20 h-20 rounded border"
-                    />
-
-                    <span class="text-sm text-gray-600 truncate">
-                      {{ file.name }}
-                    </span>
-
-                  </div>
-
-                  <!-- Buttons (tidak kepotong) -->
-                  <div class="flex items-center gap-2 shrink-0">
-
-                    <button
-                      type="button"
-                      @click="previewCertificate(file)"
-                      class="p-2 bg-white rounded-full shadow text-gray-500 hover:text-gray-700"
-                    >
-                      <Eye :size="18"/>
-                    </button>
-
-                    <button
-                      type="button"
-                      @click="removeCertificate(index)"
-                      class="p-2 bg-white rounded-full shadow text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 :size="18"/>
-                    </button>
-
-                    <BaseButton
-                      v-if="index === certificates.length - 1"
-                      size="sm"
-                      variant="primary"
-                      @click="triggerCertificateInput"
-                    >
-                      <Plus :size="16"/>
-                    </BaseButton>
-
-                  </div>
-                </div>
-              </div>
-              <div
-                v-else
-                @click="triggerCertificateInput"
-                class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150 border-gray-300 bg-gray-50 hover:bg-gray-100"
-                >
-                <p class="text-sm font-medium text-gray-600">Upload Sertifikat</p>
-                <p class="text-xs text-gray-400 mt-1">PDF / DOC Max 5 MB</p>
-              </div>
-              <input
-                ref="certificateInputRef"
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx"
-                class="hidden"
-                @change="handleCertificateChange"
-              />
-              <p v-if="errors.certificate" class="mt-1 text-xs text-red-600">
-                {{ errors.certificate }}
-              </p>
             </div>
           </form>
 

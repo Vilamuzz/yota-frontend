@@ -3,11 +3,12 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ArrowLeft, Eye, X, Baby } from 'lucide-vue-next'
 import router from '@/router'
 import { ref, computed } from 'vue'
-import type { Submission } from '@/types/fosterChildrenCandidate'
+import { Category, Gender, type FosterChildrenCandidate } from '@/types/fosterChildren'
 import { useRoute } from 'vue-router'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import RejectConfirmationModal from '@/components/molecules/RejectConfirmationModal.vue'
+import { ROLES } from '@/const/roles'
 
 const route = useRoute()
 const childId = route.params.id as string
@@ -16,78 +17,94 @@ const child = computed(() => {
   return children.value.find((c) => c.id === childId)
 })
 
-const children = ref<Submission[]>([
+const children = ref<FosterChildrenCandidate[]>([
   {
     id: '1',
-    applicant_name: 'Choi Youngjae',
-    number_phone: '081234567890',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Faris Ahad',
-    gender: 'Laki-laki',
-    category: 'Yatim',
-    birthplace: 'Bandung',
-    birthdate: '2014-05-10',
+    slug: 'faris-ahad',
+    name: 'Faris Ahad',
+    profilePicture: 'https://i.pravatar.cc/150?img=1',
+    gender: Gender.male,
+    category: Category.yatim,
     address: 'Jl. Melati No. 12 Bandung',
-    image_url: 'https://i.pravatar.cc/150?img=1',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
+    birthPlace: 'Bandung',
+    birthDate: '2014-05-10',
+    isGraduated: false,
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    submitterName: 'Choi Youngjae',
+    submitterPhone: '081234567890',
+    submitterAddress: 'Jl. Melati No.2 Bandung',
+    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    submittedBy: '',
     status: 'Diajukan',
-    created_at: '2024-01-01',
+    rejectionReason: '',
+    createdAt: '2024-01-01'
   },
   {
     id: '2',
-    applicant_name: 'Jung Woojin',
-    number_phone: '081234567891',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Tia Mutiara',
-    gender: 'Perempuan',
-    category: 'Piatu',
-    birthplace: 'Garut',
-    birthdate: '2015-02-15',
+    submitterName: 'Jung Woojin',
+    submitterPhone: '081234567891',
+    submitterAddress: 'Jl Mawar No. 7 Garut',
+    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    name: 'Tia Mutiara',
+    slug: 'tia-mutiara',
+    gender: Gender.female,
+    category: Category.piatu,
+    birthPlace: 'Garut',
+    birthDate: '2015-02-15',
     address: 'Jl. Mawar No. 5 Garut',
-    image_url: 'https://i.pravatar.cc/150?img=2',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
+    isGraduated: false,
+    profilePicture: 'https://i.pravatar.cc/150?img=2',
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     status: 'Menunggu Verifikasi',
-    created_at: '2024-01-02',
+    rejectionReason: '',
+    submittedBy: '',
+    createdAt: '2024-01-02',
   },
   {
     id: '3',
-    applicant_name: 'Jang Juwang',
-    number_phone: '081234567892',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Ahmad Rizki',
-    gender: 'Laki-laki',
-    category: 'Yatim Piatu',
-    birthplace: 'Tasikmalaya',
-    birthdate: '2013-08-20',
+    submitterName: 'Jang Juwang',
+    submitterPhone: '081234567892',
+    submitterAddress: 'Jl. Kenanga No. 8 Tasikmalaya',
+    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    name: 'Ahmad Rizki',
+    slug: 'ahmad-rizki',
+    gender: Gender.male,
+    category: Category.yatimPiatu,
+    birthPlace: 'Tasikmalaya',
+    birthDate: '2013-08-20',
+    isGraduated: false,
     address: 'Jl. Anggrek No. 9 Tasikmalaya',
-    image_url: 'https://i.pravatar.cc/150?img=4',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
+    profilePicture: 'https://i.pravatar.cc/150?img=4',
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    submittedBy: '',
+    rejectionReason: '',
     status: 'Disetujui',
-    created_at: '2024-01-03',
+    createdAt: '2024-01-03',
   },
   {
     id: '4',
-    applicant_name: 'Park Sungho',
-    number_phone: '081234567893',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Laila Salsabila',
-    gender: 'Perempuan',
-    category: 'Yatim',
-    birthplace: 'Cimahi',
-    birthdate: '2016-11-30',
+    submitterName: 'Park Sungho',
+    submitterPhone: '081234567893',
+    submitterAddress: 'Jl. Dahlia No.8 Cimahi',
+    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    name: 'Laila Salsabila',
+    slug: 'laila-salsabila',
+    gender: Gender.female,
+    category: Category.yatimPiatu,
+    birthPlace: 'Cimahi',
+    birthDate: '2016-11-30',
     address: 'Jl. Dahlia No. 3 Cimahi',
-    image_url: 'https://i.pravatar.cc/150?img=5',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
+    profilePicture: 'https://i.pravatar.cc/150?img=5',
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    isGraduated: false,
+    submittedBy:'',
+    rejectionReason: '',
     status: 'Ditolak',
-    created_at: '2024-01-04',
+    createdAt: '2024-01-04',
   },
 ])
 
@@ -114,9 +131,9 @@ const getShortFileName = (url: string, label: string) => {
 }
 
 const handleCancel = () => {
-  if (role.value === 'chairman') {
+  if (role.value === ROLES.CHAIRMAN) {
     router.push({
-      name: 'chairman-foster-children-submissions',
+      name: 'dashboard-chairman-foster-children-submissions',
     })
   } else {
     router.push({
@@ -128,15 +145,14 @@ const handleCancel = () => {
 const confirmVerify = ref(false)
 const confirmReject = ref(false)
 
-const role = ref('social_manager')
-if (window.location.pathname.includes('chairman')) {
-  role.value = 'chairman'
-} else {
-  role.value = 'social_manager'
+const role = ref(ROLES.SOCIAL_MANAGER)
+
+if (route.path.includes('chairman')) {
+  role.value = ROLES.CHAIRMAN
 }
 
 const verifyConfig = computed(() => {
-  if (role.value === 'chairman') {
+  if (role.value === ROLES.CHAIRMAN) {
     return {
       title: 'Setujui Pengajuan Anak Asuh',
       message: `Apakah Anda yakin ingin menyetujui pengajuan ini?\n\n Persetujuan ini akan menetapkan anak tersebut sebagai anak asuh resmi yayasan.`,
@@ -155,7 +171,7 @@ const openVerifyModal = () => {
   confirmVerify.value = true
 }
 const confirmVerifyAction = () => {
-  if (role.value === 'chairman') {
+  if (role.value === ROLES.CHAIRMAN) {
     console.log('Pengajuan disetujui oleh Ketua Yayasan')
   } else {
     console.log('Pengajuan diverifikasi oleh Koodinator Sosial')
@@ -168,7 +184,7 @@ const openRejectModal = () => {
 }
 const handleReject = (reason: string) => {
   console.log('Alasan reject:', reason)
-  if (role.value === 'chairman') {
+  if (role.value === ROLES.CHAIRMAN) {
     console.log('Pengajuan ditolak oleh Ketua')
   } else {
     console.log('Pengajuan ditolak oleh Social Manager')
@@ -176,7 +192,7 @@ const handleReject = (reason: string) => {
   confirmReject.value = false
 }
 const verifyRejectConfig = computed(() => {
-  if (role.value === 'chairman') {
+  if (role.value === ROLES.CHAIRMAN) {
     return {
       title: 'Tolak Pengajuan Anak Asuh',
       message: `Silakan masukkan alasan penolakan pengajuan anak asuh ini.\n\n Keputusan ini akan dicatat sebagai keputusan akhir yayasan.`,
@@ -221,16 +237,16 @@ const verifyRejectConfig = computed(() => {
               <h2 class="text-lg font-semibold text-gray-900">Identitas Anak Asuh</h2>
               <div class="grid grid-cols-[180px_auto] gap-y-3 gap-x-2 text-sm">
                 <div class="text-gray-500">Nama Anak Asuh</div>
-                <div>: {{ child.child_name }}</div>
+                <div>: {{ child.name }}</div>
 
                 <div class="text-gray-500">Jenis Kelamin</div>
                 <div>: {{ child.gender }}</div>
 
                 <div class="text-gray-500">Tempat Lahir</div>
-                <div>: {{ child.birthplace }}</div>
+                <div>: {{ child.birthPlace }}</div>
 
                 <div class="text-gray-500">Tanggal Lahir</div>
-                <div>: {{ child.birthdate }}</div>
+                <div>: {{ child.birthDate }}</div>
 
                 <div class="text-gray-500">Alamat</div>
                 <div>: {{ child.address }}</div>
@@ -241,14 +257,14 @@ const verifyRejectConfig = computed(() => {
                 <div class="text-gray-500">Foto Anak</div>
                 <div class="flex items-center gap-2">
                   <span>: </span>
-                  <div v-if="child.image_url" class="flex items-center gap-3">
+                  <div v-if="child.profilePicture" class="flex items-center gap-3">
                     <img
-                      :src="child.image_url"
-                      :alt="child.child_name"
+                      :src="child.profilePicture"
+                      :alt="child.name"
                       class="w-10 h-10 rounded border shrink-0"
                     />
                     <button
-                      @click="previewImage(child.image_url)"
+                      @click="previewImage(child.profilePicture)"
                       class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
                       title="Lihat Foto"
                     >
@@ -279,13 +295,13 @@ const verifyRejectConfig = computed(() => {
                 <div class="text-gray-500">Kartu Keluarga</div>
                 <div class="flex items-start gap-2">
                   <span>: </span>
-                  <div v-if="child.familyCard_url" class="space-y-2">
+                  <div v-if="child.familyCard" class="space-y-2">
                     <div class="flex items-center gap-3">
                       <span class="text-sm">{{
-                        getShortFileName(child.familyCard_url, 'Kartu_Keluarga')
+                        getShortFileName(child.familyCard, 'Kartu_Keluarga')
                       }}</span>
                       <button
-                        @click="previewFile(child.familyCard_url)"
+                        @click="previewFile(child.familyCard)"
                         class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
                         title="Lihat Kartu Keluarga"
                       >
@@ -299,11 +315,11 @@ const verifyRejectConfig = computed(() => {
                 <div class="text-gray-500">SKTM</div>
                 <div class="flex items-start gap-2">
                   <span>: </span>
-                  <div v-if="child.sktm_url" class="space-y-2">
+                  <div v-if="child.sktm" class="space-y-2">
                     <div class="flex items-center gap-3">
-                      <span class="text-sm">{{ getShortFileName(child.sktm_url, 'SKTM') }}</span>
+                      <span class="text-sm">{{ getShortFileName(child.sktm, 'SKTM') }}</span>
                       <button
-                        @click="previewFile(child.sktm_url)"
+                        @click="previewFile(child.sktm)"
                         class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
                         title="Lihat SKTM"
                       >
@@ -313,29 +329,6 @@ const verifyRejectConfig = computed(() => {
                   </div>
                 </div>
 
-                <div class="text-gray-500">Piagam Penghargaan</div>
-                <div class="flex items-start gap-2">
-                  <span>: </span>
-                  <div v-if="child.certificates?.length" class="space-y-2">
-                    <div
-                      v-for="(cert, index) in child.certificates"
-                      :key="index"
-                      class="flex items-center gap-3"
-                    >
-                      <span class="text-sm">
-                        {{ cert.file_name || 'Sertifikat' }}
-                      </span>
-                      <button
-                        @click="previewFile(cert.file_url)"
-                        class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat Sertifikat"
-                      >
-                        <Eye :size="18" />
-                      </button>
-                    </div>
-                  </div>
-                  <div v-else class="flex items-center text-sm">Tidak ada sertifikat</div>
-                </div>
               </div>
             </div>
           </div>
@@ -345,19 +338,22 @@ const verifyRejectConfig = computed(() => {
               <h2 class="text-lg font-semibold text-gray-900">Informasi Pengajuan</h2>
               <div class="grid grid-cols-[180px_auto] gap-y-3 gap-x-2 text-sm">
                 <div class="text-gray-500">Nama Pengaju</div>
-                <div>: {{ child.applicant_name }}</div>
+                <div>: {{ child.submitterName }}</div>
 
                 <div class="text-gray-500">Nomor Telepon</div>
-                <div>: {{ child.number_phone }}</div>
+                <div>: {{ child.submitterPhone }}</div>
+
+                <div class="text-gray-500">Alamat</div>
+                <div>: {{ child.submitterAddress }}</div>
 
                 <div class="text-gray-500">KTP Pengaju</div>
                 <div class="flex items-start gap-2">
                   <span>: </span>
-                  <div v-if="child.ktp_url" class="space-y-2">
+                  <div v-if="child.submitterIdCard" class="space-y-2">
                     <div class="flex items-center gap-3">
-                      <span class="text-sm">{{ getShortFileName(child.ktp_url, 'KTP') }}</span>
+                      <span class="text-sm">{{ getShortFileName(child.submitterIdCard, 'KTP') }}</span>
                       <button
-                        @click="previewFile(child.ktp_url)"
+                        @click="previewFile(child.submitterIdCard)"
                         class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
                         title="Lihat KTP"
                       >

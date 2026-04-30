@@ -7,7 +7,7 @@ import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
 import { Plus, Eye, Baby } from 'lucide-vue-next'
-import type { DonationChild } from '@/types/donationChildren'
+import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
 
 const router = useRouter()
 const searchQuery = ref('')
@@ -33,70 +33,70 @@ const pagination = ref({
   has_next: false,
 })
 
-const donationChildren = ref<DonationChild[]>([
+const fosterChildrenTransaction = ref<FosterChildrenTransaction[]>([
   {
     id: '1',
-    child_id: 'child1',
-    order_id: 'order1',
-    donor_name: 'Choi Youngjae',
-    donor_email: 'choi@example.com',
-    gross_amount: 50000,
-    source: true,
-    transaction_status: 'Berhasil',
-    transaction_id: 'txn1',
-    snap_token: 'snap1',
-    paid_at: '2024-01-01',
-    created_at: '2024-01-01',
+    fosterChildrenId: 'child1',
+    orderId: 'order1',
+    donorName: 'Choi Youngjae',
+    donorEmail: 'choi@example.com',
+    grossAmount: 50000,
+    isOnline: true,
+    transactionStatus: 'Berhasil',
+    transactionId: 'txn1',
+    snapToken: 'snap1',
+    paidAt: '2024-01-01',
+    createdAt: '2024-01-01',
   },
   {
     id: '2',
-    child_id: 'child2',
-    order_id: 'order2',
-    donor_name: 'Jung Woojin',
-    donor_email: 'jung@example.com',
-    gross_amount: 75000,
-    source: false,
-    transaction_status: 'Menunggu Pembayaran',
-    transaction_id: 'txn2',
-    snap_token: 'snap2',
-    paid_at: null,
-    created_at: '2024-01-02',
+    fosterChildrenId: 'child2',
+    orderId: 'order2',
+    donorName: 'Jung Woojin',
+    donorEmail: 'jung@example.com',
+    grossAmount: 75000,
+    isOnline: false,
+    transactionStatus: 'Menunggu Pembayaran',
+    transactionId: 'txn2',
+    snapToken: 'snap2',
+    paidAt: null,
+    createdAt: '2024-01-02',
   },
 ])
 
-const filteredDonationChildren = computed((): DonationChild[] => {
-  return donationChildren.value.filter((donation: DonationChild) => {
-    const matchesSearch = donation.donor_name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const method = donation.source ? 'Online' : 'Offline'
+const filteredFosterChildrenTransaction = computed((): FosterChildrenTransaction[] => {
+  return fosterChildrenTransaction.value.filter((donation: FosterChildrenTransaction) => {
+    const matchesSearch = donation.donorName.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const method = donation.isOnline ? 'Online' : 'Offline'
     const matchesMethod = selectedMethod.value === 'all' || method === selectedMethod.value
-    const matchesStatus = selectedStatus.value === 'all' || donation.transaction_status === selectedStatus.value
+    const matchesStatus = selectedStatus.value === 'all' || donation.transactionStatus === selectedStatus.value
 
     return matchesSearch && matchesMethod && matchesStatus
   })
 })
 
-const paginatedDonationChildren = computed((): DonationChild[] => {
+const paginatedFostedChildrenTransaction = computed((): FosterChildrenTransaction[] => {
   const start = pageOffset.value * limit.value
-  return filteredDonationChildren.value.slice(start, start + limit.value)
+  return filteredFosterChildrenTransaction.value.slice(start, start + limit.value)
 })
 
-const handleView = (donation: DonationChild) => {
+const handleView = (donation: FosterChildrenTransaction) => {
   router.push({
     name: 'dashboard-foster-children-donations-detail',
     params: { id: donation.id },
   })
 }
 
-watch([pageOffset, limit, filteredDonationChildren], () => {
+watch([pageOffset, limit, filteredFosterChildrenTransaction], () => {
   pagination.value.has_prev = pageOffset.value > 0
-  pagination.value.has_next = (pageOffset.value + 1) * limit.value < filteredDonationChildren.value.length
+  pagination.value.has_next = (pageOffset.value + 1) * limit.value < filteredFosterChildrenTransaction.value.length
 }, { immediate: true })
 
 watch(limit, () => {
   pageOffset.value = 0
 
   pagination.value.has_prev = false
-  pagination.value.has_next = limit.value < filteredDonationChildren.value.length
+  pagination.value.has_next = limit.value < filteredFosterChildrenTransaction.value.length
 })
 
 watch(
@@ -140,15 +140,17 @@ const getStatusColor = (status: string) => {
     <div class="space-y-6">
       <div class="">
         <div class="flex flex-col md:flex-col gap-4">
-          <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-            <BaseSearch v-model="searchQuery" placeholder="Cari riwayat donasi..." />
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <BaseFilter
-                :has-active-filters="
-                  selectedMethod !== 'all' || selectedStatus !== 'all'
-                "
-              >
-                <template #default="{ closeDropdown }">
+          <div class="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+            <h2 class="text-lg font-semibold text-gray-800">
+              Riwayat Donasi Anak Asuh
+            </h2>
+            <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <BaseSearch v-model="searchQuery" placeholder="Cari riwayat donasi..." />
+              <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <BaseFilter
+                  :has-active-filters="selectedMethod !== 'all' || selectedStatus !== 'all'"
+                >
+                  <template #default="{ closeDropdown }">
                   <div class="space-y-4">
                     <div>
                       <label class="block text-xs text-gray-700 mb-2">Metode Donasi</label>
@@ -190,12 +192,12 @@ const getStatusColor = (status: string) => {
                     </div>
                   </div>
                 </template>
-              </BaseFilter>
-
-              <BaseButton variant="primary" @click="handleCreate">
-                <Plus :size="20" class="mr-1" />
-                Tambah Donasi Anak Asuh
-              </BaseButton>
+                </BaseFilter>
+                <BaseButton variant="primary" @click="handleCreate">
+                  <Plus :size="20" class="mr-1" />
+                  Tambah Donasi Anak Asuh
+                </BaseButton>
+              </div>
             </div>
           </div>
         </div>
@@ -206,7 +208,7 @@ const getStatusColor = (status: string) => {
       class="mt-6"
       :loading="false"
       loading-message="Memuat data riwayat donasi anak asuh..."
-      :is-empty="filteredDonationChildren.length === 0"
+      :is-empty="filteredFosterChildrenTransaction.length === 0"
       empty-message="Tidak ada riwayat donasi anak asuh yang ditemukan."
       :has-prev="pagination?.has_prev"
       :has-next="pagination?.has_next"
@@ -231,24 +233,24 @@ const getStatusColor = (status: string) => {
 
       <template #rows>
         <tr
-          v-for="(donationChild, index) in paginatedDonationChildren"
-          :key="donationChild.id"
+          v-for="(fosterChildrenTransaction, index) in paginatedFostedChildrenTransaction"
+          :key="fosterChildrenTransaction.id"
           class="bg-white hover:bg-gray-50 transition-colors duration-150"
         >
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
             {{ pageOffset * limit + index + 1 }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins max-w-50 truncate">
-            {{ donationChild.donor_name }}
+            {{ fosterChildrenTransaction.donorName }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            Rp {{ donationChild.gross_amount.toLocaleString('id-ID') }}
+            Rp {{ fosterChildrenTransaction.grossAmount.toLocaleString('id-ID') }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ donationChild.source ? 'Online' : 'Offline' }}
+            {{ fosterChildrenTransaction.isOnline ? 'Online' : 'Offline' }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ new Date(donationChild.created_at).toLocaleDateString('id-ID', {
+            {{ new Date(fosterChildrenTransaction.createdAt).toLocaleDateString('id-ID', {
               day: '2-digit',
               month: 'short',
               year: 'numeric',
@@ -258,15 +260,15 @@ const getStatusColor = (status: string) => {
             <span
               :class="[
                 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-poppins border',
-                getStatusColor(donationChild.transaction_status),
+                getStatusColor(fosterChildrenTransaction.transactionStatus),
               ]"
             >
-              {{ donationChild.transaction_status.charAt(0).toUpperCase() + donationChild.transaction_status.slice(1) }}
+              {{ fosterChildrenTransaction.transactionStatus.charAt(0).toUpperCase() + fosterChildrenTransaction.transactionStatus.slice(1) }}
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
             <button
-              @click="handleView(donationChild)"
+              @click="handleView(fosterChildrenTransaction)"
               class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
             >
               <Eye :size="18" />

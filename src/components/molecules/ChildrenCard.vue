@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { Child } from '@/types/fosterChildren'
+import type { FosterChildren } from '@/types/fosterChildren'
 
 defineProps<{
-  children: Child
+  children: FosterChildren
 }>()
 
 const emit = defineEmits(['view'])
 
-const handleView = (child: Child) => {
+const handleView = (child: FosterChildren) => {
   emit('view', child)
 }
 
@@ -47,7 +47,7 @@ function calculateAge(birthDate: string): number {
     class="flex flex-col items-center text-center space-y-1 hover:scale-105 transition"
     >
     <img
-      :src="children.image_url"
+      :src="children.profilePicture"
       :alt="children.name"
       class="w-20 h-20 rounded-full object-cover border-2 border-green-600"
     />
@@ -60,7 +60,7 @@ function calculateAge(birthDate: string): number {
 
     <div class="flex text-sm divide-x">
           <span class="font-bold px-1">{{ children.category }}</span>
-          <span class="font-normal px-1">{{ calculateAge(children.birth_date) }} Tahun</span>
+          <span class="font-normal px-1">{{ calculateAge(children.birthDate) }} Tahun</span>
     </div>
 
     </div>
