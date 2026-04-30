@@ -41,8 +41,8 @@ export interface FosterChildrenCandidate {
 }
 
 export enum Gender {
-  male = 'male',
-  female = 'female',
+  male = 'Laki-laki',
+  female = 'Perempuan',
 }
 
 export enum Category {
@@ -69,6 +69,7 @@ export interface FosterChildrenCandidateList {
 }
 
 export interface FosterChildrenParams extends PaginationParams {
+  gender?: Gender
   category?: Category
   isGraduated?: boolean
 }

@@ -5,13 +5,15 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
-import type { Submission } from '@/types/fosterChildrenCandidate'
+import { Category, Gender, type FosterChildrenCandidate } from '@/types/fosterChildren'
 import router from '@/router'
+import { ROLES } from '@/const/roles'
 
 const searchQuery = ref('')
 const selectedGender = ref('all')
 const selectedCategory = ref('all')
 const selectedStatus = ref('all')
+
 
 const clearFilters = () => {
   searchQuery.value = ''
@@ -23,15 +25,17 @@ const clearFilters = () => {
 const genders = ['all', 'laki-laki', 'perempuan']
 const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
 
-const rawRole = localStorage.getItem('role')
+const path = window.location.pathname.toLowerCase()
 
-const role = ref(rawRole ? rawRole.toLowerCase() : 'social_manager')
-if (window.location.pathname.includes('chairman')) {
-  role.value = 'chairman'
-}
+const role = ref(
+  path.includes('chairman')
+    ? ROLES.CHAIRMAN
+    : ROLES.SOCIAL_MANAGER
+)
+
 const statusByRole: Record<string, string[]> = {
-  chairman: ['Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
-  social_manager: ['Diajukan', 'Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
+  [ROLES.CHAIRMAN]: ['Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
+  [ROLES.SOCIAL_MANAGER]: ['Diajukan', 'Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
 }
 const statuses = computed(() => {
   return ['all', ...(statusByRole[role.value] ?? [])]
@@ -47,84 +51,100 @@ const pagination = ref({
 const handleNextPage = () => {}
 const handlePrevPage = () => {}
 
-const children = ref<Submission[]>([
+const children = ref<FosterChildrenCandidate[]>([
   {
     id: '1',
-    applicant_name: 'Choi Youngjae',
-    number_phone: '081234567890',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Faris Ahad',
-    gender: 'Laki-laki',
-    category: 'Yatim',
-    birthplace: 'Bandung',
-    birthdate: '2014-05-10',
+    slug: 'faris-ahad',
+    name: 'Faris Ahad',
+    profilePicture: 'https://i.pravatar.cc/150?img=1',
+    gender: Gender.male,
+    category: Category.yatim,
     address: 'Jl. Melati No. 12 Bandung',
-    image_url: 'https://i.pravatar.cc/150?img=1',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
+    birthPlace: 'Bandung',
+    birthDate: '2014-05-10',
+    isGraduated: false,
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    submitterName: 'Choi Youngjae',
+    submitterPhone: '081234567890',
+    submitterAddress: 'Jl. Melati No.2 Bandung',
+    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    submittedBy: '',
     status: 'Diajukan',
-    created_at: '2024-01-01',
+    rejectionReason: '',
+    createdAt: '2024-01-01'
   },
   {
     id: '2',
-    applicant_name: 'Jung Woojin',
-    number_phone: '081234567891',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Tia Mutiara',
-    gender: 'Perempuan',
-    category: 'Piatu',
-    birthplace: 'Garut',
-    birthdate: '2015-02-15',
+    submitterName: 'Jung Woojin',
+    submitterPhone: '081234567891',
+    submitterAddress: 'Jl Mawar No. 7 Garut',
+    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    name: 'Tia Mutiara',
+    slug: 'tia-mutiara',
+    gender: Gender.female,
+    category: Category.piatu,
+    birthPlace: 'Garut',
+    birthDate: '2015-02-15',
     address: 'Jl. Mawar No. 5 Garut',
-    image_url: 'https://i.pravatar.cc/150?img=2',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
+    isGraduated: false,
+    profilePicture: 'https://i.pravatar.cc/150?img=2',
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     status: 'Menunggu Verifikasi',
-    created_at: '2024-01-02',
+    rejectionReason: '',
+    submittedBy: '',
+    createdAt: '2024-01-02',
   },
   {
     id: '3',
-    applicant_name: 'Jang Juwang',
-    number_phone: '081234567892',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Ahmad Rizki',
-    gender: 'Laki-laki',
-    category: 'Yatim Piatu',
-    birthplace: 'Tasikmalaya',
-    birthdate: '2013-08-20',
+    submitterName: 'Jang Juwang',
+    submitterPhone: '081234567892',
+    submitterAddress: 'Jl. Kenanga No. 8 Tasikmalaya',
+    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    name: 'Ahmad Rizki',
+    slug: 'ahmad-rizki',
+    gender: Gender.male,
+    category: Category.yatimPiatu,
+    birthPlace: 'Tasikmalaya',
+    birthDate: '2013-08-20',
+    isGraduated: false,
     address: 'Jl. Anggrek No. 9 Tasikmalaya',
-    image_url: 'https://i.pravatar.cc/150?img=4',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
+    profilePicture: 'https://i.pravatar.cc/150?img=4',
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    submittedBy: '',
+    rejectionReason: '',
     status: 'Disetujui',
-    created_at: '2024-01-03',
+    createdAt: '2024-01-03',
   },
   {
     id: '4',
-    applicant_name: 'Park Sungho',
-    number_phone: '081234567893',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Laila Salsabila',
-    gender: 'Perempuan',
-    category: 'Yatim',
-    birthplace: 'Cimahi',
-    birthdate: '2016-11-30',
+    submitterName: 'Park Sungho',
+    submitterPhone: '081234567893',
+    submitterAddress: 'Jl. Dahlia No.8 Cimahi',
+    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    name: 'Laila Salsabila',
+    slug: 'laila-salsabila',
+    gender: Gender.female,
+    category: Category.yatimPiatu,
+    birthPlace: 'Cimahi',
+    birthDate: '2016-11-30',
     address: 'Jl. Dahlia No. 3 Cimahi',
-    image_url: 'https://i.pravatar.cc/150?img=5',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
+    profilePicture: 'https://i.pravatar.cc/150?img=5',
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    isGraduated: false,
+    submittedBy:'',
+    rejectionReason: '',
     status: 'Ditolak',
-    created_at: '2024-01-04',
+    createdAt: '2024-01-04',
   },
 ])
 
 const filteredChildren = computed(() => {
   let data = [...children.value]
-  if (role.value === 'chairman') {
+  if (role.value === ROLES.CHAIRMAN) {
     data = data.filter((child) => child.status !== 'Diajukan')
   }
   if (selectedStatus.value !== 'all') {
@@ -138,7 +158,7 @@ const filteredChildren = computed(() => {
   }
   if (searchQuery.value) {
     data = data.filter((child) =>
-      child.child_name.toLowerCase().includes(searchQuery.value.toLowerCase()),
+      child.name.toLowerCase().includes(searchQuery.value.toLowerCase()),
     )
   }
 
@@ -167,10 +187,10 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const handleView = (child: Submission) => {
-  if (role.value === 'chairman') {
+const handleView = (child: FosterChildrenCandidate) => {
+  if (role.value === ROLES.CHAIRMAN) {
     router.push({
-      name: 'chairman-foster-children-submissions-detail',
+      name: 'dashboard-chairman-foster-children-submissions-detail',
       params: { id: child.id },
     })
   } else {
@@ -300,7 +320,7 @@ const handleView = (child: Submission) => {
             {{ pageOffset * limit + index + 1 }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins max-w-50 truncate">
-            {{ child.child_name }}
+            {{ child.name }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
             {{ child.gender }}
@@ -309,7 +329,7 @@ const handleView = (child: Submission) => {
             {{ child.category }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ formatDate(child.created_at) }}
+            {{ formatDate(child.createdAt) }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-center">
             <span

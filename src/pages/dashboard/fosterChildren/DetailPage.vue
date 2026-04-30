@@ -36,8 +36,8 @@ const children = ref<FosterChildren[]>([
       },
     ],
     isGraduated: false,
-    familyCard: '',
-    sktm: '',
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     createdAt: '2024-01-01',
   },
   {
@@ -58,9 +58,9 @@ const children = ref<FosterChildren[]>([
         alt: 'Juara 3 Lomba Menulis Cerpen.pdf',
       }
     ],
-    isGraduated: true,
-    familyCard: '',
-    sktm: '',
+    isGraduated: false,
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     createdAt: '2024-01-02',
   },
   {
@@ -88,8 +88,8 @@ const children = ref<FosterChildren[]>([
       }
     ],
     isGraduated: true,
-    familyCard: '',
-    sktm: '',
+    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     createdAt: '2024-01-03',
   },
 ])
@@ -98,9 +98,29 @@ const child = computed(() => {
   return children.value.find((c) => c.id === childId)
 })
 
-const previewCertificate = (url: string) => {
-  window.open(url, '_blank')
+const previewFile = (file: File | string) => {
+  if (!file) return
+
+  if (typeof file === 'string') {
+
+    window.open(file, '_blank')
+  } else {
+    const url = URL.createObjectURL(file)
+    window.open(url, '_blank')
+  }
 }
+
+const getShortFileName = (fileUrl: string, defaultName: string) => {
+  if (!fileUrl) return defaultName
+
+  try {
+    const parts = fileUrl.split('/')
+    return parts[parts.length - 1]
+  } catch {
+    return defaultName
+  }
+}
+
 const handleCancel = () => {
   router.push({ name: 'dashboard-foster-children' })
 }
@@ -167,6 +187,43 @@ const handleEdit = (child: FosterChildren) => {
               <div class="text-gray-500">Alamat</div>
               <div>: {{ child.address }}</div>
 
+              <div class="text-gray-500">Kartu Keluarga</div>
+                <div class="flex items-start gap-2">
+                  <span>: </span>
+                  <div v-if="child.familyCard" class="space-y-2">
+                    <div class="flex items-center gap-3">
+                      <span class="text-sm">{{
+                        getShortFileName(child.familyCard, 'Kartu_Keluarga')
+                      }}</span>
+                      <button
+                        @click="previewFile(child.familyCard)"
+                        class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
+                        title="Lihat Kartu Keluarga"
+                      >
+                        <Eye :size="18" />
+                      </button>
+                    </div>
+                  </div>
+                  <div v-else class="flex items-center text-sm">Tidak ada kartu keluarga</div>
+                </div>
+
+                <div class="text-gray-500">SKTM</div>
+                <div class="flex items-start gap-2">
+                  <span>: </span>
+                  <div v-if="child.sktm" class="space-y-2">
+                    <div class="flex items-center gap-3">
+                      <span class="text-sm">{{ getShortFileName(child.sktm, 'SKTM') }}</span>
+                      <button
+                        @click="previewFile(child.sktm)"
+                        class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
+                        title="Lihat SKTM"
+                      >
+                        <Eye :size="18" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
               <div class="text-gray-500">Prestasi</div>
               <div class="flex items-start gap-2">
                 <span>: </span>
@@ -182,16 +239,17 @@ const handleEdit = (child: FosterChildren) => {
                 <span>: </span>
                 <div v-if="child.achievements?.length" class="space-y-2">
                   <div
-                    v-for="(cert, index) in child.achievements"
-                    :key="index"
+                    v-for="cert in child.achievements"
+                    :key="cert.id"
                     class="flex items-center gap-3"
                   >
-                    <iframe :src="cert.url" class="w-20 h-20 rounded border shrink-0"> </iframe>
-                    <span class="text-sm">
-                      {{ cert.alt || 'Sertifikat' }}
+                    <div class="flex items-center gap-3">
+                      <span class="text-sm">
+                        {{ cert.title }}
                     </span>
+                    </div>
                     <button
-                      @click="previewCertificate(cert.url)"
+                      @click="previewFile(cert.url)"
                       class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
                       title="Lihat Sertifikat"
                     >
@@ -203,7 +261,7 @@ const handleEdit = (child: FosterChildren) => {
               </div>
             </div>
 
-            <div class="pt-4 flex items-center gap-40">
+            <div class="pt-2 flex items-center gap-40">
               <div class="text-gray-500">Status</div>
               <span
                 :class="[
