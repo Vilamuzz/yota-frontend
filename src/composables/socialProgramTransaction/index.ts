@@ -1,3 +1,3 @@
-export { useDonationTransactionList } from './useSocialProgramTransactionList'
-export { useDonationTransactionCreate } from './useSocialProgramTransactionCreate'
-export { useDonationTransactionCreateOffline } from './useSocialProgramTransactionCreateOffline'
+export { useSocialProgramTransactionList } from './useSocialProgramTransactionList'
+export { useSocialProgramTransactionCreate } from './useSocialProgramTransactionCreate'
+export { useSocialProgramTransactionCreateOffline } from './useSocialProgramTransactionCreateOffline'

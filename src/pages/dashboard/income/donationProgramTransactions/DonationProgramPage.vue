@@ -5,7 +5,7 @@ import { Eye, HandHeart } from 'lucide-vue-next'
 import { useDonationProgramFilters } from '@/composables/donationProgram/useDonationProgramFilters'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import { DonationProgramCategoryEnum, DonationProgramStatusEnum } from '@/types/donationProgram'
 import { formatCurrency, formatDate } from '@/utils/format'
 

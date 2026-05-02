@@ -7,39 +7,33 @@ import { api } from '@/utils/api'
 
 export const donationProgramTransactionService = {
   createDonationProgramTransaction: async (
-    donationProgramSlug: string,
+    slug: string,
     data: CreateDonationProgramTransactionRequest,
   ) => {
-    const response = await api.post(
-      `${API.DONATION_PROGRAMS}/${donationProgramSlug}/transactions`,
-      data,
-    )
+    const response = await api.post(`${API.DONATION_PROGRAMS}/${slug}/transactions`, data)
     return response.data
   },
 
   createOfflineDonationProgramTransaction: async (
-    donationProgramId: string,
+    id: string,
     data: CreateDonationProgramTransactionRequest,
   ) => {
-    const response = await api.post(
-      `${API.DONATION_PROGRAMS}/${donationProgramId}/transactions`,
-      data,
-    )
+    const response = await api.post(`${API.DONATION_PROGRAMS}/${id}/transactions`, data)
     return response.data
   },
 
   getDonationProgramTransactions: async (
-    donationProgramId: string,
+    id: string,
     params: DonationProgramTransactionQueryParams,
   ) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS}/${donationProgramId}/transactions`, {
+    const response = await api.get(`${API.DONATION_PROGRAMS}/${id}/transactions`, {
       params,
     })
     return response.data
   },
 
-  getDonationProgramTransactionDetail: async (transactionId: string) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS}/transactions/${transactionId}`)
+  getDonationProgramTransactionDetail: async (id: string) => {
+    const response = await api.get(`${API.DONATION_PROGRAMS}/transactions/${id}`)
     return response.data
   },
 }

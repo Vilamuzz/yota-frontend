@@ -7,39 +7,33 @@ import { api } from '@/utils/api'
 
 export const fosterChildrenTransactionService = {
   createFosterChildrenTransaction: async (
-    FosterChildrenSlug: string,
+    slug: string,
     data: CreateFosterChildrenTransactionRequest,
   ) => {
-    const response = await api.post(
-      `${API.FOSTER_CHILDREN}/${FosterChildrenSlug}/transactions`,
-      data,
-    )
+    const response = await api.post(`${API.FOSTER_CHILDREN}/${slug}/transactions`, data)
     return response.data
   },
 
   createOfflineFosterChildrenTransaction: async (
-    FosterChildrenId: string,
+    id: string,
     data: CreateFosterChildrenTransactionRequest,
   ) => {
-    const response = await api.post(
-      `${API.FOSTER_CHILDREN}/${FosterChildrenId}/transactions`,
-      data,
-    )
+    const response = await api.post(`${API.FOSTER_CHILDREN}/${id}/transactions`, data)
     return response.data
   },
 
   getFosterChildrenTransactions: async (
-    FosterChildrenId: string,
+    id: string,
     params: FosterChildrenTransactionQueryParams,
   ) => {
-    const response = await api.get(`${API.FOSTER_CHILDREN}/${FosterChildrenId}/transactions`, {
+    const response = await api.get(`${API.FOSTER_CHILDREN}/${id}/transactions`, {
       params,
     })
     return response.data
   },
 
-  getFosterChildrenTransactionDetail: async (transactionId: string) => {
-    const response = await api.get(`${API.FOSTER_CHILDREN}/transactions/${transactionId}`)
+  getFosterChildrenTransactionDetail: async (id: string) => {
+    const response = await api.get(`${API.FOSTER_CHILDREN}/transactions/${id}`)
     return response.data
   },
 }

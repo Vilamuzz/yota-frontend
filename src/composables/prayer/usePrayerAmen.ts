@@ -7,7 +7,7 @@ export const usePrayerAmen = () => {
   const queryClient = useQueryClient()
 
   const createMutation = useMutation<PrayerResponse, ApiError, string>({
-    mutationFn: (prayerID) => prayerService.amenPrayer(prayerID),
+    mutationFn: (id) => prayerService.amenPrayer(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prayers'] })
     },

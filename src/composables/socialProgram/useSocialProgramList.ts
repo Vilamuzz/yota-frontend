@@ -1,28 +1,23 @@
-import { ref, toValue, type MaybeRefOrGetter } from 'vue'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { socialProgramService } from '@/services/socialProgram.service'
-import type { SocialProgramParams } from '@/types/socialProgram'
+import type { SocialProgramQueryParams, SocialProgramListResponse } from '@/types/socialProgram'
+import type { ApiError } from '@/types/response'
 
-export const useSocialProgramList = (params: MaybeRefOrGetter<SocialProgramParams>) => {
-  const socialProgramListError = ref('')
-
-  const socialProgramListQuery = useQuery({
-    queryKey: ['socialprograms', params],
-    queryFn: async () => {
-      try {
-        const response = await socialProgramService.getSocialProgramList(toValue(params))
-        return response
-      } catch (err: unknown) {
-        socialProgramListError.value =
-          err instanceof Error ? err.message : 'Failed to fetch social programs'
-        throw err
-      }
-    },
+export const useSocialProgramList = (params: MaybeRefOrGetter<SocialProgramQueryParams>) => {
+  const listQuery = useQuery<SocialProgramListResponse, ApiError>({
+    queryKey: ['socialPrograms', params],
+    queryFn: () => socialProgramService.getSocialProgramList(toValue(params)),
     retry: 1,
   })
 
+  const socialPrograms = computed(() => listQuery.data.value?.data?.socialPrograms || [])
+  const pagination = computed(() => listQuery.data.value?.data?.pagination)
+
   return {
-    socialProgramListError,
-    socialProgramListQuery,
+    listQuery,
+    socialPrograms,
+    pagination,
+    isLoading: listQuery.isPending,
   }
 }

@@ -4,9 +4,9 @@ import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { SquarePen, HandHeart, Plus } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
-import { useDonationTransactionList } from '@/composables/donationProgramTransaction/useDonationProgramTransactionList'
+import { useDonationProgramTransactionList } from '@/composables/donationProgramTransaction/useDonationProgramTransactionList'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import type { DonationProgramTransactionQueryParams } from '@/types/donationProgramTransaction'
 
 const router = useRouter()
@@ -28,7 +28,7 @@ const queryParams = computed<DonationProgramTransactionQueryParams>(() => {
 })
 
 // Fetch donations via composable
-const { donationTransactions, pagination, isLoading } = useDonationTransactionList(
+const { donationProgramTransactions, pagination, isLoading } = useDonationProgramTransactionList(
   donation_id,
   queryParams,
 )
@@ -79,7 +79,7 @@ const getStatusColor = (status: string) => {
       <BaseTable
         :loading="isLoading"
         loading-message="Loading donation transactions..."
-        :is-empty="donationTransactions.length === 0"
+        :is-empty="donationProgramTransactions.length === 0"
         empty-message="No donation transactions available"
         :has-prev="!!pagination?.nextCursor"
         :has-next="!!pagination?.prevCursor"
@@ -110,7 +110,7 @@ const getStatusColor = (status: string) => {
 
         <template #rows>
           <tr
-            v-for="(transaction, index) in donationTransactions"
+            v-for="(transaction, index) in donationProgramTransactions"
             :key="transaction.id"
             class="hover:bg-gray-50 transition-colors duration-150"
           >

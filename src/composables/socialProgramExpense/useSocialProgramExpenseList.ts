@@ -1,34 +1,34 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { donationProgramExpenseService } from '@/services/donationProgramExpense.service'
+import { socialProgramExpenseService } from '@/services/socialProgramExpense.service'
 import type {
-  DonationProgramExpenseListResponse,
-} from '@/types/donationProgramExpense'
+  SocialProgramExpenseListResponse,
+} from '@/types/socialProgramExpense'
 import type { ApiError, PaginationParams } from '@/types/response'
 
-export const useDonationProgramExpenseList = (
+export const useSocialProgramExpenseList = (
   id: MaybeRefOrGetter<string>,
   params: MaybeRefOrGetter<PaginationParams>,
 ) => {
-  const donationExpenseListQuery = useQuery<DonationProgramExpenseListResponse, ApiError>({
-    queryKey: ['donationProgramExpenses', id, params],
+  const listQuery = useQuery<SocialProgramExpenseListResponse, ApiError>({
+    queryKey: ['socialProgramExpenses', id, params],
     queryFn: () =>
-      donationProgramExpenseService.getDonationProgramExpenses(
+      socialProgramExpenseService.getSocialProgramExpenses(
         toValue(id),
         toValue(params),
       ),
     retry: 1,
   })
 
-  const donationExpenses = computed(
-    () => donationExpenseListQuery.data.value?.data?.expenses || [],
+  const socialProgramExpenses = computed(
+    () => listQuery.data.value?.data?.expenses || [],
   )
-  const pagination = computed(() => donationExpenseListQuery.data.value?.data?.pagination)
+  const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {
-    donationExpenseListQuery,
-    donationExpenses,
+    listQuery,
+    socialProgramExpenses,
     pagination,
-    isLoading: donationExpenseListQuery.isPending,
+    isLoading: listQuery.isPending,
   }
 }

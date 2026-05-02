@@ -3,7 +3,7 @@ import { reactive, computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useResetPassword } from '@/composables/auth/useResetPassword'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
+import AuthInput from '@/components/atoms/AuthInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
@@ -96,7 +96,7 @@ const closeModal = () => {
       <BaseAlert v-if="initError" type="error">
         {{ initError }}
       </BaseAlert>
-      <BaseInput
+      <AuthInput
         id="password"
         v-model="form.password"
         type="password"
@@ -108,7 +108,7 @@ const closeModal = () => {
         :error="passwordError"
       />
 
-      <BaseInput
+      <AuthInput
         id="confirmPassword"
         v-model="form.confirmPassword"
         type="password"
@@ -133,7 +133,7 @@ const closeModal = () => {
     <template #footer>
       <button
         @click="goToLogin"
-        class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition duration-200"
+        class="text-xs text-primary-400 hover:text-primary-500 font-medium transition duration-200"
       >
         ← Back to login
       </button>

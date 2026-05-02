@@ -1,18 +1,18 @@
 import { useQuery } from '@tanstack/vue-query'
-import { donationProgramExpenseService } from '@/services/donationProgramExpense.service'
+import { socialProgramExpenseService } from '@/services/socialProgramExpense.service'
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
-import type { DonationProgramExpenseResponse } from '@/types/donationProgramExpense'
+import type { SocialProgramExpenseResponse } from '@/types/socialProgramExpense'
 import type { ApiError } from '@/types/response'
 
-export const useDonationProgramExpenseDetail = (id: MaybeRefOrGetter<string>) => {
-  const donationExpenseDetailQuery = useQuery<DonationProgramExpenseResponse, ApiError>({
-    queryKey: ['donationExpenseDetail', id],
-    queryFn: () => donationProgramExpenseService.getDonationProgramExpenseDetail(toValue(id)),
+export const useSocialProgramExpenseDetail = (id: MaybeRefOrGetter<string>) => {
+  const detailQuery = useQuery<SocialProgramExpenseResponse, ApiError>({
+    queryKey: ['socialProgramExpenseDetail', id],
+    queryFn: () => socialProgramExpenseService.getSocialProgramExpenseDetail(toValue(id)),
     enabled: computed(() => !!toValue(id)),
     retry: 1,
   })
 
   return {
-    donationExpenseDetailQuery,
+    detailQuery,
   }
 }

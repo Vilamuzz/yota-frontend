@@ -1,40 +1,33 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { donationProgramTransactionService } from '@/services/donationProgramTransaction.service'
+import { socialProgramTransactionService } from '@/services/socialProgramTransaction.service'
 import type {
-  DonationProgramTransactionQueryParams,
-  DonationProgramTransactionListResponse,
-} from '@/types/donationProgramTransaction'
+  SocialProgramTransactionQueryParams,
+  SocialProgramTransactionListResponse,
+} from '@/types/socialProgramTransaction'
 import type { ApiError } from '@/types/response'
 
-export const useDonationProgramTransactionList = (
+export const useSocialProgramTransactionList = (
   id: MaybeRefOrGetter<string>,
-  params: MaybeRefOrGetter<DonationProgramTransactionQueryParams>,
+  params: MaybeRefOrGetter<SocialProgramTransactionQueryParams>,
 ) => {
-  const donationProgramTransactionListQuery = useQuery<
-    DonationProgramTransactionListResponse,
-    ApiError
-  >({
-    queryKey: ['donationProgramTransactions', id, params],
+  const listQuery = useQuery<SocialProgramTransactionListResponse, ApiError>({
+    queryKey: ['socialProgramTransactions', id, params],
     queryFn: () =>
-      donationProgramTransactionService.getDonationProgramTransactions(
+      socialProgramTransactionService.getSocialProgramTransactions(
         toValue(id),
         toValue(params),
       ),
     retry: 1,
   })
 
-  const donationProgramTransactions = computed(
-    () => donationProgramTransactionListQuery.data.value?.data?.transactions || [],
-  )
-  const pagination = computed(
-    () => donationProgramTransactionListQuery.data.value?.data?.pagination,
-  )
+  const socialProgramTransactions = computed(() => listQuery.data.value?.data?.transactions || [])
+  const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {
-    donationProgramTransactionListQuery,
-    donationProgramTransactions,
+    listQuery,
+    socialProgramTransactions,
     pagination,
-    isLoading: donationProgramTransactionListQuery.isPending,
+    isLoading: listQuery.isPending,
   }
 }

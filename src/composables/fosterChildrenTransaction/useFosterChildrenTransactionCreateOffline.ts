@@ -16,7 +16,6 @@ export const useFosterChildrenTransactionCreateOffline = () => {
   >({
     mutationFn: ({ id, data }) =>
       fosterChildrenTransactionService.createOfflineFosterChildrenTransaction(id, data),
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fosterChildrenTransactions'] })
     },

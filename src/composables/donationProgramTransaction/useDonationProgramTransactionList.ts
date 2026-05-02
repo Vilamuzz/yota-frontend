@@ -11,10 +11,7 @@ export const useDonationProgramTransactionList = (
   id: MaybeRefOrGetter<string>,
   params: MaybeRefOrGetter<DonationProgramTransactionQueryParams>,
 ) => {
-  const donationProgramTransactionListQuery = useQuery<
-    DonationProgramTransactionListResponse,
-    ApiError
-  >({
+  const listQuery = useQuery<DonationProgramTransactionListResponse, ApiError>({
     queryKey: ['donationProgramTransactions', id, params],
     queryFn: () =>
       donationProgramTransactionService.getDonationProgramTransactions(
@@ -24,17 +21,13 @@ export const useDonationProgramTransactionList = (
     retry: 1,
   })
 
-  const donationProgramTransactions = computed(
-    () => donationProgramTransactionListQuery.data.value?.data?.transactions || [],
-  )
-  const pagination = computed(
-    () => donationProgramTransactionListQuery.data.value?.data?.pagination,
-  )
+  const donationProgramTransactions = computed(() => listQuery.data.value?.data?.transactions || [])
+  const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {
-    donationProgramTransactionListQuery,
+    listQuery,
     donationProgramTransactions,
     pagination,
-    isLoading: donationProgramTransactionListQuery.isPending,
+    isLoading: listQuery.isPending,
   }
 }

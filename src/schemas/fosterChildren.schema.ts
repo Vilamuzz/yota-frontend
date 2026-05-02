@@ -31,4 +31,4 @@ export const updateChildSchema = z.object({
   achievements: z.array(z.string()).optional(),
 })
 
-export type UpdateChildFormData = z.infer<typeof updateChildSchema>
+export type FosterChildrenFormData = z.infer<typeof fosterChildrenSchema>

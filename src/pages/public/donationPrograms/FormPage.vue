@@ -3,7 +3,7 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import { ArrowLeft } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { usePublishedDonationProgramDetail } from '@/composables/donationProgram/usePublishedDonationProgramDetail'
+import { usePublishedDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
 import { useDonationTransactionCreate } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCreate'
 
 const route = useRoute()

@@ -1,23 +1,31 @@
+import { computed } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fosterChildrenService } from '@/services/fosterChildren.service'
-import type { CreateFosterChildrenRequest, FosterChildrenResponse } from '@/types/fosterChildren'
+import type { CreateFosterChildrenRequest, FosterChildren } from '@/types/fosterChildren'
 import type { ApiError } from '@/types/response'
-import { computed } from 'vue'
+import type { ApiResponse } from '@/types/response'
 
-export const useChildCreate = () => {
+export const useFosterChildrenCreate = () => {
   const queryClient = useQueryClient()
 
-  const createMutation = useMutation<FosterChildrenResponse, ApiError, CreateFosterChildrenRequest>({
-    mutationFn: (data) => fosterChildrenService.createFosterChildren(data),
+  const createMutation = useMutation<
+    ApiResponse<FosterChildren>,
+    ApiError,
+    CreateFosterChildrenRequest
+  >({
+    mutationFn: (data: CreateFosterChildrenRequest) =>
+      fosterChildrenService.createFosterChildren(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
     },
   })
 
-  const createError = computed(() => createMutation.error.value?.message)
+  const validationErrors = computed(
+    () => createMutation.error.value?.response?.data?.validation ?? null,
+  )
 
   return {
     createMutation,
-    createError,
+    validationErrors,
   }
 }

@@ -67,4 +67,3 @@ export interface UpdateDonationProgramRequest {
 
 export type DonationProgramResponse = Response<DonationProgram>
 export type DonationProgramListResponse = Response<DonationProgramList>
-export type DonationProgramDetailResponse = Response<DonationProgram>

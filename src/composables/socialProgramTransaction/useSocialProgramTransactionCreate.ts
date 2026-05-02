@@ -1,23 +1,23 @@
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { donationProgramTransactionService } from '@/services/donationProgramTransaction.service'
+import { socialProgramTransactionService } from '@/services/socialProgramTransaction.service'
 import type {
-  CreateDonationProgramTransactionRequest,
-  DonationProgramTransactionResponse,
-} from '@/types/donationProgramTransaction'
+  CreateSocialProgramTransactionRequest,
+  SocialProgramTransactionResponse,
+} from '@/types/socialProgramTransaction'
 import type { ApiError } from '@/types/response'
 
-export const useDonationProgramTransactionCreate = () => {
+export const useSocialProgramTransactionCreate = () => {
   const queryClient = useQueryClient()
 
   const createMutation = useMutation<
-    DonationProgramTransactionResponse,
+    SocialProgramTransactionResponse,
     ApiError,
-    { slug: string; data: CreateDonationProgramTransactionRequest }
+    { slug: string; data: CreateSocialProgramTransactionRequest }
   >({
     mutationFn: ({ slug, data }) =>
-      donationProgramTransactionService.createDonationProgramTransaction(slug, data),
+      socialProgramTransactionService.createSocialProgramTransaction(slug, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['donationProgramTransactions'] })
+      queryClient.invalidateQueries({ queryKey: ['socialProgramTransactions'] })
     },
   })
 

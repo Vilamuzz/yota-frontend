@@ -4,23 +4,20 @@ import { api } from '@/utils/api'
 import type { PaginationParams } from '@/types/response'
 
 export const fosterChildrenExpenseService = {
-  createFosterChildrenExpense: async (
-    fosterChildrenId: string,
-    data: CreateFosterChildrenExpenseRequest,
-  ) => {
-    const response = await api.post(`${API.FOSTER_CHILDREN}/${fosterChildrenId}/expenses`, data)
+  createFosterChildrenExpense: async (id: string, data: CreateFosterChildrenExpenseRequest) => {
+    const response = await api.post(`${API.FOSTER_CHILDREN}/${id}/expenses`, data)
     return response.data
   },
 
-  getFosterChildrenExpenses: async (fosterChildrenId: string, params: PaginationParams) => {
-    const response = await api.get(`${API.FOSTER_CHILDREN}/${fosterChildrenId}/expenses`, {
+  getFosterChildrenExpenses: async (id: string, params: PaginationParams) => {
+    const response = await api.get(`${API.FOSTER_CHILDREN}/${id}/expenses`, {
       params,
     })
     return response.data
   },
 
-  getFosterChildrenExpenseDetail: async (expenseId: string) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS}/expenses/${expenseId}`)
+  getFosterChildrenExpenseDetail: async (id: string) => {
+    const response = await api.get(`${API.FOSTER_CHILDREN}/expenses/${id}`)
     return response.data
   },
 }

@@ -14,5 +14,11 @@ export interface SocialProgramSubscriptionList {
   pagination: Pagination
 }
 
+export interface SocialProgramSubscriptionQueryParams extends PaginationParams {
+  status?: string
+  socialProgramId?: string
+  accountId?: string
+}
+
 export type SocialProgramSubscriptionResponse = Response<SocialProgramSubscription>
 export type SocialProgramSubscriptionListResponse = Response<SocialProgramSubscriptionList>

@@ -5,7 +5,7 @@ import type { DonationProgramExpenseResponse } from '@/types/donationProgramExpe
 import type { ApiError } from '@/types/response'
 
 export const useDonationProgramExpenseDetail = (id: MaybeRefOrGetter<string>) => {
-  const donationExpenseDetailQuery = useQuery<DonationProgramExpenseResponse, ApiError>({
+  const detailQuery = useQuery<DonationProgramExpenseResponse, ApiError>({
     queryKey: ['donationExpenseDetail', id],
     queryFn: () => donationProgramExpenseService.getDonationProgramExpenseDetail(toValue(id)),
     enabled: computed(() => !!toValue(id)),
@@ -13,6 +13,6 @@ export const useDonationProgramExpenseDetail = (id: MaybeRefOrGetter<string>) =>
   })
 
   return {
-    donationExpenseDetailQuery,
+    detailQuery,
   }
 }

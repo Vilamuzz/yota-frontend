@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import BaseLoading from '@/components/atoms/BaseLoading.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 
 interface Props {
   loading?: boolean
