@@ -3,7 +3,7 @@ import { ref, computed, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRegister } from '@/composables/auth/useRegister'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
+import AuthInput from '@/components/atoms/AuthInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { registerSchema } from '@/schemas/auth.schema'
 import { getZodErrors } from '@/utils/zodError'
@@ -81,7 +81,7 @@ const handleRegister = () => {
 <template>
   <AuthLayout title="Create Account" subtitle="Sign up to get started">
     <form @submit.prevent="handleRegister" class="space-y-4">
-      <BaseInput
+      <AuthInput
         id="username"
         v-model="form.username"
         type="text"
@@ -91,7 +91,7 @@ const handleRegister = () => {
         :error="usernameError"
       />
 
-      <BaseInput
+      <AuthInput
         id="email"
         v-model="form.email"
         type="email"
@@ -101,7 +101,7 @@ const handleRegister = () => {
         :error="emailError"
       />
 
-      <BaseInput
+      <AuthInput
         id="password"
         v-model="form.password"
         type="password"
@@ -114,7 +114,7 @@ const handleRegister = () => {
         :error="passwordError"
       />
 
-      <BaseInput
+      <AuthInput
         id="confirmPassword"
         v-model="form.confirmPassword"
         type="password"
@@ -139,10 +139,7 @@ const handleRegister = () => {
     <template #footer>
       <p class="text-xs text-gray-600">
         Already have an account?
-        <RouterLink
-          to="/login"
-          class="text-indigo-600 hover:text-indigo-800 font-semibold transition duration-200"
-        >
+        <RouterLink to="/login" class="text-primary-400 font-semibold hover:underline">
           Sign in
         </RouterLink>
       </p>

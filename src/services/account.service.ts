@@ -19,33 +19,30 @@ export const accountService = {
     return response.data
   },
 
-  getDetailAccount: async (accountId: string): Promise<AccountResponse> => {
-    const response = await api.get<AccountResponse>(`${API.ACCOUNTS}/${accountId}`)
+  getDetailAccount: async (id: string): Promise<AccountResponse> => {
+    const response = await api.get<AccountResponse>(`${API.ACCOUNTS}/${id}`)
     return response.data
   },
 
   setAccountBanStatus: async (
-    accountId: string,
+    id: string,
     data: SetAccountBanStatusRequest,
   ): Promise<ApiResponse> => {
-    const response = await api.patch<ApiResponse>(`${API.ACCOUNTS}/${accountId}/ban`, data)
+    const response = await api.patch<ApiResponse>(`${API.ACCOUNTS}/${id}/ban`, data)
     return response.data
   },
 
-  addAccountRole: async (accountId: string, roleId: number): Promise<ApiResponse> => {
-    const response = await api.post<ApiResponse>(`${API.ACCOUNTS}/${accountId}/roles/${roleId}`)
+  addAccountRole: async (id: string, roleId: number): Promise<ApiResponse> => {
+    const response = await api.post<ApiResponse>(`${API.ACCOUNTS}/${id}/roles/${roleId}`)
     return response.data
   },
 
   updateAccountRole: async (
-    accountId: string,
+    id: string,
     roleId: number,
     data: UpdateAccountRoleRequest,
   ): Promise<ApiResponse> => {
-    const response = await api.patch<ApiResponse>(
-      `${API.ACCOUNTS}/${accountId}/roles/${roleId}`,
-      data,
-    )
+    const response = await api.patch<ApiResponse>(`${API.ACCOUNTS}/${id}/roles/${roleId}`, data)
     return response.data
   },
 

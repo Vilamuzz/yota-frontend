@@ -17,7 +17,7 @@ export const useFosterChildrenTransactionCreate = () => {
     mutationFn: ({ slug, data }) =>
       fosterChildrenTransactionService.createFosterChildrenTransaction(slug, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['donationProgramTransactions'] })
+      queryClient.invalidateQueries({ queryKey: ['fosterChildrenTransactions'] })
     },
   })
 

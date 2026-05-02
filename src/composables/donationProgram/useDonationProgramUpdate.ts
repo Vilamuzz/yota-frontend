@@ -7,32 +7,32 @@ import type { ApiError, ApiResponse } from '@/types/response'
 export const useDonationProgramUpdate = () => {
   const queryClient = useQueryClient()
 
-  const updateDonationMutation = useMutation<
+  const updateMutation = useMutation<
     ApiResponse<DonationProgram>,
     ApiError,
-    { donationId: string; data: UpdateDonationProgramRequest }
+    { id: string; data: UpdateDonationProgramRequest }
   >({
-    mutationFn: ({ donationId, data }) => donationProgramService.updateDonationProgram(donationId, data),
+    mutationFn: ({ id, data }) => donationProgramService.updateDonationProgram(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
-      queryClient.invalidateQueries({ queryKey: ['donationDetail', variables.donationId] })
+      queryClient.invalidateQueries({ queryKey: ['donationDetail', variables.id] })
     },
   })
 
-  const deleteDonationMutation = useMutation<ApiResponse<void>, ApiError, string>({
-    mutationFn: (donationId) => donationProgramService.deleteDonationProgram(donationId),
+  const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => donationProgramService.deleteDonationProgram(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
     },
   })
 
   const validationErrors = computed(
-    () => updateDonationMutation.error.value?.response?.data?.validation ?? null,
+    () => updateMutation.error.value?.response?.data?.validation ?? null,
   )
 
   return {
-    updateDonationMutation,
-    deleteDonationMutation,
+    updateMutation,
+    deleteMutation,
     validationErrors,
   }
 }

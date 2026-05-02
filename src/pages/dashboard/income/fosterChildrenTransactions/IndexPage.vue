@@ -1,261 +1,302 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
-import { ArrowLeft, CirclePoundSterling } from 'lucide-vue-next'
+import BaseButton from '@/components/atoms/BaseButton.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
+import { Plus, Eye, Baby, ArrowLeft } from 'lucide-vue-next'
 import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
-import { useRouter, useRoute } from 'vue-router'
+import { formatCurrency, formatDate } from '@/utils/format'
 
 const route = useRoute()
 const router = useRouter()
 const childId = computed(() => route.params.id as string)
 
-const searchQuery = ref('')
-const selectedMethod = ref('all')
-const methods = ['all', 'Online', 'Offline']
-
-const clearFilters = () => {
-  selectedMethod.value = 'all'
-}
-
-const limit = ref(10)
-const limitOptions = [10, 25, 50, 100]
-const pageOffset = ref(0)
-const pagination = ref({
-  has_prev: false,
-  has_next: false,
+const queryParams = reactive({
+  search: '',
+  method: 'all',
+  status: 'all',
+  limit: 10,
+  page: 1,
 })
 
-const fosterChildrenTransaction = ref<FosterChildrenTransaction[]>([
+const searchInput = ref('')
+let searchTimeout: ReturnType<typeof setTimeout>
+watch(searchInput, (val) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    queryParams.search = val
+    queryParams.page = 1
+  }, 500)
+})
+
+const limitOptions = [10, 25, 50, 100]
+const methods = ['Online', 'Offline']
+const statuses = ['Menunggu Pembayaran', 'Berhasil', 'Gagal', 'Kedaluwarsa']
+
+const clearFilters = () => {
+  searchInput.value = ''
+  queryParams.search = ''
+  queryParams.method = 'all'
+  queryParams.status = 'all'
+  queryParams.page = 1
+}
+
+const handleCreate = () => {
+  router.push({ name: 'dashboard-foster-children-donations-create' })
+}
+
+const handleBack = () => {
+  router.push({ name: 'dashboard-foster-children-donations' })
+}
+
+const hasActiveFilters = computed(() => {
+  return queryParams.method !== 'all' || queryParams.status !== 'all'
+})
+
+// Mock data (replace with API call when ready)
+const fosterChildrenTransactions = ref<FosterChildrenTransaction[]>([
   {
     id: '1',
-    fosterChildrenId: 'child1',
-    orderId: 'order1',
+    fosterChildrenId: '1',
     donorName: 'Choi Youngjae',
     donorEmail: 'choi@example.com',
     grossAmount: 50000,
     isOnline: true,
+    orderId: 'ORD-123',
+    transactionId: 'TXN-456',
+    snapToken: 'ST-789',
     transactionStatus: 'Berhasil',
-    transactionId: 'txn1',
-    snapToken: 'snap1',
-    paidAt: '2024-01-01',
-    createdAt: '2024-01-01',
+    paidAt: '2024-01-01T10:00:00Z',
+    createdAt: '2024-01-01T10:00:00Z',
   },
   {
     id: '2',
-    fosterChildrenId: 'child2',
-    orderId: 'order2',
-    donorName: 'Jung Woojin',
-    donorEmail: 'jung@example.com',
-    grossAmount: 75000,
+    fosterChildrenId: '1',
+    donorName: 'Ahmad Subarjo',
+    donorEmail: 'ahmad@example.com',
+    grossAmount: 150000,
     isOnline: false,
+    orderId: 'ORD-987',
+    transactionId: 'TXN-654',
+    snapToken: '',
     transactionStatus: 'Menunggu Pembayaran',
-    transactionId: 'txn2',
-    snapToken: 'snap2',
-    paidAt: null,
-    createdAt: '2024-01-02',
-  },
-  {
-    id: '3',
-    fosterChildrenId: 'child1',
-    orderId: 'order2',
-    donorName: 'Jang Juwang',
-    donorEmail: 'jang@example.com',
-    grossAmount: 100000,
-    isOnline: true,
-    transactionStatus: 'Berhasil',
-    transactionId: 'txn2',
-    snapToken: 'snap2',
-    paidAt: null,
-    createdAt: '2024-01-02',
+    paidAt: '',
+    createdAt: '2024-01-15T14:30:00Z',
   },
 ])
 
-const filteredFosterChildrenTransaction = computed((): FosterChildrenTransaction[] => {
-  return fosterChildrenTransaction.value.filter((donation) => {
-    const matchesChild = donation.fosterChildrenId === childId.value
-
-    const matchesSearch = donation.donorName
-      .toLowerCase()
-      .includes(searchQuery.value.toLowerCase())
-
+const filteredTransactions = computed((): FosterChildrenTransaction[] => {
+  return fosterChildrenTransactions.value.filter((donation: FosterChildrenTransaction) => {
+    const matchesSearch = donation.donorName.toLowerCase().includes(queryParams.search.toLowerCase())
     const method = donation.isOnline ? 'Online' : 'Offline'
-    const matchesMethod =
-      selectedMethod.value === 'all' || method === selectedMethod.value
+    const matchesMethod = queryParams.method === 'all' || method === queryParams.method
+    const matchesStatus =
+      queryParams.status === 'all' || donation.transactionStatus === queryParams.status
 
-    return matchesChild && matchesSearch && matchesMethod
+    return matchesSearch && matchesMethod && matchesStatus
   })
 })
 
-const paginatedFostedChildrenTransaction = computed((): FosterChildrenTransaction[] => {
-  const start = pageOffset.value * limit.value
-  return filteredFosterChildrenTransaction.value.slice(start, start + limit.value)
+const pageOffset = computed(() => queryParams.page - 1)
+
+const paginatedTransactions = computed((): FosterChildrenTransaction[] => {
+  const start = pageOffset.value * queryParams.limit
+  return filteredTransactions.value.slice(start, start + queryParams.limit)
 })
 
-
-watch([pageOffset, limit, filteredFosterChildrenTransaction], () => {
-  pagination.value.has_prev = pageOffset.value > 0
-  pagination.value.has_next = (pageOffset.value + 1) * limit.value < filteredFosterChildrenTransaction.value.length
-}, { immediate: true })
-
-watch(limit, () => {
-  pageOffset.value = 0
-
-  pagination.value.has_prev = false
-  pagination.value.has_next = limit.value < filteredFosterChildrenTransaction.value.length
+watch([() => queryParams.limit], () => {
+  queryParams.page = 1
 })
-
-watch(
-  [searchQuery, selectedMethod ],
-  () =>
-    pageOffset.value = 0
-)
 
 const handlePrevPage = () => {
-  if (pagination.value.has_prev) {
-    pageOffset.value -= 1
+  if (queryParams.page > 1) {
+    queryParams.page--
   }
 }
 
 const handleNextPage = () => {
-  if (pagination.value.has_next) {
-    pageOffset.value += 1
+  if (queryParams.page * queryParams.limit < filteredTransactions.value.length) {
+    queryParams.page++
   }
 }
 
-const handleCancel = () => {
-  router.push({ name: 'dashboard-foster-children-transaction' })
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'Berhasil':
+      return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+    case 'Menunggu Pembayaran':
+      return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
+    case 'Gagal':
+      return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+    case 'Kedaluwarsa':
+      return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700'
+    default:
+      return 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
+  }
 }
-
 </script>
 
 <template>
   <DashboardLayout>
-    <div class ="max-w-full mx-auto space-y-6">
-      <div class="flex items-center gap-4">
-        <button
-          @click="handleCancel"
-          class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-150 text-gray-500 hover:text-gray-700"
-          title="Kembali ke anak asuh"
-        >
-          <ArrowLeft :size="20" />
-        </button>
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-primary-50 rounded-lg">
-            <CirclePoundSterling :size="24" class="text-primary-400" />
+    <div class="space-y-6">
+      <!-- Header Section -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <button
+            @click="handleBack"
+            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            title="Kembali ke list anak asuh"
+          >
+            <ArrowLeft :size="20" />
+          </button>
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+              <Baby :size="24" class="text-primary-400 dark:text-primary-500" />
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white">Riwayat Donasi Anak Asuh</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Kelola dan pantau riwayat donasi anak asuh.</p>
+            </div>
           </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900">Detail Pemasukkan Anak Asuh</h2>
-          </div>
+        </div>
+        
+        <BaseButton variant="primary" @click="handleCreate">
+          <Plus :size="20" class="mr-1" />
+          Tambah Donasi
+        </BaseButton>
+      </div>
+
+      <!-- Filters & Search -->
+      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <BaseSearch v-model="searchInput" placeholder="Cari nama donatur..." class="w-full sm:max-w-xs" />
+        
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <BaseFilter :has-active-filters="hasActiveFilters">
+            <template #default="{ closeDropdown }">
+              <div class="space-y-4 w-64">
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                    Metode Donasi
+                  </label>
+                  <select
+                    v-model="queryParams.method"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="all">Semua Metode</option>
+                    <option v-for="method in methods" :key="method" :value="method">
+                      {{ method }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                    Status
+                  </label>
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="all">Semua Status</option>
+                    <option v-for="status in statuses" :key="status" :value="status">
+                      {{ status }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                  >
+                    RESET
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+                  >
+                    APPLY
+                  </button>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
         </div>
       </div>
 
-      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="p-6 space-y-5">
-          <div class="space-y-6">
-            <div class="">
-              <div class="flex flex-col md:flex-col gap-4">
-                <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-                  <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                    <BaseSearch v-model="searchQuery" placeholder="Cari pemasukkan..." />
-                    <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                      <BaseFilter
-                        :has-active-filters="selectedMethod !== 'all'"
-                      >
-                        <template #default="{ closeDropdown }">
-                        <div class="space-y-4">
-                          <div>
-                            <label class="block text-xs text-gray-700 mb-2">Metode Donasi</label>
-                            <select
-                              v-model="selectedMethod"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            >
-                              <option v-for="method in methods" :key="method" :value="method">
-                                {{ method.charAt(0).toUpperCase() + method.slice(1) }}
-                              </option>
-                            </select>
-                          </div>
+      <!-- Table Content -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-all duration-300">
+        <BaseTable
+          :loading="false"
+          loading-message="Memuat data riwayat donasi anak asuh..."
+          :is-empty="filteredTransactions.length === 0"
+          empty-message="Tidak ada riwayat donasi anak asuh yang ditemukan."
+          :has-prev="queryParams.page > 1"
+          :has-next="queryParams.page * queryParams.limit < filteredTransactions.length"
+          v-model:limit="queryParams.limit"
+          :limit-options="limitOptions"
+          @prev="handlePrevPage"
+          @next="handleNextPage"
+        >
+          <template #empty-icon>
+            <Baby :size="64" class="text-gray-300 dark:text-gray-600 mb-2" />
+          </template>
 
-                          <div class="flex gap-2 pt-2">
-                            <button
-                              @click="clearFilters"
-                              class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
-                            >
-                              Clear
-                            </button>
-                            <button
-                              @click="closeDropdown"
-                              class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150"
-                            >
-                              Apply
-                            </button>
-                          </div>
-                        </div>
-                      </template>
-                      </BaseFilter>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <template #headers>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">No</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Nama Donatur</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Nominal Donasi</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Metode Donasi</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Tanggal Donasi</th>
+            <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Status</th>
+            <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Aksi</th>
+          </template>
 
-          <BaseTable
-            class="mt-6"
-            :loading="false"
-            loading-message="Memuat data riwayat donasi anak asuh..."
-            :is-empty="filteredFosterChildrenTransaction.length === 0"
-            empty-message="Tidak ada riwayat donasi anak asuh yang ditemukan."
-            :has-prev="pagination?.has_prev"
-            :has-next="pagination?.has_next"
-            v-model.limit="limit"
-            :limit-options="limitOptions"
-            @prev="handlePrevPage"
-            @next="handleNextPage"
-          >
-            <template #empty-icon>
-              <CirclePoundSterling :size="64" class="text-gray-400" />
-            </template>
-
-            <template #headers>
-              <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">No</th>
-              <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Nama Donatur</th>
-              <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Metode Donasi</th>
-              <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Nominal Donasi</th>
-              <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Tanggal Donasi</th>
-            </template>
-
-            <template #rows>
-              <tr
-                v-for="(fosterChildrenTransaction, index) in paginatedFostedChildrenTransaction"
-                :key="fosterChildrenTransaction.id"
-                class="bg-white hover:bg-gray-50 transition-colors duration-150"
-              >
-                <td class="px-6 py-4 whitespace-nowrap font-poppins">
-                  {{ pageOffset * limit + index + 1 }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap font-poppins max-w-50 truncate">
-                  {{ fosterChildrenTransaction.donorName }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap font-poppins">
-                  {{ fosterChildrenTransaction.isOnline ? 'Online' : 'Offline' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap font-poppins">
-                  Rp {{ fosterChildrenTransaction.grossAmount.toLocaleString('id-ID') }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap font-poppins">
-                  {{ new Date(fosterChildrenTransaction.createdAt).toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  }) }}
-                </td>
-              </tr>
-            </template>
-          </BaseTable>
-        </div>
+          <template #rows>
+            <tr
+              v-for="(transaction, index) in paginatedTransactions"
+              :key="transaction.id"
+              class="group hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-0"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                {{ pageOffset * queryParams.limit + index + 1 }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white max-w-xs truncate">
+                {{ transaction.donorName }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600 dark:text-gray-300">
+                {{ formatCurrency(transaction.grossAmount) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                {{ transaction.isOnline ? 'Online' : 'Offline' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                {{ formatDate(transaction.createdAt) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <span
+                  :class="[
+                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all duration-300',
+                    getStatusColor(transaction.transactionStatus),
+                  ]"
+                >
+                  {{ transaction.transactionStatus }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <button
+                  class="p-2 inline-flex items-center text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all"
+                  title="Lihat Detail"
+                >
+                  <Eye :size="18" />
+                </button>
+              </td>
+            </tr>
+          </template>
+        </BaseTable>
       </div>
     </div>
   </DashboardLayout>

@@ -2,7 +2,7 @@ import { API } from '@/const/api'
 import type {
   CreateDonationProgramRequest,
   DonationProgramListResponse,
-  DonationProgramDetailResponse,
+  DonationProgramResponse,
   DonationProgramQueryParams,
   UpdateDonationProgramRequest,
 } from '@/types/donationProgram'
@@ -20,8 +20,8 @@ export const donationProgramService = {
 
   getPublishedDonationProgramDetail: async (
     donationProgramSlug: string,
-  ): Promise<DonationProgramDetailResponse> => {
-    const response = await api.get<DonationProgramDetailResponse>(
+  ): Promise<DonationProgramResponse> => {
+    const response = await api.get<DonationProgramResponse>(
       `${API.DONATION_PROGRAMS}/${donationProgramSlug}`,
     )
     return response.data
@@ -36,10 +36,8 @@ export const donationProgramService = {
     return response.data
   },
 
-  getDonationProgramDetail: async (donationId: string): Promise<DonationProgramDetailResponse> => {
-    const response = await api.get<DonationProgramDetailResponse>(
-      `${API.DONATION_PROGRAMS_ADMIN}/${donationId}`,
-    )
+  getDonationProgramDetail: async (id: string): Promise<DonationProgramResponse> => {
+    const response = await api.get<DonationProgramResponse>(`${API.DONATION_PROGRAMS_ADMIN}/${id}`)
     return response.data
   },
 
@@ -50,15 +48,15 @@ export const donationProgramService = {
     return response.data
   },
 
-  updateDonationProgram: async (donationId: string, data: UpdateDonationProgramRequest) => {
-    const response = await api.put(`${API.DONATION_PROGRAMS_ADMIN}/${donationId}`, data, {
+  updateDonationProgram: async (id: string, data: UpdateDonationProgramRequest) => {
+    const response = await api.put(`${API.DONATION_PROGRAMS_ADMIN}/${id}`, data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data
   },
 
-  deleteDonationProgram: async (donationId: string) => {
-    const response = await api.delete(`${API.DONATION_PROGRAMS_ADMIN}/${donationId}`)
+  deleteDonationProgram: async (id: string) => {
+    const response = await api.delete(`${API.DONATION_PROGRAMS_ADMIN}/${id}`)
     return response.data
   },
 }

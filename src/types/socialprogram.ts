@@ -9,6 +9,8 @@ export interface SocialProgram {
   status: string
   minimumAmount: number
   billingDay: number
+  totalSubscribers: number
+  createdAt: string
 }
 
 export interface SocialProgramList {
@@ -20,7 +22,7 @@ export interface SocialProgramDetail {
   socialProgram: SocialProgram
 }
 
-export interface SocialProgramParams extends PaginationParams {
+export interface SocialProgramQueryParams extends PaginationParams {
   status?: string
 }
 

@@ -4,13 +4,18 @@ import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Eye, HandHeart } from 'lucide-vue-next'
 
-import { useDonationProgramList } from '@/composables/donationProgram/useDonationProgramList'
+import { useDonationProgramList } from '@/composables/donationProgram/useDonationProgramAdminList'
 import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import type { DonationProgram, DonationProgramCategoryEnum, DonationProgramQueryParams, DonationProgramStatusEnum } from '@/types/donationProgram'
+import type {
+  DonationProgram,
+  DonationProgramCategoryEnum,
+  DonationProgramQueryParams,
+  DonationProgramStatusEnum,
+} from '@/types/donationProgram'
 
 const router = useRouter()
 
@@ -74,7 +79,9 @@ const queryClient = useQueryClient()
 
 // Fetch donations via composable
 const { donationListQuery } = useDonationProgramList(queryParams)
-const donations = computed<DonationProgram[]>(() => donationListQuery.data.value?.data?.donationPrograms || [])
+const donations = computed<DonationProgram[]>(
+  () => donationListQuery.data.value?.data?.donationPrograms || [],
+)
 const pagination = computed(() => donationListQuery.data.value?.data?.pagination)
 
 const handleNextPage = () => {

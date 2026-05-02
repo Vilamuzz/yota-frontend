@@ -11,30 +11,25 @@ export const useFosterChildrenTransactionList = (
   id: MaybeRefOrGetter<string>,
   params: MaybeRefOrGetter<FosterChildrenTransactionQueryParams>,
 ) => {
-  const fosterChildrenTransactionListQuery = useQuery<
+  const listQuery = useQuery<
     FosterChildrenTransactionListResponse,
     ApiError
   >({
     queryKey: ['fosterChildrenTransactions', id, params],
     queryFn: () =>
-      fosterChildrenTransactionService.getFosterChildrenTransactions(
-        toValue(id),
-        toValue(params),
-      ),
+      fosterChildrenTransactionService.getFosterChildrenTransactions(toValue(id), toValue(params)),
     retry: 1,
   })
 
   const fosterChildrenTransactions = computed(
-    () => fosterChildrenTransactionListQuery.data.value?.data?.transactions || [],
+    () => listQuery.data.value?.data?.transactions || [],
   )
-  const pagination = computed(
-    () => fosterChildrenTransactionListQuery.data.value?.data?.pagination,
-  )
+  const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {
-    fosterChildrenTransactionListQuery,
+    listQuery,
     fosterChildrenTransactions,
     pagination,
-    isLoading: fosterChildrenTransactionListQuery.isPending,
+    isLoading: listQuery.isPending,
   }
 }

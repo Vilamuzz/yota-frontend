@@ -52,6 +52,24 @@ export const publicationManagerRoutes: RouteRecordRaw[] = [
           },
         ],
       },
+
+      {
+        path: 'moderation',
+        children: [
+          {
+            path: 'prayers',
+            name: 'dashboard-moderation-prayers',
+            component: () => import('@/pages/dashboard/moderation/prayers/IndexPage.vue'),
+            meta: { title: 'Moderasi Doa' },
+          },
+          {
+            path: 'comments',
+            name: 'dashboard-moderation-comments',
+            component: () => import('@/pages/dashboard/moderation/newsComments/IndexPage.vue'),
+            meta: { title: 'Moderasi Komentar' },
+          },
+        ],
+      },
     ],
   },
 ]

@@ -1,34 +1,29 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fosterChildrenExpenseService } from '@/services/fosterChildrenExpense.service'
-import type {
-  FosterChildrenExpenseListResponse,
-} from '@/types/fosterChildrenExpense'
+import type { FosterChildrenExpenseListResponse } from '@/types/fosterChildrenExpense'
 import type { ApiError, PaginationParams } from '@/types/response'
 
 export const useFosterChildrenExpenseList = (
   id: MaybeRefOrGetter<string>,
   params: MaybeRefOrGetter<PaginationParams>,
 ) => {
-  const fosterChildrenExpenseListQuery = useQuery<FosterChildrenExpenseListResponse, ApiError>({
+  const listQuery = useQuery<FosterChildrenExpenseListResponse, ApiError>({
     queryKey: ['fosterChildrenExpenses', id, params],
     queryFn: () =>
-      fosterChildrenExpenseService.getFosterChildrenExpenses(
-        toValue(id),
-        toValue(params),
-      ),
+      fosterChildrenExpenseService.getFosterChildrenExpenses(toValue(id), toValue(params)),
     retry: 1,
   })
 
   const fosterChildrenExpenses = computed(
-    () => fosterChildrenExpenseListQuery.data.value?.data?.expenses || [],
+    () => listQuery.data.value?.data?.expenses || [],
   )
-  const pagination = computed(() => fosterChildrenExpenseListQuery.data.value?.data?.pagination)
+  const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {
-    fosterChildrenExpenseListQuery,
+    listQuery,
     fosterChildrenExpenses,
     pagination,
-    isLoading: fosterChildrenExpenseListQuery.isPending,
+    isLoading: listQuery.isPending,
   }
 }

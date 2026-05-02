@@ -1,12 +1,9 @@
 import { z } from 'zod'
 
 export const createFosterChildrenTransactionSchema = z.object({
-  grossAmount: z.number().min(1000, 'Minimum amount is 1000 IDR'),
+  grossAmount: z.coerce.number().min(1000, 'Minimal donasi adalah Rp 1.000'),
   donorName: z.string().optional(),
-  donationDate: z.string().min(1, 'Donation date is required'),
-  donorEmail: z.string().email('Please enter a valid email').optional().or(z.literal('')),
+  donorEmail: z.string().email('Format email tidak valid').optional().or(z.literal('')),
 })
 
-export type CreateFosterChildrenTransactionSchema = z.infer<
-  typeof createFosterChildrenTransactionSchema
->
+export type CreateFosterChildrenTransactionFormData = z.infer<typeof createFosterChildrenTransactionSchema>

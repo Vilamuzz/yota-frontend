@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useResendVerification } from '@/composables/auth/useResendVerification'
 import { useToast } from '@/composables/ui/useToast'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
+import AuthInput from '@/components/atoms/AuthInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { Mail, ArrowLeft, Send } from 'lucide-vue-next'
 import { forgetPasswordSchema } from '@/schemas/auth.schema'
@@ -74,7 +74,7 @@ const handleResend = () => {
     </div>
 
     <form @submit.prevent="handleResend" class="space-y-6">
-      <BaseInput
+      <AuthInput
         id="email"
         v-model="form.email"
         type="email"
@@ -86,7 +86,7 @@ const handleResend = () => {
         <template #prefix>
           <Mail class="w-4 h-4 text-gray-400" />
         </template>
-      </BaseInput>
+      </AuthInput>
 
       <BaseButton
         type="submit"
@@ -115,7 +115,7 @@ const handleResend = () => {
     <template #footer>
       <p class="text-xs text-gray-500">
         Already verified?
-        <RouterLink to="/login" class="text-primary-300 font-semibold hover:underline">
+        <RouterLink to="/login" class="text-primary-400 font-semibold hover:underline">
           Sign in
         </RouterLink>
       </p>

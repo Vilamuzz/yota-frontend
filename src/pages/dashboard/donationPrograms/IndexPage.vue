@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import {
   type DonationProgram,
@@ -15,6 +15,7 @@ import {
   DonationProgramStatusEnum,
 } from '@/types/donationProgram'
 import { formatCurrency, formatDate } from '@/utils/format'
+import { getStatusColor } from '@/utils/status'
 
 const {
   queryParams,
@@ -31,21 +32,6 @@ const {
 } = useDonationProgramFilters()
 
 const queryClient = useQueryClient()
-
-function getStatusColor(status: string) {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'bg-green-100 text-green-700 border-green-200'
-    case 'completed':
-      return 'bg-blue-100 text-blue-700 border-blue-200'
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-    case 'closed':
-      return 'bg-red-100 text-red-700 border-red-200'
-    default:
-      return 'bg-gray-100 text-gray-700 border-gray-200'
-  }
-}
 
 // Delete confirmation modal
 const confirmShow = ref(false)
@@ -140,8 +126,8 @@ const statuses = Object.values(DonationProgramStatusEnum)
         :has-next="!!pagination?.nextCursor"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage"
-        @next="handleNextPage"
+        @prev="handlePrevPage(pagination)"
+        @next="handleNextPage(pagination)"
       >
         <template #empty-icon>
           <HandHeart :size="96" class="mx-auto mb-2" />

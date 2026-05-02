@@ -1,67 +1,86 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Eye, Baby } from 'lucide-vue-next'
+import { ref, computed, reactive, watch } from 'vue'
+import { Eye, Baby, FilterX } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
-import { Category, Gender, type FosterChildrenCandidate } from '@/types/fosterChildren'
-import router from '@/router'
+import BaseTable from '@/components/organisms/BaseTable.vue'
+import type { FosterChildrenCandidate } from '@/types/fosterChildrenCandidate'
+import { useRouter } from 'vue-router'
+import { Category, Gender } from '@/types/fosterChildren'
 import { ROLES } from '@/const/roles'
 
-const searchQuery = ref('')
-const selectedGender = ref('all')
-const selectedCategory = ref('all')
-const selectedStatus = ref('all')
+const router = useRouter()
 
+// Unified query parameters
+const queryParams = reactive({
+  search: '',
+  gender: undefined as Gender | undefined,
+  category: undefined as Category | undefined,
+  status: 'all',
+  limit: 10,
+  page: 1,
+})
+
+// Search debounce logic
+const searchInput = ref('')
+let searchTimeout: ReturnType<typeof setTimeout>
+watch(searchInput, (val) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    queryParams.search = val
+    queryParams.page = 1
+  }, 500)
+})
 
 const clearFilters = () => {
-  searchQuery.value = ''
-  selectedGender.value = 'all'
-  selectedCategory.value = 'all'
-  selectedStatus.value = 'all'
+  searchInput.value = ''
+  queryParams.search = ''
+  queryParams.gender = undefined
+  queryParams.category = undefined
+  queryParams.status = 'all'
+  queryParams.page = 1
 }
 
-const genders = ['all', 'laki-laki', 'perempuan']
-const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
+const genders = Object.values(Gender)
+const categories = Object.values(Category)
 
-const path = window.location.pathname.toLowerCase()
-
-const role = ref(
-  path.includes('chairman')
-    ? ROLES.CHAIRMAN
-    : ROLES.SOCIAL_MANAGER
-)
+const rawRole = localStorage.getItem('role')
+const role = ref(rawRole ? rawRole.toLowerCase() : 'social_manager')
+if (window.location.pathname.toLowerCase().includes('chairman')) {
+  role.value = 'chairman'
+}
 
 const statusByRole: Record<string, string[]> = {
   [ROLES.CHAIRMAN]: ['Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
   [ROLES.SOCIAL_MANAGER]: ['Diajukan', 'Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
 }
+
 const statuses = computed(() => {
   return ['all', ...(statusByRole[role.value] ?? [])]
 })
 
-const limit = ref(10)
-const pageOffset = ref(0)
-const pagination = ref({
-  has_prev: false,
-  has_next: false,
-})
+const pageOffset = computed(() => queryParams.page - 1)
 
-const handleNextPage = () => {}
-const handlePrevPage = () => {}
+const handleNextPage = () => {
+  queryParams.page++
+}
+const handlePrevPage = () => {
+  if (queryParams.page > 1) queryParams.page--
+}
 
+// Mock data (replace with API call when ready)
 const children = ref<FosterChildrenCandidate[]>([
   {
     id: '1',
-    slug: 'faris-ahad',
     name: 'Faris Ahad',
-    profilePicture: 'https://i.pravatar.cc/150?img=1',
+    slug: 'faris-ahad',
     gender: Gender.male,
     category: Category.yatim,
-    address: 'Jl. Melati No. 12 Bandung',
     birthPlace: 'Bandung',
     birthDate: '2014-05-10',
+    address: 'Jl. Melati No. 12 Bandung',
+    profilePicture: 'https://i.pravatar.cc/150?img=1',
     isGraduated: false,
     familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
@@ -72,73 +91,31 @@ const children = ref<FosterChildrenCandidate[]>([
     submittedBy: '',
     status: 'Diajukan',
     rejectionReason: '',
-    createdAt: '2024-01-01'
+    createdAt: '2024-01-01',
+    achievements: [],
   },
   {
     id: '2',
-    submitterName: 'Jung Woojin',
-    submitterPhone: '081234567891',
-    submitterAddress: 'Jl Mawar No. 7 Garut',
-    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    name: 'Tia Mutiara',
-    slug: 'tia-mutiara',
+    name: 'Sarah Amira',
+    slug: 'sarah-amira',
     gender: Gender.female,
     category: Category.piatu,
-    birthPlace: 'Garut',
-    birthDate: '2015-02-15',
-    address: 'Jl. Mawar No. 5 Garut',
+    birthPlace: 'Jakarta',
+    birthDate: '2015-08-15',
+    address: 'Jl. Mawar No. 4 Jakarta',
+    profilePicture: 'https://i.pravatar.cc/150?img=5',
     isGraduated: false,
-    profilePicture: 'https://i.pravatar.cc/150?img=2',
-    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    familyCard: '',
+    sktm: '',
+    achievements: [],
+    submittedBy: '',
+    submitterName: 'Jung Woojin',
+    submitterIdCard: '',
+    submitterAddress: '',
+    submitterPhone: '',
     status: 'Menunggu Verifikasi',
     rejectionReason: '',
-    submittedBy: '',
-    createdAt: '2024-01-02',
-  },
-  {
-    id: '3',
-    submitterName: 'Jang Juwang',
-    submitterPhone: '081234567892',
-    submitterAddress: 'Jl. Kenanga No. 8 Tasikmalaya',
-    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    name: 'Ahmad Rizki',
-    slug: 'ahmad-rizki',
-    gender: Gender.male,
-    category: Category.yatimPiatu,
-    birthPlace: 'Tasikmalaya',
-    birthDate: '2013-08-20',
-    isGraduated: false,
-    address: 'Jl. Anggrek No. 9 Tasikmalaya',
-    profilePicture: 'https://i.pravatar.cc/150?img=4',
-    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    submittedBy: '',
-    rejectionReason: '',
-    status: 'Disetujui',
-    createdAt: '2024-01-03',
-  },
-  {
-    id: '4',
-    submitterName: 'Park Sungho',
-    submitterPhone: '081234567893',
-    submitterAddress: 'Jl. Dahlia No.8 Cimahi',
-    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    name: 'Laila Salsabila',
-    slug: 'laila-salsabila',
-    gender: Gender.female,
-    category: Category.yatimPiatu,
-    birthPlace: 'Cimahi',
-    birthDate: '2016-11-30',
-    address: 'Jl. Dahlia No. 3 Cimahi',
-    profilePicture: 'https://i.pravatar.cc/150?img=5',
-    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    isGraduated: false,
-    submittedBy:'',
-    rejectionReason: '',
-    status: 'Ditolak',
-    createdAt: '2024-01-04',
+    createdAt: '2024-01-15',
   },
 ])
 
@@ -147,18 +124,18 @@ const filteredChildren = computed(() => {
   if (role.value === ROLES.CHAIRMAN) {
     data = data.filter((child) => child.status !== 'Diajukan')
   }
-  if (selectedStatus.value !== 'all') {
-    data = data.filter((child) => child.status === selectedStatus.value)
+  if (queryParams.status !== 'all') {
+    data = data.filter((child) => child.status === queryParams.status)
   }
-  if (selectedGender.value !== 'all') {
-    data = data.filter((child) => child.gender === selectedGender.value)
+  if (queryParams.gender) {
+    data = data.filter((child) => child.gender === queryParams.gender)
   }
-  if (selectedCategory.value !== 'all') {
-    data = data.filter((child) => child.category === selectedCategory.value)
+  if (queryParams.category) {
+    data = data.filter((child) => child.category === queryParams.category)
   }
-  if (searchQuery.value) {
+  if (queryParams.search) {
     data = data.filter((child) =>
-      child.name.toLowerCase().includes(searchQuery.value.toLowerCase()),
+      child.name.toLowerCase().includes(queryParams.search.toLowerCase()),
     )
   }
 
@@ -168,13 +145,13 @@ const filteredChildren = computed(() => {
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Disetujui':
-      return 'bg-green-100 text-green-800'
+      return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
     case 'Menunggu Verifikasi':
-      return 'bg-purple-100 text-purple-800'
+      return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800'
     case 'Diajukan':
-      return 'bg-yellow-100 text-yellow-800'
+      return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
     default:
-      return 'bg-red-100 text-red-800'
+      return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
   }
 }
 
@@ -188,170 +165,229 @@ const formatDate = (dateString: string) => {
 }
 
 const handleView = (child: FosterChildrenCandidate) => {
-  if (role.value === ROLES.CHAIRMAN) {
-    router.push({
-      name: 'dashboard-chairman-foster-children-submissions-detail',
-      params: { id: child.id },
-    })
-  } else {
-    router.push({
-      name: 'dashboard-foster-children-submissions-detail',
-      params: { id: child.id },
-    })
-  }
+  const routeName =
+    role.value === 'chairman'
+      ? 'chairman-foster-children-submissions-detail'
+      : 'dashboard-foster-children-submissions-detail'
+
+  router.push({
+    name: routeName,
+    params: { id: child.id },
+  })
 }
 </script>
 
 <template>
   <DashboardLayout>
-    <template #title>Ajuan Anak Asuh</template>
-
     <div class="space-y-6">
-      <div class="">
-        <div class="flex flex-col md:flex-col gap-4">
-          <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-            <BaseSearch v-model="searchQuery" placeholder="Cari anak asuh..." />
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <BaseFilter
-                :has-active-filters="selectedGender !== 'all' || selectedCategory !== 'all'"
-              >
-                <template #default="{ closeDropdown }">
-                  <div class="space-y-4">
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Jenis Kelamin</label>
-                      <select
-                        v-model="selectedGender"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="gender in genders" :key="gender" :value="gender">
-                          {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Kategori</label>
-                      <select
-                        v-model="selectedCategory"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="category in categories" :key="category" :value="category">
-                          {{ category.charAt(0).toUpperCase() + category.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Status</label>
-                      <select
-                        v-model="selectedStatus"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="status in statuses" :key="status" :value="status">
-                          {{ status.charAt(0).toUpperCase() + status.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
-
-                    <div class="flex gap-2 pt-2">
-                      <button
-                        @click="clearFilters"
-                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
-                      >
-                        Clear
-                      </button>
-                      <button
-                        @click="closeDropdown"
-                        class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </div>
-                </template>
-              </BaseFilter>
-            </div>
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+            <Baby :size="24" class="text-primary-400 dark:text-primary-500" />
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Ajuan Anak Asuh</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Review dan verifikasi pengajuan anak asuh baru.
+            </p>
           </div>
         </div>
       </div>
-    </div>
 
-    <BaseTable
-      class="mt-6"
-      :loading="false"
-      loading.message="Memuat data ajuan anak asuh..."
-      :is-empty="filteredChildren.length === 0"
-      empty-message="Belum ada data ajuan anak asuh"
-      :has-prev="pagination?.has_prev"
-      :has-next="pagination?.has_next"
-      v-model.limit="limit"
-      @prev="handlePrevPage"
-      @next="handleNextPage"
-    >
-      <template #empty-icon>
-        <Baby :size="64" class="text-gray-400" />
-      </template>
+      <!-- Filters & Search -->
+      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <BaseSearch
+          v-model="searchInput"
+          placeholder="Cari nama anak..."
+          class="w-full sm:max-w-xs"
+        />
 
-      <template #headers>
-        <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">No</th>
-        <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">
-          Nama Anak Asuh
-        </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
-          Jenis Kelamin
-        </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
-          Kategori
-        </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
-          Tanggal Pengajuan
-        </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Status</th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Aksi</th>
-      </template>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <BaseFilter
+            :has-active-filters="
+              queryParams.gender !== undefined ||
+              queryParams.category !== undefined ||
+              queryParams.status !== 'all'
+            "
+          >
+            <template #default="{ closeDropdown }">
+              <div class="space-y-4 w-64">
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    >Jenis Kelamin</label
+                  >
+                  <select
+                    v-model="queryParams.gender"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Gender</option>
+                    <option v-for="gender in genders" :key="gender" :value="gender">
+                      {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
+                    </option>
+                  </select>
+                </div>
 
-      <template #rows>
-        <tr
-          v-for="(child, index) in filteredChildren"
-          :key="child.id"
-          class="bg-white hover:bg-gray-50 transition-colors duration-150"
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    >Kategori</label
+                  >
+                  <select
+                    v-model="queryParams.category"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Kategori</option>
+                    <option v-for="category in categories" :key="category" :value="category">
+                      {{ category.charAt(0).toUpperCase() + category.slice(1) }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    >Status</label
+                  >
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option v-for="status in statuses" :key="status" :value="status">
+                      {{ status }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                  >
+                    RESET
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+                  >
+                    APPLY
+                  </button>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
+        </div>
+      </div>
+
+      <!-- Table Content -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-all duration-300"
+      >
+        <BaseTable
+          :loading="false"
+          :is-empty="filteredChildren.length === 0"
+          :has-prev="queryParams.page > 1"
+          :has-next="filteredChildren.length > queryParams.page * queryParams.limit"
+          v-model:limit="queryParams.limit"
+          @prev="handlePrevPage"
+          @next="handleNextPage"
         >
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ pageOffset * limit + index + 1 }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins max-w-50 truncate">
-            {{ child.name }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ child.gender }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ child.category }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ formatDate(child.createdAt) }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-center">
-            <span
-              :class="[
-                'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-poppins border',
-                getStatusColor(child.status),
-              ]"
+          <template #empty-icon>
+            <FilterX :size="48" class="text-gray-300 dark:text-gray-600" />
+          </template>
+          <template #empty-message>
+            Tidak ada data pengajuan yang ditemukan dengan filter tersebut.
+          </template>
+
+          <template #headers>
+            <th
+              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
             >
-              {{ child.status.charAt(0).toUpperCase() + child.status.slice(1) }}
-            </span>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-center relative">
-            <button
-              @click="handleView(child)"
-              class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
-              title="Lihat Detail"
+              No
+            </th>
+            <th
+              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
             >
-              <Eye :size="18" />
-            </button>
-          </td>
-        </tr>
-      </template>
-    </BaseTable>
+              Nama Anak
+            </th>
+            <th
+              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
+            >
+              Jenis Kelamin
+            </th>
+            <th
+              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
+            >
+              Kategori
+            </th>
+            <th
+              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
+            >
+              Tgl Pengajuan
+            </th>
+            <th
+              class="px-6 py-4 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
+            >
+              Status
+            </th>
+            <th
+              class="px-6 py-4 text-right text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
+            >
+              Aksi
+            </th>
+          </template>
+
+          <template #rows>
+            <tr
+              v-for="(child, index) in filteredChildren.slice((queryParams.page - 1) * queryParams.limit, queryParams.page * queryParams.limit)"
+              :key="child.id"
+              class="group hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-0"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                {{ pageOffset * queryParams.limit + index + 1 }}
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white"
+              >
+                {{ child.name }}
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 capitalize"
+              >
+                {{ child.gender }}
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 capitalize"
+              >
+                {{ child.category }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                {{ formatDate(child.createdAt) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <span
+                  :class="[
+                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all duration-300',
+                    getStatusColor(child.status),
+                  ]"
+                >
+                  {{ child.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <button
+                  @click="handleView(child)"
+                  class="p-2 text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all"
+                  title="Lihat Detail"
+                >
+                  <Eye :size="18" />
+                </button>
+              </td>
+            </tr>
+          </template>
+        </BaseTable>
+      </div>
+    </div>
   </DashboardLayout>
 </template>

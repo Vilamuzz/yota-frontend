@@ -13,4 +13,12 @@ export const API = {
   GALLERIES_ADMIN: '/api/admin/galleries',
   NEWS: '/api/news',
   NEWS_ADMIN: '/api/admin/news',
+  AMBULANCES: '/api/ambulances',
+  AMBULANCES_ADMIN: '/api/admin/ambulances',
+  AMBULANCE_SERVICES: '/api/ambulance-services',
+  AMBULANCE_SERVICES_ADMIN: '/api/admin/ambulance-services',
+  SOCIAL_PROGRAM_INVOICES: '/api/social-program-invoices',
+  SOCIAL_PROGRAM_INVOICES_ADMIN: '/api/admin/social-program-invoices',
+  SOCIAL_PROGRAM_SUBSCRIPTIONS: '/api/social-program-subscriptions',
+  SOCIAL_PROGRAM_SUBSCRIPTIONS_ADMIN: '/api/admin/social-program-subscriptions',
 }

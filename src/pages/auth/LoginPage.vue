@@ -2,7 +2,7 @@
 import { reactive, computed, watch, ref } from 'vue'
 import { useLogin } from '@/composables/auth/useLogin'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
+import AuthInput from '@/components/atoms/AuthInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useToast } from '@/composables/ui/useToast'
 import { loginSchema } from '@/schemas/auth.schema'
@@ -59,7 +59,7 @@ const handleGoogleLogin = () => {
     @google-login="handleGoogleLogin"
   >
     <form @submit.prevent="handleLogin" class="space-y-4">
-      <BaseInput
+      <AuthInput
         id="email"
         v-model="form.email"
         type="email"
@@ -69,7 +69,7 @@ const handleGoogleLogin = () => {
         :error="emailError"
       />
 
-      <BaseInput
+      <AuthInput
         id="password"
         v-model="form.password"
         type="password"
@@ -103,10 +103,7 @@ const handleGoogleLogin = () => {
     <template #footer>
       <p class="text-xs text-gray-600">
         Don't have an account?
-        <RouterLink
-          to="/register"
-          class="text-indigo-600 hover:text-indigo-800 font-semibold transition duration-200"
-        >
+        <RouterLink to="/register" class="text-primary-400 font-semibold hover:underline">
           Register now
         </RouterLink>
       </p>

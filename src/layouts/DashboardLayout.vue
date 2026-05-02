@@ -9,9 +9,12 @@ import { useRoleSwitch } from '@/composables/auth/useRoleSwitch'
 import { useAuthStore } from '@/stores/auth'
 import DashboardSidebar from '@/components/ui/DashboardSidebar.vue'
 import type { Role } from '@/types/auth'
+import { useToast } from '@/composables/ui/useToast'
+import { extractError } from '@/utils/error'
 
 const { isDark, toggleTheme } = useTheme()
 const authStore = useAuthStore()
+const { showToast } = useToast()
 const { user } = useCurrentUser()
 const { switchRole, isLoading: isSwitchingRole } = useRoleSwitch()
 const route = useRoute()
@@ -61,9 +64,18 @@ const userInitials = computed(() => {
 
 const userRole = computed(() => authStore.activeRole || 'User')
 
-const handleRoleSwitch = async (role: Role) => {
-  await switchRole(role)
-  showUserMenu.value = false
+const handleRoleSwitch = (role: Role) => {
+  switchRole(role, {
+    onSuccess: () => {
+      showToast('Role switched successfully!', 'success')
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Gagal mengubah role. Silakan coba lagi.'), 'error')
+    },
+    onSettled: () => {
+      showUserMenu.value = false
+    },
+  })
 }
 </script>
 
