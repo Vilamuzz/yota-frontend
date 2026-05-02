@@ -3,12 +3,12 @@ import {
   Newspaper,
   Users,
   CirclePoundSterling,
-  Baby, NotepadText,
+  Baby,
+  NotepadText,
   GalleryHorizontal,
   Ambulance,
-  MessageCircleHeart,
   HandHeart,
-  MessageCircleMore,
+  ShieldAlert,
 } from 'lucide-vue-next'
 import type { NavItem } from '@/types/navigation'
 import { ROLES } from './roles'
@@ -29,12 +29,6 @@ export const dashboardNavigation: NavItem[] = [
     icon: HandHeart,
     label: 'Program Donasi',
     route: '/dashboard/donation-programs',
-    roles: [ROLES.FINANCE],
-  },
-  {
-    icon: MessageCircleHeart,
-    label: 'Moderasi Doa',
-    route: '/dashboard/prayers',
     roles: [ROLES.FINANCE],
   },
   {
@@ -107,10 +101,19 @@ export const dashboardNavigation: NavItem[] = [
     route: '/dashboard/news',
   },
   {
-    icon: MessageCircleMore,
-    label: 'Moderasi Komentar',
+    icon: ShieldAlert,
+    label: 'Moderasi',
     roles: [ROLES.PUBLICATION_MANAGER],
-    route: '/dashboard/comments',
+    children: [
+      {
+        label: 'Komentar Berita',
+        route: '/dashboard/moderation/comments',
+      },
+      {
+        label: 'Doa',
+        route: '/dashboard/moderation/prayers',
+      },
+    ],
   },
   {
     icon: GalleryHorizontal,
@@ -137,15 +140,15 @@ export const dashboardNavigation: NavItem[] = [
     children: [
       {
         label: 'Data Program',
-        route: '/dashboard/social-program',
+        route: '/dashboard/social-programs',
       },
       {
         label: 'Riwayat Langganan',
-        route: '/dashboard/social-program/subscriptions',
+        route: '/dashboard/social-programs/subscriptions',
       },
       {
         label: 'Riwayat Pelanggan',
-        route: '/dashboard/social-program/customers',
+        route: '/dashboard/social-programs/customers',
       },
     ],
   },
@@ -153,6 +156,6 @@ export const dashboardNavigation: NavItem[] = [
     icon: NotepadText,
     label: 'Program Ketua',
     roles: [ROLES.CHAIRMAN],
-    route: '/dashboard/social-program',
+    route: '/dashboard/social-programs',
   },
 ]

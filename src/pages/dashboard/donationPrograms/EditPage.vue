@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Upload, X } from 'lucide-vue-next'
 import {
@@ -7,7 +7,7 @@ import {
   type DonationProgramCategoryEnum,
 } from '@/types/donationProgram'
 import { updateDonationSchema } from '@/schemas/donationProgram.schema'
-import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
+import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramAdminDetail'
 import { useDonationProgramUpdate } from '@/composables/donationProgram/useDonationProgramUpdate'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
@@ -24,15 +24,17 @@ const { donationDetailQuery } = useDonationProgramDetail(donationId)
 const { updateDonationMutation, validationErrors } = useDonationProgramUpdate()
 const { showToast } = useToast()
 
-// Form fields
-const title = ref('')
-const description = ref('')
-const category = ref('')
-const fundTarget = ref('')
-const startDate = ref('')
-const dateEnd = ref('')
-const imageFile = ref<File | null>(null)
-const imagePreview = ref<string | null>(null)
+// Form state
+const form = reactive({
+  title: '',
+  description: '',
+  category: '',
+  fundTarget: '',
+  startDate: '',
+  dateEnd: '',
+  imageFile: null as File | null,
+  imagePreview: null as string | null,
+})
 
 // Validation errors
 const fieldErrors = ref<Record<string, string>>({})
@@ -69,15 +71,15 @@ watch(
   (response) => {
     if (!response?.data) return
     const donation = response.data
-    title.value = donation.title ?? ''
-    description.value = donation.description ?? ''
-    category.value = donation.category ?? ''
-    fundTarget.value = donation.fundTarget ? String(donation.fundTarget) : ''
+    form.title = donation.title ?? ''
+    form.description = donation.description ?? ''
+    form.category = donation.category ?? ''
+    form.fundTarget = donation.fundTarget ? String(donation.fundTarget) : ''
     // Normalise date to YYYY-MM-DD for the date input
-    startDate.value = donation.startDate ? (donation.startDate.split('T')[0] ?? '') : ''
-    dateEnd.value = donation.endDate ? (donation.endDate.split('T')[0] ?? '') : ''
+    form.startDate = donation.startDate ? (donation.startDate.split('T')[0] ?? '') : ''
+    form.dateEnd = donation.endDate ? (donation.endDate.split('T')[0] ?? '') : ''
     // Show existing image as preview (URL, not a File)
-    if (donation.coverImage) imagePreview.value = donation.coverImage
+    if (donation.coverImage) form.imagePreview = donation.coverImage
   },
   { immediate: true },
 )
@@ -109,25 +111,25 @@ const handleImageChange = (event: Event) => {
   const newErrors = { ...fieldErrors.value }
   delete newErrors.image
   fieldErrors.value = newErrors
-  imageFile.value = file
-  imagePreview.value = URL.createObjectURL(file)
+  form.imageFile = file
+  form.imagePreview = URL.createObjectURL(file)
 }
 
 const removeImage = () => {
-  imageFile.value = null
-  imagePreview.value = null
+  form.imageFile = null
+  form.imagePreview = null
   if (coverImageInputRef.value) coverImageInputRef.value.value = ''
 }
 
 // Validation
 const validate = (): boolean => {
   const result = updateDonationSchema.safeParse({
-    title: title.value.trim(),
-    description: description.value.trim(),
-    category: category.value,
-    fund_target: Number(fundTarget.value),
-    date_start: startDate.value,
-    date_end: dateEnd.value,
+    title: form.title.trim(),
+    description: form.description.trim(),
+    category: form.category,
+    fund_target: Number(form.fundTarget),
+    date_start: form.startDate,
+    date_end: form.dateEnd,
   })
 
   const zodErrors = getZodErrors(result as Parameters<typeof getZodErrors>[0])
@@ -143,13 +145,13 @@ const handleSubmit = async (status: boolean) => {
     {
       donationId: donationId,
       data: {
-        title: title.value.trim(),
-        description: description.value.trim(),
-        category: category.value as DonationProgramCategoryEnum,
-        fundTarget: Number(fundTarget.value),
-        startDate: startDate.value,
-        endDate: dateEnd.value,
-        ...(imageFile.value ? { coverImage: imageFile.value } : {}),
+        title: form.title.trim(),
+        description: form.description.trim(),
+        category: form.category as DonationProgramCategoryEnum,
+        fundTarget: Number(form.fundTarget),
+        startDate: form.startDate,
+        endDate: form.dateEnd,
+        ...(form.imageFile ? { coverImage: form.imageFile } : {}),
         status: status ? DonationProgramStatusEnum.ACTIVE : DonationProgramStatusEnum.DRAFT,
       },
     },
@@ -171,7 +173,7 @@ const handleSaveDraft = () => handleSubmit(false)
 const todayStr = new Date().toISOString().split('T')[0]
 
 const formatCurrencyPreview = computed(() => {
-  const num = Number(fundTarget.value)
+  const num = Number(form.fundTarget)
   if (!num || isNaN(num)) return ''
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -218,10 +220,10 @@ const formatCurrencyPreview = computed(() => {
 
                 <!-- Preview area -->
                 <div
-                  v-if="imagePreview"
+                  v-if="form.imagePreview"
                   class="relative w-full h-52 rounded-lg overflow-hidden group border border-gray-200 dark:border-gray-700"
                 >
-                  <img :src="imagePreview" alt="Preview" class="w-full h-full object-cover" />
+                  <img :src="form.imagePreview" alt="Preview" class="w-full h-full object-cover" />
                   <div
                     class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center"
                   >
@@ -267,7 +269,7 @@ const formatCurrencyPreview = computed(() => {
               <!-- Title -->
               <BaseInput
                 id="title"
-                v-model="title"
+                v-model="form.title"
                 label="Title"
                 placeholder="e.g. Help Build a School in Lombok"
                 :error="titleError"
@@ -286,7 +288,7 @@ const formatCurrencyPreview = computed(() => {
                   </label>
                   <textarea
                     id="description"
-                    v-model="description"
+                    v-model="form.description"
                     rows="5"
                     placeholder="Describe the goal of this donation campaign…"
                     class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
@@ -311,7 +313,7 @@ const formatCurrencyPreview = computed(() => {
                     </label>
                     <select
                       id="category"
-                      v-model="category"
+                      v-model="form.category"
                       class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600"
                       :class="
                         categoryError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
@@ -331,7 +333,7 @@ const formatCurrencyPreview = computed(() => {
                   <div>
                     <BaseInput
                       id="fundTarget"
-                      v-model="fundTarget"
+                      v-model="form.fundTarget"
                       type="number"
                       label="Fund Target (IDR)"
                       placeholder="e.g. 50000000"
@@ -346,7 +348,7 @@ const formatCurrencyPreview = computed(() => {
                   <!-- Start Date -->
                   <BaseInput
                     id="startDate"
-                    v-model="startDate"
+                    v-model="form.startDate"
                     type="date"
                     label="Campaign Start Date"
                     :error="startDateError"
@@ -355,10 +357,10 @@ const formatCurrencyPreview = computed(() => {
                   <!-- End Date -->
                   <BaseInput
                     id="dateEnd"
-                    v-model="dateEnd"
+                    v-model="form.dateEnd"
                     type="date"
                     label="Campaign End Date"
-                    :min="startDate || todayStr"
+                    :min="form.startDate || todayStr"
                     :error="dateEndError"
                   />
                 </div>

@@ -1,32 +1,13 @@
 import { z } from 'zod'
-import { Category, Gender } from '@/types/fosterChildren'
 
-export const createChildSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  birthPlace: z.string().min(1, 'Birth place is required'),
-  birthDate: z.string().min(1, 'Birth date is required'),
-  address: z.string().min(1, 'Address is required'),
-  gender: z.nativeEnum(Gender, { errorMap: () => ({ message: 'Gender is required' }) }),
-  category: z.nativeEnum(Category, { errorMap: () => ({ message: 'Category is required' }) }),
-  isGraduated: z.boolean(),
-  profilePicture: z.instanceof(File, { message: 'Image file is required' }).optional(),
-  achievements: z.array(z.string()).optional(),
-  certificates: z.array(z.instanceof(File)).optional(),
+export const fosterChildrenSchema = z.object({
+  name: z.string().min(1, 'Nama wajib diisi'),
+  gender: z.string().min(1, 'Jenis kelamin wajib dipilih'),
+  category: z.string().min(1, 'Kategori wajib dipilih'),
+  address: z.string().min(1, 'Alamat wajib diisi'),
+  birthPlace: z.string().min(1, 'Tempat lahir wajib diisi'),
+  birthDate: z.string().min(1, 'Tanggal lahir wajib diisi'),
+  isGraduated: z.boolean().default(false),
 })
 
-export type CreateChildFormData = z.infer<typeof createChildSchema>
-
-export const updateChildSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  birthPlace: z.string().min(1, 'Birth place is required'),
-  birthDate: z.string().min(1, 'Birth date is required'),
-  address: z.string().min(1, 'Address is required'),
-  gender: z.nativeEnum(Gender, { errorMap: () => ({ message: 'Gender is required' }) }),
-  category: z.nativeEnum(Category, { errorMap: () => ({ message: 'Category is required' }) }),
-  isGraduated: z.boolean(),
-  profilePicture: z.instanceof(File).optional(),
-  achievements: z.array(z.string()).optional(),
-  certificates: z.array(z.instanceof(File)).optional(),
-})
-
-export type UpdateChildFormData = z.infer<typeof updateChildSchema>
+export type FosterChildrenFormData = z.infer<typeof fosterChildrenSchema>

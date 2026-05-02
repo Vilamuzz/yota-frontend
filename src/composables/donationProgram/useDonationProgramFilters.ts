@@ -1,6 +1,7 @@
 import { ref, reactive, computed, watch } from 'vue'
-import { useDonationProgramList } from './useDonationProgramList'
+import { useDonationProgramAdminList } from './useDonationProgramAdminList'
 import type { DonationProgramQueryParams } from '@/types/donationProgram'
+import { useCursorPagination } from '../ui/usePagination'
 
 export function useDonationProgramFilters() {
   const queryParams = reactive<DonationProgramQueryParams>({
@@ -29,32 +30,10 @@ export function useDonationProgramFilters() {
     () => resetPagination(),
   )
 
-  const pageOffset = ref(0)
-
-  function resetPagination() {
-    queryParams.nextCursor = undefined
-    queryParams.prevCursor = undefined
-    pageOffset.value = 0
-  }
-
-  // Fetch donations via composable
-  const { donationPrograms, pagination, isLoading, donationListQuery } = useDonationProgramList(queryParams)
-
-  function handleNextPage() {
-    if (pagination.value?.nextCursor) {
-      queryParams.nextCursor = pagination.value.nextCursor
-      queryParams.prevCursor = undefined
-      pageOffset.value += 1
-    }
-  }
-
-  function handlePrevPage() {
-    if (pagination.value?.prevCursor) {
-      queryParams.prevCursor = pagination.value.prevCursor
-      queryParams.nextCursor = undefined
-      pageOffset.value -= 1
-    }
-  }
+  const { donationPrograms, pagination, isLoading, listQuery } =
+    useDonationProgramAdminList(queryParams)
+  const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
+    useCursorPagination(queryParams)
 
   const hasActiveFilters = computed(
     () => queryParams.category !== undefined || queryParams.status !== undefined,
@@ -75,11 +54,11 @@ export function useDonationProgramFilters() {
     donationPrograms,
     pagination,
     isLoading,
-    donationListQuery,
+    listQuery,
     hasActiveFilters,
     handleNextPage,
     handlePrevPage,
     clearFilters,
-    resetPagination
+    resetPagination,
   }
 }

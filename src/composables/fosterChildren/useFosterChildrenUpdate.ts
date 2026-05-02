@@ -1,23 +1,40 @@
+import { computed } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fosterChildrenService } from '@/services/fosterChildren.service'
-import type { UpdateFosterChildrenRequest } from '@/types/fosterChildren'
-import type { ApiError } from '@/types/response'
-import { computed } from 'vue'
+import type { UpdateFosterChildrenRequest, FosterChildren } from '@/types/fosterChildren'
+import type { ApiError, ApiResponse } from '@/types/response'
 
 export const useFosterChildrenUpdate = () => {
   const queryClient = useQueryClient()
 
-  const updateFosterChildMutation = useMutation<any, ApiError, { childId: string; data: UpdateFosterChildrenRequest }>({
-    mutationFn: ({ childId, data }) => fosterChildrenService.updateFosterChildren(childId, data),
+  const updateMutation = useMutation<
+    ApiResponse<FosterChildren>,
+    ApiError,
+    { id: string; data: UpdateFosterChildrenRequest }
+  >({
+    mutationFn: ({ id, data }) => fosterChildrenService.updateFosterChildren(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
+      queryClient.invalidateQueries({
+        queryKey: ['fosterChildrenDetail', variables.id],
+      })
+    },
+  })
+
+  const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => fosterChildrenService.deleteFosterChildren(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
     },
   })
 
-  const updateError = computed(() => updateFosterChildMutation.error.value?.message)
+  const validationErrors = computed(
+    () => updateMutation.error.value?.response?.data?.validation ?? null,
+  )
 
   return {
-    updateFosterChildMutation,
-    updateError,
+    updateMutation,
+    deleteMutation,
+    validationErrors,
   }
 }

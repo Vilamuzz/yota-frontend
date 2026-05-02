@@ -6,7 +6,7 @@ import { Eye } from 'lucide-vue-next'
 
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 
 // ================== ROUTER ==================
 const router = useRouter()
@@ -45,7 +45,7 @@ const allData = ref([
 // ================== FILTER ==================
 const filteredData = computed(() => {
   return allData.value.filter((item) =>
-    item.name.toLowerCase().includes(debouncedSearchQuery.value.toLowerCase())
+    item.name.toLowerCase().includes(debouncedSearchQuery.value.toLowerCase()),
   )
 })
 
@@ -103,16 +103,13 @@ const clearFilters = () => {
     <template #title>
       <div>
         <h1 class="text-2xl font-semibold text-gray-800">Riwayat Pelanggan</h1>
-        <p class="text-sm text-gray-400 mt-1">
-          Manajemen Program > Riwayat Pelanggan
-        </p>
+        <p class="text-sm text-gray-400 mt-1">Manajemen Program > Riwayat Pelanggan</p>
       </div>
     </template>
 
     <!-- CONTAINER -->
     <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
       <div class="bg-white rounded-xl border border-gray-200 px-6 py-5">
-
         <!-- TOP BAR (SAMA PERSIS STYLE REFERENSI) -->
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-base font-semibold text-gray-700">
@@ -200,7 +197,6 @@ const clearFilters = () => {
             </template>
           </BaseTable>
         </div>
-
       </div>
     </div>
   </DashboardLayout>

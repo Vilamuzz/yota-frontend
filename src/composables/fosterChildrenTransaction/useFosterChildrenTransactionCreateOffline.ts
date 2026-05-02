@@ -1,23 +1,23 @@
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { donationProgramTransactionService } from '@/services/donationProgramTransaction.service'
+import { fosterChildrenTransactionService } from '@/services/fosterChildrenTransaction.service'
 import type {
-  CreateDonationProgramTransactionRequest,
-  DonationProgramTransactionResponse,
-} from '@/types/donationProgramTransaction'
+  CreateFosterChildrenTransactionRequest,
+  FosterChildrenTransactionResponse,
+} from '@/types/fosterChildrenTransaction'
 import type { ApiError } from '@/types/response'
 
-export const useDonationProgramTransactionCreateOffline = () => {
+export const useFosterChildrenTransactionCreateOffline = () => {
   const queryClient = useQueryClient()
 
   const createMutation = useMutation<
-    DonationProgramTransactionResponse,
+    FosterChildrenTransactionResponse,
     ApiError,
-    { id: string; data: CreateDonationProgramTransactionRequest }
+    { id: string; data: CreateFosterChildrenTransactionRequest }
   >({
     mutationFn: ({ id, data }) =>
-      donationProgramTransactionService.createOfflineDonationProgramTransaction(id, data),
+      fosterChildrenTransactionService.createOfflineFosterChildrenTransaction(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['donationProgramTransactions'] })
+      queryClient.invalidateQueries({ queryKey: ['fosterChildrenTransactions'] })
     },
   })
 

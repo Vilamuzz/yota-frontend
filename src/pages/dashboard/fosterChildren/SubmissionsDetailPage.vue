@@ -1,93 +1,45 @@
 <script setup lang="ts">
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { ArrowLeft, Eye, X, Baby } from 'lucide-vue-next'
+import { ArrowLeft, Eye, X, Baby, CheckCircle2 } from 'lucide-vue-next'
 import router from '@/router'
 import { ref, computed } from 'vue'
-import type { Submission } from '@/types/fosterChildrenCandidate'
+import type { FosterChildrenCandidate } from '@/types/fosterChildrenCandidate'
 import { useRoute } from 'vue-router'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import RejectConfirmationModal from '@/components/molecules/RejectConfirmationModal.vue'
+import { Category, Gender } from '@/types/fosterChildren'
 
 const route = useRoute()
-const childId = route.params.id as string
+const fosterChildrenCandidateId = route.params.id as string
 
-const child = computed(() => {
-  return children.value.find((c) => c.id === childId)
+const fosterChildrenCandidate = computed(() => {
+  return fosterChildrenCandidates.value.find((c) => c.id === fosterChildrenCandidateId)
 })
 
-const children = ref<Submission[]>([
+const fosterChildrenCandidates = ref<FosterChildrenCandidate[]>([
   {
     id: '1',
-    applicant_name: 'Choi Youngjae',
-    number_phone: '081234567890',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Faris Ahad',
-    gender: 'Laki-laki',
-    category: 'Yatim',
-    birthplace: 'Bandung',
-    birthdate: '2014-05-10',
+    name: 'Faris Ahad',
+    slug: 'faris-ahad',
+    gender: Gender.male,
+    category: Category.yatim,
+    birthPlace: 'Bandung',
+    birthDate: '10-05-2014',
     address: 'Jl. Melati No. 12 Bandung',
-    image_url: 'https://i.pravatar.cc/150?img=1',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
+    profilePicture: 'https://i.pravatar.cc/150?img=1',
+    isGraduated: false,
+    familyCard: '',
+    sktm: '',
+    achievements: [],
+    submittedBy: '',
+    submitterName: 'Ahmad Subarjo',
+    submitterIdCard: '',
+    submitterAddress: 'Jl. Melati No. 12 Bandung',
+    submitterPhone: '08123456789',
     status: 'Diajukan',
-    created_at: '2024-01-01',
-  },
-  {
-    id: '2',
-    applicant_name: 'Jung Woojin',
-    number_phone: '081234567891',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Tia Mutiara',
-    gender: 'Perempuan',
-    category: 'Piatu',
-    birthplace: 'Garut',
-    birthdate: '2015-02-15',
-    address: 'Jl. Mawar No. 5 Garut',
-    image_url: 'https://i.pravatar.cc/150?img=2',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
-    status: 'Menunggu Verifikasi',
-    created_at: '2024-01-02',
-  },
-  {
-    id: '3',
-    applicant_name: 'Jang Juwang',
-    number_phone: '081234567892',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Ahmad Rizki',
-    gender: 'Laki-laki',
-    category: 'Yatim Piatu',
-    birthplace: 'Tasikmalaya',
-    birthdate: '2013-08-20',
-    address: 'Jl. Anggrek No. 9 Tasikmalaya',
-    image_url: 'https://i.pravatar.cc/150?img=4',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
-    status: 'Disetujui',
-    created_at: '2024-01-03',
-  },
-  {
-    id: '4',
-    applicant_name: 'Park Sungho',
-    number_phone: '081234567893',
-    ktp_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    child_name: 'Laila Salsabila',
-    gender: 'Perempuan',
-    category: 'Yatim',
-    birthplace: 'Cimahi',
-    birthdate: '2016-11-30',
-    address: 'Jl. Dahlia No. 3 Cimahi',
-    image_url: 'https://i.pravatar.cc/150?img=5',
-    familyCard_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    certificates: [],
-    status: 'Ditolak',
-    created_at: '2024-01-04',
+    rejectionReason: '',
+    createdAt: '2024-01-01',
   },
 ])
 
@@ -104,6 +56,7 @@ const closeImagePreview = () => {
 }
 
 const previewFile = (url: string) => {
+  if (!url) return
   window.open(url, '_blank')
 }
 
@@ -175,6 +128,7 @@ const handleReject = (reason: string) => {
   }
   confirmReject.value = false
 }
+
 const verifyRejectConfig = computed(() => {
   if (role.value === 'chairman') {
     return {
@@ -193,214 +147,198 @@ const verifyRejectConfig = computed(() => {
 <template>
   <DashboardLayout>
     <div class="max-w-full mx-auto space-y-6">
+      <!-- Header -->
       <div class="flex items-center gap-4">
         <button
           @click="handleCancel"
-          class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-150 text-gray-500 hover:text-gray-700"
+          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           title="Kembali ke ajuan anak asuh"
         >
           <ArrowLeft :size="20" />
         </button>
         <div class="flex items-center gap-3">
-          <div class="p-2 bg-primary-50 rounded-lg">
-            <Baby :size="24" class="text-primary-400" />
+          <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+            <Baby :size="24" class="text-primary-400 dark:text-primary-500" />
           </div>
           <div>
-            <h2 class="text-xl font-bold text-gray-900">Detail Ajuan Anak Asuh</h2>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Detail Ajuan Anak Asuh</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Review and manage child submission details.</p>
           </div>
         </div>
       </div>
 
       <div
-        v-if="child"
-        class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+        v-if="fosterChildrenCandidate"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
       >
-        <div class="grid grid-cols-1 md:grid-cols-2 items-start">
-          <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden m-4">
-            <div class="p-6 space-y-5">
-              <h2 class="text-lg font-semibold text-gray-900">Identitas Anak Asuh</h2>
-              <div class="grid grid-cols-[180px_auto] gap-y-3 gap-x-2 text-sm">
-                <div class="text-gray-500">Nama Anak Asuh</div>
-                <div>: {{ child.child_name }}</div>
+        <div class="grid grid-cols-1 lg:grid-cols-2">
+          <!-- Identitas Anak Asuh Section -->
+          <div class="p-8 border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-gray-700">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <Baby :size="20" class="text-primary-400" />
+              Identitas Anak Asuh
+            </h3>
+            <div class="space-y-4">
+              <div class="grid grid-cols-3 gap-4">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Nama Lengkap</span>
+                <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200">{{ fosterChildrenCandidate.name }}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-4">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Jenis Kelamin</span>
+                <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200 capitalize">{{ fosterChildrenCandidate.gender }}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-4">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">TTL</span>
+                <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200">{{ fosterChildrenCandidate.birthPlace }}, {{ fosterChildrenCandidate.birthDate }}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-4">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Kategori</span>
+                <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200 capitalize">{{ fosterChildrenCandidate.category }}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-4">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Alamat</span>
+                <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200">{{ fosterChildrenCandidate.address }}</span>
+              </div>
 
-                <div class="text-gray-500">Jenis Kelamin</div>
-                <div>: {{ child.gender }}</div>
-
-                <div class="text-gray-500">Tempat Lahir</div>
-                <div>: {{ child.birthplace }}</div>
-
-                <div class="text-gray-500">Tanggal Lahir</div>
-                <div>: {{ child.birthdate }}</div>
-
-                <div class="text-gray-500">Alamat</div>
-                <div>: {{ child.address }}</div>
-
-                <div class="text-gray-500">Kategori</div>
-                <div>: {{ child.category }}</div>
-
-                <div class="text-gray-500">Foto Anak</div>
-                <div class="flex items-center gap-2">
-                  <span>: </span>
-                  <div v-if="child.image_url" class="flex items-center gap-3">
-                    <img
-                      :src="child.image_url"
-                      :alt="child.child_name"
-                      class="w-10 h-10 rounded border shrink-0"
-                    />
-                    <button
-                      @click="previewImage(child.image_url)"
-                      class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                      title="Lihat Foto"
-                    >
+              <!-- Documents -->
+              <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
+                <h4 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Dokumen Pendukung</h4>
+                <div class="space-y-3">
+                  <!-- Profile Picture -->
+                  <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-600">
+                        <img v-if="fosterChildrenCandidate.profilePicture" :src="fosterChildrenCandidate.profilePicture" class="w-full h-full object-cover" />
+                      </div>
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Foto Profil</span>
+                    </div>
+                    <button @click="previewImage(fosterChildrenCandidate.profilePicture)" class="p-2 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors">
                       <Eye :size="18" />
                     </button>
                   </div>
-                  <div
-                    v-if="showImagePreview"
-                    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-                  >
-                    <div class="relative bg-white rounded-lg p-4 max-w-lg w-full">
-                      <button
-                        @click="closeImagePreview"
-                        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                      >
+
+                  <!-- Family Card -->
+                  <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                    <div class="flex items-center gap-3">
+                      <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-blue-500">
+                        <X :size="20" /> <!-- Placeholder for icon -->
+                      </div>
+                      <div>
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Kartu Keluarga</p>
+                        <p class="text-xs text-gray-400">{{ getShortFileName(fosterChildrenCandidate.familyCard, 'KK') }}</p>
+                      </div>
+                    </div>
+                    <button @click="previewFile(fosterChildrenCandidate.familyCard)" class="p-2 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors" :disabled="!fosterChildrenCandidate.familyCard">
+                      <Eye :size="18" />
+                    </button>
+                  </div>
+
+                  <!-- SKTM -->
+                  <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                    <div class="flex items-center gap-3">
+                      <div class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-orange-500">
                         <X :size="20" />
-                      </button>
-
-                      <img
-                        v-if="previewImageUrl"
-                        :src="previewImageUrl"
-                        class="w-full max-h-[70vh] object-contain rounded"
-                      />
+                      </div>
+                      <div>
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">SKTM</p>
+                        <p class="text-xs text-gray-400">{{ getShortFileName(fosterChildrenCandidate.sktm, 'SKTM') }}</p>
+                      </div>
                     </div>
+                    <button @click="previewFile(fosterChildrenCandidate.sktm)" class="p-2 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors" :disabled="!fosterChildrenCandidate.sktm">
+                      <Eye :size="18" />
+                    </button>
                   </div>
-                </div>
-
-                <div class="text-gray-500">Kartu Keluarga</div>
-                <div class="flex items-start gap-2">
-                  <span>: </span>
-                  <div v-if="child.familyCard_url" class="space-y-2">
-                    <div class="flex items-center gap-3">
-                      <span class="text-sm">{{
-                        getShortFileName(child.familyCard_url, 'Kartu_Keluarga')
-                      }}</span>
-                      <button
-                        @click="previewFile(child.familyCard_url)"
-                        class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat Kartu Keluarga"
-                      >
-                        <Eye :size="18" />
-                      </button>
-                    </div>
-                  </div>
-                  <div v-else class="flex items-center text-sm">Tidak ada kartu keluarga</div>
-                </div>
-
-                <div class="text-gray-500">SKTM</div>
-                <div class="flex items-start gap-2">
-                  <span>: </span>
-                  <div v-if="child.sktm_url" class="space-y-2">
-                    <div class="flex items-center gap-3">
-                      <span class="text-sm">{{ getShortFileName(child.sktm_url, 'SKTM') }}</span>
-                      <button
-                        @click="previewFile(child.sktm_url)"
-                        class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat SKTM"
-                      >
-                        <Eye :size="18" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="text-gray-500">Piagam Penghargaan</div>
-                <div class="flex items-start gap-2">
-                  <span>: </span>
-                  <div v-if="child.certificates?.length" class="space-y-2">
-                    <div
-                      v-for="(cert, index) in child.certificates"
-                      :key="index"
-                      class="flex items-center gap-3"
-                    >
-                      <span class="text-sm">
-                        {{ cert.file_name || 'Sertifikat' }}
-                      </span>
-                      <button
-                        @click="previewFile(cert.file_url)"
-                        class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat Sertifikat"
-                      >
-                        <Eye :size="18" />
-                      </button>
-                    </div>
-                  </div>
-                  <div v-else class="flex items-center text-sm">Tidak ada sertifikat</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden m-4">
-            <div class="p-6 space-y-5">
-              <h2 class="text-lg font-semibold text-gray-900">Informasi Pengajuan</h2>
-              <div class="grid grid-cols-[180px_auto] gap-y-3 gap-x-2 text-sm">
-                <div class="text-gray-500">Nama Pengaju</div>
-                <div>: {{ child.applicant_name }}</div>
-
-                <div class="text-gray-500">Nomor Telepon</div>
-                <div>: {{ child.number_phone }}</div>
-
-                <div class="text-gray-500">KTP Pengaju</div>
-                <div class="flex items-start gap-2">
-                  <span>: </span>
-                  <div v-if="child.ktp_url" class="space-y-2">
-                    <div class="flex items-center gap-3">
-                      <span class="text-sm">{{ getShortFileName(child.ktp_url, 'KTP') }}</span>
-                      <button
-                        @click="previewFile(child.ktp_url)"
-                        class="ml-3 text-gray-500 hover:text-gray-700 flex items-center"
-                        title="Lihat KTP"
-                      >
-                        <Eye :size="18" />
-                      </button>
-                    </div>
-                  </div>
-                  <div v-else class="flex items-center text-sm">Tidak ada KTP pengaju</div>
+          <!-- Informasi Pengajuan Section -->
+          <div class="p-8 space-y-8 bg-gray-50/50 dark:bg-gray-800/30">
+            <div>
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <CheckCircle2 :size="20" class="text-green-500" />
+                Informasi Pengajuan
+              </h3>
+              <div class="space-y-4">
+                <div class="grid grid-cols-3 gap-4">
+                  <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Nama Pengaju</span>
+                  <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200">{{ fosterChildrenCandidate.submitterName }}</span>
                 </div>
+                <div class="grid grid-cols-3 gap-4">
+                  <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Nomor Telepon</span>
+                  <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200">{{ fosterChildrenCandidate.submitterPhone }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                  <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Alamat Pengaju</span>
+                  <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200">{{ fosterChildrenCandidate.submitterAddress }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-4 items-center">
+                  <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</span>
+                  <div class="col-span-2">
+                    <span
+                      :class="[
+                        'px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider border',
+                        fosterChildrenCandidate.status === 'Diajukan'
+                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
+                          : fosterChildrenCandidate.status === 'Menunggu Verifikasi'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800'
+                            : fosterChildrenCandidate.status === 'Disetujui'
+                              ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+                              : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800',
+                      ]"
+                    >
+                      {{ fosterChildrenCandidate.status }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                <div class="text-gray-500">Status Pengajuan</div>
-                <span
-                  :class="[
-                    'inline-block w-fit ml-2 px-3 py-1 text-xs rounded-full',
-                    child.status === 'Diajukan'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : child.status === 'Menunggu Verifikasi'
-                        ? 'bg-purple-100 text-purple-800'
-                        : child.status === 'Disetujui'
-                          ? 'bg-green-100 text-green-800'
-                          : child.status === 'Ditolak'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800',
-                  ]"
-                >
-                  {{ child.status }}
-                </span>
+            <!-- Additional Achievements or Notes can go here -->
+            <div v-if="fosterChildrenCandidate.achievements?.length">
+              <h4 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Piagam / Prestasi</h4>
+              <div class="space-y-2">
+                <div v-for="(cert, index) in fosterChildrenCandidate.achievements" :key="index" class="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 truncate pr-4">{{ cert.title }}</span>
+                  <button @click="previewFile(cert.url)" class="text-primary-500 hover:text-primary-600 transition-colors">
+                    <Eye :size="18" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="px-6 pb-4 flex justify-end gap-3">
-          <BaseButton type="button" variant="danger" @click="openRejectModal"> Tolak </BaseButton>
-
-          <BaseButton type="button" variant="primary" @click="openVerifyModal">
-            {{ verifyConfig.buttonText }}
-          </BaseButton>
+        <!-- Action Footer -->
+        <div class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <p class="text-xs text-gray-500 dark:text-gray-400 italic">Submitted on {{ fosterChildrenCandidate.createdAt }}</p>
+          <div class="flex items-center gap-3">
+            <BaseButton variant="danger" size="md" class="px-8" @click="openRejectModal">
+              Tolak
+            </BaseButton>
+            <BaseButton variant="primary" size="md" class="px-8" @click="openVerifyModal">
+              {{ verifyConfig.buttonText }}
+            </BaseButton>
+          </div>
         </div>
       </div>
     </div>
   </DashboardLayout>
 
+  <!-- Image Preview Modal -->
+  <div v-if="showImagePreview" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" @click.self="closeImagePreview">
+    <div class="relative max-w-4xl w-full bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 transform scale-100">
+      <div class="absolute top-4 right-4 z-10">
+        <button @click="closeImagePreview" class="p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-colors">
+          <X :size="24" />
+        </button>
+      </div>
+      <img v-if="previewImageUrl" :src="previewImageUrl" class="w-full h-auto max-h-[85vh] object-contain" />
+    </div>
+  </div>
+
+  <!-- Confirmations -->
   <ConfirmationModal
     :show="confirmVerify"
     :title="verifyConfig.title"

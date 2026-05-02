@@ -6,7 +6,7 @@ import { Eye } from 'lucide-vue-next'
 
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 
 // ================== ROUTER ==================
@@ -70,12 +70,9 @@ const allData = ref([
 // ================== FILTER ==================
 const filteredData = computed(() => {
   return allData.value.filter((item) => {
-    const matchSearch = item.name
-      .toLowerCase()
-      .includes(debouncedSearchQuery.value.toLowerCase())
+    const matchSearch = item.name.toLowerCase().includes(debouncedSearchQuery.value.toLowerCase())
 
-    const matchStatus =
-      selectedStatus.value === 'all' || item.status === selectedStatus.value
+    const matchStatus = selectedStatus.value === 'all' || item.status === selectedStatus.value
 
     return matchSearch && matchStatus
   })
@@ -171,9 +168,7 @@ const handleView = (subscription: any) => {
     <template #title>
       <div>
         <h1 class="text-2xl font-semibold text-gray-800">Riwayat Langganan</h1>
-        <p class="text-sm text-gray-400 mt-1">
-          Manajemen Program > Riwayat Langganan
-        </p>
+        <p class="text-sm text-gray-400 mt-1">Manajemen Program > Riwayat Langganan</p>
       </div>
     </template>
 
@@ -181,7 +176,6 @@ const handleView = (subscription: any) => {
     <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
       <!-- CARD -->
       <div class="bg-white rounded-xl border border-gray-200 px-6 py-5">
-
         <!-- TOP BAR (TIDAK UBAH LOGIC) -->
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-base font-semibold text-gray-700">
@@ -283,10 +277,10 @@ const handleView = (subscription: any) => {
                       program.status === 'active'
                         ? 'Berjalan'
                         : program.status === 'pending'
-                        ? 'Pending'
-                        : program.status === 'completed'
-                        ? 'Selesai'
-                        : program.status
+                          ? 'Pending'
+                          : program.status === 'completed'
+                            ? 'Selesai'
+                            : program.status
                     }}
                   </span>
                 </td>

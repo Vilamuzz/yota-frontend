@@ -1,101 +1,81 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Eye, SquarePen, Trash2, Plus, Baby } from 'lucide-vue-next'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
-import { Category, Gender, type FosterChildren, type FosterChildrenParams } from '@/types/fosterChildren'
+import {
+  Category,
+  Gender,
+  type FosterChildren,
+  type FosterChildrenParams,
+} from '@/types/fosterChildren'
 
 const router = useRouter()
 
-const searchQuery = ref('')
-const debouncedSearchQuery = ref('')
-const selectedGender = ref('all')
-const selectedCategory = ref('all')
-const selectedStatus = ref('all')
-
-const limit = ref(10)
+const queryParams = reactive<FosterChildrenParams>({
+  limit: 10,
+  search: undefined,
+  gender: undefined,
+  category: undefined,
+  isGraduated: undefined,
+  nextCursor: undefined,
+  prevCursor: undefined,
+})
 const limitOptions = [10, 25, 50, 100]
 
+const searchQuery = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
-watch(searchQuery, (newVal) => {
+
+watch(searchQuery, (val) => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    debouncedSearchQuery.value = newVal
-  }, 500)
+    queryParams.search = val || undefined
+    resetPagination()
+  }, 400)
 })
 
-// Cursor pagination state
-const currentNextCursor = ref<string | undefined>(undefined)
-const currentPrevCursor = ref<string | undefined>(undefined)
-const direction = ref<'next' | 'prev' | undefined>(undefined)
+watch(
+  () => [queryParams.gender, queryParams.category, queryParams.isGraduated, queryParams.limit],
+  () => resetPagination(),
+)
+
 const pageOffset = ref(0)
 
-const queryParams = computed<FosterChildrenParams>(() => {
-  const params: FosterChildrenParams = { limit: limit.value }
-
-  if (direction.value === 'next' && currentNextCursor.value) {
-    params.nextCursor = currentNextCursor.value
-  } else if (direction.value === 'prev' && currentPrevCursor.value) {
-    params.prevCursor = currentPrevCursor.value
-  }
-
-  if (debouncedSearchQuery.value) {
-    params.search = debouncedSearchQuery.value
-  }
-
-  if (selectedGender.value !== 'all') {
-    params.gender = selectedGender.value as Gender
-  }
-
-  if (selectedCategory.value !== 'all') {
-    params.category = selectedCategory.value as Category
-  }
-
-  if (selectedStatus.value !== 'all') {
-    params.isGraduated = selectedStatus.value === 'lulus'
-  }
-
-  return params
-})
-
-const resetPagination = () => {
-  currentNextCursor.value = undefined
-  currentPrevCursor.value = undefined
-  direction.value = undefined
+function resetPagination() {
+  queryParams.nextCursor = undefined
+  queryParams.prevCursor = undefined
   pageOffset.value = 0
 }
-
-watch([debouncedSearchQuery, selectedGender, selectedCategory, selectedStatus, limit], () => {
-  resetPagination()
-})
 
 // Fetch foster children via composable
 const { fosterChildrenListQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
 
-const handleNextPage = () => {
+function handleNextPage() {
   if (pagination.value?.nextCursor) {
-    currentNextCursor.value = pagination.value.nextCursor
-    direction.value = 'next'
+    queryParams.nextCursor = pagination.value.nextCursor
+    queryParams.prevCursor = undefined
     pageOffset.value += 1
   }
 }
 
-const handlePrevPage = () => {
+function handlePrevPage() {
   if (pagination.value?.prevCursor) {
-    currentPrevCursor.value = pagination.value.prevCursor
-    direction.value = 'prev'
+    queryParams.prevCursor = pagination.value.prevCursor
+    queryParams.nextCursor = undefined
     pageOffset.value -= 1
   }
 }
 
 const getStatusColor = (isGraduated: boolean) => {
-  return isGraduated ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-green-100 text-green-800 border-green-200'
+  return isGraduated
+    ? 'bg-blue-100 text-blue-800 border-blue-200'
+    : 'bg-green-100 text-green-800 border-green-200'
 }
 
 const confirmShow = ref(false)
@@ -112,16 +92,23 @@ const handleConfirmDelete = async () => {
   confirmChild.value = null
 }
 
-const clearFilters = () => {
+const hasActiveFilters = computed(
+  () =>
+    queryParams.gender !== undefined ||
+    queryParams.category !== undefined ||
+    queryParams.isGraduated !== undefined,
+)
+
+function clearFilters() {
   searchQuery.value = ''
-  selectedGender.value = 'all'
-  selectedCategory.value = 'all'
-  selectedStatus.value = 'all'
+  queryParams.gender = undefined
+  queryParams.category = undefined
+  queryParams.isGraduated = undefined
+  resetPagination()
 }
 
-const genders = ['all', Gender.male, Gender.female]
-const categories = ['all', Category.yatim, Category.piatu, Category.yatimPiatu]
-const statuses = ['all', 'aktif', 'lulus']
+const genders = [Gender.male, Gender.female]
+const categories = [Category.yatim, Category.piatu, Category.yatimPiatu]
 
 const handleView = (child: FosterChildren) => {
   router.push({ name: 'dashboard-foster-children-detail', params: { id: child.id } })
@@ -145,19 +132,16 @@ const handleEdit = (child: FosterChildren) => {
           <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
             <BaseSearch v-model="searchQuery" placeholder="Cari anak asuh..." />
             <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <BaseFilter
-                :has-active-filters="
-                  selectedGender !== 'all' || selectedCategory !== 'all' || selectedStatus !== 'all'
-                "
-              >
-                <template #default="{ closeDropdown }">
+              <BaseFilter :has-active-filters="hasActiveFilters">
+                <template #default>
                   <div class="space-y-4">
                     <div>
                       <label class="block text-xs text-gray-700 mb-2">Jenis Kelamin</label>
                       <select
-                        v-model="selectedGender"
+                        v-model="queryParams.gender"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
+                        <option :value="undefined">All</option>
                         <option v-for="gender in genders" :key="gender" :value="gender">
                           {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
                         </option>
@@ -167,9 +151,10 @@ const handleEdit = (child: FosterChildren) => {
                     <div>
                       <label class="block text-xs text-gray-700 mb-2">Kategori</label>
                       <select
-                        v-model="selectedCategory"
+                        v-model="queryParams.category"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
+                        <option :value="undefined">All</option>
                         <option v-for="category in categories" :key="category" :value="category">
                           {{ category.charAt(0).toUpperCase() + category.slice(1) }}
                         </option>
@@ -179,12 +164,12 @@ const handleEdit = (child: FosterChildren) => {
                     <div>
                       <label class="block text-xs text-gray-700 mb-2">Status</label>
                       <select
-                        v-model="selectedStatus"
+                        v-model="queryParams.isGraduated"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
-                        <option v-for="status in statuses" :key="status" :value="status">
-                          {{ status.charAt(0).toUpperCase() + status.slice(1) }}
-                        </option>
+                        <option :value="undefined">All</option>
+                        <option :value="false">Aktif</option>
+                        <option :value="true">Lulus</option>
                       </select>
                     </div>
 
@@ -194,12 +179,6 @@ const handleEdit = (child: FosterChildren) => {
                         class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
                       >
                         Clear
-                      </button>
-                      <button
-                        @click="closeDropdown"
-                        class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150"
-                      >
-                        Apply
                       </button>
                     </div>
                   </div>
@@ -224,7 +203,7 @@ const handleEdit = (child: FosterChildren) => {
       empty-message="Tidak ada anak asuh yang ditemukan."
       :has-prev="!!pagination?.prevCursor"
       :has-next="!!pagination?.nextCursor"
-      v-model:limit="limit"
+      v-model:limit="queryParams.limit"
       :limit-options="limitOptions"
       @prev="handlePrevPage"
       @next="handleNextPage"
@@ -241,7 +220,9 @@ const handleEdit = (child: FosterChildren) => {
         <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
           Jenis Kelamin
         </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Kategori</th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
+          Kategori
+        </th>
         <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
           Tanggal Ditambahkan
         </th>
@@ -253,21 +234,21 @@ const handleEdit = (child: FosterChildren) => {
         <tr
           v-for="(child, index) in fosterChildren"
           :key="child.id"
-          class="bg-white hover:bg-gray-50 transition-colors duration-150"
+          class="hover:bg-gray-50 transition-colors duration-150 dark:hover:bg-gray-700"
         >
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ pageOffset * limit + index + 1 }}
+          <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-500 dark:text-gray-200">
+            {{ pageOffset * (queryParams.limit || 10) + index + 1 }}
           </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins max-w-50 truncate">
+          <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-200 max-w-50 truncate">
             {{ child.name }}
           </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins capitalize">
+          <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-200 capitalize">
             {{ child.gender }}
           </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
+          <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-200">
             {{ child.category.charAt(0).toUpperCase() + child.category.slice(1) }}
           </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
+          <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-200">
             {{
               new Date(child.createdAt).toLocaleDateString('id-ID', {
                 day: '2-digit',
@@ -289,21 +270,21 @@ const handleEdit = (child: FosterChildren) => {
           <td class="px-6 py-4 whitespace-nowrap text-center relative">
             <button
               @click="handleView(child)"
-              class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
+              class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
               title="Lihat Detail"
             >
               <Eye :size="18" />
             </button>
             <button
               @click="handleEdit(child)"
-              class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
+              class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
               title="Edit Anak Asuh"
             >
               <SquarePen :size="18" />
             </button>
             <button
               @click="deleteChild(child)"
-              class="p-1 text-red-600 hover:bg-gray-100 rounded transition-colors duration-150"
+              class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
               title="Delete Anak Asuh"
             >
               <Trash2 :size="18" />

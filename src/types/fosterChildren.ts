@@ -17,29 +17,6 @@ export interface FosterChildren {
   createdAt: string
 }
 
-export interface FosterChildrenCandidate {
-  id: string
-  slug: string
-  name: string
-  profilePicture: string
-  gender: Gender
-  category: Category
-  address: string
-  birthPlace: string
-  birthDate: string
-  isGraduated: boolean
-  familyCard: string
-  sktm: string
-  submitterName: string
-  submitterPhone: string
-  submitterAddress: string
-  submitterIdCard: string
-  submittedBy: string
-  status: string
-  rejectionReason: string
-  createdAt: string
-}
-
 export enum Gender {
   male = 'male',
   female = 'female',
@@ -63,12 +40,8 @@ export interface FosterChildrenList {
   pagination: Pagination
 }
 
-export interface FosterChildrenCandidateList {
-  fosterChildrenCandidates: FosterChildrenCandidate[]
-  pagination: Pagination
-}
-
-export interface FosterChildrenParams extends PaginationParams {
+export interface FosterChildrenQueryParams extends PaginationParams {
+  gender?: Gender
   category?: Category
   isGraduated?: boolean
 }
@@ -101,27 +74,6 @@ export interface UpdateFosterChildrenRequest {
   isGraduated?: boolean
 }
 
-export interface CreateFosterChildrenCandidateRequest {
-  name: string
-  profilePicture: File
-  gender: Gender
-  address: string
-  birthPlace: string
-  birthDate: string
-  category: Category
-  familyCard: File
-  sktm: File
-  achievements: Achievement[]
-  isGraduated: boolean
-  submitterName: string
-  submitterPhone: string
-  submitterAddress: string
-  submitterIdCard: File
-}
-
 export type FosterChildrenResponse = Response<FosterChildren>
 export type FosterChildrenListResponse = Response<FosterChildrenList>
 export type FosterChildrenDetailResponse = Response<FosterChildren>
-export type FosterChildrenCandidateResponse = Response<FosterChildrenCandidate>
-export type FosterChildrenCandidateListResponse = Response<FosterChildrenCandidateList>
-export type FosterChildrenCandidateDetailResponse = Response<FosterChildrenCandidate>

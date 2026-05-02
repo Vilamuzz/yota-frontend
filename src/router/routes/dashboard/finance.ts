@@ -80,14 +80,20 @@ export const financeRoutes: RouteRecordRaw[] = [
                 name: 'dashboard-social-programs-transaction',
                 component: () =>
                   import('@/pages/dashboard/income/socialProgramTransactions/IndexPage.vue'),
-                meta: { title: 'Transaksi Program Sosial' },
+                meta: {
+                  title: 'Transaksi Program Sosial',
+                  activeMenu: 'dashboard-social-programs-income',
+                },
               },
               {
                 path: ':id/create',
                 name: 'dashboard-social-programs-transaction-create',
                 component: () =>
                   import('@/pages/dashboard/income/socialProgramTransactions/CreatePage.vue'),
-                meta: { title: 'Tambah Transaksi Program Sosial' },
+                meta: {
+                  title: 'Tambah Transaksi Program Sosial',
+                  activeMenu: 'dashboard-social-programs-income',
+                },
               },
             ],
           },

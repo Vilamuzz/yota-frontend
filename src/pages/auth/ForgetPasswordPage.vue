@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useForgetPassword } from '@/composables/auth/useForgetPassword'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
+import AuthInput from '@/components/atoms/AuthInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { MailCheck } from 'lucide-vue-next'
@@ -70,7 +70,7 @@ const closeModal = () => {
     subtitle="Enter your email address and we'll send you a link to reset your password"
   >
     <form @submit.prevent="handleSubmit" class="space-y-4">
-      <BaseInput
+      <AuthInput
         id="email"
         v-model="email"
         type="email"
@@ -94,7 +94,7 @@ const closeModal = () => {
     <template #footer>
       <button
         @click="goToLogin"
-        class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition duration-200"
+        class="text-xs text-primary-400 hover:text-primary-500 font-medium transition duration-200"
       >
         ← Back to login
       </button>

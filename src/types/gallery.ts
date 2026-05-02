@@ -1,6 +1,5 @@
-
 import type { Media, MediaCategory, MediaStatus } from './media'
-import type { Pagination, Response } from './response'
+import type { Pagination, PaginationParams, Response } from './response'
 
 export interface Gallery {
   id: string
@@ -19,6 +18,11 @@ export interface Gallery {
 export interface GalleryList {
   galleries: Gallery[]
   pagination: Pagination
+}
+
+export interface GalleryQueryParams extends PaginationParams {
+  category?: MediaCategory
+  status?: MediaStatus
 }
 
 export interface CreateGalleryRequest {

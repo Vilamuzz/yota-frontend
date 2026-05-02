@@ -12,6 +12,18 @@ export const superadminRoutes: RouteRecordRaw[] = [
         component: () => import('@/pages/dashboard/accounts/IndexPage.vue'),
         meta: { title: 'Accounts' },
       },
+      {
+        path: 'foundation-profile',
+        name: 'dashboard-foundation-profile',
+        component: () => import('@/pages/dashboard/foundationProfile/IndexPage.vue'),
+        meta: { title: 'Profil Yayasan' },
+      },
+      {
+        path: 'website-settings',
+        name: 'dashboard-website-settings',
+        component: () => import('@/pages/dashboard/websiteSettings/IndexPage.vue'),
+        meta: { title: 'Pengaturan Website' },
+      },
     ],
   },
 ]

@@ -1,5 +1,5 @@
 import type { Media, MediaCategory, MediaStatus } from './media'
-import type { Pagination, Response } from './response'
+import type { Pagination, Response, PaginationParams } from './response'
 
 export interface News {
   id: string
@@ -32,6 +32,11 @@ export interface NewsCommentList {
   pagination: Pagination
 }
 
+export interface NewsQueryParams extends PaginationParams {
+  category?: MediaCategory
+  status?: MediaStatus
+}
+
 export interface CreateNewsRequest {
   title: string
   category: MediaCategory
@@ -51,6 +56,7 @@ export interface UpdateNewsRequest {
 }
 
 export interface CreateNewsCommentRequest {
+  slug: string
   content: string
 }
 

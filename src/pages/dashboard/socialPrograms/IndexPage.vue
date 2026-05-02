@@ -2,18 +2,19 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Users, Plus } from 'lucide-vue-next'
+import { Eye, SquarePen, Trash2, Plus } from 'lucide-vue-next'
 
 import { useSocialProgramList } from '@/composables/socialProgram/useSocialProgramList'
 import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import type { SocialProgram, SocialProgramParams } from '@/types/socialProgram'
+import type { SocialProgram, SocialProgramQueryParams } from '@/types/socialProgram'
 
 import { useRoute } from 'vue-router'
+import { getStatusColor } from '@/utils/status'
 
 const route = useRoute()
 
@@ -45,13 +46,13 @@ const currentPrevCursor = ref<string | undefined>(undefined)
 const direction = ref<'next' | 'prev' | undefined>(undefined)
 const pageOffset = ref(0)
 
-const queryParams = computed<SocialProgramParams>(() => {
-  const params: SocialProgramParams = { limit: limit.value }
+const queryParams = computed<SocialProgramQueryParams>(() => {
+  const params: SocialProgramQueryParams = { limit: limit.value }
 
   if (direction.value === 'next' && currentNextCursor.value) {
-    params.next_cursor = currentNextCursor.value
+    params.nextCursor = currentNextCursor.value
   } else if (direction.value === 'prev' && currentPrevCursor.value) {
-    params.prev_cursor = currentPrevCursor.value
+    params.prevCursor = currentPrevCursor.value
   }
 
   if (debouncedSearchQuery.value) {
@@ -77,42 +78,25 @@ watch([debouncedSearchQuery, selectedStatus, limit], () => {
 })
 
 const queryClient = useQueryClient()
+const { listQuery } = useSocialProgramList(queryParams)
 
-// 🔥 FIX DI SINI
-const { socialProgramListQuery } = useSocialProgramList(queryParams)
+const programs = computed<SocialProgram[]>(() => listQuery.data.value?.data?.socialPrograms || [])
 
-const programs = computed<SocialProgram[]>(
-  () => socialProgramListQuery.data.value?.data?.programs || [],
-)
-
-const pagination = computed(() => socialProgramListQuery.data.value?.data?.pagination)
+const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
 const handleNextPage = () => {
-  if (pagination.value?.has_next && pagination.value.next_cursor) {
-    currentNextCursor.value = pagination.value.next_cursor
+  if (pagination.value?.nextCursor) {
+    currentNextCursor.value = pagination.value.nextCursor
     direction.value = 'next'
     pageOffset.value += 1
   }
 }
 
 const handlePrevPage = () => {
-  if (pagination.value?.has_prev && pagination.value.prev_cursor) {
-    currentPrevCursor.value = pagination.value.prev_cursor
+  if (pagination.value?.prevCursor) {
+    currentPrevCursor.value = pagination.value.prevCursor
     direction.value = 'prev'
     pageOffset.value -= 1
-  }
-}
-
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'bg-[#D1FAE5] text-[#10B981] border-transparent'
-    case 'pending':
-      return 'bg-[#FEF3C7] text-[#F8B641] border-transparent'
-    case 'completed':
-      return 'bg-[#FFE4E6] text-[#F43F5E] border-transparent'
-    default:
-      return 'bg-gray-100 text-gray-600 border-transparent'
   }
 }
 
@@ -244,12 +228,12 @@ const handleEdit = (program: SocialProgram) => {
         <!-- TABLE -->
         <div class="overflow-hidden rounded-lg border border-gray-200">
           <BaseTable
-            :loading="socialProgramListQuery.isPending.value"
+            :loading="listQuery.isPending.value"
             loading-message="Loading programs..."
             :is-empty="programs.length === 0"
             empty-message="No programs available"
-            :has-prev="pagination?.has_prev"
-            :has-next="pagination?.has_next"
+            :has-prev="!!pagination?.prevCursor"
+            :has-next="!!pagination?.nextCursor"
             v-model:limit="limit"
             :limit-options="limitOptions"
             @prev="handlePrevPage"
@@ -282,63 +266,56 @@ const handleEdit = (program: SocialProgram) => {
                 </td>
 
                 <td class="px-5 py-4 text-sm text-gray-700 font-medium">
-                  {{ program.name }}
+                  {{ program.title }}
                 </td>
 
                 <td class="px-5 py-4 text-sm text-gray-600 text-right">
                   <span v-if="isChairman">
-                    {{ program.minimum_nominal }}
+                    {{ program.minimumAmount }}
                   </span>
                   <span v-else>
-                    {{ program.total_subscriber }}
+                    {{ program.totalSubscribers }}
                   </span>
                 </td>
 
                 <!-- STATUS -->
                 <td class="px-5 py-4 text-center">
                   <span
-                    :class="[
-                      'px-2.5 py-1 text-xs rounded-full',
-                      getStatusColor(isChairman ? program.submission_status : program.status)
-                    ]"
+                    :class="['px-2.5 py-1 text-xs rounded-full', getStatusColor(program.status)]"
                   >
                     {{
-                      isChairman
-                        ? program.submission_status
-                        : program.status === 'active'
-                          ? 'Berjalan'
-                          : program.status === 'pending'
-                            ? 'Pending'
-                            : program.status === 'completed'
-                              ? 'Selesai'
-                              : program.status
+                      program.status === 'active'
+                        ? 'Berjalan'
+                        : program.status === 'pending'
+                          ? 'Pending'
+                          : program.status === 'completed'
+                            ? 'Selesai'
+                            : program.status
                     }}
                   </span>
                 </td>
 
                 <td class="px-5 py-4 text-sm text-gray-500">
-                  {{ formatDate(program.created_at) }}
+                  {{ formatDate(program.createdAt) }}
                 </td>
 
                 <!-- ACTION -->
                 <td class="px-5 py-4">
-                <div class="flex justify-center items-center gap-3 text-gray-400">
-                  
-                  <button @click="handleView(program)" class="hover:text-gray-600">
-                    <Eye :size="18" />
-                  </button>
-
-                  <template v-if="!isChairman">
-                    <button @click="handleEdit(program)" class="hover:text-gray-600">
-                      <SquarePen :size="18" />
+                  <div class="flex justify-center items-center gap-3 text-gray-400">
+                    <button @click="handleView(program)" class="hover:text-gray-600">
+                      <Eye :size="18" />
                     </button>
-                    <button @click="deleteProgram(program)" class="hover:text-red-500">
-                      <Trash2 :size="18" />
-                    </button>
-                  </template>
 
-                </div>
-              </td>
+                    <template v-if="!isChairman">
+                      <button @click="handleEdit(program)" class="hover:text-gray-600">
+                        <SquarePen :size="18" />
+                      </button>
+                      <button @click="deleteProgram(program)" class="hover:text-red-500">
+                        <Trash2 :size="18" />
+                      </button>
+                    </template>
+                  </div>
+                </td>
               </tr>
             </template>
           </BaseTable>
@@ -350,7 +327,7 @@ const handleEdit = (program: SocialProgram) => {
   <!-- MODAL -->
   <ConfirmationModal
     :show="confirmShow"
-    :title="`Delete ${confirmProgram?.name}?`"
+    :title="`Delete ${confirmProgram?.title}?`"
     message="This program will be permanently deleted."
     primary-button-text="Delete"
     secondary-button-text="Cancel"

@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { createDonationTransactionSchema } from '@/schemas/donationProgramTransaction.schema'
-import { useDonationTransactionCreateOffline } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCreateOffline'
+import { createDonationProgramTransactionSchema } from '@/schemas/donationProgramTransaction.schema'
+import { useDonationProgramTransactionCreateOffline } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCreateOffline'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
+import { extractError } from '@/utils/error'
 
 const router = useRouter()
 const route = useRoute()
-const { createMutation } = useDonationTransactionCreateOffline()
+const { createMutation } = useDonationProgramTransactionCreateOffline()
 const { showToast } = useToast()
 
 const donationId = route.params.id as string
@@ -27,7 +28,7 @@ const errors = ref<Record<string, string>>({})
 const isLoading = computed(() => createMutation.isPending.value)
 
 const validate = (): boolean => {
-  const result = createDonationTransactionSchema.safeParse({
+  const result = createDonationProgramTransactionSchema.safeParse({
     gross_amount: Number(grossAmount.value),
     donor_name: donorName.value.trim(),
     donor_email: donorEmail.value.trim(),
@@ -38,22 +39,31 @@ const validate = (): boolean => {
   return Object.keys(errors.value).length === 0
 }
 
-const handleSubmit = async () => {
+const handleSubmit = () => {
   if (!validate()) return
 
-  await createMutation.mutateAsync({
-    id: donationId,
-    data: {
-      grossAmount: Number(grossAmount.value),
-      donorName: donorName.value.trim() || undefined,
-      donorEmail: donorEmail.value.trim() || undefined,
+  createMutation.mutate(
+    {
+      id: donationId,
+      data: {
+        grossAmount: Number(grossAmount.value),
+        donorName: donorName.value.trim() || undefined,
+        donorEmail: donorEmail.value.trim() || undefined,
+      },
     },
-  })
-
-  if (createMutation.isSuccess.value) {
-    showToast('Offline transaction created successfully!', 'success')
-    router.push({ name: 'dashboard-donation-programs-transaction', params: { id: donationId } })
-  }
+    {
+      onSuccess: () => {
+        showToast('Transaksi offline berhasil dibuat!', 'success')
+        router.push({ name: 'dashboard-donation-programs-transaction', params: { id: donationId } })
+      },
+      onError: (err) => {
+        showToast(
+          extractError(err, 'Gagal membuat transaksi offline. Silahkan coba lagi.'),
+          'error',
+        )
+      },
+    },
+  )
 }
 
 const formatCurrencyPreview = computed(() => {
