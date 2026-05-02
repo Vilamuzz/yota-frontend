@@ -49,23 +49,23 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         path: 'foster-children/donations',
         name: 'dashboard-foster-children-donations',
         component: () =>
-          import('@/pages/dashboard/income/fosterChildrenTransactions/FosterChildrenPage.vue'),
+          import('@/pages/dashboard/fosterChildren/DonationHistory.vue'),
         meta: { requiresAuth: true, title: 'Riwayat Donasi Anak Asuh' },
       },
       {
         path: 'foster-children/donations/:id/detail',
         name: 'dashboard-foster-children-donations-detail',
-        component: () => import('@/pages/dashboard/income/fosterChildrenTransactions/IndexPage.vue'),
+        component: () => import('@/pages/dashboard/fosterChildren/DonationHistoryDetail.vue'),
         meta: {
           title: 'Detail Riwayat Donasi Anak Asuh',
           activeMenu: 'dashboard-foster-children-donations',
         },
       },
       {
-        path: 'foster-children/donations/create',
+        path: 'foster-children/donations/:id/create',
         name: 'dashboard-foster-children-donations-create',
         component: () =>
-          import('@/pages/dashboard/income/fosterChildrenTransactions/CreatePage.vue'),
+          import('@/pages/dashboard/fosterChildren/CreateDonationOffline.vue'),
         meta: {
           title: 'Tambah Donasi Anak Asuh', activeMenu: 'dashboard-foster-children-donations-detail',
         },

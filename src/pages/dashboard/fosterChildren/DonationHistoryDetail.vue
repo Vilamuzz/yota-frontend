@@ -1,23 +1,33 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRouter} from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
+import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
-import { ArrowLeft, CirclePoundSterling } from 'lucide-vue-next'
+import { ArrowLeft, Plus, Eye, Baby } from 'lucide-vue-next'
 import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
-import { useRouter, useRoute } from 'vue-router'
+import ModalDetailHistrory from '@/pages/dashboard/fosterChildren/ModalDetailHistory.vue'
 
-const route = useRoute()
 const router = useRouter()
-const childId = computed(() => route.params.id as string)
 
 const searchQuery = ref('')
 const selectedMethod = ref('all')
+const selectedStatus = ref('all')
 const methods = ['all', 'Online', 'Offline']
+const statuses = ['all', 'Menunggu Pembayaran', 'Berhasil', 'Gagal', 'Kedaluwarsa']
+
+const showModal = ref(false)
+const selectedTransaction = ref<FosterChildrenTransaction | null>(null)
 
 const clearFilters = () => {
   selectedMethod.value = 'all'
+  selectedStatus.value = 'all'
+}
+
+const handleCreate = () => {
+  router.push({ name: 'dashboard-foster-children-donations-create' })
 }
 
 const limit = ref(10)
@@ -74,18 +84,13 @@ const fosterChildrenTransaction = ref<FosterChildrenTransaction[]>([
 ])
 
 const filteredFosterChildrenTransaction = computed((): FosterChildrenTransaction[] => {
-  return fosterChildrenTransaction.value.filter((donation) => {
-    const matchesChild = donation.fosterChildrenId === childId.value
-
-    const matchesSearch = donation.donorName
-      .toLowerCase()
-      .includes(searchQuery.value.toLowerCase())
-
+  return fosterChildrenTransaction.value.filter((donation: FosterChildrenTransaction) => {
+    const matchesSearch = donation.donorName.toLowerCase().includes(searchQuery.value.toLowerCase())
     const method = donation.isOnline ? 'Online' : 'Offline'
-    const matchesMethod =
-      selectedMethod.value === 'all' || method === selectedMethod.value
+    const matchesMethod = selectedMethod.value === 'all' || method === selectedMethod.value
+    const matchesStatus = selectedStatus.value === 'all' || donation.transactionStatus === selectedStatus.value
 
-    return matchesChild && matchesSearch && matchesMethod
+    return matchesSearch && matchesMethod && matchesStatus
   })
 })
 
@@ -94,6 +99,10 @@ const paginatedFostedChildrenTransaction = computed((): FosterChildrenTransactio
   return filteredFosterChildrenTransaction.value.slice(start, start + limit.value)
 })
 
+const handleView = (donation: FosterChildrenTransaction) => {
+  selectedTransaction.value = donation
+  showModal.value = true
+}
 
 watch([pageOffset, limit, filteredFosterChildrenTransaction], () => {
   pagination.value.has_prev = pageOffset.value > 0
@@ -108,7 +117,7 @@ watch(limit, () => {
 })
 
 watch(
-  [searchQuery, selectedMethod ],
+  [searchQuery, selectedMethod, selectedStatus],
   () =>
     pageOffset.value = 0
 )
@@ -125,15 +134,30 @@ const handleNextPage = () => {
   }
 }
 
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'Berhasil':
+      return 'bg-green-100 text-green-800'
+    case 'Menunggu Pembayaran':
+      return 'bg-yellow-100 text-yellow-800'
+    case 'Gagal':
+      return 'bg-red-100 text-red-800'
+    case 'Kedaluwarsa':
+      return 'bg-gray-100 text-gray-800'
+    default:
+      return ''
+  }
+}
+
 const handleCancel = () => {
-  router.push({ name: 'dashboard-foster-children-transaction' })
+  router.push({ name: 'dashboard-foster-children-donations' })
 }
 
 </script>
 
 <template>
   <DashboardLayout>
-    <div class ="max-w-full mx-auto space-y-6">
+    <div class="max-w-full mx-auto space-y-6">
       <div class="flex items-center gap-4">
         <button
           @click="handleCancel"
@@ -144,10 +168,10 @@ const handleCancel = () => {
         </button>
         <div class="flex items-center gap-3">
           <div class="p-2 bg-primary-50 rounded-lg">
-            <CirclePoundSterling :size="24" class="text-primary-400" />
+            <Baby :size="24" class="text-primary-400" />
           </div>
           <div>
-            <h2 class="text-xl font-bold text-gray-900">Detail Pemasukkan Anak Asuh</h2>
+            <h2 class="text-xl font-bold text-gray-900">Detail Riwayat Donasi Anak Asuh</h2>
           </div>
         </div>
       </div>
@@ -159,10 +183,10 @@ const handleCancel = () => {
               <div class="flex flex-col md:flex-col gap-4">
                 <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
                   <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                    <BaseSearch v-model="searchQuery" placeholder="Cari pemasukkan..." />
+                    <BaseSearch v-model="searchQuery" placeholder="Cari riwayat donasi..." />
                     <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
                       <BaseFilter
-                        :has-active-filters="selectedMethod !== 'all'"
+                        :has-active-filters="selectedMethod !== 'all' || selectedStatus !== 'all'"
                       >
                         <template #default="{ closeDropdown }">
                         <div class="space-y-4">
@@ -174,6 +198,18 @@ const handleCancel = () => {
                             >
                               <option v-for="method in methods" :key="method" :value="method">
                                 {{ method.charAt(0).toUpperCase() + method.slice(1) }}
+                              </option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label class="block text-xs text-gray-700 mb-2">Status</label>
+                            <select
+                              v-model="selectedStatus"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            >
+                              <option v-for="status in statuses" :key="status" :value="status">
+                                {{ status.charAt(0).toUpperCase() + status.slice(1) }}
                               </option>
                             </select>
                           </div>
@@ -195,6 +231,12 @@ const handleCancel = () => {
                         </div>
                       </template>
                       </BaseFilter>
+                      <BaseButton
+                        variant="primary"
+                        @click="handleCreate">
+                        <Plus :size="20" class="mr-1" />
+                        Tambah Donasi Anak Asuh
+                      </BaseButton>
                     </div>
                   </div>
                 </div>
@@ -216,15 +258,17 @@ const handleCancel = () => {
             @next="handleNextPage"
           >
             <template #empty-icon>
-              <CirclePoundSterling :size="64" class="text-gray-400" />
+              <Baby :size="64" class="text-gray-400" />
             </template>
 
             <template #headers>
               <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">No</th>
               <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Nama Donatur</th>
-              <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Metode Donasi</th>
               <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Nominal Donasi</th>
+              <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Metode Donasi</th>
               <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Tanggal Donasi</th>
+              <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Status</th>
+              <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">Aksi</th>
             </template>
 
             <template #rows>
@@ -240,10 +284,10 @@ const handleCancel = () => {
                   {{ fosterChildrenTransaction.donorName }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap font-poppins">
-                  {{ fosterChildrenTransaction.isOnline ? 'Online' : 'Offline' }}
+                  Rp {{ fosterChildrenTransaction.grossAmount.toLocaleString('id-ID') }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap font-poppins">
-                  Rp {{ fosterChildrenTransaction.grossAmount.toLocaleString('id-ID') }}
+                  {{ fosterChildrenTransaction.isOnline ? 'Online' : 'Offline' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap font-poppins">
                   {{ new Date(fosterChildrenTransaction.createdAt).toLocaleDateString('id-ID', {
@@ -252,6 +296,24 @@ const handleCancel = () => {
                     year: 'numeric',
                   }) }}
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <span
+                    :class="[
+                      'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-poppins border',
+                      getStatusColor(fosterChildrenTransaction.transactionStatus),
+                    ]"
+                  >
+                    {{ fosterChildrenTransaction.transactionStatus.charAt(0).toUpperCase() + fosterChildrenTransaction.transactionStatus.slice(1) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                  <button
+                    @click="handleView(fosterChildrenTransaction)"
+                    class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
+                  >
+                    <Eye :size="18" />
+                  </button>
+                </td>
               </tr>
             </template>
           </BaseTable>
@@ -259,4 +321,10 @@ const handleCancel = () => {
       </div>
     </div>
   </DashboardLayout>
+
+  <ModalDetailHistrory
+    :show="showModal"
+    :transaction="selectedTransaction"
+    @close="showModal = false"
+  />
 </template>

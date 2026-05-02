@@ -1,106 +1,113 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, Baby } from 'lucide-vue-next'
+import { Eye, CirclePoundSterling } from 'lucide-vue-next'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
-import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
-import { Category, Gender, type FosterChildren, type FosterChildrenParams } from '@/types/fosterChildren'
+import { useFosterChildrenTransactionList } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionList'
+import type { FosterChildrenTransactionQueryParams } from '@/types/fosterChildrenTransaction'
+import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
 
 const router = useRouter()
+const route = useRoute()
 
-const children = ref<FosterChildren[]>([
+const id = computed(() => route.params.id as string)
+
+const childrenMap: Record<string, string> = {
+  child1: 'Faris Ahad',
+  child2: 'Tia Mutiara',
+}
+
+const dummyTransactions = ref<FosterChildrenTransaction[]>([
   {
     id: '1',
-    name: 'Faris Ahad',
-    slug: 'faris-ahad',
-    gender: Gender.male,
-    category: Category.yatim,
-    birthPlace: 'Bandung',
-    birthDate: '10-05-2014',
-    address: 'Jl. Melati No. 12 Bandung',
-    profilePicture: 'https://i.pravatar.cc/150?img=1',
-    achievements: [
-      {
-        id: '1',
-        title: 'Juara 1 Lomba Menggambar 2023',
-        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        alt: 'Juara 1 Lomba Menggambar.pdf',
-      },
-      {
-        id: '2',
-        title: 'Juara 2 Lomba Cerdas Cermat 2024',
-        url: 'https://www.africau.edu/images/default/sample.pdf',
-        alt: 'Juara 2 Lomba Cerdas Cermat.pdf',
-      },
-    ],
-    isGraduated: false,
-    familyCard: '',
-    sktm: '',
+    fosterChildrenId: 'child1',
+    orderId: 'order1',
+    donorName: 'Choi Youngjae',
+    donorEmail: 'choi@example.com',
+    grossAmount: 50000,
+    isOnline: true,
+    transactionStatus: 'Berhasil',
+    transactionId: 'txn1',
+    snapToken: 'snap1',
+    paidAt: '2024-01-01',
     createdAt: '2024-01-01',
   },
   {
     id: '2',
-    name: 'Tia Mutiara',
-    slug: 'tia-mutiara',
-    gender: Gender.female,
-    category: Category.piatu,
-    birthPlace: 'Garut',
-    birthDate: '15-02-2015',
-    address: 'Jl. Mawar No. 5 Garut',
-    profilePicture: 'https://i.pravatar.cc/150?img=2',
-    achievements: [
-      {
-        id: '3',
-        title: 'Juara 3 Lomba Menulis Cerpen 2023',
-        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        alt: 'Juara 3 Lomba Menulis Cerpen.pdf',
-      }
-    ],
-    isGraduated: false,
-    familyCard: '',
-    sktm: '',
+    fosterChildrenId: 'child2',
+    orderId: 'order2',
+    donorName: 'Jung Woojin',
+    donorEmail: 'jung@example.com',
+    grossAmount: 75000,
+    isOnline: false,
+    transactionStatus: 'Menunggu Pembayaran',
+    transactionId: 'txn2',
+    snapToken: 'snap2',
+    paidAt: null,
     createdAt: '2024-01-02',
   },
-  {
+   {
     id: '3',
-    name: 'Ahmad Rizki',
-    slug: 'ahmad-rizki',
-    gender: Gender.male,
-    category: Category.yatimPiatu,
-    birthPlace: 'Tasikmalaya',
-    birthDate: '20-03-2013',
-    address: 'Jl. Anggrek No. 9 Tasikmalaya',
-    profilePicture: 'https://i.pravatar.cc/150?img=4',
-    achievements: [
-      {
-        id: '4',
-        title: 'Juara 1 Lomba Pidato 2023',
-        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        alt: 'Juara 1 Lomba Pidato.pdf',
-      },
-      {
-        id: '5',
-        title: 'Juara 2 Lomba Matematika 2024',
-        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        alt: 'Juara 2 Lomba Matematika.pdf',
-      }
-    ],
-    isGraduated: true,
-    familyCard: '',
-    sktm: '',
-    createdAt: '2024-01-03',
+    fosterChildrenId: 'child1',
+    orderId: 'order2',
+    donorName: 'Jang Juwang',
+    donorEmail: 'jang@example.com',
+    grossAmount: 100000,
+    isOnline: true,
+    transactionStatus: 'Menunggu Pembayaran',
+    transactionId: 'txn2',
+    snapToken: 'snap2',
+    paidAt: null,
+    createdAt: '2024-01-02',
   },
 ])
 
+const useDummy = ref(true) // ubah ke false kalau mau pakai API
+
+const transactionsSource = computed(() => {
+  return useDummy.value
+    ? dummyTransactions.value
+    : fosterChildrenTransactions.value
+})
+
+const incomeData = computed(() => {
+  const map = new Map()
+  transactionsSource.value.forEach((trx: FosterChildrenTransaction) => {
+
+    const date = new Date(trx.createdAt)
+
+    const period = date.toLocaleDateString('id-ID', {
+      month: 'long',
+      year: 'numeric',
+    })
+
+    const key = `${trx.fosterChildrenId}-${period}`
+
+    if (!map.has(key)) {
+      map.set(key, {
+        id: trx.fosterChildrenId,
+        name: childrenMap[trx.fosterChildrenId] || 'Tidak diketahui', // sementara (atau mapping ke nama anak)
+        totalTransactions: 0,
+        totalAmount: 0,
+        period,
+      })
+    }
+
+    const item = map.get(key)
+    item.totalTransactions += 1
+    item.totalAmount += trx.grossAmount
+  })
+
+  return Array.from(map.values())
+})
+
 const searchQuery = ref('')
 const debouncedSearchQuery = ref('')
-const selectedGender = ref('all')
-const selectedCategory = ref('all')
-const selectedStatus = ref('all')
+const selectedMethod = ref('all')
+const methods = ['all', 'Online', 'Offline']
 
 const limit = ref(10)
 const limitOptions = [10, 25, 50, 100]
@@ -119,8 +126,8 @@ const currentPrevCursor = ref<string | undefined>(undefined)
 const direction = ref<'next' | 'prev' | undefined>(undefined)
 const pageOffset = ref(0)
 
-const queryParams = computed<FosterChildrenParams>(() => {
-  const params: FosterChildrenParams = { limit: limit.value }
+const queryParams = computed<FosterChildrenTransactionQueryParams>(() => {
+  const params: FosterChildrenTransactionQueryParams = { limit: limit.value }
 
   if (direction.value === 'next' && currentNextCursor.value) {
     params.nextCursor = currentNextCursor.value
@@ -132,16 +139,8 @@ const queryParams = computed<FosterChildrenParams>(() => {
     params.search = debouncedSearchQuery.value
   }
 
-  if (selectedGender.value !== 'all') {
-    params.gender = selectedGender.value as Gender
-  }
-
-  if (selectedCategory.value !== 'all') {
-    params.category = selectedCategory.value as Category
-  }
-
-  if (selectedStatus.value !== 'all') {
-    params.isGraduated = selectedStatus.value === 'lulus'
+  if (selectedMethod.value !== 'all') {
+  params.isOnline = selectedMethod.value === 'Online'
   }
 
   return params
@@ -154,19 +153,14 @@ const resetPagination = () => {
   pageOffset.value = 0
 }
 
-watch([debouncedSearchQuery, selectedGender, selectedCategory, selectedStatus, limit], () => {
+watch([debouncedSearchQuery, selectedMethod, limit], () => {
   resetPagination()
 })
 
-// Fetch foster children via composable
-const { fosterChildrenListQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
 
-const displayChildren = computed(() => {
-  // kalau API kosong → pakai dummy
-  return fosterChildren.value.length
-    ? fosterChildren.value
-    : children.value
-})
+const { fosterChildrenTransactionListQuery, fosterChildrenTransactions, pagination } = useFosterChildrenTransactionList(id, queryParams)
+
+const displayChildren = computed(() => incomeData.value)
 
 const handleNextPage = () => {
   if (pagination.value?.nextCursor) {
@@ -184,40 +178,30 @@ const handlePrevPage = () => {
   }
 }
 
-const getStatusColor = (isGraduated: boolean) => {
-  return isGraduated ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-green-100 text-green-800 border-green-200'
-}
-
-const confirmShow = ref(false)
-const confirmChild = ref<FosterChildren | null>(null)
-
-const handleConfirmDelete = async () => {
-  if (!confirmChild.value) return
-  // TODO: Implement delete mutation
-  confirmShow.value = false
-  confirmChild.value = null
-}
-
 const clearFilters = () => {
   searchQuery.value = ''
-  selectedGender.value = 'all'
-  selectedCategory.value = 'all'
-  selectedStatus.value = 'all'
 }
 
-const genders = ['all', Gender.male, Gender.female]
-const categories = ['all', Category.yatim, Category.piatu, Category.yatimPiatu]
-const statuses = ['all', 'aktif', 'lulus']
+type IncomeItem = {
+  id: string
+  name: string
+  totalTransactions: number
+  totalAmount: number
+  period: string
+}
 
-const handleView = (child: FosterChildren) => {
-  router.push({ name: 'dashboard-foster-children-donations-detail', params: { id: child.id } })
+const handleView = (child: IncomeItem) => {
+    router.push({
+      name: 'dashboard-foster-children-transaction-detail',
+      params: { id: child.id },
+    })
 }
 
 </script>
 
 <template>
   <DashboardLayout>
-    <template #title>Manajemen Anak Asuh </template>
+    <template #title>Pemasukan Anak Asuh </template>
 
     <div class="space-y-6">
       <div class="">
@@ -227,46 +211,23 @@ const handleView = (child: FosterChildren) => {
             <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
               <BaseFilter
                 :has-active-filters="
-                  selectedGender !== 'all' || selectedCategory !== 'all' || selectedStatus !== 'all'
+                  selectedMethod !== 'all'
                 "
               >
                 <template #default="{ closeDropdown }">
                   <div class="space-y-4">
                     <div>
-                      <label class="block text-xs text-gray-700 mb-2">Jenis Kelamin</label>
+                      <label class="block text-xs text-gray-700 mb-2">Metode Donasi</label>
                       <select
-                        v-model="selectedGender"
+                        v-model="selectedMethod"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
-                        <option v-for="gender in genders" :key="gender" :value="gender">
-                          {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
+                        <option v-for="method in methods" :key="method" :value="method">
+                          {{ method.charAt(0).toUpperCase() + method.slice(1) }}
                         </option>
                       </select>
                     </div>
 
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Kategori</label>
-                      <select
-                        v-model="selectedCategory"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="category in categories" :key="category" :value="category">
-                          {{ category.charAt(0).toUpperCase() + category.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Status</label>
-                      <select
-                        v-model="selectedStatus"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="status in statuses" :key="status" :value="status">
-                          {{ status.charAt(0).toUpperCase() + status.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
 
                     <div class="flex gap-2 pt-2">
                       <button
@@ -294,10 +255,10 @@ const handleView = (child: FosterChildren) => {
 
     <BaseTable
       class="mt-6"
-      :loading="fosterChildrenListQuery.isPending.value && displayChildren.length === 0"
-      loading-message="Memuat data anak asuh..."
+      :loading="fosterChildrenTransactionListQuery.isPending.value && displayChildren.length === 0"
+      loading-message="Memuat data pemasukkan anak asuh..."
       :is-empty="displayChildren.length === 0"
-      empty-message="Tidak ada anak asuh yang ditemukan."
+      empty-message="Tidak ada pemasukkan anak asuh yang ditemukan."
       :has-prev="!!pagination?.prevCursor"
       :has-next="!!pagination?.nextCursor"
       v-model:limit="limit"
@@ -306,7 +267,7 @@ const handleView = (child: FosterChildren) => {
       @next="handleNextPage"
     >
       <template #empty-icon>
-        <Baby :size="64" class="text-gray-400" />
+        <CirclePoundSterling :size="64" class="text-gray-400" />
       </template>
 
       <template #headers>
@@ -315,13 +276,12 @@ const handleView = (child: FosterChildren) => {
           Nama Anak Asuh
         </th>
         <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
-          Jenis Kelamin
+          Jumlah Pemasukkan
         </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Kategori</th>
+        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Total Pemasukkan</th>
         <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
-          Tanggal Ditambahkan
+          Periode
         </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Status</th>
         <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Aksi</th>
       </template>
 
@@ -338,30 +298,15 @@ const handleView = (child: FosterChildren) => {
             {{ child.name }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins capitalize">
-            {{ child.gender }}
+            {{ child.totalTransactions }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ child.category.charAt(0).toUpperCase() + child.category.slice(1) }}
+            Rp{{ child.totalAmount.toLocaleString('id-ID') }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{
-              new Date(child.createdAt).toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-              })
-            }}
+            {{ child.period }}
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-center">
-            <span
-              :class="[
-                'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-poppins border',
-                getStatusColor(child.isGraduated),
-              ]"
-            >
-              {{ child.isGraduated ? 'Lulus' : 'Aktif' }}
-            </span>
-          </td>
+
           <td class="px-6 py-4 whitespace-nowrap text-center relative">
             <button
               @click="handleView(child)"
@@ -375,15 +320,4 @@ const handleView = (child: FosterChildren) => {
       </template>
     </BaseTable>
   </DashboardLayout>
-
-  <ConfirmationModal
-    :show="confirmShow"
-    :title="`Delete ${confirmChild?.name}?`"
-    :message="`Anak asuh akan dihapus secara permanen dan tidak dapat dipulihkan.`"
-    primary-button-text="Delete"
-    secondary-button-text="Cancel"
-    @primary="handleConfirmDelete"
-    @secondary="confirmShow = false"
-    @close="confirmShow = false"
-  />
 </template>
