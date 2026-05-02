@@ -145,7 +145,11 @@ const handleCancel = () => {
 const confirmVerify = ref(false)
 const confirmReject = ref(false)
 
-const role = ref(ROLES.SOCIAL_MANAGER)
+type Role =
+  | typeof ROLES.SOCIAL_MANAGER
+  | typeof ROLES.CHAIRMAN
+
+const role = ref<Role>(ROLES.SOCIAL_MANAGER)
 
 if (route.path.includes('chairman')) {
   role.value = ROLES.CHAIRMAN

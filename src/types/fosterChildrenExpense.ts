@@ -2,6 +2,7 @@ import type { Pagination, Response } from './response'
 
 export interface FosterChildrenExpense {
   id: string
+  fosterChildrenId: string
   title: string
   amount: number
   expenseDate: string

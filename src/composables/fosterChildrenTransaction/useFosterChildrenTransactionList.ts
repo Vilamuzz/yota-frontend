@@ -1,40 +1,40 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { donationProgramTransactionService } from '@/services/donationProgramTransaction.service'
+import { fosterChildrenTransactionService } from '@/services/fosterChildrenTransaction.service'
 import type {
-  DonationProgramTransactionQueryParams,
-  DonationProgramTransactionListResponse,
-} from '@/types/donationProgramTransaction'
+  FosterChildrenTransactionQueryParams,
+  FosterChildrenTransactionListResponse,
+} from '@/types/fosterChildrenTransaction'
 import type { ApiError } from '@/types/response'
 
-export const useDonationProgramTransactionList = (
+export const useFosterChildrenTransactionList = (
   id: MaybeRefOrGetter<string>,
-  params: MaybeRefOrGetter<DonationProgramTransactionQueryParams>,
+  params: MaybeRefOrGetter<FosterChildrenTransactionQueryParams>,
 ) => {
-  const donationProgramTransactionListQuery = useQuery<
-    DonationProgramTransactionListResponse,
+  const fosterChildrenTransactionListQuery = useQuery<
+    FosterChildrenTransactionListResponse,
     ApiError
   >({
-    queryKey: ['donationProgramTransactions', id, params],
+    queryKey: ['fosterChildrenTransactions', id, params],
     queryFn: () =>
-      donationProgramTransactionService.getDonationProgramTransactions(
+      fosterChildrenTransactionService.getFosterChildrenTransactions(
         toValue(id),
         toValue(params),
       ),
     retry: 1,
   })
 
-  const donationProgramTransactions = computed(
-    () => donationProgramTransactionListQuery.data.value?.data?.transactions || [],
+  const fosterChildrenTransactions = computed(
+    () => fosterChildrenTransactionListQuery.data.value?.data?.transactions || [],
   )
   const pagination = computed(
-    () => donationProgramTransactionListQuery.data.value?.data?.pagination,
+    () => fosterChildrenTransactionListQuery.data.value?.data?.pagination,
   )
 
   return {
-    donationProgramTransactionListQuery,
-    donationProgramTransactions,
+    fosterChildrenTransactionListQuery,
+    fosterChildrenTransactions,
     pagination,
-    isLoading: donationProgramTransactionListQuery.isPending,
+    isLoading: fosterChildrenTransactionListQuery.isPending,
   }
 }
