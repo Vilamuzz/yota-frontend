@@ -54,7 +54,7 @@ const handleSubmit = () => {
 
   createMutation.mutate(
     {
-      fosterChildId,
+      id: fosterChildId,
       data: {
         title: title.value.trim(),
         amount: Number(amount.value),

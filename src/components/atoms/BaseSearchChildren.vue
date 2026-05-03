@@ -19,7 +19,7 @@ defineEmits<{
 const router = useRouter()
 
 const handleForm = () => {
-  router.push({name: 'foster-children-form',
+  router.push({name: 'foster-children-submission',
               params: {
                 slug: 'foster-children-submission' }})
 }

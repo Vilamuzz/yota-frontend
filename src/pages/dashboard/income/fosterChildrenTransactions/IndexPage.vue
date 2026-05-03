@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
@@ -10,9 +10,7 @@ import { Plus, Eye, Baby, ArrowLeft } from 'lucide-vue-next'
 import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
 import { formatCurrency, formatDate } from '@/utils/format'
 
-const route = useRoute()
 const router = useRouter()
-const childId = computed(() => route.params.id as string)
 
 const queryParams = reactive({
   search: '',
@@ -162,7 +160,7 @@ const getStatusColor = (status: string) => {
             </div>
           </div>
         </div>
-        
+
         <BaseButton variant="primary" @click="handleCreate">
           <Plus :size="20" class="mr-1" />
           Tambah Donasi
@@ -172,7 +170,7 @@ const getStatusColor = (status: string) => {
       <!-- Filters & Search -->
       <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <BaseSearch v-model="searchInput" placeholder="Cari nama donatur..." class="w-full sm:max-w-xs" />
-        
+
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <BaseFilter :has-active-filters="hasActiveFilters">
             <template #default="{ closeDropdown }">

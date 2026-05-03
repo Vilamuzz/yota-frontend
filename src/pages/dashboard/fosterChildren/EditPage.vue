@@ -17,8 +17,8 @@ const route = useRoute()
 const router = useRouter()
 const fosterChildId = route.params.id as string
 
-const { updateFosterChildrenMutation, validationErrors } = useFosterChildrenUpdate()
-const { fosterChildrenDetailQuery } = useFosterChildrenDetail(fosterChildId)
+const { updateMutation, validationErrors } = useFosterChildrenUpdate()
+const { detailQuery } = useFosterChildrenDetail(fosterChildId)
 const { showToast } = useToast()
 
 // Form state
@@ -39,7 +39,7 @@ const form = reactive({
 })
 
 watch(
-  () => fosterChildrenDetailQuery.data.value,
+  () => detailQuery.data.value,
   (response) => {
     if (response?.data) {
       const child = response.data
@@ -88,8 +88,8 @@ const isGraduatedError = computed(
 )
 const achivementError = computed(() => fieldErrors.value.achivement || '')
 
-const isFetching = computed(() => fosterChildrenDetailQuery.isPending.value)
-const isLoading = computed(() => updateFosterChildrenMutation.isPending.value)
+const isFetching = computed(() => detailQuery.isPending.value)
+const isLoading = computed(() => updateMutation.isPending.value)
 
 const addAchievement = () => {
   if (form.achievementInput.trim()) {
@@ -212,9 +212,9 @@ const validate = () => {
 const handleSubmit = () => {
   if (!validate()) return
 
-  updateFosterChildrenMutation.mutate(
+  updateMutation.mutate(
     {
-      fosterChildId: fosterChildId,
+      id: fosterChildId,
       data: {
         name: form.name.trim(),
         gender: form.gender as Gender,

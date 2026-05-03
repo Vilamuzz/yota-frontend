@@ -53,7 +53,7 @@ export const fosterChildrenCandidateService = {
     return response.data
   },
 
-  deleteFosterChildreCandidaten: async (id: string) => {
+  deleteFosterChildreCandidate: async (id: string) => {
     const response = await api.delete(`${API.FOSTER_CHILDREN_ADMIN}/${id}`)
     return response.data
   },
