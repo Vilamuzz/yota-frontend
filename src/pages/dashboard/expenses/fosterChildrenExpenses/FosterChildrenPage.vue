@@ -2,12 +2,11 @@
 import { ref, computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, Baby, CirclePoundSterling } from 'lucide-vue-next'
+import { Eye, CirclePoundSterling } from 'lucide-vue-next'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { Category, Gender } from '@/types/fosterChildren'
-import { formatDate } from '@/utils/format'
 import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
 import type { FosterChildrenQueryParams, FosterChildren } from '@/types/fosterChildren'
 
@@ -183,7 +182,7 @@ const getStatusColor = (isGraduated: boolean) => {
       @next="handleNextPage"
     >
       <template #empty-icon>
-        <Baby :size="64" class="text-gray-400 dark:text-gray-600" />
+        <CirclePoundSterling :size="64" class="text-gray-400 dark:text-gray-600" />
       </template>
 
       <template #headers>

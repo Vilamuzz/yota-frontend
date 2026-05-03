@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/ui/useToast'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 
 const router = useRouter()
-const route = useRoute()
 const { showToast } = useToast()
 
-const fosterChildId = route.params.id as string
 
 // Form fields
 const donorName = ref('')
@@ -24,11 +22,11 @@ const isLoading = ref(false)
 
 const validate = (): boolean => {
   const newErrors: Record<string, string> = {}
-  
+
   if (!grossAmount.value || Number(grossAmount.value) < 1000) {
     newErrors.gross_amount = 'Minimal donasi adalah Rp 1.000'
   }
-  
+
   if (donorEmail.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donorEmail.value)) {
     newErrors.donor_email = 'Format email tidak valid'
   }
@@ -45,10 +43,10 @@ const handleSubmit = async () => {
   try {
     // Mock API call
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    
+
     showToast('Transaksi offline berhasil dicatat!', 'success')
     router.push({ name: 'dashboard-foster-children-transaction' })
-  } catch (error) {
+  } catch {
     showToast('Gagal mencatat transaksi offline', 'error')
   } finally {
     isLoading.value = false
@@ -69,7 +67,7 @@ const formatCurrencyPreview = computed(() => {
 <template>
   <DashboardLayout>
     <template #title>Tambah Transaksi Anak Asuh</template>
-    
+
     <div class="max-w-full mx-auto space-y-6">
       <!-- Form Card -->
       <form

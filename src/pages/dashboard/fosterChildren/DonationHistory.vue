@@ -8,7 +8,7 @@ import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/molecules/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
-import { Category, Gender, type FosterChildren, type FosterChildrenParams } from '@/types/fosterChildren'
+import { Category, Gender, type FosterChildren, type FosterChildrenQueryParams } from '@/types/fosterChildren'
 
 const router = useRouter()
 
@@ -119,8 +119,8 @@ const currentPrevCursor = ref<string | undefined>(undefined)
 const direction = ref<'next' | 'prev' | undefined>(undefined)
 const pageOffset = ref(0)
 
-const queryParams = computed<FosterChildrenParams>(() => {
-  const params: FosterChildrenParams = { limit: limit.value }
+const queryParams = computed<FosterChildrenQueryParams>(() => {
+  const params: FosterChildrenQueryParams = { limit: limit.value }
 
   if (direction.value === 'next' && currentNextCursor.value) {
     params.nextCursor = currentNextCursor.value
@@ -159,7 +159,7 @@ watch([debouncedSearchQuery, selectedGender, selectedCategory, selectedStatus, l
 })
 
 // Fetch foster children via composable
-const { fosterChildrenListQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
+const { listQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
 
 const displayChildren = computed(() => {
   // kalau API kosong → pakai dummy
@@ -297,7 +297,7 @@ const handleView = (child: FosterChildren) => {
 
     <BaseTable
       class="mt-6"
-      :loading="fosterChildrenListQuery.isPending.value && displayChildren.length === 0"
+      :loading="listQuery.isPending.value && displayChildren.length === 0"
       loading-message="Memuat data anak asuh..."
       :is-empty="displayChildren.length === 0"
       empty-message="Tidak ada anak asuh yang ditemukan."

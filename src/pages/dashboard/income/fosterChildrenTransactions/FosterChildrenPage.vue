@@ -6,12 +6,6 @@ import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { Category, Gender, type FosterChildren } from '@/types/fosterChildren'
-import { useFosterChildrenTransactionList } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionList'
-import type { FosterChildrenTransactionQueryParams, FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
-import { useRouter, useRoute } from 'vue-router'
-
-const router = useRouter()
-const route = useRoute()
 
 const queryParams = reactive({
   search: '',
@@ -133,7 +127,7 @@ const formatDate = (date: string) => {
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-            <Baby :size="24" class="text-primary-400 dark:text-primary-500" />
+            <CirclePoundSterling :size="24" class="text-primary-400 dark:text-primary-500" />
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Anak Asuh</h2>
@@ -323,7 +317,7 @@ const formatDate = (date: string) => {
                 <div class="flex items-center justify-center gap-2">
                   <RouterLink
                     :to="{
-                      name: 'dashboard-foster-children-transactions-detail',
+                      name: 'dashboard-foster-children-transaction-detail',
                       params: { id: child.id },
                     }"
                     class="p-2 inline-flex items-center text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all"

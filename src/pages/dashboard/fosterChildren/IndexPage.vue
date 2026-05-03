@@ -13,12 +13,12 @@ import {
   Category,
   Gender,
   type FosterChildren,
-  type FosterChildrenParams,
+  type FosterChildrenQueryParams,
 } from '@/types/fosterChildren'
 
 const router = useRouter()
 
-const queryParams = reactive<FosterChildrenParams>({
+const queryParams = reactive<FosterChildrenQueryParams>({
   limit: 10,
   search: undefined,
   gender: undefined,
@@ -55,7 +55,7 @@ function resetPagination() {
 }
 
 // Fetch foster children via composable
-const { fosterChildrenListQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
+const { listQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
 
 const displayChildren = computed(() => fosterChildren.value)
 
@@ -206,7 +206,7 @@ const handleEdit = (child: FosterChildren) => {
 
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-all duration-300">
       <BaseTable
-        :loading="fosterChildrenListQuery.isPending.value"
+        :loading="listQuery.isPending.value"
         loading-message="Memuat data anak asuh..."
         :is-empty="displayChildren.length === 0"
         empty-message="Tidak ada anak asuh yang ditemukan."
