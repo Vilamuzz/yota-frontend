@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, reactive, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Plus, HandHeart, RotateCcw, Trash2, Eye } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
@@ -17,10 +17,7 @@ import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransactio
 import type { FosterChildrenTransactionQueryParams } from '@/types/fosterChildrenTransaction'
 import { getStatusColor } from '@/utils/statusColor'
 
-const route = useRoute()
-const { showToast } = useToast()
-const childId = route.params.id as string
-const { deleteMutation } = useFosterChildrenTransactionDelete()
+const router = useRouter()
 
 const queryParams = reactive<FosterChildrenTransactionQueryParams>({
   limit: 10,
@@ -110,35 +107,87 @@ function handleConfirmDelete() {
           </BaseButton>
         </div>
 
-        <BaseButton
-          variant="primary"
-          :to="{
-            name: 'dashboard-foster-children-transaction-create',
-            params: { id: childId },
-          }"
-          class="w-full sm:w-auto"
-        >
+        <BaseButton variant="primary" @click="handleCreate">
           <Plus :size="20" class="mr-1" />
           Tambah Transaksi Offline
         </BaseButton>
       </div>
 
-      <!-- Table Section -->
-      <BaseTable
-        :loading="isLoading"
-        loading-message="Memuat transaksi anak asuh..."
-        :is-empty="fosterChildrenTransactions.length === 0"
-        empty-message="Tidak ada data transaksi"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
-        v-model:limit="queryParams.limit"
-        :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
-      >
-        <template #empty-icon>
-          <HandHeart :size="96" class="mx-auto mb-2 text-gray-300" />
-        </template>
+      <!-- Filters & Search -->
+      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <BaseSearch v-model="searchInput" placeholder="Cari nama donatur..." class="w-full sm:max-w-xs" />
+
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <BaseFilter :has-active-filters="hasActiveFilters">
+            <template #default="{ closeDropdown }">
+              <div class="space-y-4 w-64">
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                    Metode Donasi
+                  </label>
+                  <select
+                    v-model="queryParams.method"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="all">Semua Metode</option>
+                    <option v-for="method in methods" :key="method" :value="method">
+                      {{ method }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                    Status
+                  </label>
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="all">Semua Status</option>
+                    <option v-for="status in statuses" :key="status" :value="status">
+                      {{ status }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                  >
+                    RESET
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+                  >
+                    APPLY
+                  </button>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
+        </div>
+      </div>
+
+      <!-- Table Content -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-all duration-300">
+        <BaseTable
+          :loading="false"
+          loading-message="Memuat data riwayat donasi anak asuh..."
+          :is-empty="filteredTransactions.length === 0"
+          empty-message="Tidak ada riwayat donasi anak asuh yang ditemukan."
+          :has-prev="queryParams.page > 1"
+          :has-next="queryParams.page * queryParams.limit < filteredTransactions.length"
+          v-model:limit="queryParams.limit"
+          :limit-options="limitOptions"
+          @prev="handlePrevPage"
+          @next="handleNextPage"
+        >
+          <template #empty-icon>
+            <Baby :size="64" class="text-gray-300 dark:text-gray-600 mb-2" />
+          </template>
 
         <template #headers>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>

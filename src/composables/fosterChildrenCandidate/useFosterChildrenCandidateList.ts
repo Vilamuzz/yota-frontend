@@ -1,30 +1,25 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fosterChildrenCandidateService } from '@/services/fosterChildrenCandidate.service'
-import type {
-  FosterChildrenCandidateQueryParams,
-  FosterChildrenCandidateListResponse,
-} from '@/types/fosterChildrenCandidate'
+import type { FosterChildrenCandidateQueryParams, FosterChildrenCandidateListResponse } from '@/types/fosterChildrenCandidate'
 import type { ApiError } from '@/types/response'
 
-export const useFosterChildrenCandidateList = (
-  params: MaybeRefOrGetter<FosterChildrenCandidateQueryParams>,
-) => {
-  const candidateListQuery = useQuery<FosterChildrenCandidateListResponse, ApiError>({
-    queryKey: ['fosterChildrenCandidates', params],
-    queryFn: () => fosterChildrenCandidateService.getFosterChildrenCandidate(toValue(params)),
+export const useFosterCandidateChildrenList = (params: MaybeRefOrGetter<FosterChildrenCandidateQueryParams>) => {
+  const listQuery = useQuery<FosterChildrenCandidateListResponse, ApiError>({
+    queryKey: ['fosterChildrenCandidate', params],
+    queryFn: () => fosterChildrenCandidateService.getFosterChildrenCandidateList(toValue(params)),
     retry: 1,
   })
 
-  const candidates = computed(
-    () => candidateListQuery.data.value?.data?.fosterChildrenCandidates || [],
+  const fosterChildrenCandidate = computed(
+    () => listQuery.data.value?.data?.fosterChildrenCandidates || [],
   )
-  const pagination = computed(() => candidateListQuery.data.value?.data?.pagination)
+  const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {
-    candidateListQuery,
-    candidates,
+    listQuery,
+    fosterChildrenCandidate,
     pagination,
-    isLoading: candidateListQuery.isPending,
+    isLoading: listQuery.isPending,
   }
 }

@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { createFosterChildrenTransactionSchema } from '@/schemas/fosterChildrenTransaction.schema'
-import { useFosterChildrenTransactionCreateOffline } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionCreateOffline'
+import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
@@ -12,17 +10,49 @@ import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 
 const router = useRouter()
-const route = useRoute()
-const { createMutation } = useFosterChildrenTransactionCreateOffline()
 const { showToast } = useToast()
 
-const fosterChildId = route.params.id as string
+
+// Form fields
 const donorName = ref('')
 const donorEmail = ref('')
 const grossAmount = ref('')
 const errors = ref<Record<string, string>>({})
 
-const isLoading = computed(() => createMutation.isPending.value)
+const isLoading = ref(false)
+
+const validate = (): boolean => {
+  const newErrors: Record<string, string> = {}
+
+  if (!grossAmount.value || Number(grossAmount.value) < 1000) {
+    newErrors.gross_amount = 'Minimal donasi adalah Rp 1.000'
+  }
+
+  if (donorEmail.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donorEmail.value)) {
+    newErrors.donor_email = 'Format email tidak valid'
+  }
+
+  errors.value = newErrors
+  return Object.keys(errors.value).length === 0
+}
+
+const handleSubmit = async () => {
+  if (!validate()) return
+
+  isLoading.value = true
+
+  try {
+    // Mock API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    showToast('Transaksi offline berhasil dicatat!', 'success')
+    router.push({ name: 'dashboard-foster-children-transaction' })
+  } catch {
+    showToast('Gagal mencatat transaksi offline', 'error')
+  } finally {
+    isLoading.value = false
+  }
+}
 
 const formatCurrencyPreview = computed(() => {
   const num = Number(grossAmount.value)

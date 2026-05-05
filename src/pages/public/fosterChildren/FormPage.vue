@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft } from 'lucide-vue-next'
 import { Category, Gender, type FosterChildren } from '@/types/fosterChildren'
-import ChildProfile from '@/components/molecules/ChildProfile.vue'
+import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import router from '@/router'
-import { ref, computed } from 'vue'
-
+const router = useRouter()
 const route = useRoute()
+
 const childSlug = route.params.slug as string
 
 const children = ref<FosterChildren[]>([
@@ -89,22 +89,37 @@ const children = ref<FosterChildren[]>([
 ])
 
 const child = computed(() => {
-  return children.value.find((c) => c.slug === childSlug)
+  return children.value.find(c => c.slug === childSlug)
 })
-
 const handleBack = () => {
-  router.push({ name: 'foster-children' })
+  router.push({ name: 'foster-children-detail' })
 }
 
-const handleDonasi = () => {
-  router.push({ name: 'foster-children-donation', params: { slug: childSlug } })
+const manualInput = ref('')
+const manualError = ref('')
+const donorName = ref('')
+
+const formatNumber = (val: string) => {
+  const num = val.replace(/\D/g, '')
+  return new Intl.NumberFormat('id-ID').format(Number(num || 0))
 }
 
+const handleManualInput = (val: string) => {
+  const raw = val.replace(/\D/g, '')
+  const num = Number(raw)
+
+  if (raw && num < 10000) {
+    manualError.value = 'Minimal donasi Rp 10.000'
+  } else {
+    manualError.value = ''
+  }
+  manualInput.value = formatNumber(raw)
+}
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-100">
-    <div class="sticky top-0 z-40 bg-white px-6 py-4 flex items-center gap-4 font-[Poppins]">
+    <div class="sticky top-0 z-40 bg-white px-6 py-4 flex items-center gap-4 font-poppins">
       <!-- Back Button -->
       <button
         class="flex items-center justify-center shrink-0 text-gray-700 hover:text-gray-900 transition"
@@ -121,50 +136,66 @@ const handleDonasi = () => {
 
     <div class="bg-white rounded-xl border-gray-100 shadow-sm overflow-hidden mx-auto mt-5 w-[90%]">
       <div class="p-6 space-y-5">
-        <ChildProfile
-          v-if="child"
-          :child="child"
-        />
-        <div class="grid grid-cols-[180px_auto] gap-y-3 gap-x-2 text-sm">
-          <div class="text-gray-500">Nama Anak Asuh</div>
-          <div>: {{  child?.name }}</div>
+        <!-- Judul -->
+        <h2 class="text-left text-2xl font-bold text-black">
+          Masukan Nominal Donasi
+        </h2>
 
-          <div class="text-gray-500">Jenis Kelamin</div>
-          <div>: {{  child?.gender }}</div>
-
-          <div class="text-gray-500">Tempat Lahir</div>
-          <div>: {{  child?.birthPlace }}</div>
-
-          <div class="text-gray-500">Tanggal Lahir</div>
-          <div>: {{  child?.birthDate }}</div>
-
-          <div class="text-gray-500">Alamat</div>
-          <div>: {{  child?.address }}</div>
-        </div>
-        <div class="flex flex-col gap-3 mt-5">
-          <div v-if="child?.achievements?.length"
-               class="flex flex-wrap gap-4 mt-6">
-            <div v-for="cert in child.achievements"
-                :key="cert.id"
-                class="w-65 rounded-xl border bg-white shadow-sm overflow-hidden">
-              <iframe
-                :src="cert.url"
-                class="w-full h-50">
-              </iframe>
-            </div>
-          </div>
-          <p v-else class="text-gray-500 text-sm mt-6">Belum ada sertifikat yang diunggah.</p>
-        </div>
-        <div class="px-6 pb-4 flex justify-end gap-3">
+        <!-- Preset -->
+        <div class="grid grid-cols-2 gap-3">
           <BaseButton
-            variant="primary"
-            @click="handleDonasi"
-            class="rounded-xl px-5 py-2.5 text-base"
+            v-for="amount in [10000,20000,50000,100000]"
+            :key="amount"
+            variant="outline"
             size="lg"
+            class="text-xl font-semibold border-2 border-gray-200 text-black"
+            @click="handleManualInput(amount.toString())"
           >
-            Donasi
+            Rp {{ new Intl.NumberFormat('id-ID').format(amount) }}
           </BaseButton>
         </div>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3">
+          <div class="flex-1 h-px bg-gray-200" />
+          <div class="flex-1 h-px bg-gray-200" />
+        </div>
+
+        <div class="space-y-2">
+          <BaseInput
+            id="amount"
+            v-model="manualInput"
+            label="Nominal Lainnya"
+            placeholder="0"
+            size="lg"
+            :error="manualError"
+            :hint="!manualError ? 'Minimal donasi Rp 10.000' : ''"
+            @update:model-value="handleManualInput"
+            class="[&>label]:text-black"
+          >
+            <template #prefix>
+              <span class="text-black font-semibold font-poppins">Rp</span>
+            </template>
+          </BaseInput>
+
+          <BaseInput
+            id="donorName"
+            v-model="donorName"
+            label="Nama Donatur"
+            placeholder="Nama (opsional)"
+            size="lg"
+            class="[&>label]:text-black"
+          />
+        </div>
+
+        <BaseButton
+          variant="primary"
+          size="lg"
+          :fullWidth="true"
+          :disabled="!!manualError || !manualInput"
+        >
+          Lanjut Pembayaran
+        </BaseButton>
       </div>
     </div>
   </div>

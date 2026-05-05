@@ -12,30 +12,84 @@ import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
+import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
+import {
+  Category,
+  Gender,
+  type FosterChildren,
+  type FosterChildrenQueryParams,
+} from '@/types/fosterChildren'
 
-const { showToast } = useToast()
-const { deleteMutation } = useFosterChildrenDelete()
+const router = useRouter()
 
-const {
-  queryParams,
-  limitOptions,
-  searchQuery,
-  pageOffset,
-  fosterChildren,
-  pagination,
-  isLoading,
-  hasActiveFilters,
-  handleNextPage,
-  handlePrevPage,
-  clearFilters,
-} = useFosterChildrenFilters()
+const queryParams = reactive<FosterChildrenQueryParams>({
+  limit: 10,
+  search: undefined,
+  gender: undefined,
+  category: undefined,
+  isGraduated: undefined,
+  nextCursor: undefined,
+  prevCursor: undefined,
+})
 
-const isDeleteModalOpen = ref(false)
-const selectedChildId = ref<string | null>(null)
+const limitOptions = [10, 25, 50, 100]
 
-function openDeleteModal(id: string) {
-  selectedChildId.value = id
-  isDeleteModalOpen.value = true
+const searchQuery = ref('')
+let searchTimeout: ReturnType<typeof setTimeout>
+
+watch(searchQuery, (val) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    queryParams.search = val || undefined
+    resetPagination()
+  }, 400)
+})
+
+watch(
+  () => [queryParams.gender, queryParams.category, queryParams.isGraduated, queryParams.limit],
+  () => resetPagination(),
+)
+
+const pageOffset = ref(0)
+
+function resetPagination() {
+  queryParams.nextCursor = undefined
+  queryParams.prevCursor = undefined
+  pageOffset.value = 0
+}
+
+// Fetch foster children via composable
+const { listQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
+
+const displayChildren = computed(() => fosterChildren.value)
+
+function handleNextPage() {
+  if (pagination.value?.nextCursor) {
+    queryParams.nextCursor = pagination.value.nextCursor
+    queryParams.prevCursor = undefined
+    pageOffset.value += 1
+  }
+}
+
+function handlePrevPage() {
+  if (pagination.value?.prevCursor) {
+    queryParams.prevCursor = pagination.value.prevCursor
+    queryParams.nextCursor = undefined
+    pageOffset.value -= 1
+  }
+}
+
+const getStatusColor = (isGraduated: boolean) => {
+  return isGraduated
+    ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
+    : 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+}
+
+const confirmShow = ref(false)
+const confirmChild = ref<FosterChildren | null>(null)
+const deleteChild = (child: FosterChildren) => {
+  confirmChild.value = child
+  confirmShow.value = true
 }
 
 function handleConfirmDelete() {
@@ -160,7 +214,7 @@ function handleConfirmDelete() {
 
       <!-- Table Section -->
       <BaseTable
-        :loading="isLoading"
+        :loading="listQuery.isPending.value"
         loading-message="Memuat data anak asuh..."
         :is-empty="fosterChildren.length === 0"
         empty-message="Tidak ada data anak asuh"

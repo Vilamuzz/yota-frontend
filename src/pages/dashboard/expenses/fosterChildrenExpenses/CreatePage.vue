@@ -57,7 +57,7 @@ const handleSubmit = () => {
 
   createMutation.mutate(
     {
-      id: childId,
+      id: fosterChildId,
       data: {
         ...result.data,
         proofFile: proofFile.value || undefined,

@@ -1,28 +1,101 @@
 <script setup lang="ts">
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, Baby } from 'lucide-vue-next'
-import { useFosterChildrenFilters } from '@/composables/fosterChildren/useFosterChildrenFilters'
+import { Eye, CirclePoundSterling } from 'lucide-vue-next'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
-import { formatDate } from '@/utils/format'
+import { Category, Gender } from '@/types/fosterChildren'
+import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
+import type { FosterChildrenQueryParams, FosterChildren } from '@/types/fosterChildren'
 
-const {
-  queryParams,
-  limitOptions,
-  genders,
-  categories,
-  statuses,
-  searchQuery,
-  pageOffset,
-  fosterChildren,
-  pagination,
-  isLoading,
-  hasActiveFilters,
-  handleNextPage,
-  handlePrevPage,
-  clearFilters,
-} = useFosterChildrenFilters()
+const router = useRouter()
+
+const queryParams = reactive<FosterChildrenQueryParams>({
+  limit: 10,
+  search: undefined,
+  gender: undefined,
+  category: undefined,
+  isGraduated: undefined,
+  nextCursor: undefined,
+  prevCursor: undefined,
+})
+
+const searchInput = ref('')
+let searchTimeout: ReturnType<typeof setTimeout>
+watch(searchInput, (val) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    queryParams.search = val || undefined
+    resetPagination()
+  }, 400)
+})
+
+const limitOptions = [10, 25, 50, 100]
+const genders = Object.values(Gender)
+const categories = Object.values(Category)
+
+const clearFilters = () => {
+  searchInput.value = ''
+  queryParams.search = undefined
+  queryParams.gender = undefined
+  queryParams.category = undefined
+  queryParams.isGraduated = undefined
+  resetPagination()
+}
+
+const hasActiveFilters = computed(() => {
+  return (
+    queryParams.gender !== undefined ||
+    queryParams.category !== undefined ||
+    queryParams.isGraduated !== undefined
+  )
+})
+
+const pageOffset = ref(0)
+
+function resetPagination() {
+  queryParams.nextCursor = undefined
+  queryParams.prevCursor = undefined
+  pageOffset.value = 0
+}
+
+watch(
+  () => [queryParams.gender, queryParams.category, queryParams.isGraduated, queryParams.limit],
+  () => resetPagination(),
+)
+
+// Fetch foster children via composable
+const { fosterChildren, pagination, isLoading } = useFosterChildrenList(queryParams)
+
+const handleNextPage = () => {
+  if (pagination.value?.nextCursor) {
+    queryParams.nextCursor = pagination.value.nextCursor
+    queryParams.prevCursor = undefined
+    pageOffset.value += 1
+  }
+}
+
+const handlePrevPage = () => {
+  if (pagination.value?.prevCursor) {
+    queryParams.prevCursor = pagination.value.prevCursor
+    queryParams.nextCursor = undefined
+    pageOffset.value -= 1
+  }
+}
+
+const handleView = (child: FosterChildren) => {
+  router.push({
+    name: 'dashboard-foster-children-expense-transaction',
+    params: { id: child.id },
+  })
+}
+
+const getStatusColor = (isGraduated: boolean) => {
+  if (isGraduated) {
+    return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
+  }
+  return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+}
 </script>
 
 <template>
@@ -102,22 +175,22 @@ const {
         </div>
       </div>
 
-      <!-- Table Section -->
-      <BaseTable
-        :loading="isLoading"
-        loading-message="Memuat data anak asuh..."
-        :is-empty="fosterChildren.length === 0"
-        empty-message="Tidak ada data anak asuh"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
-        v-model:limit="queryParams.limit"
-        :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
-      >
-        <template #empty-icon>
-          <Baby :size="96" class="mx-auto mb-2 text-gray-300" />
-        </template>
+    <BaseTable
+      class="mt-6"
+      :loading="isLoading"
+      loading-message="Memuat data anak asuh..."
+      :is-empty="fosterChildren.length === 0"
+      empty-message="Tidak ada anak asuh yang ditemukan."
+      :has-prev="!!pagination?.prevCursor"
+      :has-next="!!pagination?.nextCursor"
+      v-model:limit="queryParams.limit"
+      :limit-options="limitOptions"
+      @prev="handlePrevPage"
+      @next="handleNextPage"
+    >
+      <template #empty-icon>
+        <CirclePoundSterling :size="64" class="text-gray-400 dark:text-gray-600" />
+      </template>
 
         <template #headers>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>

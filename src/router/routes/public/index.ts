@@ -56,7 +56,12 @@ export const publicRoutes: RouteRecordRaw[] = [
       },
       {
         path: ':slug/form',
-        name: 'foster-children-form',
+        name: 'foster-children-donation',
+        component: () => import('@/pages/public/fosterChildren/FormPage.vue'),
+      },
+      {
+        path: ':slug/form',
+        name: 'foster-children-submission',
         component: () => import('@/pages/public/fosterChildren/FormSubmission.vue'),
       },
     ],
@@ -99,18 +104,13 @@ export const publicRoutes: RouteRecordRaw[] = [
 
   {
     path: '/news',
-    children: [
-      {
-        path: '',
-        name: 'news',
-        component: () => import('@/pages/public/news/IndexPage.vue'),
-      },
-      {
-        path: ':slug',
-        name: 'news-detail',
-        component: () => import('@/pages/public/news/DetailPage.vue'),
-      },
-    ],
+    name: 'news',
+    component: () => import('@/pages/public/news/IndexPage.vue'),
+  },
+  {
+    path: '/reports',
+    name: 'reports',
+    component: () => import('@/pages/public/reports/IndexPage.vue'),
   },
 
 ]

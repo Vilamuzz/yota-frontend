@@ -26,6 +26,10 @@ import { extractError } from '@/utils/error'
 
 const route = useRoute()
 const router = useRouter()
+const fosterChildId = route.params.id as string
+
+const { updateMutation, validationErrors } = useFosterChildrenUpdate()
+const { detailQuery } = useFosterChildrenDetail(fosterChildId)
 const { showToast } = useToast()
 
 const fosterChildId = route.params.id as string
@@ -93,31 +97,29 @@ watch(
   },
   { deep: true },
 )
+const birthDateError = computed(
+  () => fieldErrors.value.birthDate || validationErrors.value?.birthDate || '',
+)
+const addressError = computed(
+  () => fieldErrors.value.address || validationErrors.value?.address || '',
+)
+const imageError = computed(
+  () =>
+    fieldErrors.value.profilePicture ||
+    fieldErrors.value.image ||
+    validationErrors.value?.profilePicture ||
+    '',
+)
+const achievementsError = computed(
+  () => fieldErrors.value.achievements || validationErrors.value?.achievements || '',
+)
+const isGraduatedError = computed(
+  () => fieldErrors.value.isGraduated || validationErrors.value?.isGraduated || '',
+)
+const achivementError = computed(() => fieldErrors.value.achivement || '')
 
-const handleProfilePictureChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    const file = target.files[0]
-    form.profilePictureFile = file
-    form.profilePicturePreview = URL.createObjectURL(file)
-  }
-}
-
-const handleFileChange = (event: Event, type: 'familyCard' | 'sktm' | 'achievement') => {
-  const target = event.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    const file = target.files[0]
-    if (type === 'familyCard') {
-      form.familyCardFile = file
-      form.familyCardPreview = URL.createObjectURL(file)
-    } else if (type === 'sktm') {
-      form.sktmFile = file
-      form.sktmPreview = URL.createObjectURL(file)
-    } else {
-      form.achievementFile = file
-    }
-  }
-}
+const isFetching = computed(() => detailQuery.isPending.value)
+const isLoading = computed(() => updateMutation.isPending.value)
 
 const addAchievement = () => {
   if (form.achievementInput.trim() && form.achievementFile) {

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { Category, Gender } from '@/types/fosterChildren'
 
-export const createChildSchema = z.object({
+export const createFosterChildrenSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   birthPlace: z.string().min(1, 'Birth place is required'),
   birthDate: z.string().min(1, 'Birth date is required'),
@@ -15,9 +15,9 @@ export const createChildSchema = z.object({
   achievements: z.array(z.string()).optional(),
 })
 
-export type CreateChildFormData = z.infer<typeof createChildSchema>
+export type CreateFosterChildrenFormData = z.infer<typeof createFosterChildrenSchema>
 
-export const updateChildSchema = z.object({
+export const updateFosterChildrenSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   birthPlace: z.string().min(1, 'Birth place is required'),
   birthDate: z.string().min(1, 'Birth date is required'),
@@ -31,4 +31,4 @@ export const updateChildSchema = z.object({
   achievements: z.array(z.string()).optional(),
 })
 
-export type FosterChildrenFormData = z.infer<typeof fosterChildrenSchema>
+export type FosterChildrenFormData = z.infer<typeof updateFosterChildrenSchema>
