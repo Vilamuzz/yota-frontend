@@ -6,6 +6,7 @@ export interface Account {
   email: string
   isBanned: boolean
   roles: AccountRole[]
+  userProfile: UserProfile
   createdAt: string
 }
 

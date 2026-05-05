@@ -1,245 +1,105 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Eye, HandHeart } from 'lucide-vue-next'
-
-import { useDonationProgramList } from '@/composables/donationProgram/useDonationProgramAdminList'
-import { useQueryClient } from '@tanstack/vue-query'
+import { useDonationProgramFilters } from '@/composables/donationProgram/useDonationProgramFilters'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
-import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import type {
-  DonationProgram,
-  DonationProgramCategoryEnum,
-  DonationProgramQueryParams,
-  DonationProgramStatusEnum,
-} from '@/types/donationProgram'
+import { DonationProgramCategoryEnum, DonationProgramStatusEnum } from '@/types/donationProgram'
+import { formatCurrency, formatDate } from '@/utils/format'
+import { getStatusColor } from '@/utils/statusColor'
 
-const router = useRouter()
+const {
+  queryParams,
+  limitOptions,
+  searchQuery,
+  pageOffset,
+  donationPrograms,
+  pagination,
+  isLoading,
+  hasActiveFilters,
+  handleNextPage,
+  handlePrevPage,
+  clearFilters,
+} = useDonationProgramFilters()
 
-const searchQuery = ref('')
-const debouncedSearchQuery = ref('')
-const selectedCategory = ref('all')
-const selectedStatus = ref('all')
-const limit = ref(10)
-const limitOptions = [10, 25, 50, 100]
-
-let searchTimeout: ReturnType<typeof setTimeout>
-watch(searchQuery, (newVal) => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    debouncedSearchQuery.value = newVal
-  }, 500)
-})
-
-// Cursor pagination state
-const currentNextCursor = ref<string | undefined>(undefined)
-const currentPrevCursor = ref<string | undefined>(undefined)
-const direction = ref<'next' | 'prev' | undefined>(undefined)
-const pageOffset = ref(0)
-
-const queryParams = computed<DonationProgramQueryParams>(() => {
-  const params: DonationProgramQueryParams = { limit: limit.value }
-
-  if (direction.value === 'next' && currentNextCursor.value) {
-    params.nextCursor = currentNextCursor.value
-  } else if (direction.value === 'prev' && currentPrevCursor.value) {
-    params.prevCursor = currentPrevCursor.value
-  }
-
-  if (debouncedSearchQuery.value) {
-    params.search = debouncedSearchQuery.value
-  }
-
-  if (selectedCategory.value !== 'all') {
-    params.category = selectedCategory.value as DonationProgramCategoryEnum
-  }
-
-  if (selectedStatus.value !== 'all') {
-    params.status = selectedStatus.value as DonationProgramStatusEnum
-  }
-
-  return params
-})
-
-const resetPagination = () => {
-  currentNextCursor.value = undefined
-  currentPrevCursor.value = undefined
-  direction.value = undefined
-  pageOffset.value = 0
-}
-
-watch([debouncedSearchQuery, selectedCategory, selectedStatus, limit], () => {
-  resetPagination()
-})
-
-const queryClient = useQueryClient()
-
-// Fetch donations via composable
-const { donationListQuery } = useDonationProgramList(queryParams)
-const donations = computed<DonationProgram[]>(
-  () => donationListQuery.data.value?.data?.donationPrograms || [],
-)
-const pagination = computed(() => donationListQuery.data.value?.data?.pagination)
-
-const handleNextPage = () => {
-  if (pagination.value?.nextCursor) {
-    currentNextCursor.value = pagination.value.nextCursor
-    direction.value = 'next'
-    pageOffset.value += 1
-  }
-}
-
-const handlePrevPage = () => {
-  if (pagination.value?.prevCursor) {
-    currentPrevCursor.value = pagination.value.prevCursor
-    direction.value = 'prev'
-    pageOffset.value -= 1
-  }
-}
-
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'bg-green-100 text-green-700 border-green-200'
-    case 'completed':
-      return 'bg-blue-100 text-blue-700 border-blue-200'
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-    case 'closed':
-      return 'bg-red-100 text-red-700 border-red-200'
-    default:
-      return 'bg-gray-100 text-gray-700 border-gray-200'
-  }
-}
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(amount)
-}
-
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-// Delete confirmation modal
-const confirmShow = ref(false)
-const confirmDonation = ref<DonationProgram | null>(null)
-
-const handleConfirmDelete = async () => {
-  if (!confirmDonation.value) return
-  // TODO: implement delete mutation
-  queryClient.invalidateQueries({ queryKey: ['donations'] })
-  confirmShow.value = false
-  confirmDonation.value = null
-}
-
-const clearFilters = () => {
-  searchQuery.value = ''
-  debouncedSearchQuery.value = ''
-  selectedCategory.value = 'all'
-  selectedStatus.value = 'all'
-}
-
-const categories = ['all', 'education', 'health', 'environment', 'social', 'disaster']
-const statuses = ['all', 'active', 'pending', 'completed', 'closed']
-
-const handleDonationTransaction = (id: string) => {
-  router.push({ name: 'dashboard-donation-transaction', params: { id } })
-}
+const categories = Object.values(DonationProgramCategoryEnum)
+const statuses = Object.values(DonationProgramStatusEnum)
 </script>
 
 <template>
   <DashboardLayout>
-    <template #title>Donation Management</template>
+    <template #title>Pengeluaran Donasi</template>
 
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="">
-        <div class="flex flex-col md:flex-col gap-4">
-          <!-- Search and Filter Controls -->
-          <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-            <BaseSearch v-model="searchQuery" placeholder="Search donations..." />
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <BaseFilter
-                :has-active-filters="selectedCategory !== 'all' || selectedStatus !== 'all'"
-              >
-                <template #default="{ closeDropdown }">
-                  <div class="space-y-4">
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Category</label>
-                      <select
-                        v-model="selectedCategory"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="category in categories" :key="category" :value="category">
-                          {{ category.charAt(0).toUpperCase() + category.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchQuery" placeholder="Cari donasi..." class="w-full sm:w-64" />
+          <BaseFilter :has-active-filters="hasActiveFilters">
+            <template #default>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
+                    >Kategori</label
+                  >
+                  <select
+                    v-model="queryParams.category"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option :value="undefined">Semua</option>
+                    <option v-for="category in categories" :key="category" :value="category">
+                      {{ category.charAt(0).toUpperCase() + category.slice(1) }}
+                    </option>
+                  </select>
+                </div>
 
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Status</label>
-                      <select
-                        v-model="selectedStatus"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="status in statuses" :key="status" :value="status">
-                          {{ status.charAt(0).toUpperCase() + status.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
+                <div>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option :value="undefined">Semua</option>
+                    <option v-for="status in statuses" :key="status" :value="status">
+                      {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                    </option>
+                  </select>
+                </div>
 
-                    <div class="flex gap-2 pt-2">
-                      <button
-                        @click="clearFilters"
-                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
-                      >
-                        Clear
-                      </button>
-                      <button
-                        @click="closeDropdown"
-                        class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </div>
-                </template>
-              </BaseFilter>
-            </div>
-          </div>
+                <div class="flex gap-2 pt-2">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
         </div>
       </div>
 
       <!-- Donations Table -->
       <BaseTable
-        :loading="donationListQuery.isPending.value"
-        loading-message="Loading donations..."
-        :is-empty="donations.length === 0"
-        empty-message="No donations available"
+        :loading="isLoading"
+        loading-message="Memuat data donasi..."
+        :is-empty="donationPrograms.length === 0"
+        empty-message="Tidak ada data donasi"
         :has-prev="!!pagination?.prevCursor"
         :has-next="!!pagination?.nextCursor"
-        v-model:limit="limit"
+        v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage"
-        @next="handleNextPage"
+        @prev="handlePrevPage(pagination)"
+        @next="handleNextPage(pagination)"
       >
         <template #empty-icon>
-          <HandHeart :size="96" class="mx-auto mb-2" />
+          <HandHeart :size="96" class="mx-auto mb-2 text-gray-300" />
         </template>
 
         <template #headers>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Judul</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Kategori</th>
           <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
@@ -252,67 +112,72 @@ const handleDonationTransaction = (id: string) => {
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
             Tanggal Berakhir
           </th>
-          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Aksi</th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
+            Aksi
+          </th>
         </template>
 
         <template #rows>
           <tr
-            v-for="(donation, index) in donations"
-            :key="donation.id"
-            class="hover:bg-gray-50 transition-colors duration-150"
+            v-for="(donationProgram, index) in donationPrograms"
+            :key="donationProgram.id"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
           >
-            <td class="px-6 py-4 whitespace-nowrap font-medium">
-              {{ pageOffset * limit + index + 1 }}
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+              {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium max-w-50 truncate">
-              {{ donation.title }}
+            <td
+              class="px-6 py-4 whitespace-nowrap font-medium max-w-50 truncate text-gray-600 dark:text-gray-200"
+            >
+              {{ donationProgram.title }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">
-              {{ donation.category.charAt(0).toUpperCase() + donation.category.slice(1) }}
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+              {{
+                donationProgram.category.charAt(0).toUpperCase() + donationProgram.category.slice(1)
+              }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-right">
-              {{ formatCurrency(donation.fundTarget) }}
+            <td
+              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+            >
+              {{ formatCurrency(donationProgram.fundTarget) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-right">
-              {{ formatCurrency(donation.collectedFund) }}
+            <td
+              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+            >
+              {{ formatCurrency(donationProgram.collectedFund) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                  getStatusColor(donation.status),
+                  getStatusColor(donationProgram.status),
                 ]"
               >
-                {{ donation.status.charAt(0).toUpperCase() + donation.status.slice(1) }}
+                {{
+                  donationProgram.status.charAt(0).toUpperCase() + donationProgram.status.slice(1)
+                }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">
-              {{ formatDate(donation.endDate) }}
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+              {{ formatDate(donationProgram.endDate) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center relative">
-              <button
-                @click="handleDonationTransaction(donation.id)"
-                class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
-                title="View details"
-              >
-                <Eye :size="18" />
-              </button>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-center gap-2">
+                <RouterLink
+                  :to="{
+                    name: 'dashboard-donation-programs-expense-transaction',
+                    params: { id: donationProgram.id },
+                  }"
+                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
+                  title="Lihat transaksi"
+                >
+                  <Eye :size="18" />
+                </RouterLink>
+              </div>
             </td>
           </tr>
         </template>
       </BaseTable>
     </div>
   </DashboardLayout>
-
-  <!-- Delete Confirmation Modal -->
-  <ConfirmationModal
-    :show="confirmShow"
-    :title="`Delete ${confirmDonation?.title}?`"
-    :message="`This donation will be permanently deleted. This action cannot be undone.`"
-    primary-button-text="Delete"
-    secondary-button-text="Cancel"
-    @primary="handleConfirmDelete"
-    @secondary="confirmShow = false"
-    @close="confirmShow = false"
-  />
 </template>

@@ -5,7 +5,18 @@ import type { PaginationParams } from '@/types/response'
 
 export const socialProgramExpenseService = {
   createSocialProgramExpense: async (id: string, data: CreateSocialProgramExpenseRequest) => {
-    const response = await api.post(`${API.SOCIAL_PROGRAMS}/${id}/expenses`, data)
+    const formData = new FormData()
+    formData.append('title', data.title)
+    formData.append('amount', data.amount.toString())
+    formData.append('expenseDate', data.expenseDate)
+    if (data.note) formData.append('note', data.note)
+    if (data.proofFile) formData.append('proofFile', data.proofFile)
+
+    const response = await api.post(`${API.SOCIAL_PROGRAMS}/${id}/expenses`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   },
 
@@ -18,6 +29,11 @@ export const socialProgramExpenseService = {
 
   getSocialProgramExpenseDetail: async (id: string) => {
     const response = await api.get(`${API.SOCIAL_PROGRAMS}/expenses/${id}`)
+    return response.data
+  },
+
+  deleteSocialProgramExpense: async (id: string) => {
+    const response = await api.delete(`${API.SOCIAL_PROGRAMS}/expenses/${id}`)
     return response.data
   },
 }

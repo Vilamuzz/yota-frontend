@@ -1,75 +1,72 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { createFosterChildrenTransactionSchema } from '@/schemas/fosterChildrenTransaction.schema'
+import { useFosterChildrenTransactionCreateOffline } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionCreateOffline'
 import { useToast } from '@/composables/ui/useToast'
+import { getZodErrors } from '@/utils/zodError'
+import { extractError } from '@/utils/error'
+import { formatCurrency } from '@/utils/format'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 
 const router = useRouter()
 const route = useRoute()
+const { createMutation } = useFosterChildrenTransactionCreateOffline()
 const { showToast } = useToast()
 
 const fosterChildId = route.params.id as string
-
-// Form fields
 const donorName = ref('')
 const donorEmail = ref('')
 const grossAmount = ref('')
-
-// Validation errors
 const errors = ref<Record<string, string>>({})
 
-const isLoading = ref(false)
-
-const validate = (): boolean => {
-  const newErrors: Record<string, string> = {}
-  
-  if (!grossAmount.value || Number(grossAmount.value) < 1000) {
-    newErrors.gross_amount = 'Minimal donasi adalah Rp 1.000'
-  }
-  
-  if (donorEmail.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donorEmail.value)) {
-    newErrors.donor_email = 'Format email tidak valid'
-  }
-
-  errors.value = newErrors
-  return Object.keys(errors.value).length === 0
-}
-
-const handleSubmit = async () => {
-  if (!validate()) return
-
-  isLoading.value = true
-
-  try {
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    
-    showToast('Transaksi offline berhasil dicatat!', 'success')
-    router.push({ name: 'dashboard-foster-children-transaction' })
-  } catch (error) {
-    showToast('Gagal mencatat transaksi offline', 'error')
-  } finally {
-    isLoading.value = false
-  }
-}
+const isLoading = computed(() => createMutation.isPending.value)
 
 const formatCurrencyPreview = computed(() => {
   const num = Number(grossAmount.value)
   if (!num || isNaN(num)) return ''
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(num)
+  return formatCurrency(num)
 })
+
+const handleSubmit = () => {
+  const result = createFosterChildrenTransactionSchema.safeParse({
+    grossAmount: Number(grossAmount.value),
+    donorName: donorName.value.trim(),
+    donorEmail: donorEmail.value.trim(),
+  })
+
+  const zodErrors = getZodErrors(result)
+  errors.value = zodErrors
+  if (!result.success) return
+
+  createMutation.mutate(
+    {
+      id: fosterChildId,
+      data: {
+        grossAmount: Number(grossAmount.value),
+        donorName: donorName.value.trim() || undefined,
+        donorEmail: donorEmail.value.trim() || undefined,
+      },
+    },
+    {
+      onSuccess: () => {
+        showToast('Transaksi offline berhasil dicatat!', 'success')
+        router.push({ name: 'dashboard-foster-children-transaction' })
+      },
+      onError: (err) => {
+        showToast(extractError(err, 'Gagal mencatat transaksi offline'), 'error')
+      },
+    },
+  )
+}
 </script>
 
 <template>
   <DashboardLayout>
     <template #title>Tambah Transaksi Anak Asuh</template>
-    
+
     <div class="max-w-full mx-auto space-y-6">
       <!-- Form Card -->
       <form
@@ -108,7 +105,8 @@ const formatCurrencyPreview = computed(() => {
             </div>
 
             <p class="text-xs text-gray-500 dark:text-gray-400">
-              Detail ini akan dicatat sebagai transaksi offline langsung ke dalam sistem, melewati payment gateway.
+              Detail ini akan dicatat sebagai transaksi offline langsung ke dalam sistem, melewati
+              payment gateway.
             </p>
           </div>
 

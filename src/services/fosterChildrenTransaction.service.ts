@@ -36,4 +36,9 @@ export const fosterChildrenTransactionService = {
     const response = await api.get(`${API.FOSTER_CHILDREN}/transactions/${id}`)
     return response.data
   },
+
+  deleteFosterChildrenTransaction: async (id: string) => {
+    const response = await api.delete(`${API.FOSTER_CHILDREN}/transactions/${id}`)
+    return response.data
+  },
 }

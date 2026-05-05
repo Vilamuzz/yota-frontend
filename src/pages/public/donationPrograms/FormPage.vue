@@ -2,16 +2,17 @@
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { ArrowLeft } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
+import { formatCurrency, formatNumber } from '@/utils/format'
 import { useRoute } from 'vue-router'
-import { usePublishedDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
-import { useDonationTransactionCreate } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCreate'
+import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
+import { useDonationProgramTransactionCreate } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCreate'
 
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
 
 // Composables
-const { publishedDonationProgramDetailQuery } = usePublishedDonationProgramDetail(slug)
-const { createMutation } = useDonationTransactionCreate()
+const { detailQuery } = useDonationProgramDetail(slug)
+const { createMutation } = useDonationProgramTransactionCreate()
 
 const handleBack = () => {
   window.history.back()
@@ -71,8 +72,6 @@ const onPrayerInput = () => {
   }
 }
 
-const formatDisplay = (amount: number) => new Intl.NumberFormat('id-ID').format(amount)
-
 const selectPreset = (amount: number) => {
   selectedPreset.value = amount
   manualInput.value = ''
@@ -101,7 +100,7 @@ const selectedAmount = computed(() => {
 const canContinue = computed(() => selectedAmount.value !== null && !createMutation.isPending.value)
 
 const handleSubmit = async () => {
-  const donationId = publishedDonationProgramDetailQuery.data.value?.data?.id
+  const donationId = detailQuery.data.value?.data?.id
   if (!donationId || !selectedAmount.value) return
 
   const response = await createMutation.mutateAsync({
@@ -145,7 +144,7 @@ const handleSubmit = async () => {
         <ArrowLeft :size="24" />
       </button>
       <h1 class="text-base font-bold">
-        {{ publishedDonationProgramDetailQuery.data.value?.data?.title ?? '...' }}
+        {{ detailQuery.data.value?.data?.title ?? '...' }}
       </h1>
     </div>
 
@@ -168,7 +167,7 @@ const handleSubmit = async () => {
                 : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-400 hover:text-primary-400',
             ]"
           >
-            Rp {{ formatDisplay(amount) }}
+            {{ formatCurrency(amount) }}
           </button>
         </div>
 
@@ -194,7 +193,7 @@ const handleSubmit = async () => {
           >
             <span class="text-sm text-gray-400 mr-2 shrink-0">Rp</span>
             <input
-              :value="selectedAmount ? formatDisplay(selectedAmount) : ''"
+              :value="selectedAmount ? formatNumber(selectedAmount) : ''"
               @input="onManualInput"
               type="text"
               inputmode="numeric"

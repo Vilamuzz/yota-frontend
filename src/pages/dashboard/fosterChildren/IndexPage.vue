@@ -1,301 +1,282 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Plus, Baby } from 'lucide-vue-next'
+import { Plus, Trash2, Edit, Baby, RotateCcw, GraduationCap, User } from 'lucide-vue-next'
+import { useFosterChildrenFilters } from '@/composables/fosterChildren/useFosterChildrenFilters'
+import { useFosterChildrenDelete } from '@/composables/fosterChildren/useFosterChildrenDelete'
+import { useToast } from '@/composables/ui/useToast'
+import { formatDate } from '@/utils/format'
+import { Category, Gender } from '@/types/fosterChildren'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseTable from '@/components/organisms/BaseTable.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
-import {
-  Category,
-  Gender,
-  type FosterChildren,
-  type FosterChildrenParams,
-} from '@/types/fosterChildren'
 
-const router = useRouter()
+const { showToast } = useToast()
+const { deleteMutation } = useFosterChildrenDelete()
 
-const queryParams = reactive<FosterChildrenParams>({
-  limit: 10,
-  search: undefined,
-  gender: undefined,
-  category: undefined,
-  isGraduated: undefined,
-  nextCursor: undefined,
-  prevCursor: undefined,
-})
+const {
+  queryParams,
+  limitOptions,
+  searchQuery,
+  pageOffset,
+  fosterChildren,
+  pagination,
+  isLoading,
+  hasActiveFilters,
+  handleNextPage,
+  handlePrevPage,
+  clearFilters,
+} = useFosterChildrenFilters()
 
-const limitOptions = [10, 25, 50, 100]
+const isDeleteModalOpen = ref(false)
+const selectedChildId = ref<string | null>(null)
 
-const searchQuery = ref('')
-let searchTimeout: ReturnType<typeof setTimeout>
-
-watch(searchQuery, (val) => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    queryParams.search = val || undefined
-    resetPagination()
-  }, 400)
-})
-
-watch(
-  () => [queryParams.gender, queryParams.category, queryParams.isGraduated, queryParams.limit],
-  () => resetPagination(),
-)
-
-const pageOffset = ref(0)
-
-function resetPagination() {
-  queryParams.nextCursor = undefined
-  queryParams.prevCursor = undefined
-  pageOffset.value = 0
+function openDeleteModal(id: string) {
+  selectedChildId.value = id
+  isDeleteModalOpen.value = true
 }
 
-// Fetch foster children via composable
-const { fosterChildrenListQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
-
-const displayChildren = computed(() => fosterChildren.value)
-
-function handleNextPage() {
-  if (pagination.value?.nextCursor) {
-    queryParams.nextCursor = pagination.value.nextCursor
-    queryParams.prevCursor = undefined
-    pageOffset.value += 1
+function handleConfirmDelete() {
+  if (selectedChildId.value) {
+    deleteMutation.mutate(selectedChildId.value, {
+      onSuccess: () => {
+        showToast('Data anak asuh berhasil dihapus', 'success')
+        isDeleteModalOpen.value = false
+        selectedChildId.value = null
+      },
+      onError: () => {
+        showToast('Gagal menghapus data anak asuh', 'error')
+      },
+    })
   }
-}
-
-function handlePrevPage() {
-  if (pagination.value?.prevCursor) {
-    queryParams.prevCursor = pagination.value.prevCursor
-    queryParams.nextCursor = undefined
-    pageOffset.value -= 1
-  }
-}
-
-const getStatusColor = (isGraduated: boolean) => {
-  return isGraduated
-    ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
-    : 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-}
-
-const confirmShow = ref(false)
-const confirmChild = ref<FosterChildren | null>(null)
-const deleteChild = (child: FosterChildren) => {
-  confirmChild.value = child
-  confirmShow.value = true
-}
-
-const handleConfirmDelete = async () => {
-  if (!confirmChild.value) return
-  // TODO: Implement delete mutation
-  confirmShow.value = false
-  confirmChild.value = null
-}
-
-const hasActiveFilters = computed(
-  () =>
-    queryParams.gender !== undefined ||
-    queryParams.category !== undefined ||
-    queryParams.isGraduated !== undefined,
-)
-
-function clearFilters() {
-  searchQuery.value = ''
-  queryParams.gender = undefined
-  queryParams.category = undefined
-  queryParams.isGraduated = undefined
-  resetPagination()
-}
-
-const genders = Object.values(Gender)
-const categories = Object.values(Category)
-
-const handleView = (child: FosterChildren) => {
-  router.push({ name: 'dashboard-foster-children-detail', params: { id: child.id } })
-}
-const handleCreate = () => {
-  router.push({ name: 'dashboard-foster-children-create' })
-}
-
-const handleEdit = (child: FosterChildren) => {
-  router.push({ name: 'dashboard-foster-children-edit', params: { id: child.id } })
 }
 </script>
 
 <template>
   <DashboardLayout>
-    <template #title>Manajemen Anak Asuh </template>
+    <template #title>Manajemen Anak Asuh</template>
 
     <div class="space-y-6">
-      <div class="">
-        <div class="flex flex-col md:flex-col gap-4">
-          <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-            <BaseSearch v-model="searchQuery" placeholder="Cari anak asuh..." />
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <BaseFilter :has-active-filters="hasActiveFilters">
-                <template #default="{ closeDropdown }">
-                  <div class="space-y-4 w-64">
-                    <div>
-                      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Jenis Kelamin</label>
-                      <select
-                        v-model="queryParams.gender"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option :value="undefined">Semua Gender</option>
-                        <option v-for="gender in genders" :key="gender" :value="gender">
-                          {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <BaseSearch
+            v-model="searchQuery"
+            placeholder="Cari nama anak..."
+            class="w-full sm:w-64"
+          />
+          <BaseFilter :has-active-filters="hasActiveFilters">
+            <template #default="{ closeDropdown }">
+              <div class="space-y-4 w-64">
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  >
+                    Jenis Kelamin
+                  </label>
+                  <select
+                    v-model="queryParams.gender"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Gender</option>
+                    <option :value="Gender.male">Laki-laki</option>
+                    <option :value="Gender.female">Perempuan</option>
+                  </select>
+                </div>
 
-                    <div>
-                      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Kategori</label>
-                      <select
-                        v-model="queryParams.category"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option :value="undefined">Semua Kategori</option>
-                        <option v-for="category in categories" :key="category" :value="category">
-                          {{ category.charAt(0).toUpperCase() + category.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  >
+                    Kategori
+                  </label>
+                  <select
+                    v-model="queryParams.category"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Kategori</option>
+                    <option :value="Category.yatim">Yatim</option>
+                    <option :value="Category.piatu">Piatu</option>
+                    <option :value="Category.yatimPiatu">Yatim Piatu</option>
+                  </select>
+                </div>
 
-                    <div>
-                      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Status</label>
-                      <select
-                        v-model="queryParams.isGraduated"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option :value="undefined">Semua Status</option>
-                        <option :value="false">Aktif</option>
-                        <option :value="true">Lulus</option>
-                      </select>
-                    </div>
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  >
+                    Status Kelulusan
+                  </label>
+                  <select
+                    v-model="queryParams.isGraduated"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Status</option>
+                    <option :value="true">Sudah Lulus</option>
+                    <option :value="false">Belum Lulus</option>
+                  </select>
+                </div>
 
-                    <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                      <button
-                        @click="clearFilters"
-                        class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-                      >
-                        RESET
-                      </button>
-                      <button
-                        @click="closeDropdown"
-                        class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
-                      >
-                        APPLY
-                      </button>
-                    </div>
-                  </div>
-                </template>
-              </BaseFilter>
-
-              <BaseButton variant="primary" @click="handleCreate">
-                <Plus :size="20" class="mr-1" />
-                Tambah Anak Asuh
-              </BaseButton>
-            </div>
-          </div>
+                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                  >
+                    RESET
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+                  >
+                    APPLY
+                  </button>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
+          <BaseButton
+            v-if="hasActiveFilters"
+            variant="outline"
+            size="md"
+            @click="clearFilters"
+            class="hidden sm:flex"
+          >
+            <RotateCcw :size="16" class="mr-2" />
+            Reset
+          </BaseButton>
         </div>
-      </div>
-    </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-all duration-300">
+        <BaseButton
+          variant="primary"
+          :to="{ name: 'dashboard-foster-children-create' }"
+          class="w-full sm:w-auto"
+        >
+          <Plus :size="20" class="mr-1" />
+          Tambah Anak Asuh
+        </BaseButton>
+      </div>
+
+      <!-- Table Section -->
       <BaseTable
-        :loading="fosterChildrenListQuery.isPending.value"
+        :loading="isLoading"
         loading-message="Memuat data anak asuh..."
-        :is-empty="displayChildren.length === 0"
-        empty-message="Tidak ada anak asuh yang ditemukan."
+        :is-empty="fosterChildren.length === 0"
+        empty-message="Tidak ada data anak asuh"
         :has-prev="!!pagination?.prevCursor"
         :has-next="!!pagination?.nextCursor"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage"
-        @next="handleNextPage"
+        @prev="handlePrevPage(pagination)"
+        @next="handleNextPage(pagination)"
       >
         <template #empty-icon>
-          <Baby :size="64" class="text-gray-300 dark:text-gray-600 mb-2" />
+          <Baby :size="96" class="mx-auto mb-2 text-gray-300" />
         </template>
 
         <template #headers>
-          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">No</th>
-          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-            Nama Anak Asuh
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Foto</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Nama Lengkap
           </th>
-          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-            Jenis Kelamin
-          </th>
-          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Gender</th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
             Kategori
           </th>
-          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-            Tanggal Ditambahkan
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Terdaftar
           </th>
-          <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Status</th>
-          <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Aksi</th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
+            Aksi
+          </th>
         </template>
 
         <template #rows>
           <tr
-            v-for="(child, index) in displayChildren"
+            v-for="(child, index) in fosterChildren"
             :key="child.id"
-            class="group hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-0"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
           >
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-              {{ pageOffset * (queryParams.limit || 10) + index + 1 }}
+            <td
+              class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200 text-sm"
+            >
+              {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white max-w-xs truncate">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div
+                class="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border-2 border-white dark:border-gray-800 shadow-sm"
+              >
+                <img
+                  v-if="child.profilePicture"
+                  :src="child.profilePicture"
+                  class="w-full h-full object-cover"
+                  :alt="child.name"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                  <User :size="20" />
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white truncate max-w-xs">
               {{ child.name }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 capitalize">
-              {{ child.gender }}
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+              <span
+                :class="[
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                  child.gender === Gender.male
+                    ? 'bg-blue-50 border-blue-100 text-blue-700 dark:bg-blue-900/20 dark:border-blue-900/30 dark:text-blue-400'
+                    : 'bg-pink-50 border-pink-100 text-pink-700 dark:bg-pink-900/20 dark:border-pink-900/30 dark:text-pink-400',
+                ]"
+              >
+                {{ child.gender === Gender.male ? 'Laki-laki' : 'Perempuan' }}
+              </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 capitalize">
-              {{ child.category }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300"
+            >
               {{
-                new Date(child.createdAt).toLocaleDateString('id-ID', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })
+                child.category === Category.yatim
+                  ? 'Yatim'
+                  : child.category === Category.piatu
+                    ? 'Piatu'
+                    : 'Yatim Piatu'
               }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
-                :class="[
-                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all duration-300',
-                  getStatusColor(child.isGraduated),
-                ]"
+                v-if="child.isGraduated"
+                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-50 border-green-100 text-green-700 dark:bg-green-900/20 dark:border-green-900/30 dark:text-green-400"
               >
-                {{ child.isGraduated ? 'Lulus' : 'Aktif' }}
+                <GraduationCap :size="12" />
+                Lulus
+              </span>
+              <span
+                v-else
+                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-primary-50 border-primary-100 text-primary-700 dark:bg-primary-900/20 dark:border-primary-900/30 dark:text-primary-400"
+              >
+                Aktif
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+              {{ formatDate(child.createdAt) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <button
-                  @click="handleView(child)"
-                  class="p-2 inline-flex items-center text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all"
-                  title="Lihat Detail"
+                <RouterLink
+                  :to="{ name: 'dashboard-foster-children-edit', params: { id: child.id } }"
+                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
+                  title="Edit data"
                 >
-                  <Eye :size="18" />
-                </button>
+                  <Edit :size="18" />
+                </RouterLink>
                 <button
-                  @click="handleEdit(child)"
-                  class="p-2 inline-flex items-center text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all"
-                  title="Edit Anak Asuh"
-                >
-                  <SquarePen :size="18" />
-                </button>
-                <button
-                  @click="deleteChild(child)"
-                  class="p-2 inline-flex items-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-                  title="Hapus Anak Asuh"
+                  class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 dark:hover:bg-red-900/20"
+                  title="Hapus data"
+                  @click="openDeleteModal(child.id)"
                 >
                   <Trash2 :size="18" />
                 </button>
@@ -305,17 +286,16 @@ const handleEdit = (child: FosterChildren) => {
         </template>
       </BaseTable>
     </div>
-  </DashboardLayout>
 
-  <ConfirmationModal
-    :show="confirmShow"
-    :title="`Hapus ${confirmChild?.name}?`"
-    :message="`Anak asuh akan dihapus secara permanen dan tidak dapat dipulihkan.`"
-    primary-button-text="Hapus"
-    secondary-button-text="Batal"
-    variant="danger"
-    @primary="handleConfirmDelete"
-    @secondary="confirmShow = false"
-    @close="confirmShow = false"
-  />
+    <!-- Delete Confirmation Modal -->
+    <ConfirmationModal
+      :show="isDeleteModalOpen"
+      title="Hapus Data Anak Asuh"
+      message="Apakah Anda yakin ingin menghapus data ini? Semua informasi terkait anak asuh ini akan dihapus permanen."
+      variant="danger"
+      :primary-button-loading="deleteMutation.isPending.value"
+      @close="isDeleteModalOpen = false"
+      @confirm="handleConfirmDelete"
+    />
+  </DashboardLayout>
 </template>

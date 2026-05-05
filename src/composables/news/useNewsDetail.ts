@@ -16,3 +16,17 @@ export const useNewsDetail = (id: MaybeRefOrGetter<string>) => {
     detailQuery,
   }
 }
+
+export const usePublishedNewsDetail = (slug: MaybeRefOrGetter<string>) => {
+  const detailQuery = useQuery<NewsResponse, ApiError>({
+    queryKey: ['publishedNewsDetail', slug],
+    queryFn: () => newsService.getPublishedNewsDetail(toValue(slug)),
+    enabled: computed(() => !!toValue(slug)),
+    retry: 1,
+  })
+
+  return {
+    detailQuery,
+  }
+}
+
