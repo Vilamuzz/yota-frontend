@@ -12,26 +12,26 @@ export const publicRoutes: RouteRecordRaw[] = [
     component: () => import('@/pages/public/AboutPage.vue'),
   },
   {
-    path: '/donation',
+    path: '/donation-program',
     children: [
       {
         path: '',
-        name: 'donation',
+        name: 'donation-program',
         component: () => import('@/pages/public/donationPrograms/IndexPage.vue'),
       },
       {
         path: ':slug',
-        name: 'donation-detail',
+        name: 'donation-program-detail',
         component: () => import('@/pages/public/donationPrograms/DetailPage.vue'),
       },
       {
         path: ':slug/form',
-        name: 'donation-form',
+        name: 'donation-program-form',
         component: () => import('@/pages/public/donationPrograms/FormPage.vue'),
       },
       {
         path: 'callback',
-        name: 'donation-callback',
+        name: 'donation-program-callback',
         component: () => import('@/pages/public/donationPrograms/CallbackPage.vue'),
       },
     ],
@@ -63,8 +63,8 @@ export const publicRoutes: RouteRecordRaw[] = [
         path: ':slug/form',
         name: 'foster-children-submission',
         component: () => import('@/pages/public/fosterChildren/FormSubmission.vue'),
-      }
-    ]
+      },
+    ],
   },
   {
     path: '/social-program',
@@ -88,9 +88,20 @@ export const publicRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/gallery',
-    name: 'gallery',
-    component: () => import('@/pages/public/galleries/IndexPage.vue'),
+    children: [
+      {
+        path: '',
+        name: 'gallery',
+        component: () => import('@/pages/public/galleries/IndexPage.vue'),
+      },
+      {
+        path: ':slug',
+        name: 'gallery-detail',
+        component: () => import('@/pages/public/galleries/DetailPage.vue'),
+      },
+    ],
   },
+
   {
     path: '/news',
     name: 'news',
@@ -101,4 +112,5 @@ export const publicRoutes: RouteRecordRaw[] = [
     name: 'reports',
     component: () => import('@/pages/public/reports/IndexPage.vue'),
   },
+
 ]

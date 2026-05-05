@@ -2,13 +2,15 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { socialProgramExpenseSchema } from '@/schemas/socialProgramExpense.schema'
-import { useSocialProgramExpenseCreate } from '@/composables/socialProgramExpense'
+import { useSocialProgramExpenseCreate } from '@/composables/socialProgramExpense/useSocialProgramExpenseCreate'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
+import { extractError } from '@/utils/error'
+import { formatCurrency } from '@/utils/format'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import { extractError } from '@/utils/error'
+import { Camera, FileText } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -16,51 +18,49 @@ const { createMutation } = useSocialProgramExpenseCreate()
 const { showToast } = useToast()
 
 const socialProgramId = route.params.id as string
-
-// Form fields
-const title = ref('')
-const amount = ref('')
-const expenseDate = ref('')
-const note = ref('')
-const proofFile = ref<File | undefined>(undefined)
-
-// Validation errors
+const title = ref<string>('')
+const amount = ref<string>('')
+const expenseDate = ref<string>(new Date().toISOString().substring(0, 10))
+const note = ref<string>('')
+const proofFile = ref<File | null>(null)
+const proofPreview = ref<string | null>(null)
 const errors = ref<Record<string, string>>({})
 
 const isLoading = computed(() => createMutation.isPending.value)
 
-const validate = (): boolean => {
-  const result = socialProgramExpenseSchema.safeParse({
-    title: title.value.trim(),
-    amount: Number(amount.value),
-    expenseDate: expenseDate.value,
-    note: note.value.trim() || undefined,
-  })
-
-  const zodErrors = getZodErrors(result as Parameters<typeof getZodErrors>[0])
-  errors.value = zodErrors
-  return Object.keys(errors.value).length === 0
-}
+const formatCurrencyPreview = computed(() => {
+  const num = Number(amount.value)
+  if (!num || isNaN(num)) return ''
+  return formatCurrency(num)
+})
 
 const handleFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
-    proofFile.value = target.files[0]
+    const file = target.files[0]
+    proofFile.value = file
+    proofPreview.value = URL.createObjectURL(file)
   }
 }
 
 const handleSubmit = () => {
-  if (!validate()) return
+  const result = socialProgramExpenseSchema.safeParse({
+    title: title.value.trim(),
+    amount: Number(amount.value),
+    expenseDate: expenseDate.value,
+    note: note.value.trim(),
+  })
+
+  const zodErrors = getZodErrors(result)
+  errors.value = zodErrors
+  if (!result.success) return
 
   createMutation.mutate(
     {
-      socialProgramId,
+      id: socialProgramId,
       data: {
-        title: title.value.trim(),
-        amount: Number(amount.value),
-        expenseDate: expenseDate.value,
-        proofFile: proofFile.value,
-        note: note.value.trim() || undefined,
+        ...result.data,
+        proofFile: proofFile.value || undefined,
       },
     },
     {
@@ -72,24 +72,11 @@ const handleSubmit = () => {
         })
       },
       onError: (err) => {
-        showToast(
-          extractError(err, 'Gagal mencatat pengeluaran. Silahkan coba lagi.'),
-          'error',
-        )
+        showToast(extractError(err, 'Gagal mencatat pengeluaran'), 'error')
       },
     },
   )
 }
-
-const formatCurrencyPreview = computed(() => {
-  const num = Number(amount.value)
-  if (!num || isNaN(num)) return ''
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(num)
-})
 </script>
 
 <template>
@@ -97,36 +84,34 @@ const formatCurrencyPreview = computed(() => {
     <template #title>Tambah Pengeluaran Program Sosial</template>
 
     <div class="max-w-full mx-auto space-y-6">
-      <!-- Form Card -->
       <form
         @submit.prevent="handleSubmit"
         class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
       >
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- Left Column: Basic Info -->
           <div class="p-6 space-y-5">
-            <!-- Title -->
             <BaseInput
-              id="expense-title"
+              id="title"
               v-model="title"
               label="Judul Pengeluaran"
-              placeholder="mis. Pembelian logistik"
+              placeholder="mis. Pembelian Logistik"
               :error="errors.title"
               required
             />
 
-            <!-- Amount -->
             <div>
               <label
-                for="expense-amount"
+                for="amount"
                 class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1"
               >
                 Nominal (IDR) <span class="text-red-500">*</span>
               </label>
               <input
-                id="expense-amount"
+                id="amount"
                 v-model="amount"
                 type="number"
-                min="1"
+                min="1000"
                 placeholder="mis. 500000"
                 class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-[#121212] dark:text-gray-100"
                 :class="
@@ -143,86 +128,104 @@ const formatCurrencyPreview = computed(() => {
               </p>
             </div>
 
-            <!-- Expense Date -->
-            <div>
-              <label
-                for="expense-date"
-                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1"
-              >
-                Tanggal Pengeluaran <span class="text-red-500">*</span>
-              </label>
-              <input
-                id="expense-date"
-                v-model="expenseDate"
-                type="date"
-                class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-[#121212] dark:text-gray-100"
-                :class="
-                  errors.expenseDate
-                    ? 'border-red-300 dark:border-red-500/50 focus:ring-red-500 dark:focus:ring-red-500/50'
-                    : 'border-gray-300 dark:border-gray-700'
-                "
-              />
-              <p v-if="errors.expenseDate" class="mt-1 text-xs text-red-600">
-                {{ errors.expenseDate }}
-              </p>
-            </div>
-          </div>
+            <BaseInput
+              id="expenseDate"
+              v-model="expenseDate"
+              type="date"
+              label="Tanggal Pengeluaran"
+              :error="errors.expenseDate"
+              required
+            />
 
-          <div class="p-6 space-y-5">
-            <!-- Note -->
             <div>
               <label
-                for="expense-note"
+                for="note"
                 class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1"
               >
                 Catatan (Opsional)
               </label>
               <textarea
-                id="expense-note"
+                id="note"
                 v-model="note"
                 rows="3"
-                placeholder="mis. Pembelian logistik bantuan"
-                class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-[#121212] dark:text-gray-100 resize-none"
-                :class="
-                  errors.note
-                    ? 'border-red-300 dark:border-red-500/50 focus:ring-red-500 dark:focus:ring-red-500/50'
-                    : 'border-gray-300 dark:border-gray-700'
-                "
+                placeholder="Tambahkan detail pengeluaran..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-[#121212] dark:text-gray-100"
               ></textarea>
-              <p v-if="errors.note" class="mt-1 text-xs text-red-600">
-                {{ errors.note }}
-              </p>
             </div>
+          </div>
 
-            <!-- Proof File -->
+          <!-- Right Column: Proof Upload -->
+          <div class="p-6 space-y-5 border-l border-gray-100 dark:border-gray-700">
             <div>
-              <label
-                for="proof-file"
-                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1"
-              >
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Bukti Pengeluaran (Opsional)
               </label>
-              <input
-                id="proof-file"
-                type="file"
-                accept="image/*,.pdf"
-                @change="handleFileChange"
-                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-[#121212] dark:text-gray-100 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-primary-50 file:text-primary-700 dark:file:bg-primary-900/20 dark:file:text-primary-400 hover:file:bg-primary-100"
-              />
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Format yang diterima: gambar atau PDF
-              </p>
+
+              <div
+                class="relative border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-primary-400 dark:hover:border-primary-500 transition-colors duration-200 overflow-hidden group"
+                :class="{
+                  'border-primary-400 bg-primary-50/30 dark:bg-primary-900/10': proofPreview,
+                }"
+              >
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                  @change="handleFileChange"
+                />
+
+                <div v-if="!proofPreview" class="p-8 text-center">
+                  <div
+                    class="mx-auto w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3"
+                  >
+                    <Camera class="text-gray-400" :size="24" />
+                  </div>
+                  <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Klik atau seret file
+                  </p>
+                  <p class="text-xs text-gray-500 mt-1">PNG, JPG atau PDF (Maks. 5MB)</p>
+                </div>
+
+                <div
+                  v-else
+                  class="relative aspect-video flex items-center justify-center bg-gray-50 dark:bg-gray-900/30"
+                >
+                  <img
+                    v-if="proofFile?.type.startsWith('image/')"
+                    :src="proofPreview"
+                    class="object-contain max-h-full"
+                    alt="Pratinjau Bukti"
+                  />
+                  <div v-else class="flex flex-col items-center">
+                    <FileText :size="48" class="text-primary-500" />
+                    <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mt-2">
+                      {{ proofFile?.name }}
+                    </p>
+                  </div>
+
+                  <div
+                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                  >
+                    <p class="text-white text-xs font-bold">Ganti File</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              Detail ini akan dicatat sebagai pengeluaran untuk program sosial yang dipilih.
-            </p>
+            <div
+              class="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-100 dark:border-yellow-900/30"
+            >
+              <p class="text-xs text-yellow-800 dark:text-yellow-400 leading-relaxed">
+                Pastikan nominal dan bukti pengeluaran sudah sesuai. Data yang disimpan akan
+                langsung mempengaruhi saldo program sosial terkait.
+              </p>
+            </div>
           </div>
         </div>
 
         <!-- Action Buttons -->
         <div
-          class="px-6 pb-4 flex items-center justify-between gap-3 border-t border-gray-200 dark:border-gray-700 pt-4 bg-gray-50 dark:bg-gray-800/50"
+          class="px-6 py-4 flex items-center justify-between gap-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
         >
           <BaseButton
             type="button"
@@ -235,12 +238,10 @@ const formatCurrencyPreview = computed(() => {
           >
             Batal
           </BaseButton>
-          <div class="flex items-center gap-3">
-            <BaseButton type="submit" variant="primary" :loading="isLoading">
-              <template #loading>Menyimpan…</template>
-              Catat Pengeluaran
-            </BaseButton>
-          </div>
+          <BaseButton type="submit" variant="primary" :loading="isLoading">
+            <template #loading>Menyimpan…</template>
+            Simpan Pengeluaran
+          </BaseButton>
         </div>
       </form>
     </div>

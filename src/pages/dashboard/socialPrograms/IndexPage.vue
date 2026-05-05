@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Plus } from 'lucide-vue-next'
+import { Eye, SquarePen, Trash2, Plus, Heart } from 'lucide-vue-next'
 
 import { useSocialProgramList } from '@/composables/socialProgram/useSocialProgramList'
+import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
@@ -12,101 +13,55 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { SocialProgram, SocialProgramQueryParams } from '@/types/socialProgram'
-
-import { useRoute } from 'vue-router'
-import { getStatusColor } from '@/utils/status'
-
-const route = useRoute()
-
-// ambil dari meta router (rekomended)
-const role = computed(() => route.meta.role)
-
-// helper biar enak dipake
-const isChairman = computed(() => role.value === 'chairman')
+import { getStatusColor } from '@/utils/statusColor'
+import { formatCurrency, formatDate } from '@/utils/format'
+import { useAuthStore } from '@/stores/auth'
+import { ROLES } from '@/const/roles'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
-const searchQuery = ref('')
-const debouncedSearchQuery = ref('')
-const selectedStatus = ref('all')
-const limit = ref(10)
+const isChairman = computed(() => authStore.activeRole === ROLES.CHAIRMAN)
+
+const queryParams = reactive<SocialProgramQueryParams>({
+  limit: 10,
+  search: undefined,
+  status: undefined,
+  nextCursor: undefined,
+  prevCursor: undefined,
+})
+
 const limitOptions = [10, 25, 50, 100]
 
+const searchQuery = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
-watch(searchQuery, (newVal) => {
+watch(searchQuery, (val) => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    debouncedSearchQuery.value = newVal
-  }, 500)
+    queryParams.search = val || undefined
+    resetPagination()
+  }, 400)
 })
 
-// Cursor pagination
-const currentNextCursor = ref<string | undefined>(undefined)
-const currentPrevCursor = ref<string | undefined>(undefined)
-const direction = ref<'next' | 'prev' | undefined>(undefined)
-const pageOffset = ref(0)
+const { socialPrograms, pagination, isLoading } = useSocialProgramList(queryParams)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
+  useCursorPagination(queryParams)
 
-const queryParams = computed<SocialProgramQueryParams>(() => {
-  const params: SocialProgramQueryParams = { limit: limit.value }
+watch(
+  () => [queryParams.status, queryParams.limit],
+  () => resetPagination(),
+)
 
-  if (direction.value === 'next' && currentNextCursor.value) {
-    params.nextCursor = currentNextCursor.value
-  } else if (direction.value === 'prev' && currentPrevCursor.value) {
-    params.prevCursor = currentPrevCursor.value
-  }
+const hasActiveFilters = computed(() => queryParams.status !== undefined)
 
-  if (debouncedSearchQuery.value) {
-    params.search = debouncedSearchQuery.value
-  }
-
-  if (selectedStatus.value !== 'all') {
-    params.status = selectedStatus.value
-  }
-
-  return params
-})
-
-const resetPagination = () => {
-  currentNextCursor.value = undefined
-  currentPrevCursor.value = undefined
-  direction.value = undefined
-  pageOffset.value = 0
-}
-
-watch([debouncedSearchQuery, selectedStatus, limit], () => {
+const clearFilters = () => {
+  searchQuery.value = ''
+  queryParams.search = undefined
+  queryParams.status = undefined
   resetPagination()
-})
+}
 
 const queryClient = useQueryClient()
-const { listQuery } = useSocialProgramList(queryParams)
-
-const programs = computed<SocialProgram[]>(() => listQuery.data.value?.data?.socialPrograms || [])
-
-const pagination = computed(() => listQuery.data.value?.data?.pagination)
-
-const handleNextPage = () => {
-  if (pagination.value?.nextCursor) {
-    currentNextCursor.value = pagination.value.nextCursor
-    direction.value = 'next'
-    pageOffset.value += 1
-  }
-}
-
-const handlePrevPage = () => {
-  if (pagination.value?.prevCursor) {
-    currentPrevCursor.value = pagination.value.prevCursor
-    direction.value = 'prev'
-    pageOffset.value -= 1
-  }
-}
-
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
 
 // DELETE
 const confirmShow = ref(false)
@@ -125,17 +80,14 @@ const handleConfirmDelete = async () => {
   confirmProgram.value = null
 }
 
-const clearFilters = () => {
-  searchQuery.value = ''
-  debouncedSearchQuery.value = ''
-  selectedStatus.value = 'all'
-}
+const statuses = [
+  { value: 'active', label: 'Berjalan' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'completed', label: 'Selesai' },
+]
 
-const statuses = ['all', 'active', 'pending', 'completed']
-
-// Navigasi ke halaman create program
 const handleCreate = () => {
-  router.push({ name: 'dashboard-social-program-create' }) // Sinkron dengan router di socialManager.ts
+  router.push({ name: 'dashboard-social-program-create' })
 }
 
 const handleView = (program: SocialProgram) => {
@@ -157,180 +109,171 @@ const handleEdit = (program: SocialProgram) => {
 
 <template>
   <DashboardLayout>
-    <!-- TITLE -->
-    <template #title>
-      <div>
-        <h1 class="text-2xl font-semibold text-gray-800">Data Program</h1>
-        <p class="text-sm text-gray-400 mt-1">Manajemen Program > Data Program</p>
-      </div>
-    </template>
+    <template #title>Data Program Sosial</template>
 
-    <!-- CONTAINER -->
-    <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
-      <!-- CARD -->
-      <div class="bg-white rounded-xl border border-gray-200 px-6 py-5">
-        <!-- TOP BAR -->
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="text-base font-semibold text-gray-700">Kelola Data Program Sosial</h2>
-
-          <div class="flex items-center gap-2">
-            <!-- SEARCH -->
-            <div class="w-64">
-              <BaseSearch v-model="searchQuery" placeholder="Cari Program" />
-            </div>
-
-            <!-- FILTER -->
-            <BaseFilter :has-active-filters="selectedStatus !== 'all'">
-              <template #default="{ closeDropdown }">
-                <div class="space-y-4">
-                  <div>
-                    <label class="text-xs text-gray-500">Status</label>
-                    <select
-                      v-model="selectedStatus"
-                      class="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-                    >
-                      <option v-for="status in statuses" :key="status" :value="status">
-                        {{ status }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="flex gap-2">
-                    <button
-                      @click="clearFilters"
-                      class="flex-1 text-sm border border-gray-200 py-2 rounded-lg hover:bg-gray-50"
-                    >
-                      Clear
-                    </button>
-                    <button
-                      @click="closeDropdown"
-                      class="flex-1 text-sm bg-green-600 text-white py-2 rounded-lg"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </template>
-            </BaseFilter>
-
-            <!-- BUTTON -->
-            <BaseButton
-              variant="primary"
-              class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700"
-              @click="handleCreate"
-            >
-              <Plus :size="16" />
-              Tambah Program
-            </BaseButton>
-          </div>
-        </div>
-
-        <!-- TABLE -->
-        <div class="overflow-hidden rounded-lg border border-gray-200">
-          <BaseTable
-            :loading="listQuery.isPending.value"
-            loading-message="Loading programs..."
-            :is-empty="programs.length === 0"
-            empty-message="No programs available"
-            :has-prev="!!pagination?.prevCursor"
-            :has-next="!!pagination?.nextCursor"
-            v-model:limit="limit"
-            :limit-options="limitOptions"
-            @prev="handlePrevPage"
-            @next="handleNextPage"
-          >
-            <!-- HEADER -->
-            <template #headers>
-              <th class="px-5 py-3 text-left">No</th>
-              <th class="px-5 py-3 text-left">Nama Program</th>
-
-              <!-- DINAMIS -->
-              <th class="px-5 py-3 text-right">
-                {{ isChairman ? 'Nominal Minimal' : 'Total Subscriber' }}
-              </th>
-
-              <th class="px-5 py-3 text-center">Status</th>
-              <th class="px-5 py-3 text-left">Tanggal Ditambahkan</th>
-              <th class="px-5 py-3 text-center">Aksi</th>
-            </template>
-
-            <!-- ROW -->
-            <template #rows>
-              <tr
-                v-for="(program, index) in programs"
-                :key="program.id"
-                class="border-t border-gray-100 hover:bg-gray-50"
-              >
-                <td class="px-5 py-4 text-sm text-gray-500">
-                  {{ pageOffset * limit + index + 1 }}
-                </td>
-
-                <td class="px-5 py-4 text-sm text-gray-700 font-medium">
-                  {{ program.title }}
-                </td>
-
-                <td class="px-5 py-4 text-sm text-gray-600 text-right">
-                  <span v-if="isChairman">
-                    {{ program.minimumAmount }}
-                  </span>
-                  <span v-else>
-                    {{ program.totalSubscribers }}
-                  </span>
-                </td>
-
-                <!-- STATUS -->
-                <td class="px-5 py-4 text-center">
-                  <span
-                    :class="['px-2.5 py-1 text-xs rounded-full', getStatusColor(program.status)]"
+    <div class="space-y-6">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchQuery" placeholder="Cari Program..." class="w-full sm:w-64" />
+          <BaseFilter :has-active-filters="hasActiveFilters">
+            <template #default="{ closeDropdown }">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
                   >
-                    {{
-                      program.status === 'active'
-                        ? 'Berjalan'
-                        : program.status === 'pending'
-                          ? 'Pending'
-                          : program.status === 'completed'
-                            ? 'Selesai'
-                            : program.status
-                    }}
-                  </span>
-                </td>
+                    <option :value="undefined">Semua Status</option>
+                    <option v-for="status in statuses" :key="status.value" :value="status.value">
+                      {{ status.label }}
+                    </option>
+                  </select>
+                </div>
 
-                <td class="px-5 py-4 text-sm text-gray-500">
-                  {{ formatDate(program.createdAt) }}
-                </td>
-
-                <!-- ACTION -->
-                <td class="px-5 py-4">
-                  <div class="flex justify-center items-center gap-3 text-gray-400">
-                    <button @click="handleView(program)" class="hover:text-gray-600">
-                      <Eye :size="18" />
-                    </button>
-
-                    <template v-if="!isChairman">
-                      <button @click="handleEdit(program)" class="hover:text-gray-600">
-                        <SquarePen :size="18" />
-                      </button>
-                      <button @click="deleteProgram(program)" class="hover:text-red-500">
-                        <Trash2 :size="18" />
-                      </button>
-                    </template>
-                  </div>
-                </td>
-              </tr>
+                <div class="flex gap-2 pt-2">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 dark:border-gray-600 dark:hover:bg-gray-700"
+                  >
+                    Hapus
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-150"
+                  >
+                    Terapkan
+                  </button>
+                </div>
+              </div>
             </template>
-          </BaseTable>
+          </BaseFilter>
         </div>
+
+        <BaseButton variant="primary" class="flex items-center gap-2" @click="handleCreate">
+          <Plus :size="16" />
+          Tambah Program
+        </BaseButton>
       </div>
+
+      <!-- Table Section -->
+      <BaseTable
+        :loading="isLoading"
+        loading-message="Memuat data program..."
+        :is-empty="socialPrograms.length === 0"
+        empty-message="Tidak ada data program"
+        :has-prev="!!pagination?.prevCursor"
+        :has-next="!!pagination?.nextCursor"
+        v-model:limit="queryParams.limit"
+        :limit-options="limitOptions"
+        @prev="handlePrevPage(pagination)"
+        @next="handleNextPage(pagination)"
+      >
+        <template #empty-icon>
+          <Heart :size="96" class="mx-auto mb-2 text-gray-300" />
+        </template>
+
+        <template #headers>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Nama Program
+          </th>
+          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
+            {{ isChairman ? 'Nominal Minimal' : 'Total Subscriber' }}
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Tanggal Ditambahkan
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
+            Aksi
+          </th>
+        </template>
+
+        <template #rows>
+          <tr
+            v-for="(program, index) in socialPrograms"
+            :key="program.id"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
+          >
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+              {{ pageOffset * queryParams.limit! + index + 1 }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+              {{ program.title }}
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+            >
+              <span v-if="isChairman">
+                {{ formatCurrency(program.minimumAmount) }}
+              </span>
+              <span v-else>
+                {{ program.totalSubscribers }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              <span
+                :class="[
+                  'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                  getStatusColor(program.status),
+                ]"
+              >
+                {{
+                  program.status === 'active'
+                    ? 'Berjalan'
+                    : program.status === 'pending'
+                      ? 'Pending'
+                      : program.status === 'completed'
+                        ? 'Selesai'
+                        : program.status
+                }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+              {{ formatDate(program.createdAt) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-center gap-2">
+                <button
+                  @click="handleView(program)"
+                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
+                  title="Lihat detail"
+                >
+                  <Eye :size="18" />
+                </button>
+                <template v-if="!isChairman">
+                  <button
+                    @click="handleEdit(program)"
+                    class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
+                    title="Edit program"
+                  >
+                    <SquarePen :size="18" />
+                  </button>
+                  <button
+                    @click="deleteProgram(program)"
+                    class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 inline-block dark:hover:bg-red-900/20"
+                    title="Hapus program"
+                  >
+                    <Trash2 :size="18" />
+                  </button>
+                </template>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </BaseTable>
     </div>
   </DashboardLayout>
 
   <!-- MODAL -->
   <ConfirmationModal
     :show="confirmShow"
-    :title="`Delete ${confirmProgram?.title}?`"
-    message="This program will be permanently deleted."
-    primary-button-text="Delete"
-    secondary-button-text="Cancel"
+    :title="`Hapus ${confirmProgram?.title}?`"
+    message="Program ini akan dihapus secara permanen."
+    primary-button-text="Hapus"
+    secondary-button-text="Batal"
     @primary="handleConfirmDelete"
     @secondary="confirmShow = false"
     @close="confirmShow = false"

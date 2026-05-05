@@ -16,3 +16,17 @@ export const useGalleryDetail = (id: MaybeRefOrGetter<string>) => {
     detailQuery,
   }
 }
+
+export const usePublishedGalleryDetail = (slug: MaybeRefOrGetter<string>) => {
+  const detailQuery = useQuery<GalleryResponse, ApiError>({
+    queryKey: ['publishedGalleryDetail', slug],
+    queryFn: () => galleryService.getPublishedGalleryDetail(toValue(slug)),
+    enabled: computed(() => !!toValue(slug)),
+    retry: 1,
+  })
+
+  return {
+    detailQuery,
+  }
+}
+

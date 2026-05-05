@@ -8,6 +8,7 @@ import { useDonationProgramCreate } from '@/composables/donationProgram/useDonat
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
+import { formatCurrency } from '@/utils/format'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -17,7 +18,10 @@ const { createMutation, validationErrors } = useDonationProgramCreate()
 const { showToast } = useToast()
 
 const todayStr = new Date().toISOString().split('T')[0]
+const categories = Object.values(DonationProgramCategoryEnum)
 
+const coverImageInputRef = ref<HTMLInputElement | null>(null)
+const errors = ref<Record<string, string>>({})
 const form = reactive({
   title: '',
   description: '',
@@ -29,32 +33,35 @@ const form = reactive({
   coverImagePreview: null as string | null,
 })
 
-const fieldErrors = ref<Record<string, string>>({})
-const titleError = computed(() => fieldErrors.value.title || validationErrors.value?.title || '')
+const formatCurrencyPreview = computed(() => {
+  const num = Number(form.fundTarget)
+  if (!num || isNaN(num)) return ''
+  return formatCurrency(num)
+})
+
+const titleError = computed(() => errors.value.title || validationErrors.value?.title || '')
 const descriptionError = computed(
-  () => fieldErrors.value.description || validationErrors.value?.description || '',
+  () => errors.value.description || validationErrors.value?.description || '',
 )
 const categoryError = computed(
-  () => fieldErrors.value.category || validationErrors.value?.category || '',
+  () => errors.value.category || validationErrors.value?.category || '',
 )
 const fundTargetError = computed(
-  () => fieldErrors.value.fund_target || validationErrors.value?.fundTarget || '',
+  () => errors.value.fund_target || validationErrors.value?.fundTarget || '',
 )
 const startDateError = computed(
-  () => fieldErrors.value.date_start || validationErrors.value?.startDate || '',
+  () => errors.value.date_start || validationErrors.value?.startDate || '',
 )
-const dateEndError = computed(
-  () => fieldErrors.value.date_end || validationErrors.value?.endDate || '',
-)
+const dateEndError = computed(() => errors.value.date_end || validationErrors.value?.endDate || '')
 const coverImageFileError = computed(
-  () => fieldErrors.value.cover_image || validationErrors.value?.coverImage || '',
+  () => errors.value.cover_image || validationErrors.value?.coverImage || '',
 )
 
 watch(
   () => form,
   () => {
-    if (Object.keys(fieldErrors.value).length > 0) {
-      fieldErrors.value = {}
+    if (Object.keys(errors.value).length > 0) {
+      errors.value = {}
     }
     if (createMutation.isError.value) {
       createMutation.reset()
@@ -62,9 +69,6 @@ watch(
   },
   { deep: true },
 )
-
-const categories = Object.values(DonationProgramCategoryEnum)
-const coverImageInputRef = ref<HTMLInputElement | null>(null)
 
 const triggerImageInput = () => {
   coverImageInputRef.value?.click()
@@ -76,11 +80,11 @@ const handleImageChange = (event: Event) => {
 
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
-    fieldErrors.value.image = 'Only JPG, PNG, or WebP images are allowed.'
+    errors.value.image = 'Only JPG, PNG, or WebP images are allowed.'
     return
   }
   if (file.size > 5 * 1024 * 1024) {
-    fieldErrors.value.cover_image = 'Image must be smaller than 5 MB.'
+    errors.value.cover_image = 'Image must be smaller than 5 MB.'
     return
   }
 
@@ -94,24 +98,14 @@ const removeImage = () => {
   if (coverImageInputRef.value) coverImageInputRef.value.value = ''
 }
 
-const formatCurrencyPreview = computed(() => {
-  const num = Number(form.fundTarget)
-  if (!num || isNaN(num)) return ''
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(num)
-})
-
 const handleSubmit = (status: 'active' | 'draft' = 'active') => {
   const result = createDonationSchema.safeParse({
     title: form.title.trim(),
     description: form.description.trim(),
     category: form.category,
-    fund_target: Number(form.fundTarget),
-    date_start: form.startDate,
-    date_end: form.dateEnd,
+    fundTarget: Number(form.fundTarget),
+    startDate: form.startDate,
+    endDate: form.dateEnd,
   })
 
   const zodErrors = getZodErrors(result)
@@ -119,7 +113,7 @@ const handleSubmit = (status: 'active' | 'draft' = 'active') => {
     ? {}
     : { image: 'Please upload a campaign image.' }
 
-  fieldErrors.value = { ...zodErrors, ...coverImageValidation }
+  errors.value = { ...zodErrors, ...coverImageValidation }
   if (!result.success || Object.keys(coverImageValidation).length > 0) return
 
   createMutation.mutate(

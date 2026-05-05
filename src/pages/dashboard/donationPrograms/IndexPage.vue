@@ -3,19 +3,21 @@ import { ref } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { SquarePen, Trash2, HandHeart, Plus } from 'lucide-vue-next'
 import { useDonationProgramFilters } from '@/composables/donationProgram/useDonationProgramFilters'
-import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
+import { useDonationProgramUpdate } from '@/composables/donationProgram/useDonationProgramUpdate'
+import { useToast } from '@/composables/ui/useToast'
+import { extractError } from '@/utils/error'
 import {
   type DonationProgram,
   DonationProgramCategoryEnum,
   DonationProgramStatusEnum,
 } from '@/types/donationProgram'
 import { formatCurrency, formatDate } from '@/utils/format'
-import { getStatusColor } from '@/utils/status'
+import { getStatusColor } from '@/utils/statusColor'
 
 const {
   queryParams,
@@ -31,27 +33,34 @@ const {
   clearFilters,
 } = useDonationProgramFilters()
 
-const queryClient = useQueryClient()
-
-// Delete confirmation modal
-const confirmShow = ref(false)
-const confirmDonation = ref<DonationProgram | null>(null)
-
-function deleteDonation(donation: DonationProgram) {
-  confirmDonation.value = donation
-  confirmShow.value = true
-}
-
-async function handleConfirmDelete() {
-  if (!confirmDonation.value) return
-  // TODO: implement delete mutation
-  queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
-  confirmShow.value = false
-  confirmDonation.value = null
-}
+const { deleteMutation } = useDonationProgramUpdate()
+const { showToast } = useToast()
 
 const categories = Object.values(DonationProgramCategoryEnum)
 const statuses = Object.values(DonationProgramStatusEnum)
+
+const confirmShow = ref(false)
+const confirmDonationProgram = ref<DonationProgram | null>(null)
+
+function deleteDonationProgram(donationProgram: DonationProgram) {
+  confirmDonationProgram.value = donationProgram
+  confirmShow.value = true
+}
+
+function handleConfirmDelete() {
+  if (!confirmDonationProgram.value) return
+
+  deleteMutation.mutate(confirmDonationProgram.value.id, {
+    onSuccess: () => {
+      showToast('Donation program deleted successfully!', 'success')
+      confirmShow.value = false
+      confirmDonationProgram.value = null
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Failed to delete donation program.'), 'error')
+    },
+  })
+}
 </script>
 
 <template>
@@ -190,15 +199,15 @@ const statuses = Object.values(DonationProgramStatusEnum)
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <router-link
+                <RouterLink
                   :to="{ name: 'dashboard-donation-programs-edit', params: { id: donation.id } }"
                   class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Edit donation"
                 >
                   <SquarePen :size="18" />
-                </router-link>
+                </RouterLink>
                 <button
-                  @click="deleteDonation(donation)"
+                  @click="deleteDonationProgram(donation)"
                   class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
                   title="Delete donation"
                 >
@@ -215,10 +224,11 @@ const statuses = Object.values(DonationProgramStatusEnum)
   <!-- Delete Confirmation Modal -->
   <ConfirmationModal
     :show="confirmShow"
-    :title="`Delete ${confirmDonation?.title}?`"
+    :title="`Delete ${confirmDonationProgram?.title}?`"
     :message="`This donation will be permanently deleted. This action cannot be undone.`"
     primary-button-text="Delete"
     secondary-button-text="Cancel"
+    :primary-button-loading="deleteMutation.isPending.value"
     @primary="handleConfirmDelete"
     @secondary="confirmShow = false"
     @close="confirmShow = false"

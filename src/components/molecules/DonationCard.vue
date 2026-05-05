@@ -2,22 +2,22 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatCurrency } from '@/utils/format'
-import type { Donation } from '@/types/donationProgram'
+import type { DonationProgram } from '@/types/donationProgram'
 
 const props = defineProps<{
-  donation: Donation
+  donation: DonationProgram
 }>()
 
 const progressPercent = computed(() => {
-  if (!props.donation.fund_target || props.donation.fund_target === 0) return 0
-  return Math.min(100, (props.donation.collected_fund / props.donation.fund_target) * 100)
+  if (!props.donation.fundTarget || props.donation.fundTarget === 0) return 0
+  return Math.min(100, (props.donation.collectedFund / props.donation.fundTarget) * 100)
 })
 
 const remainingDays = computed(() =>
   Math.max(
     0,
     Math.ceil(
-      (new Date(props.donation.date_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+      (new Date(props.donation.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
     ),
   ),
 )
@@ -25,11 +25,11 @@ const remainingDays = computed(() =>
 
 <template>
   <RouterLink
-    :to="{ name: 'donation-detail', params: { slug: donation.slug } }"
+    :to="{ name: 'donation-program-detail', params: { slug: donation.slug } }"
     class="bg-white overflow-hidden flex space-x-6 flex-row p-8 border-gray-200 border-b-2 hover:bg-gray-50 transition-colors"
   >
     <img
-      :src="donation.image_url"
+      :src="donation.coverImage"
       :alt="donation.title"
       class="w-1/2 h-auto rounded-xl object-cover"
     />
@@ -48,7 +48,7 @@ const remainingDays = computed(() =>
         <div>
           <p class="text-sm text-gray-500">Target</p>
           <span class="font-semibold text-primary-500">{{
-            formatCurrency(donation.fund_target)
+            formatCurrency(donation.fundTarget)
           }}</span>
         </div>
         <div>

@@ -2,29 +2,30 @@
 import { ref, computed, watch, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Upload, X } from 'lucide-vue-next'
-import {
-  DonationProgramStatusEnum,
-  type DonationProgramCategoryEnum,
-} from '@/types/donationProgram'
+import { DonationProgramCategoryEnum, DonationProgramStatusEnum } from '@/types/donationProgram'
 import { updateDonationSchema } from '@/schemas/donationProgram.schema'
-import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramAdminDetail'
+import { useDonationProgramAdminDetail } from '@/composables/donationProgram/useDonationProgramAdminDetail'
 import { useDonationProgramUpdate } from '@/composables/donationProgram/useDonationProgramUpdate'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
+import { formatCurrency } from '@/utils/format'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 
 const router = useRouter()
 const route = useRoute()
-const donationId = route.params.id as string
-
-const { donationDetailQuery } = useDonationProgramDetail(donationId)
-const { updateDonationMutation, validationErrors } = useDonationProgramUpdate()
 const { showToast } = useToast()
+const donationId = route.params.id as string
+const { detailQuery } = useDonationProgramAdminDetail(donationId)
+const { updateMutation, validationErrors } = useDonationProgramUpdate()
 
-// Form state
+const todayStr = new Date().toISOString().split('T')[0]
+const categories = Object.values(DonationProgramCategoryEnum)
+
+const coverImageInputRef = ref<HTMLInputElement | null>(null)
+const errors = ref<Record<string, string>>({})
 const form = reactive({
   title: '',
   description: '',
@@ -36,38 +37,34 @@ const form = reactive({
   imagePreview: null as string | null,
 })
 
-// Validation errors
-const fieldErrors = ref<Record<string, string>>({})
+const isLoading = computed(() => updateMutation.isPending.value)
+const isFetching = computed(() => detailQuery.isPending.value)
+const isSuccess = computed(() => updateMutation.isSuccess.value)
 
-const titleError = computed(() => fieldErrors.value.title || validationErrors.value?.title || '')
+const formatCurrencyPreview = computed(() => {
+  const num = Number(form.fundTarget)
+  if (!num || isNaN(num)) return ''
+  return formatCurrency(num)
+})
+
+const titleError = computed(() => errors.value.title || validationErrors.value?.title || '')
 const descriptionError = computed(
-  () => fieldErrors.value.description || validationErrors.value?.description || '',
+  () => errors.value.description || validationErrors.value?.description || '',
 )
 const categoryError = computed(
-  () => fieldErrors.value.category || validationErrors.value?.category || '',
+  () => errors.value.category || validationErrors.value?.category || '',
 )
 const fundTargetError = computed(
-  () => fieldErrors.value.fund_target || validationErrors.value?.fundTarget || '',
+  () => errors.value.fundTarget || validationErrors.value?.fundTarget || '',
 )
 const startDateError = computed(
-  () => fieldErrors.value.date_start || validationErrors.value?.startDate || '',
+  () => errors.value.startDate || validationErrors.value?.startDate || '',
 )
-const dateEndError = computed(
-  () => fieldErrors.value.date_end || validationErrors.value?.endDate || '',
-)
-const imageError = computed(
-  () => fieldErrors.value.image || validationErrors.value?.coverImage || '',
-)
+const dateEndError = computed(() => errors.value.endDate || validationErrors.value?.endDate || '')
+const imageError = computed(() => errors.value.image || validationErrors.value?.coverImage || '')
 
-const categories = ['education', 'health', 'environment', 'social', 'disaster']
-
-const isLoading = computed(() => updateDonationMutation.isPending.value)
-const isSuccess = computed(() => updateDonationMutation.isSuccess.value)
-const isFetching = computed(() => donationDetailQuery.isPending.value)
-
-// Pre-fill form when detail loads
 watch(
-  () => donationDetailQuery.data.value,
+  () => detailQuery.data.value,
   (response) => {
     if (!response?.data) return
     const donation = response.data
@@ -79,13 +76,12 @@ watch(
     form.startDate = donation.startDate ? (donation.startDate.split('T')[0] ?? '') : ''
     form.dateEnd = donation.endDate ? (donation.endDate.split('T')[0] ?? '') : ''
     // Show existing image as preview (URL, not a File)
-    if (donation.coverImage) form.imagePreview = donation.coverImage
+    if (donation.coverImage) {
+      form.imagePreview = donation.coverImage
+    }
   },
   { immediate: true },
 )
-
-// Image handling
-const coverImageInputRef = ref<HTMLInputElement | null>(null)
 
 const triggerImageInput = () => {
   coverImageInputRef.value?.click()
@@ -97,20 +93,20 @@ const handleImageChange = (event: Event) => {
 
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
-    fieldErrors.value = {
-      ...fieldErrors.value,
+    errors.value = {
+      ...errors.value,
       image: 'Only JPG, PNG, or WebP images are allowed.',
     }
     return
   }
   if (file.size > 5 * 1024 * 1024) {
-    fieldErrors.value = { ...fieldErrors.value, image: 'Image must be smaller than 5 MB.' }
+    errors.value = { ...errors.value, image: 'Image must be smaller than 5 MB.' }
     return
   }
 
-  const newErrors = { ...fieldErrors.value }
+  const newErrors = { ...errors.value }
   delete newErrors.image
-  fieldErrors.value = newErrors
+  errors.value = newErrors
   form.imageFile = file
   form.imagePreview = URL.createObjectURL(file)
 }
@@ -118,32 +114,32 @@ const handleImageChange = (event: Event) => {
 const removeImage = () => {
   form.imageFile = null
   form.imagePreview = null
-  if (coverImageInputRef.value) coverImageInputRef.value.value = ''
+  if (coverImageInputRef.value) {
+    coverImageInputRef.value.value = ''
+  }
 }
 
-// Validation
 const validate = (): boolean => {
   const result = updateDonationSchema.safeParse({
     title: form.title.trim(),
     description: form.description.trim(),
     category: form.category,
-    fund_target: Number(form.fundTarget),
-    date_start: form.startDate,
-    date_end: form.dateEnd,
+    fundTarget: Number(form.fundTarget),
+    startDate: form.startDate,
+    endDate: form.dateEnd,
   })
 
   const zodErrors = getZodErrors(result as Parameters<typeof getZodErrors>[0])
-  fieldErrors.value = { ...zodErrors }
-  return Object.keys(fieldErrors.value).length === 0
+  errors.value = { ...zodErrors }
+  return Object.keys(errors.value).length === 0
 }
 
-// Submit
-const handleSubmit = async (status: boolean) => {
+const handleSubmit = (status: boolean) => {
   if (!validate()) return
 
-  await updateDonationMutation.mutateAsync(
+  updateMutation.mutate(
     {
-      donationId: donationId,
+      id: donationId,
       data: {
         title: form.title.trim(),
         description: form.description.trim(),
@@ -168,19 +164,6 @@ const handleSubmit = async (status: boolean) => {
 }
 
 const handleSaveDraft = () => handleSubmit(false)
-
-// Today's date string for min date constraint
-const todayStr = new Date().toISOString().split('T')[0]
-
-const formatCurrencyPreview = computed(() => {
-  const num = Number(form.fundTarget)
-  if (!num || isNaN(num)) return ''
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(num)
-})
 </script>
 
 <template>

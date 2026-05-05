@@ -1,6 +1,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useSocialProgramList } from './useSocialProgramList'
 import type { SocialProgramQueryParams } from '@/types/socialProgram'
+import { useCursorPagination } from '../ui/usePagination'
 
 export function useSocialProgramFilters() {
   const queryParams = reactive<SocialProgramQueryParams>({
@@ -12,8 +13,18 @@ export function useSocialProgramFilters() {
   })
 
   const limitOptions = [10, 25, 50, 100]
+
+  const statuses = [
+    { label: 'Aktif', value: 'active' },
+    { label: 'Tidak Aktif', value: 'inactive' },
+  ]
+
   const searchQuery = ref('')
   let searchTimeout: ReturnType<typeof setTimeout>
+
+  const { socialPrograms, pagination, isLoading, listQuery } = useSocialProgramList(queryParams)
+  const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
+    useCursorPagination(queryParams)
 
   watch(searchQuery, (val) => {
     clearTimeout(searchTimeout)
@@ -28,36 +39,7 @@ export function useSocialProgramFilters() {
     () => resetPagination(),
   )
 
-  const pageOffset = ref(0)
-
-  function resetPagination() {
-    queryParams.nextCursor = undefined
-    queryParams.prevCursor = undefined
-    pageOffset.value = 0
-  }
-
-  // Fetch social programs via composable
-  const { socialPrograms, pagination, isLoading, listQuery } = useSocialProgramList(queryParams)
-
-  function handleNextPage() {
-    if (pagination.value?.nextCursor) {
-      queryParams.nextCursor = pagination.value.nextCursor
-      queryParams.prevCursor = undefined
-      pageOffset.value += 1
-    }
-  }
-
-  function handlePrevPage() {
-    if (pagination.value?.prevCursor) {
-      queryParams.prevCursor = pagination.value.prevCursor
-      queryParams.nextCursor = undefined
-      pageOffset.value -= 1
-    }
-  }
-
-  const hasActiveFilters = computed(
-    () => queryParams.status !== undefined,
-  )
+  const hasActiveFilters = computed(() => queryParams.status !== undefined)
 
   function clearFilters() {
     searchQuery.value = ''
@@ -68,6 +50,7 @@ export function useSocialProgramFilters() {
   return {
     queryParams,
     limitOptions,
+    statuses,
     searchQuery,
     pageOffset,
     socialPrograms,

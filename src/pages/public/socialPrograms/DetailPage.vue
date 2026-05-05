@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft } from 'lucide-vue-next'
+import { formatCurrency } from '@/utils/format'
 import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import SubscriptionInfo from '@/components/molecules/SubscriptionInfo.vue'
@@ -13,9 +14,7 @@ const program = {
   minimum: 500000,
 }
 
-function formatRupiah(value: number) {
-  return new Intl.NumberFormat('id-ID').format(value)
-}
+
 
 const goToForm = () => {
   router.push({
@@ -59,7 +58,7 @@ const goToForm = () => {
     <div class="mb-4">
       <span class="text-gray-500 text-sm">Minimal</span>
       <span class="text-primary-300 font-bold text-2xl ml-2">
-        Rp {{ formatRupiah(program.minimum) }}
+        {{ formatCurrency(program.minimum) }}
       </span>
     </div>
 

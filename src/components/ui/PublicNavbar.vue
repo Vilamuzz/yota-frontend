@@ -14,7 +14,7 @@ const handleLogin = () => {
 const navLinks = [
   { label: 'Beranda', href: '/' },
   { label: 'Tentang', href: '/about' },
-  { label: 'Donasi', href: '/donation' },
+  { label: 'Program Donasi', href: '/donation-program' },
   { label: 'Program Sosial', href: '/social-program' },
   { label: 'Anak Asuh', href: '/foster-child' },
   { label: 'Ambulans', href: '/ambulance' },

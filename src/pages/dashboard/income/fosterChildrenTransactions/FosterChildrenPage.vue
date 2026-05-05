@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, reactive, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, Baby, CirclePoundSterling } from 'lucide-vue-next'
+import { Eye, Baby } from 'lucide-vue-next'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
@@ -122,6 +121,8 @@ const formatDate = (date: string) => {
 
 <template>
   <DashboardLayout>
+    <template #title>Manajemen Donatur Anak Asuh</template>
+
     <div class="space-y-6">
       <!-- Header Section -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -148,18 +149,17 @@ const formatDate = (date: string) => {
 
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default="{ closeDropdown }">
-              <div class="space-y-4 w-64">
+            <template #default>
+              <div class="space-y-4">
                 <div>
-                  <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
                     >Jenis Kelamin</label
                   >
                   <select
                     v-model="queryParams.gender"
-                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option value="all">Semua Gender</option>
+                    <option :value="undefined">Semua</option>
                     <option v-for="gender in genders" :key="gender" :value="gender">
                       {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
                     </option>
@@ -167,15 +167,14 @@ const formatDate = (date: string) => {
                 </div>
 
                 <div>
-                  <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
                     >Kategori</label
                   >
                   <select
                     v-model="queryParams.category"
-                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option value="all">Semua Kategori</option>
+                    <option :value="undefined">Semua</option>
                     <option v-for="category in categories" :key="category" :value="category">
                       {{ category.charAt(0).toUpperCase() + category.slice(1) }}
                     </option>
@@ -183,33 +182,28 @@ const formatDate = (date: string) => {
                 </div>
 
                 <div>
-                  <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
-                    >Status</label
-                  >
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
                   <select
-                    v-model="queryParams.status"
-                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                    v-model="queryParams.isGraduated"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option value="all">Semua Status</option>
-                    <option v-for="status in statuses" :key="status" :value="status">
-                      {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                    <option :value="undefined">Semua</option>
+                    <option
+                      v-for="status in statuses"
+                      :key="String(status.value)"
+                      :value="status.value"
+                    >
+                      {{ status.label }}
                     </option>
                   </select>
                 </div>
 
-                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <div class="flex gap-2 pt-2">
                   <button
                     @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
                   >
-                    RESET
-                  </button>
-                  <button
-                    @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
-                  >
-                    APPLY
+                    Hapus
                   </button>
                 </div>
               </div>
@@ -218,63 +212,33 @@ const formatDate = (date: string) => {
         </div>
       </div>
 
-      <!-- Table Content -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-all duration-300"
+      <BaseTable
+        :loading="isLoading"
+        loading-message="Memuat data anak asuh..."
+        :is-empty="fosterChildren.length === 0"
+        empty-message="Tidak ada data anak asuh"
+        :has-prev="!!pagination?.prevCursor"
+        :has-next="!!pagination?.nextCursor"
+        v-model:limit="queryParams.limit"
+        :limit-options="limitOptions"
+        @prev="handlePrevPage(pagination)"
+        @next="handleNextPage(pagination)"
       >
-        <BaseTable
-          :loading="false"
-          loading-message="Memuat data anak asuh..."
-          :is-empty="filteredChildren.length === 0"
-          empty-message="Tidak ada anak asuh yang ditemukan."
-          :has-prev="queryParams.page > 1"
-          :has-next="queryParams.page * queryParams.limit < filteredChildren.length"
-          v-model:limit="queryParams.limit"
-          :limit-options="limitOptions"
-          @prev="handlePrevPage"
-          @next="handleNextPage"
-        >
-          <template #empty-icon>
-            <Baby :size="64" class="text-gray-300 dark:text-gray-600 mb-2" />
-          </template>
+        <template #empty-icon>
+          <Baby :size="96" class="mx-auto mb-2 text-gray-300" />
+        </template>
 
-          <template #headers>
-            <th
-              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
-            >
-              No
-            </th>
-            <th
-              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
-            >
-              Nama Anak Asuh
-            </th>
-            <th
-              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
-            >
-              Jenis Kelamin
-            </th>
-            <th
-              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
-            >
-              Kategori
-            </th>
-            <th
-              class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
-            >
-              Tanggal Ditambahkan
-            </th>
-            <th
-              class="px-6 py-4 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
-            >
-              Status
-            </th>
-            <th
-              class="px-6 py-4 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
-            >
-              Aksi
-            </th>
-          </template>
+        <template #headers>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nama</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Jenis Kelamin
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Kategori</th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
+            Aksi
+          </th>
+        </template>
 
           <template #rows>
             <tr

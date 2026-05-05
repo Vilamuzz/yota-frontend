@@ -1,132 +1,134 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Upload, X, ArrowLeft } from 'lucide-vue-next'
-import { newsSchema } from '@/schemas/news.schema'
-import { MediaCategory, MediaStatus } from '@/types/media'
-import { useNewsDetail } from '@/composables/news/useNewsDetail'
-import { useNewsUpdate } from '@/composables/news/useNewsUpdate'
-import { useToast } from '@/composables/ui/useToast'
-import { getZodErrors } from '@/utils/zodError'
-import { extractError } from '@/utils/error'
+import { Camera, Upload, X, FileImage, Newspaper, ArrowLeft, Loader2 } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
+import { useNewsDetail } from '@/composables/news/useNewsDetail'
+import { useNewsUpdate } from '@/composables/news/useNewsUpdate'
+import { updateNewsSchema } from '@/schemas/news.schema'
+import { MediaCategory, MediaStatus } from '@/types/media'
+import { useToast } from '@/composables/ui/useToast'
+import { getZodErrors } from '@/utils/zodError'
+import { extractError } from '@/utils/error'
 
 const router = useRouter()
 const route = useRoute()
-const newsId = route.params.id as string
-
-const { detailQuery } = useNewsDetail(newsId)
-const { updateMutation, validationErrors } = useNewsUpdate()
 const { showToast } = useToast()
 
-// ── Form state ─────────────────────────────────────────────────────────────
+const newsId = route.params.id as string
+const { detailQuery } = useNewsDetail(newsId)
+const { updateMutation, validationErrors } = useNewsUpdate()
+
 const form = reactive({
   title: '',
   category: '' as MediaCategory | '',
-  status: MediaStatus.Draft as MediaStatus,
   content: '',
-  coverImageFile: null as File | null,
-  coverImagePreview: null as string | null,
+  status: MediaStatus.Draft,
+  coverImage: null as File | null,
+  coverPreview: null as string | null,
+  mediaFiles: [] as File[],
+  mediaPreviews: [] as string[],
+  existingMedias: [] as { id: string; url: string }[],
 })
 
+const errors = ref<Record<string, string>>({})
+
+const categories = Object.values(MediaCategory)
+const statuses = [
+  { label: 'Draft', value: MediaStatus.Draft },
+  { label: 'Terbitkan', value: MediaStatus.Published },
+  { label: 'Arsipkan', value: MediaStatus.Archived },
+]
+
 const isFetching = computed(() => detailQuery.isPending.value)
-const fieldErrors = ref<Record<string, string>>({})
+const isLoading = computed(() => updateMutation.isPending.value)
 
-// ── Computed errors ────────────────────────────────────────────────────────
-const titleError = computed(() => fieldErrors.value.title || validationErrors.value?.title || '')
-const categoryError = computed(
-  () => fieldErrors.value.category || validationErrors.value?.category || '',
-)
-const statusError = computed(() => fieldErrors.value.status || validationErrors.value?.status || '')
-const contentError = computed(
-  () => fieldErrors.value.content || validationErrors.value?.content || '',
-)
-const coverImageError = computed(
-  () => fieldErrors.value.coverImage || validationErrors.value?.coverImage || '',
-)
-
-// ── Pre-fill form when data loads ─────────────────────────────────────────
 watch(
   () => detailQuery.data.value,
   (response) => {
     if (!response?.data) return
-    const item = response.data
-    form.title = item.title ?? ''
-    form.category = (item.category as MediaCategory) ?? ''
-    form.status = (item.status as MediaStatus) ?? MediaStatus.Draft
-    form.content = item.content ?? ''
-    if (item.coverImage) form.coverImagePreview = item.coverImage
+    const news = response.data
+    form.title = news.title
+    form.category = news.category
+    form.content = news.content
+    form.status = news.status
+    form.coverPreview = news.coverImage
+    form.existingMedias = news.medias || []
   },
   { immediate: true },
 )
 
-// Clear local errors on change
 watch(
   () => form,
   () => {
-    if (Object.keys(fieldErrors.value).length > 0) fieldErrors.value = {}
-    if (updateMutation.isError.value) updateMutation.reset()
+    if (Object.keys(errors.value).length > 0) {
+      errors.value = {}
+    }
+    if (updateMutation.isError.value) {
+      updateMutation.reset()
+    }
   },
   { deep: true },
 )
 
-// ── Image handling ─────────────────────────────────────────────────────────
-const coverImageInputRef = ref<HTMLInputElement | null>(null)
-
-function triggerImageInput() {
-  coverImageInputRef.value?.click()
-}
-
-function handleImageChange(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (!file) return
-
-  const allowed = ['image/jpeg', 'image/png', 'image/webp']
-  if (!allowed.includes(file.type)) {
-    fieldErrors.value = { ...fieldErrors.value, coverImage: 'Hanya JPG, PNG, atau WebP.' }
-    return
+const handleCoverChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    form.coverImage = file
+    form.coverPreview = URL.createObjectURL(file)
   }
-  if (file.size > 5 * 1024 * 1024) {
-    fieldErrors.value = { ...fieldErrors.value, coverImage: 'Ukuran maksimal 5 MB.' }
-    return
+}
+
+const handleMediasChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files) {
+    const files = Array.from(target.files)
+    form.mediaFiles = [...form.mediaFiles, ...files]
+    const newPreviews = files.map((file) => URL.createObjectURL(file))
+    form.mediaPreviews = [...form.mediaPreviews, ...newPreviews]
   }
-  const { coverImage: _removed, ...rest } = fieldErrors.value
-  fieldErrors.value = rest
-  form.coverImageFile = file
-  form.coverImagePreview = URL.createObjectURL(file)
 }
 
-function removeImage() {
-  form.coverImageFile = null
-  form.coverImagePreview = null
-  if (coverImageInputRef.value) coverImageInputRef.value.value = ''
+const removeNewMedia = (index: number) => {
+  form.mediaFiles.splice(index, 1)
+  form.mediaPreviews.splice(index, 1)
 }
 
-// ── Submit ─────────────────────────────────────────────────────────────────
-async function handleSubmit(overrideStatus?: MediaStatus) {
-  const statusToUse = overrideStatus ?? form.status
+const formatCategory = (cat: string) => {
+  return cat
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
 
-  const result = newsSchema.safeParse({
+const handleSubmit = () => {
+  const result = updateNewsSchema.safeParse({
     title: form.title.trim(),
     category: form.category,
     content: form.content.trim(),
-    status: statusToUse,
+    status: form.status,
   })
 
-  fieldErrors.value = getZodErrors(result)
-  if (!result.success) return
+  const zodErrors = getZodErrors(result)
+  errors.value = zodErrors
 
-  await updateMutation.mutateAsync(
+  if (!result.success) {
+    showToast('Mohon periksa kembali inputan Anda', 'error')
+    return
+  }
+
+  updateMutation.mutate(
     {
       id: newsId,
       data: {
-        title: form.title.trim(),
-        category: form.category as MediaCategory,
-        content: form.content.trim(),
-        status: statusToUse,
-        ...(form.coverImageFile ? { coverImage: form.coverImageFile } : {}),
+        ...result.data,
+        category: result.data.category as MediaCategory,
+        status: result.data.status as MediaStatus,
+        coverImage: form.coverImage || undefined,
+        medias: form.mediaFiles.length > 0 ? form.mediaFiles : undefined,
       },
     },
     {
@@ -135,20 +137,10 @@ async function handleSubmit(overrideStatus?: MediaStatus) {
         router.push({ name: 'dashboard-news' })
       },
       onError: (err) => {
-        showToast(extractError(err, 'Gagal memperbarui berita.'), 'error')
+        showToast(extractError(err, 'Gagal memperbarui berita'), 'error')
       },
     },
   )
-}
-
-const categories = Object.values(MediaCategory)
-const statuses = Object.values(MediaStatus)
-
-function categoryLabel(cat: string) {
-  return cat
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
 }
 </script>
 
@@ -156,196 +148,293 @@ function categoryLabel(cat: string) {
   <DashboardLayout>
     <template #title>Edit Berita</template>
 
-    <div class="max-w-full mx-auto">
-      <!-- Loading skeleton -->
-      <div
-        v-if="isFetching"
-        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-8"
-      >
-        <div class="animate-pulse space-y-4">
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-          <div class="h-52 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-          <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          </div>
-        </div>
+    <div v-if="isFetching" class="flex flex-col items-center justify-center py-24">
+      <Loader2 class="w-12 h-12 text-primary-500 animate-spin mb-4" />
+      <p class="text-gray-500 font-medium">Memuat data berita...</p>
+    </div>
+
+    <div v-else class="max-w-full mx-auto space-y-6">
+      <!-- Header Actions -->
+      <div class="flex items-center justify-between">
+        <BaseButton variant="outline" size="md" @click="router.push({ name: 'dashboard-news' })">
+          <ArrowLeft :size="18" class="mr-2" />
+          Kembali
+        </BaseButton>
       </div>
 
-      <template v-else>
-        <form @submit.prevent="handleSubmit()" class="space-y-6">
+      <form @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left: Basic Info -->
+        <div class="lg:col-span-2 space-y-6">
           <div
-            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-5"
           >
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
-              <!-- Left: image + metadata -->
-              <div class="p-6 space-y-5">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-                  Informasi Dasar
+            <div class="flex items-center gap-3 pb-2 border-b border-gray-50 dark:border-gray-700">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-500">
+                <Newspaper :size="20" />
+              </div>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Informasi Utama
+              </h3>
+            </div>
+
+            <BaseInput
+              id="title"
+              v-model="form.title"
+              label="Judul Berita"
+              placeholder="mis. Yota Berbagi Kebahagiaan di Bulan Suci"
+              :error="errors.title || validationErrors?.title"
+              required
+            />
+
+            <div>
+              <label
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
+              >
+                Kategori <span class="text-red-500">*</span>
+              </label>
+              <select
+                v-model="form.category"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
+                :class="{ 'border-red-500': errors.category || validationErrors?.category }"
+              >
+                <option value="" disabled>Pilih Kategori</option>
+                <option v-for="cat in categories" :key="cat" :value="cat">
+                  {{ formatCategory(cat) }}
+                </option>
+              </select>
+              <p
+                v-if="errors.category || validationErrors?.category"
+                class="mt-1 text-xs text-red-600"
+              >
+                {{ errors.category || validationErrors?.category }}
+              </p>
+            </div>
+
+            <div>
+              <label
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
+              >
+                Isi Berita <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                v-model="form.content"
+                rows="12"
+                placeholder="Tuliskan isi berita secara lengkap di sini..."
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500 transition-all duration-200 outline-none resize-none"
+                :class="{ 'border-red-500': errors.content || validationErrors?.content }"
+              ></textarea>
+              <p
+                v-if="errors.content || validationErrors?.content"
+                class="mt-1 text-xs text-red-600"
+              >
+                {{ errors.content || validationErrors?.content }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Multi Media Upload -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <h3
+                  class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider"
+                >
+                  Media Pendukung
                 </h3>
-
-                <!-- Cover Image -->
-                <div>
-                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
-                    Gambar Sampul
-                    <span class="text-gray-400 font-normal">(biarkan jika tidak ingin mengubah)</span>
-                  </label>
-
-                  <div
-                    v-if="form.coverImagePreview"
-                    class="relative w-full h-52 rounded-lg overflow-hidden group border border-gray-200 dark:border-gray-700"
-                  >
-                    <img :src="form.coverImagePreview" alt="Preview" class="w-full h-full object-cover" />
-                    <div
-                      class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center"
-                    >
-                      <button
-                        type="button"
-                        @click="removeImage"
-                        class="opacity-0 group-hover:opacity-100 transition-opacity p-2 bg-white rounded-full shadow text-red-500 hover:text-red-600"
-                      >
-                        <X :size="18" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div
-                    v-else
-                    @click="triggerImageInput"
-                    class="flex flex-col items-center justify-center w-full h-52 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
-                    :class="
-                      coverImageError
-                        ? 'border-red-300 bg-red-50 dark:bg-red-900/20'
-                        : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    "
-                  >
-                    <Upload :size="32" class="text-gray-400 mb-2" />
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      Klik untuk unggah gambar baru
-                    </p>
-                    <p class="text-xs text-gray-400 mt-1">JPG, PNG, WebP · Maks. 5 MB</p>
-                  </div>
-
-                  <input
-                    ref="coverImageInputRef"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    class="hidden"
-                    @change="handleImageChange"
-                  />
-                  <p v-if="coverImageError" class="mt-1 text-xs text-red-600">{{ coverImageError }}</p>
-                </div>
-
-                <!-- Title -->
-                <BaseInput
-                  id="title"
-                  v-model="form.title"
-                  label="Judul Berita"
-                  required
-                  placeholder="Masukkan judul berita..."
-                  :error="titleError"
+                <p class="text-xs text-gray-500 mt-1">
+                  Tambahkan foto-foto tambahan untuk memperkaya isi berita.
+                </p>
+              </div>
+              <label class="cursor-pointer">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  class="sr-only"
+                  @change="handleMediasChange"
                 />
-
-                <!-- Category + Status -->
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label for="category" class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
-                      Kategori <span class="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="category"
-                      v-model="form.category"
-                      class="w-full px-3 py-2 text-sm border rounded-lg transition focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                      :class="categoryError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'"
-                    >
-                      <option value="" disabled>Pilih kategori</option>
-                      <option v-for="cat in categories" :key="cat" :value="cat">
-                        {{ categoryLabel(cat) }}
-                      </option>
-                    </select>
-                    <p v-if="categoryError" class="mt-1 text-xs text-red-600">{{ categoryError }}</p>
-                  </div>
-
-                  <div>
-                    <label for="status" class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
-                      Status <span class="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="status"
-                      v-model="form.status"
-                      class="w-full px-3 py-2 text-sm border rounded-lg transition focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                      :class="statusError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'"
-                    >
-                      <option v-for="s in statuses" :key="s" :value="s">
-                        {{ s.charAt(0).toUpperCase() + s.slice(1) }}
-                      </option>
-                    </select>
-                    <p v-if="statusError" class="mt-1 text-xs text-red-600">{{ statusError }}</p>
-                  </div>
+                <div
+                  class="flex items-center gap-2 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-xs font-bold hover:bg-primary-100 transition-colors"
+                >
+                  <Upload :size="16" />
+                  TAMBAH MEDIA
                 </div>
+              </label>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+              <!-- New Previews -->
+              <div
+                v-for="(preview, index) in form.mediaPreviews"
+                :key="'new-' + index"
+                class="relative aspect-square rounded-xl overflow-hidden group border border-primary-100 dark:border-primary-900 shadow-sm"
+              >
+                <img :src="preview" class="w-full h-full object-cover" />
+                <div class="absolute inset-0 bg-primary-500/10 pointer-events-none"></div>
+                <div
+                  class="absolute top-1 left-1 px-1.5 py-0.5 bg-primary-500 text-white text-[8px] font-bold rounded uppercase"
+                >
+                  BARU
+                </div>
+                <button
+                  type="button"
+                  @click="removeNewMedia(index)"
+                  class="absolute top-2 right-2 p-1 bg-white/90 dark:bg-gray-800/90 rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X :size="14" />
+                </button>
               </div>
 
-              <!-- Right: content -->
-              <div class="p-6 space-y-5">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-                  Konten
-                </h3>
-
-                <div class="flex flex-col h-[calc(100%-2.5rem)]">
-                  <label for="content" class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
-                    Isi Berita <span class="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    id="content"
-                    v-model="form.content"
-                    rows="18"
-                    placeholder="Tulis isi berita di sini..."
-                    class="flex-1 w-full px-3 py-2 text-sm border rounded-lg transition focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                    :class="contentError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'"
-                  />
-                  <p v-if="contentError" class="mt-1 text-xs text-red-600">{{ contentError }}</p>
+              <!-- Existing Media -->
+              <div
+                v-for="media in form.existingMedias"
+                :key="media.id"
+                class="relative aspect-square rounded-xl overflow-hidden group border border-gray-100 dark:border-gray-700 shadow-sm opacity-80 hover:opacity-100 transition-opacity"
+              >
+                <img :src="media.url" class="w-full h-full object-cover grayscale-[20%]" />
+                <div
+                  class="absolute top-1 left-1 px-1.5 py-0.5 bg-gray-500 text-white text-[8px] font-bold rounded uppercase"
+                >
+                  DI SERVER
                 </div>
               </div>
             </div>
 
-            <!-- Action bar -->
             <div
-              class="px-6 py-4 bg-gray-50 dark:bg-gray-800/60 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3"
+              v-if="form.mediaPreviews.length === 0 && form.existingMedias.length === 0"
+              class="py-12 border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center text-gray-400"
             >
+              <Upload :size="32" class="mb-2 opacity-20" />
+              <p class="text-xs">Belum ada media tambahan</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Sidebar -->
+        <div class="space-y-6">
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <h3
+              class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider text-center"
+            >
+              Gambar Utama (Sampul)
+            </h3>
+
+            <div
+              class="relative aspect-video rounded-xl border-2 border-dashed overflow-hidden transition-colors duration-200 group"
+              :class="[
+                form.coverPreview
+                  ? 'border-primary-500 bg-primary-50/10'
+                  : 'border-gray-300 dark:border-gray-700 hover:border-primary-400',
+              ]"
+            >
+              <input
+                type="file"
+                accept="image/*"
+                class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                @change="handleCoverChange"
+              />
+
+              <div
+                v-if="!form.coverPreview"
+                class="h-full flex flex-col items-center justify-center p-4 text-center"
+              >
+                <div
+                  class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3"
+                >
+                  <Camera class="text-gray-400" :size="24" />
+                </div>
+                <p class="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Pilih Gambar Utama
+                </p>
+                <p class="text-[10px] text-gray-400 mt-1">Format 16:9 direkomendasikan</p>
+              </div>
+
+              <template v-else>
+                <img :src="form.coverPreview" class="w-full h-full object-cover" />
+                <div
+                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                >
+                  <p class="text-white text-xs font-bold uppercase tracking-widest">GANTI GAMBAR</p>
+                </div>
+              </template>
+            </div>
+            <p v-if="errors.coverImage" class="text-center text-[10px] text-red-600">
+              {{ errors.coverImage }}
+            </p>
+
+            <div class="p-4 bg-primary-50/50 dark:bg-primary-900/10 rounded-xl space-y-2">
+              <div class="flex items-center gap-2 text-primary-700 dark:text-primary-400">
+                <FileImage :size="16" />
+                <span class="text-xs font-bold">REKOMENDASI</span>
+              </div>
+              <p class="text-[11px] text-primary-600 dark:text-primary-300 leading-relaxed">
+                Gunakan gambar berkualitas tinggi dengan aspek rasio 16:9 agar tampilan berita
+                terlihat profesional di halaman publik.
+              </p>
+            </div>
+          </div>
+
+          <!-- Status & Actions -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+              Pengaturan Berita
+            </h3>
+
+            <div>
+              <label
+                class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2"
+                >Status</label
+              >
+              <div class="grid grid-cols-1 gap-2">
+                <button
+                  v-for="s in statuses"
+                  :key="s.value"
+                  type="button"
+                  @click="form.status = s.value"
+                  class="flex items-center justify-between px-3 py-2 rounded-xl border transition-all duration-200 text-xs font-medium"
+                  :class="[
+                    form.status === s.value
+                      ? 'bg-primary-50 border-primary-200 text-primary-700 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-400'
+                      : 'border-gray-100 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50',
+                  ]"
+                >
+                  {{ s.label }}
+                  <div
+                    v-if="form.status === s.value"
+                    class="w-2 h-2 rounded-full bg-primary-500"
+                  ></div>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-4 border-t border-gray-50 dark:border-gray-700">
+              <BaseButton
+                type="submit"
+                variant="primary"
+                :loading="isLoading"
+                class="w-full py-4 rounded-xl shadow-lg shadow-primary-500/20"
+              >
+                PERBARUI BERITA
+              </BaseButton>
               <BaseButton
                 type="button"
                 variant="outline"
-                :to="{ name: 'dashboard-news' }"
-                :disabled="updateMutation.isPending.value"
+                @click="router.push({ name: 'dashboard-news' })"
+                :disabled="isLoading"
+                class="w-full rounded-xl"
               >
-                <ArrowLeft :size="16" class="mr-1" />
-                Kembali
+                BATAL
               </BaseButton>
-
-              <div class="flex items-center gap-3">
-                <BaseButton
-                  type="button"
-                  variant="outline"
-                  @click="handleSubmit(MediaStatus.Draft)"
-                  :disabled="updateMutation.isPending.value"
-                >
-                  Simpan Draft
-                </BaseButton>
-                <BaseButton
-                  type="submit"
-                  variant="primary"
-                  :loading="updateMutation.isPending.value"
-                >
-                  <template #loading>Menyimpan…</template>
-                  Simpan Perubahan
-                </BaseButton>
-              </div>
             </div>
           </div>
-        </form>
-      </template>
+        </div>
+      </form>
     </div>
   </DashboardLayout>
 </template>

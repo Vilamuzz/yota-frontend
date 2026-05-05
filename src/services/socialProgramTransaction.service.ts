@@ -33,4 +33,9 @@ export const socialProgramTransactionService = {
     const response = await api.get(`${API.SOCIAL_PROGRAMS}/transactions/${id}`)
     return response.data
   },
+
+  deleteSocialProgramTransaction: async (id: string) => {
+    const response = await api.delete(`${API.SOCIAL_PROGRAMS}/transactions/${id}`)
+    return response.data
+  },
 }

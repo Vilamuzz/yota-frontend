@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { GalleryHorizontal, Plus, SquarePen, Trash2, Eye } from 'lucide-vue-next'
+import { Plus, Trash2, Edit, Image as ImageIcon, RotateCcw } from 'lucide-vue-next'
+import { useGalleryAdminList } from '@/composables/gallery/useGalleryAdminList'
+import { useGalleryDelete } from '@/composables/gallery/useGalleryDelete'
+import { useCursorPagination } from '@/composables/ui/usePagination'
+import { useToast } from '@/composables/ui/useToast'
+import { formatDate } from '@/utils/format'
+import { getStatusColor } from '@/utils/statusColor'
+import { MediaCategory, MediaStatus } from '@/types/media'
+import type { GalleryQueryParams } from '@/types/gallery'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import { useGalleryAdminList } from '@/composables/gallery/useGalleryAdminList'
-import { useGalleryUpdate } from '@/composables/gallery/useGalleryUpdate'
-import { useToast } from '@/composables/ui/useToast'
-import { extractError } from '@/utils/error'
-import { formatDate } from '@/utils/format'
-import { MediaCategory, MediaStatus } from '@/types/media'
-import type { Gallery, GalleryQueryParams } from '@/types/gallery'
 
-const router = useRouter()
 const { showToast } = useToast()
+const { deleteMutation } = useGalleryDelete()
 
 const queryParams = reactive<GalleryQueryParams>({
   limit: 10,
@@ -27,11 +27,25 @@ const queryParams = reactive<GalleryQueryParams>({
   nextCursor: undefined,
   prevCursor: undefined,
 })
+
 const limitOptions = [10, 25, 50, 100]
 const searchQuery = ref('')
-const pageOffset = ref(0)
-
 let searchTimeout: ReturnType<typeof setTimeout>
+
+const categories = Object.values(MediaCategory)
+const statuses = Object.values(MediaStatus)
+
+const { galleries, pagination, isLoading } = useGalleryAdminList(queryParams)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
+  useCursorPagination(queryParams)
+
+const isDeleteModalOpen = ref(false)
+const selectedGalleryId = ref<string | null>(null)
+
+const hasActiveFilters = computed(
+  () => queryParams.category !== undefined || queryParams.status !== undefined,
+)
+
 watch(searchQuery, (val) => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
@@ -39,59 +53,12 @@ watch(searchQuery, (val) => {
     resetPagination()
   }, 400)
 })
+
 watch(
   () => [queryParams.category, queryParams.status, queryParams.limit],
   () => resetPagination(),
 )
 
-function resetPagination() {
-  queryParams.nextCursor = undefined
-  queryParams.prevCursor = undefined
-  pageOffset.value = 0
-}
-
-const { galleries, pagination, isLoading } = useGalleryAdminList(queryParams)
-
-function handleNextPage() {
-  if (pagination.value?.nextCursor) {
-    queryParams.nextCursor = pagination.value.nextCursor
-    queryParams.prevCursor = undefined
-    pageOffset.value += 1
-  }
-}
-function handlePrevPage() {
-  if (pagination.value?.prevCursor) {
-    queryParams.prevCursor = pagination.value.prevCursor
-    queryParams.nextCursor = undefined
-    pageOffset.value -= 1
-  }
-}
-
-const { deleteMutation } = useGalleryUpdate()
-const confirmShow = ref(false)
-const confirmGallery = ref<Gallery | null>(null)
-
-function openDeleteConfirm(item: Gallery) {
-  confirmGallery.value = item
-  confirmShow.value = true
-}
-
-async function handleConfirmDelete() {
-  if (!confirmGallery.value) return
-  try {
-    await deleteMutation.mutateAsync(confirmGallery.value.id)
-    showToast('Galeri berhasil dihapus.', 'success')
-  } catch (err: any) {
-    showToast(extractError(err, 'Gagal menghapus galeri.'), 'error')
-  } finally {
-    confirmShow.value = false
-    confirmGallery.value = null
-  }
-}
-
-const hasActiveFilters = computed(
-  () => queryParams.category !== undefined || queryParams.status !== undefined,
-)
 function clearFilters() {
   searchQuery.value = ''
   queryParams.category = undefined
@@ -99,25 +66,30 @@ function clearFilters() {
   resetPagination()
 }
 
-const categories = Object.values(MediaCategory)
-const statuses = Object.values(MediaStatus)
+function openDeleteModal(id: string) {
+  selectedGalleryId.value = id
+  isDeleteModalOpen.value = true
+}
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case MediaStatus.Published:
-      return 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
-    case MediaStatus.Draft:
-      return 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800'
-    case MediaStatus.Archived:
-      return 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
-    default:
-      return 'bg-gray-100 text-gray-600 border-gray-200'
+function handleConfirmDelete() {
+  if (selectedGalleryId.value) {
+    deleteMutation.mutate(selectedGalleryId.value, {
+      onSuccess: () => {
+        showToast('Galeri berhasil dihapus', 'success')
+        isDeleteModalOpen.value = false
+        selectedGalleryId.value = null
+      },
+      onError: () => {
+        showToast('Gagal menghapus galeri', 'error')
+      },
+    })
   }
 }
-function categoryLabel(cat: string) {
-  return cat
+
+function formatCategory(category: string) {
+  return category
     .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 }
 </script>
@@ -125,154 +97,177 @@ function categoryLabel(cat: string) {
 <template>
   <DashboardLayout>
     <template #title>Manajemen Galeri</template>
+
     <div class="space-y-6">
-      <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-        <BaseSearch v-model="searchQuery" placeholder="Cari judul galeri..." />
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchQuery" placeholder="Cari galeri..." class="w-full sm:w-64" />
           <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default>
-              <div class="space-y-4">
+            <template #default="{ closeDropdown }">
+              <div class="space-y-4 w-64">
                 <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
-                    >Kategori</label
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
                   >
+                    Kategori
+                  </label>
                   <select
                     v-model="queryParams.category"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-gray-200"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
                   >
-                    <option :value="undefined">Semua</option>
+                    <option :value="undefined">Semua Kategori</option>
                     <option v-for="cat in categories" :key="cat" :value="cat">
-                      {{ categoryLabel(cat) }}
+                      {{ formatCategory(cat) }}
                     </option>
                   </select>
                 </div>
+
                 <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  >
+                    Status
+                  </label>
                   <select
                     v-model="queryParams.status"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-gray-200"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
                   >
-                    <option :value="undefined">Semua</option>
-                    <option v-for="s in statuses" :key="s" :value="s">
-                      {{ s.charAt(0).toUpperCase() + s.slice(1) }}
+                    <option :value="undefined">Semua Status</option>
+                    <option v-for="status in statuses" :key="status" :value="status">
+                      {{ status.charAt(0).toUpperCase() + status.slice(1) }}
                     </option>
                   </select>
                 </div>
-                <button
-                  @click="clearFilters"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors"
-                >
-                  Clear
-                </button>
+
+                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                  >
+                    RESET
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+                  >
+                    APPLY
+                  </button>
+                </div>
               </div>
             </template>
           </BaseFilter>
           <BaseButton
-            variant="primary"
-            @click="router.push({ name: 'dashboard-galleries-create' })"
+            v-if="hasActiveFilters"
+            variant="outline"
+            size="md"
+            @click="clearFilters"
+            class="hidden sm:flex"
           >
-            <Plus :size="18" class="mr-1" />Tambah Galeri
+            <RotateCcw :size="16" class="mr-2" />
+            Reset
           </BaseButton>
         </div>
+
+        <BaseButton
+          variant="primary"
+          :to="{ name: 'dashboard-galleries-create' }"
+          class="w-full sm:w-auto"
+        >
+          <Plus :size="20" class="mr-1" />
+          Tambah Galeri
+        </BaseButton>
       </div>
 
+      <!-- Table Section -->
       <BaseTable
         :loading="isLoading"
         loading-message="Memuat data galeri..."
-        :is-empty="!isLoading && galleries.length === 0"
-        empty-message="Tidak ada galeri yang ditemukan."
+        :is-empty="galleries.length === 0"
+        empty-message="Tidak ada data galeri"
         :has-prev="!!pagination?.prevCursor"
         :has-next="!!pagination?.nextCursor"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage"
-        @next="handleNextPage"
+        @prev="handlePrevPage(pagination)"
+        @next="handleNextPage(pagination)"
       >
-        <template #empty-icon><GalleryHorizontal :size="64" class="text-gray-300 mb-2" /></template>
-        <template #headers>
-          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">No</th>
-          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Judul</th>
-          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Kategori</th>
-          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
-          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">
-            <Eye :size="13" class="inline mr-1" />Dilihat
-          </th>
-          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Dipublikasi
-          </th>
-          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Dibuat</th>
-          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Aksi</th>
+        <template #empty-icon>
+          <ImageIcon :size="96" class="mx-auto mb-2 text-gray-300" />
         </template>
+
+        <template #headers>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Thumbnail
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Judul</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Kategori</th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Dibuat</th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
+            Aksi
+          </th>
+        </template>
+
         <template #rows>
           <tr
-            v-for="(item, index) in galleries"
-            :key="item.id"
+            v-for="(gallery, index) in galleries"
+            :key="gallery.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
           >
             <td
-              class="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap"
+              class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200 text-sm"
             >
-              {{ pageOffset * (queryParams.limit ?? 10) + index + 1 }}
+              {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
-            <td class="px-4 py-3">
-              <div class="flex items-center gap-3">
-                <div
-                  class="h-10 w-14 shrink-0 rounded overflow-hidden bg-gray-100 dark:bg-gray-700"
-                >
-                  <img
-                    v-if="item.coverImage"
-                    :src="item.coverImage"
-                    :alt="item.title"
-                    class="h-full w-full object-cover"
-                  />
-                  <div v-else class="h-full w-full flex items-center justify-center">
-                    <GalleryHorizontal :size="16" class="text-gray-400" />
-                  </div>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="w-16 h-10 rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
+                <img
+                  v-if="gallery.coverImage"
+                  :src="gallery.coverImage"
+                  class="w-full h-full object-cover"
+                  :alt="gallery.title"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <ImageIcon :size="16" class="text-gray-400" />
                 </div>
-                <span
-                  class="text-sm font-medium text-gray-800 dark:text-gray-200 max-w-xs truncate"
-                  >{{ item.title }}</span
-                >
               </div>
             </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ categoryLabel(item.category) }}
+            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white max-w-xs truncate">
+              {{ gallery.title }}
             </td>
-            <td class="px-4 py-3 text-center whitespace-nowrap">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+              {{ formatCategory(gallery.category) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
                 :class="[
                   'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                  getStatusColor(item.status),
+                  getStatusColor(gallery.status),
                 ]"
               >
-                {{ item.status.charAt(0).toUpperCase() + item.status.slice(1) }}
+                {{ gallery.status.charAt(0).toUpperCase() + gallery.status.slice(1) }}
               </span>
             </td>
-            <td
-              class="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap"
-            >
-              {{ item.views.toLocaleString('id-ID') }}
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+              {{ formatDate(gallery.createdAt) }}
             </td>
-            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
-              {{ item.publishedAt ? formatDate(item.publishedAt) : '—' }}
-            </td>
-            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
-              {{ formatDate(item.createdAt) }}
-            </td>
-            <td class="px-4 py-3 text-center whitespace-nowrap">
-              <div class="flex items-center justify-center gap-1">
-                <router-link
-                  :to="{ name: 'dashboard-galleries-edit', params: { id: item.id } }"
-                  class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300 transition-colors"
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-center gap-2">
+                <RouterLink
+                  :to="{ name: 'dashboard-galleries-edit', params: { id: gallery.id } }"
+                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Edit galeri"
-                  ><SquarePen :size="16"
-                /></router-link>
-                <button
-                  @click="openDeleteConfirm(item)"
-                  class="p-1.5 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
-                  title="Hapus galeri"
                 >
-                  <Trash2 :size="16" />
+                  <Edit :size="18" />
+                </RouterLink>
+                <button
+                  class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 dark:hover:bg-red-900/20"
+                  title="Hapus galeri"
+                  @click="openDeleteModal(gallery.id)"
+                >
+                  <Trash2 :size="18" />
                 </button>
               </div>
             </td>
@@ -280,17 +275,16 @@ function categoryLabel(cat: string) {
         </template>
       </BaseTable>
     </div>
-  </DashboardLayout>
 
-  <ConfirmationModal
-    :show="confirmShow"
-    title="Hapus Galeri?"
-    :message="`Galeri &quot;${confirmGallery?.title}&quot; akan dihapus secara permanen.\nTindakan ini tidak dapat dibatalkan.`"
-    primary-button-text="Hapus"
-    secondary-button-text="Batal"
-    :primary-button-loading="deleteMutation.isPending.value"
-    @primary="handleConfirmDelete"
-    @secondary="confirmShow = false"
-    @close="confirmShow = false"
-  />
+    <!-- Delete Confirmation Modal -->
+    <ConfirmationModal
+      :show="isDeleteModalOpen"
+      title="Hapus Galeri"
+      message="Apakah Anda yakin ingin menghapus galeri ini? Semua media di dalamnya juga akan terhapus."
+      variant="danger"
+      :primary-button-loading="deleteMutation.isPending.value"
+      @close="isDeleteModalOpen = false"
+      @confirm="handleConfirmDelete"
+    />
+  </DashboardLayout>
 </template>

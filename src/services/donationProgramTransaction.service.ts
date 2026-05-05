@@ -36,4 +36,9 @@ export const donationProgramTransactionService = {
     const response = await api.get(`${API.DONATION_PROGRAMS}/transactions/${id}`)
     return response.data
   },
+
+  deleteDonationProgramTransaction: async (id: string) => {
+    const response = await api.delete(`${API.DONATION_PROGRAMS}/transactions/${id}`)
+    return response.data
+  },
 }

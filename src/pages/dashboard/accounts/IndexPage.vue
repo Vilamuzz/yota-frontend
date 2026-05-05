@@ -2,6 +2,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { UserCheck, SquarePen, Ban, UserRound, Eye } from 'lucide-vue-next'
 import { useAccountList, useAccountUpdate, useRoles } from '@/composables/account'
+import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useQueryClient } from '@tanstack/vue-query'
 import type { Account, AccountQueryParam } from '@/types/account'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
@@ -10,6 +11,7 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
+import { getAccountStatusColor } from '@/utils/statusColor'
 
 const queryParams = reactive<AccountQueryParam>({
   limit: 10,
@@ -36,34 +38,13 @@ watch(
   () => resetPagination(),
 )
 
-const pageOffset = ref(0)
-
-function resetPagination() {
-  queryParams.nextCursor = undefined
-  queryParams.prevCursor = undefined
-  pageOffset.value = 0
-}
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
+  useCursorPagination(queryParams)
 
 const { accounts, pagination, isLoading } = useAccountList(queryParams)
 const { roles } = useRoles()
 const queryClient = useQueryClient()
 const { updateBanStatusMutation } = useAccountUpdate()
-
-function handleNextPage() {
-  if (pagination.value?.nextCursor) {
-    queryParams.nextCursor = pagination.value.nextCursor
-    queryParams.prevCursor = undefined
-    pageOffset.value += 1
-  }
-}
-
-function handlePrevPage() {
-  if (pagination.value?.prevCursor) {
-    queryParams.prevCursor = pagination.value.prevCursor
-    queryParams.nextCursor = undefined
-    pageOffset.value -= 1
-  }
-}
 
 const hasActiveFilters = computed(
   () => queryParams.roleId !== undefined || queryParams.isBanned !== undefined,
@@ -74,12 +55,6 @@ function clearFilters() {
   queryParams.roleId = undefined
   queryParams.isBanned = undefined
   resetPagination()
-}
-
-function getStatusColor(isBanned: boolean) {
-  return isBanned
-    ? 'bg-red-100 text-red-700 border-red-200'
-    : 'bg-green-100 text-green-700 border-green-200'
 }
 
 const modalShow = ref(false)
@@ -212,8 +187,8 @@ function handleConfirmAction() {
         :has-next="!!pagination?.nextCursor"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage"
-        @next="handleNextPage"
+        @prev="handlePrevPage(pagination)"
+        @next="handleNextPage(pagination)"
       >
         <template #empty-icon>
           <UserRound :size="96" class="mx-auto mb-2" />
@@ -253,7 +228,7 @@ function handleConfirmAction() {
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                  getStatusColor(account.isBanned),
+                  getAccountStatusColor(account.isBanned),
                 ]"
               >
                 {{ account.isBanned ? 'Banned' : 'Active' }}

@@ -2,6 +2,7 @@
 import { useRouter } from 'vue-router'
 import { ref, onMounted, onUnmounted } from 'vue'
 import PublicLayout from '@/layouts/PublicLayout.vue'
+import { formatCurrency } from '@/utils/format'
 
 const router = useRouter()
 
@@ -65,15 +66,6 @@ const featuredDonations = [
     target: 20000000,
   },
 ]
-
-const formatFund = (amount: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
 
 const galleryImages = [
   'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&h=600&fit=crop',
@@ -193,9 +185,9 @@ const latestNews = [
                 <p class="text-sm text-gray-500">
                   Terkumpul:
                   <span class="font-semibold text-primary-500">{{
-                    formatFund(donation.collected)
+                    formatCurrency(donation.collected)
                   }}</span>
-                  <span class="text-gray-400"> / {{ formatFund(donation.target) }}</span>
+                  <span class="text-gray-400"> / {{ formatCurrency(donation.target) }}</span>
                 </p>
                 <!-- Progress Bar -->
                 <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -210,10 +202,10 @@ const latestNews = [
             </div>
           </div>
         </div>
-        <router-link
-          to="/donation"
+        <RouterLink
+          to="/donation-program"
           class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
-          >Selengkapnya >></router-link
+          >Selengkapnya >></RouterLink
         >
       </div>
     </section>
@@ -248,10 +240,10 @@ const latestNews = [
             </div>
           </div>
         </div>
-        <router-link
+        <RouterLink
           to="/news"
           class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
-          >Selengkapnya >></router-link
+          >Selengkapnya >></RouterLink
         >
       </div>
     </section>
@@ -296,10 +288,10 @@ const latestNews = [
             </div>
           </div>
         </div>
-        <router-link
+        <RouterLink
           to="/gallery"
           class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
-          >Selengkapnya >></router-link
+          >Selengkapnya >></RouterLink
         >
       </div>
     </section>

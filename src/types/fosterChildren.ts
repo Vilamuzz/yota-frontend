@@ -46,6 +46,13 @@ export interface FosterChildrenQueryParams extends PaginationParams {
   isGraduated?: boolean
 }
 
+export interface AchievementRequest {
+  id?: string
+  title: string
+  url: File
+  alt: string
+}
+
 export interface CreateFosterChildrenRequest {
   name: string
   profilePicture: File
@@ -56,7 +63,7 @@ export interface CreateFosterChildrenRequest {
   category: Category
   familyCard: File
   sktm: File
-  achievements: Achievement[]
+  achievements: AchievementRequest[]
   isGraduated: boolean
 }
 
@@ -70,7 +77,7 @@ export interface UpdateFosterChildrenRequest {
   category?: Category
   familyCard?: File
   sktm?: File
-  achievements?: Achievement[]
+  achievements?: AchievementRequest[]
   isGraduated?: boolean
 }
 

@@ -4,7 +4,7 @@ import { ROLES } from '@/const/roles'
 export const socialManagerRoutes: RouteRecordRaw[] = [
   {
     path: '',
-    meta: { role: [ROLES.SOCIAL_MANAGER, ROLES.CHAIRMAN] },
+    meta: { role: ROLES.SOCIAL_MANAGER },
     children: [
       {
         path: 'foster-children',
@@ -34,21 +34,6 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
             meta: { title: 'Detail Anak Asuh', activeMenu: 'dashboard-foster-children' },
           },
           {
-            path: 'submissions',
-            name: 'dashboard-foster-children-submissions',
-            component: () => import('@/pages/dashboard/fosterChildren/SubmissionsPage.vue'),
-            meta: { title: 'Ajuan Anak Asuh' },
-          },
-          {
-            path: 'submissions/:id/detail',
-            name: 'dashboard-foster-children-submissions-detail',
-            component: () => import('@/pages/dashboard/fosterChildren/SubmissionsDetailPage.vue'),
-            meta: {
-              title: 'Detail Ajuan Anak Asuh',
-              activeMenu: 'dashboard-foster-children-submissions',
-            },
-          },
-          {
             path: 'donations',
             name: 'dashboard-foster-children-donations',
             component: () =>
@@ -72,12 +57,6 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         path: 'social-programs',
         children: [
           {
-            path: '',
-            name: 'dashboard-social-programs',
-            component: () => import('@/pages/dashboard/socialPrograms/IndexPage.vue'),
-            meta: { title: 'Program Sosial' },
-          },
-          {
             path: 'create',
             name: 'dashboard-social-programs-create',
             component: () => import('@/pages/dashboard/socialPrograms/CreatePage.vue'),
@@ -86,13 +65,15 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
           {
             path: 'subscriptions',
             name: 'dashboard-social-programs-subscriptions',
-            component: () => import('@/pages/dashboard/socialPrograms/SubscriptionHistoryPage.vue'),
+            component: () =>
+              import('@/pages/dashboard/socialPrograms/Subscriptions/SubscriptionHistoryPage.vue'),
             meta: { title: 'Riwayat Langganan' },
           },
           {
             path: 'subscriptions/:id',
             name: 'dashboard-social-programs-subscription-detail',
-            component: () => import('@/pages/dashboard/socialPrograms/SubscriptionDetailPage.vue'),
+            component: () =>
+              import('@/pages/dashboard/socialPrograms/Subscriptions/SubscriptionDetailPage.vue'),
             meta: {
               requiresAuth: true,
               title: 'Detail Langganan',
@@ -103,13 +84,15 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
           {
             path: 'customers',
             name: 'dashboard-social-programs-customers',
-            component: () => import('@/pages/dashboard/socialPrograms/CustomerHistoryPage.vue'),
+            component: () =>
+              import('@/pages/dashboard/socialPrograms/Customers/CustomerHistoryPage.vue'),
             meta: { title: 'Riwayat Pelanggan' },
           },
           {
             path: 'customers/:id',
             name: 'dashboard-social-programs-customers-detail',
-            component: () => import('@/pages/dashboard/socialPrograms/CustomerDetailPage.vue'),
+            component: () =>
+              import('@/pages/dashboard/socialPrograms/Customers/CustomerDetailPage.vue'),
             meta: {
               requiresAuth: true,
               title: 'Detail Pelanggan',
@@ -119,7 +102,7 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
           {
             path: 'customers/:customerId/program/:programId',
             name: 'dashboard-social-programs-customers',
-            component: () => import('@/pages/dashboard/socialPrograms/CustomerPage.vue'),
+            component: () => import('@/pages/dashboard/socialPrograms/Customers/CustomerPage.vue'),
             meta: {
               requiresAuth: true,
               title: 'Detail Program Pelanggan',

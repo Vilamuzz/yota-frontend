@@ -9,6 +9,7 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { extractError } from '@/utils/error'
+import { formatCurrency } from '@/utils/format'
 
 const router = useRouter()
 const route = useRoute()
@@ -17,30 +18,28 @@ const { showToast } = useToast()
 
 const donationId = route.params.id as string
 
-// Form fields
 const donorName = ref('')
 const donorEmail = ref('')
 const grossAmount = ref('')
-
-// Validation errors
 const errors = ref<Record<string, string>>({})
-
 const isLoading = computed(() => createMutation.isPending.value)
 
-const validate = (): boolean => {
-  const result = createDonationProgramTransactionSchema.safeParse({
-    gross_amount: Number(grossAmount.value),
-    donor_name: donorName.value.trim(),
-    donor_email: donorEmail.value.trim(),
-  })
-
-  const zodErrors = getZodErrors(result as Parameters<typeof getZodErrors>[0])
-  errors.value = zodErrors
-  return Object.keys(errors.value).length === 0
-}
+const formatCurrencyPreview = computed(() => {
+  const num = Number(grossAmount.value)
+  if (!num || isNaN(num)) return ''
+  return formatCurrency(num)
+})
 
 const handleSubmit = () => {
-  if (!validate()) return
+  const result = createDonationProgramTransactionSchema.safeParse({
+    grossAmount: Number(grossAmount.value),
+    donorName: donorName.value.trim(),
+    donorEmail: donorEmail.value.trim(),
+  })
+
+  const zodErrors = getZodErrors(result)
+  errors.value = zodErrors
+  if (!result.success) return
 
   createMutation.mutate(
     {
@@ -65,16 +64,6 @@ const handleSubmit = () => {
     },
   )
 }
-
-const formatCurrencyPreview = computed(() => {
-  const num = Number(grossAmount.value)
-  if (!num || isNaN(num)) return ''
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(num)
-})
 </script>
 
 <template>

@@ -2,6 +2,9 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/ui/useToast'
+import { getZodErrors } from '@/utils/zodError'
+import { extractError } from '@/utils/error'
+import { formatCurrency } from '@/utils/format'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -14,8 +17,6 @@ const { showToast } = useToast()
 const donorName = ref('')
 const donorEmail = ref('')
 const grossAmount = ref('')
-
-// Validation errors
 const errors = ref<Record<string, string>>({})
 
 const isLoading = ref(false)
@@ -56,12 +57,40 @@ const handleSubmit = async () => {
 const formatCurrencyPreview = computed(() => {
   const num = Number(grossAmount.value)
   if (!num || isNaN(num)) return ''
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(num)
+  return formatCurrency(num)
 })
+
+const handleSubmit = () => {
+  const result = createFosterChildrenTransactionSchema.safeParse({
+    grossAmount: Number(grossAmount.value),
+    donorName: donorName.value.trim(),
+    donorEmail: donorEmail.value.trim(),
+  })
+
+  const zodErrors = getZodErrors(result)
+  errors.value = zodErrors
+  if (!result.success) return
+
+  createMutation.mutate(
+    {
+      id: fosterChildId,
+      data: {
+        grossAmount: Number(grossAmount.value),
+        donorName: donorName.value.trim() || undefined,
+        donorEmail: donorEmail.value.trim() || undefined,
+      },
+    },
+    {
+      onSuccess: () => {
+        showToast('Transaksi offline berhasil dicatat!', 'success')
+        router.push({ name: 'dashboard-foster-children-transaction' })
+      },
+      onError: (err) => {
+        showToast(extractError(err, 'Gagal mencatat transaksi offline'), 'error')
+      },
+    },
+  )
+}
 </script>
 
 <template>
@@ -106,7 +135,8 @@ const formatCurrencyPreview = computed(() => {
             </div>
 
             <p class="text-xs text-gray-500 dark:text-gray-400">
-              Detail ini akan dicatat sebagai transaksi offline langsung ke dalam sistem, melewati payment gateway.
+              Detail ini akan dicatat sebagai transaksi offline langsung ke dalam sistem, melewati
+              payment gateway.
             </p>
           </div>
 

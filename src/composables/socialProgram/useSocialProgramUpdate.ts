@@ -1,29 +1,28 @@
 import { computed } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { donationProgramService } from '@/services/donationProgram.service'
-import type { UpdateDonationProgramRequest, DonationProgram } from '@/types/donationProgram'
+import { socialProgramService } from '@/services/socialProgram.service'
+import type { UpdateSocialProgramRequest, SocialProgram } from '@/types/socialProgram'
 import type { ApiError, ApiResponse } from '@/types/response'
 
-export const useDonationProgramUpdate = () => {
+export const useSocialProgramUpdate = () => {
   const queryClient = useQueryClient()
 
   const updateMutation = useMutation<
-    ApiResponse<DonationProgram>,
+    ApiResponse<SocialProgram>,
     ApiError,
-    { donationId: string; data: UpdateDonationProgramRequest }
+    { id: string; data: UpdateSocialProgramRequest }
   >({
-    mutationFn: ({ donationId, data }) =>
-      donationProgramService.updateDonationProgram(donationId, data),
+    mutationFn: ({ id, data }) => socialProgramService.updateSocialProgram(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
-      queryClient.invalidateQueries({ queryKey: ['donationDetail', variables.donationId] })
+      queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
+      queryClient.invalidateQueries({ queryKey: ['socialProgramDetail', variables.id] })
     },
   })
 
   const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
-    mutationFn: (donationId) => donationProgramService.deleteDonationProgram(donationId),
+    mutationFn: (id) => socialProgramService.deleteSocialProgram(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
+      queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
     },
   })
 

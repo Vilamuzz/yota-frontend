@@ -93,11 +93,11 @@ const getShortFileName = (url: string, label: string) => {
 const handleCancel = () => {
   if (role.value === ROLES.CHAIRMAN) {
     router.push({
-      name: 'dashboard-chairman-foster-children-submissions',
+      name: 'chairman-foster-children-candidates',
     })
   } else {
     router.push({
-      name: 'dashboard-foster-children-submissions',
+      name: 'dashboard-foster-children-candidates',
     })
   }
 }
@@ -105,13 +105,10 @@ const handleCancel = () => {
 const confirmVerify = ref(false)
 const confirmReject = ref(false)
 
-type Role = typeof ROLES.SOCIAL_MANAGER | typeof ROLES.CHAIRMAN
-
-const role = ref<Role>(ROLES.SOCIAL_MANAGER)
-
-if (route.path.toLowerCase().includes('chairman')) {
-  role.value = ROLES.CHAIRMAN
-}
+const authStore = useAuthStore()
+const role = computed(() =>
+  authStore.activeRole === ROLES.CHAIRMAN ? ROLES.CHAIRMAN : ROLES.SOCIAL_MANAGER,
+)
 
 const verifyConfig = computed(() => {
   if (role.value === ROLES.CHAIRMAN) {
@@ -201,7 +198,9 @@ const verifyRejectConfig = computed(() => {
         <div class="grid grid-cols-1 lg:grid-cols-2">
           <!-- Identitas Anak Asuh Section -->
           <div class="p-8 border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-gray-700">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+            <h3
+              class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
+            >
               <Baby :size="20" class="text-primary-400" />
               Identitas Anak Asuh
             </h3>
@@ -255,7 +254,9 @@ const verifyRejectConfig = computed(() => {
                     class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600"
                   >
                     <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-600">
+                      <div
+                        class="w-10 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-600"
+                      >
                         <img
                           v-if="fosterChildrenCandidate.profilePicture"
                           :src="fosterChildrenCandidate.profilePicture"
@@ -283,12 +284,12 @@ const verifyRejectConfig = computed(() => {
                         <Eye :size="20" />
                       </div>
                       <div>
-                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                          >Kartu Keluarga</p
-                        >
-                        <p class="text-xs text-gray-400">{{
-                          getShortFileName(fosterChildrenCandidate.familyCard, 'KK')
-                        }}</p>
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Kartu Keluarga
+                        </p>
+                        <p class="text-xs text-gray-400">
+                          {{ getShortFileName(fosterChildrenCandidate.familyCard, 'KK') }}
+                        </p>
                       </div>
                     </div>
                     <button
@@ -310,9 +311,9 @@ const verifyRejectConfig = computed(() => {
                       </div>
                       <div>
                         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">SKTM</p>
-                        <p class="text-xs text-gray-400">{{
-                          getShortFileName(fosterChildrenCandidate.sktm, 'SKTM')
-                        }}</p>
+                        <p class="text-xs text-gray-400">
+                          {{ getShortFileName(fosterChildrenCandidate.sktm, 'SKTM') }}
+                        </p>
                       </div>
                     </div>
                     <button
@@ -388,8 +389,9 @@ const verifyRejectConfig = computed(() => {
             <div v-if="fosterChildrenCandidate.achievements?.length">
               <h4
                 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4"
-                >Piagam / Prestasi</h4
               >
+                Piagam / Prestasi
+              </h4>
               <div class="space-y-2">
                 <div
                   v-for="(cert, index) in fosterChildrenCandidate.achievements"
@@ -415,9 +417,9 @@ const verifyRejectConfig = computed(() => {
         <div
           class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
         >
-          <p class="text-xs text-gray-500 dark:text-gray-400 italic"
-            >Dikirim pada {{ fosterChildrenCandidate.createdAt }}</p
-          >
+          <p class="text-xs text-gray-500 dark:text-gray-400 italic">
+            Dikirim pada {{ fosterChildrenCandidate.createdAt }}
+          </p>
           <div class="flex items-center gap-3">
             <BaseButton variant="danger" size="md" class="px-8" @click="openRejectModal">
               Tolak
