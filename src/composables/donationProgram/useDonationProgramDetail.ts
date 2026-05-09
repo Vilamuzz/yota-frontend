@@ -7,7 +7,7 @@ import type { ApiError } from '@/types/response'
 export const useDonationProgramDetail = (slug: MaybeRefOrGetter<string>) => {
   const detailQuery = useQuery<DonationProgramResponse, ApiError>({
     queryKey: ['donationDetail', slug],
-    queryFn: () => donationProgramService.getDonationProgramDetail(toValue(slug)),
+    queryFn: () => donationProgramService.getPublishedDonationProgramDetail(toValue(slug)),
     enabled: computed(() => !!toValue(slug)),
     retry: 1,
   })

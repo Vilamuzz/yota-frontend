@@ -9,6 +9,7 @@ import {
   Ambulance,
   HandHeart,
   ShieldAlert,
+  Settings,
 } from 'lucide-vue-next'
 import type { NavItem } from '@/types/navigation'
 import { ROLES } from './roles'
@@ -26,6 +27,12 @@ export const dashboardNavigation: NavItem[] = [
     roles: [ROLES.SUPERADMIN],
   },
   {
+    icon: Settings,
+    label: 'Pengaturan',
+    route: '/dashboard/settings',
+    roles: [ROLES.SUPERADMIN],
+  },
+  {
     icon: HandHeart,
     label: 'Program Donasi',
     route: '/dashboard/donation-programs',
@@ -33,13 +40,15 @@ export const dashboardNavigation: NavItem[] = [
   },
   {
     icon: CirclePoundSterling,
-    label: 'Pemasukan',
+    label: 'Pemasukan Donasi',
     roles: [ROLES.FINANCE],
+    route: '/dashboard/income/donation-programs',
+  },
+  {
+    icon: CirclePoundSterling,
+    label: 'Pemasukan',
+    roles: [ROLES.SOCIAL_MANAGER],
     children: [
-      {
-        label: 'Program Donasi',
-        route: '/dashboard/income/donation-programs',
-      },
       {
         label: 'Program Sosial',
         route: '/dashboard/income/social-programs',
@@ -162,6 +171,6 @@ export const dashboardNavigation: NavItem[] = [
     icon: Baby,
     label: 'Anak Asuh',
     roles: [ROLES.CHAIRMAN],
-    route: '/dashboard/chairman/foster-children/submissions'
-  }
+    route: '/dashboard/chairman/foster-children/submissions',
+  },
 ]

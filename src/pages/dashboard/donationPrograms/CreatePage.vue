@@ -99,6 +99,37 @@ const removeImage = () => {
 }
 
 const handleSubmit = (status: 'active' | 'draft' = 'active') => {
+  if (status === 'draft') {
+    if (!form.title.trim()) {
+      errors.value = { title: 'Judul wajib diisi untuk draf' }
+      return
+    }
+
+    createMutation.mutate(
+      {
+        title: form.title.trim(),
+        status: DonationProgramStatusEnum.DRAFT,
+        description: form.description.trim() || undefined,
+        category: (form.category as DonationProgramCategoryEnum) || undefined,
+        fundTarget: form.fundTarget ? Number(form.fundTarget) : undefined,
+        startDate: form.startDate || undefined,
+        endDate: form.dateEnd || undefined,
+        coverImage: form.coverImageFile || undefined,
+      },
+      {
+        onSuccess: () => {
+          showToast('Donation draft saved successfully!', 'success')
+          router.push({ name: 'dashboard-donation-programs' })
+        },
+        onError: (err) => {
+          showToast(extractError(err, 'Failed to save draft.'), 'error')
+        },
+      },
+    )
+    return
+  }
+
+  // Full validation for active status
   const result = createDonationSchema.safeParse({
     title: form.title.trim(),
     description: form.description.trim(),
@@ -125,8 +156,7 @@ const handleSubmit = (status: 'active' | 'draft' = 'active') => {
       startDate: form.startDate!,
       endDate: form.dateEnd,
       coverImage: form.coverImageFile!,
-      status:
-        status === 'draft' ? DonationProgramStatusEnum.DRAFT : DonationProgramStatusEnum.ACTIVE,
+      status: DonationProgramStatusEnum.ACTIVE,
     },
     {
       onSuccess: () => {

@@ -135,6 +135,39 @@ const validate = (): boolean => {
 }
 
 const handleSubmit = (status: boolean) => {
+  if (status === false) {
+    if (!form.title.trim()) {
+      errors.value = { title: 'Judul wajib diisi untuk draf' }
+      return
+    }
+
+    updateMutation.mutate(
+      {
+        id: donationId,
+        data: {
+          title: form.title.trim(),
+          status: DonationProgramStatusEnum.DRAFT,
+          description: form.description.trim() || undefined,
+          category: (form.category as DonationProgramCategoryEnum) || undefined,
+          fundTarget: form.fundTarget ? Number(form.fundTarget) : undefined,
+          startDate: form.startDate || undefined,
+          endDate: form.dateEnd || undefined,
+          ...(form.imageFile ? { coverImage: form.imageFile } : {}),
+        },
+      },
+      {
+        onSuccess: () => {
+          showToast('Donation draft updated successfully!', 'success')
+          router.push({ name: 'dashboard-donation-programs' })
+        },
+        onError: (err) => {
+          showToast(extractError(err, 'Failed to update draft.'), 'error')
+        },
+      },
+    )
+    return
+  }
+
   if (!validate()) return
 
   updateMutation.mutate(
@@ -148,7 +181,7 @@ const handleSubmit = (status: boolean) => {
         startDate: form.startDate,
         endDate: form.dateEnd,
         ...(form.imageFile ? { coverImage: form.imageFile } : {}),
-        status: status ? DonationProgramStatusEnum.ACTIVE : DonationProgramStatusEnum.DRAFT,
+        status: DonationProgramStatusEnum.ACTIVE,
       },
     },
     {
@@ -365,6 +398,7 @@ const handleSaveDraft = () => handleSubmit(false)
             </BaseButton>
             <div class="flex items-center gap-3">
               <BaseButton
+                v-if="detailQuery.data.value?.data?.status === DonationProgramStatusEnum.DRAFT"
                 type="button"
                 variant="outline"
                 @click="handleSaveDraft"

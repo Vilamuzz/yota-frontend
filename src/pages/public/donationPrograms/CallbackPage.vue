@@ -15,7 +15,7 @@ onMounted(async () => {
 
   if (!orderId) {
     showToast('Invalid transaction', 'error')
-    await router.push('/donation')
+    await router.push('/donation-programs')
     return
   }
 
@@ -27,21 +27,21 @@ onMounted(async () => {
     // Show success or pending message based on transaction status
     if (transactionStatus === 'settlement') {
       showToast('Donasi Anda berhasil! Terima kasih.', 'success')
-      await router.push('/donation')
+      await router.push('/donation-programs')
     } else if (transactionStatus === 'pending') {
       showToast('Donasi Anda sedang diproses.', 'info')
-      await router.push('/donation')
+      await router.push('/donation-programs')
     } else if (transactionStatus === 'deny' || transactionStatus === 'cancel') {
       showToast('Transaksi dibatalkan.', 'error')
-      await router.push('/donation')
+      await router.push('/donation-programs')
     } else {
       // Default redirect
-      await router.push('/donation')
+      await router.push('/donation-programs')
     }
   } catch (error) {
     console.error('Transaction verification failed:', error)
     showToast('Terjadi kesalahan saat memverifikasi transaksi.', 'error')
-    await router.push('/donation')
+    await router.push('/donation-programs')
   } finally {
     isLoading.value = false
   }

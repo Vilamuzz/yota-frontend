@@ -12,7 +12,7 @@ export const publicRoutes: RouteRecordRaw[] = [
     component: () => import('@/pages/public/AboutPage.vue'),
   },
   {
-    path: '/donation-program',
+    path: '/donation-programs',
     children: [
       {
         path: '',
@@ -112,5 +112,4 @@ export const publicRoutes: RouteRecordRaw[] = [
     name: 'reports',
     component: () => import('@/pages/public/reports/IndexPage.vue'),
   },
-
 ]

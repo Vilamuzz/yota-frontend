@@ -1,30 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useCurrentUser } from '@/composables/account/useCurrentUser'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 
-const { user, fetchCurrentUser } = useCurrentUser()
-const error = ref('')
-const loading = ref(false)
-
-// Fetch current user data
-const getUserData = async () => {
-  loading.value = true
-  error.value = ''
-
-  const result = await fetchCurrentUser()
-
-  if (result.isError) {
-    error.value = result.error?.message || 'Failed to fetch user data'
-  }
-
-  loading.value = false
-}
-
-// Fetch user data on component mount
-onMounted(() => {
-  getUserData()
-})
+const { user, currentUserQuery } = useCurrentUser()
+const error = computed(() => (currentUserQuery.error.value as any)?.message || '')
+const loading = computed(() => currentUserQuery.isPending.value)
 </script>
 
 <template>
@@ -63,7 +44,7 @@ onMounted(() => {
       <h2 class="text-lg font-semibold mb-2">Error loading user data</h2>
       <p>{{ error }}</p>
       <button
-        @click="getUserData"
+        @click="currentUserQuery.refetch()"
         class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
       >
         Retry

@@ -54,7 +54,9 @@ export const accountService = {
   updateCurrentUserProfile: async (
     data: UpdateUserProfileRequest,
   ): Promise<UserProfileResponse> => {
-    const response = await api.patch<UserProfileResponse>(`${API.ME}/profile`, data)
+    const response = await api.patch<UserProfileResponse>(`${API.ME}/profile`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
     return response.data
   },
 
@@ -64,7 +66,7 @@ export const accountService = {
   },
 
   getRoles: async (): Promise<RolesResponse> => {
-    const response = await api.get<RolesResponse>(`${API.ACCOUNTS}/roles`)
+    const response = await api.get<RolesResponse>('/api/roles')
     return response.data
   },
 }

@@ -26,6 +26,20 @@ export const useDonationProgramUpdate = () => {
     },
   })
 
+  const activeMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => donationProgramService.updateActiveDonationProgram(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
+    },
+  })
+
+  const archiveMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => donationProgramService.updateArchiveDonationProgram(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
+    },
+  })
+
   const validationErrors = computed(
     () => updateMutation.error.value?.response?.data?.validation ?? null,
   )
@@ -33,6 +47,8 @@ export const useDonationProgramUpdate = () => {
   return {
     updateMutation,
     deleteMutation,
+    activeMutation,
+    archiveMutation,
     validationErrors,
   }
 }

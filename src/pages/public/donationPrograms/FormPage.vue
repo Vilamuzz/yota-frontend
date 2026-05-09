@@ -118,15 +118,21 @@ const handleSubmit = async () => {
     window.snap.pay(snapToken, {
       onSuccess: function () {
         window.location.href =
-          '/donation/callback?order_id=' + response.data?.orderId + '&transaction_status=settlement'
+          '/donation-programs/callback?order_id=' +
+          response.data?.orderId +
+          '&transaction_status=settlement'
       },
       onPending: function () {
         window.location.href =
-          '/donation/callback?order_id=' + response.data?.orderId + '&transaction_status=pending'
+          '/donation-programs/callback?order_id=' +
+          response.data?.orderId +
+          '&transaction_status=pending'
       },
       onError: function () {
         window.location.href =
-          '/donation/callback?order_id=' + response.data?.orderId + '&transaction_status=error'
+          '/donation-programs/callback?order_id=' +
+          response.data?.orderId +
+          '&transaction_status=error'
       },
       onClose: function () {
         // Handle when user closes the modal without completing payment

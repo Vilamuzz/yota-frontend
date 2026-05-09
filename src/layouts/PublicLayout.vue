@@ -33,7 +33,7 @@ const handleProfileClick = () => {
 const navLinks = [
   { label: 'Beranda', to: '/' },
   { label: 'Tentang', to: '/about' },
-  { label: 'Program Donasi', to: '/donation-program' },
+  { label: 'Program Donasi', to: '/donation-programs' },
   { label: 'Program Sosial', to: '/social-programs' },
   { label: 'Anak Asuh', to: '/foster-children' },
   { label: 'Ambulans', to: '/ambulance' },

@@ -53,16 +53,6 @@ export const financeRoutes: RouteRecordRaw[] = [
                   activeMenu: 'dashboard-donation-programs-income',
                 },
               },
-              {
-                path: ':id/create',
-                name: 'dashboard-donation-programs-transaction-create',
-                component: () =>
-                  import('@/pages/dashboard/income/donationProgramTransactions/CreatePage.vue'),
-                meta: {
-                  title: 'Tambah Transaksi Donasi',
-                  activeMenu: 'dashboard-donation-programs-income',
-                },
-              },
             ],
           },
           {

@@ -8,11 +8,19 @@ export interface DonationProgramTransaction {
   donorEmail: string
   grossAmount: number
   isOnline: boolean
-  transactionStatus: string
+  transactionStatus: TransactionStatus
   transactionId: string
   snapToken: string
   paidAt: string | null
   createdAt: string
+}
+
+export enum TransactionStatus {
+  PENDING = 'pending',
+  SETTLEMENT = 'settlement',
+  DENY = 'deny',
+  CANCEL = 'cancel',
+  EXPIRED = 'expired',
 }
 
 export interface DonationProgramTransactionList {

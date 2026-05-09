@@ -3,12 +3,12 @@ import { API } from '@/const/api'
 import type { PrayerListResponse, PrayerResponse } from '@/types/prayer'
 
 export const prayerService = {
-  getListPrayer: async (id: string): Promise<PrayerListResponse> => {
-    const response = await api.get<PrayerListResponse>(`${API.DONATION_PROGRAMS}/prayers/${id}`)
+  getListPrayer: async (slug: string): Promise<PrayerListResponse> => {
+    const response = await api.get<PrayerListResponse>(`${API.DONATION_PROGRAMS}/${slug}/prayers`)
     return response.data
   },
 
-  amenPrayer: async (id: string) => {
+  amenPrayer: async (slug: string, id: string) => {
     const response = await api.post(`${API.DONATION_PROGRAMS}/prayers/${id}/amen`)
     return response.data
   },
