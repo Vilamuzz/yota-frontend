@@ -221,7 +221,7 @@ const handleRoleSwitch = (role: Role) => {
       </header>
 
       <main
-        class="flex-1 overflow-y-auto bg-white dark:bg-[#121212] font-sf-pro text-gray-900 dark:text-white"
+        class="flex-1 overflow-y-auto bg-transparent dark:bg-[#121212] font-sf-pro text-gray-900 dark:text-white"
       >
         <div class="p-6">
           <slot />

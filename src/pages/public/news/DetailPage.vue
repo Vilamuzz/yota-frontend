@@ -122,13 +122,13 @@ const handleShare = () => {
 
         <!-- Media Gallery (if any) -->
         <section
-          v-if="news.medias && news.medias.length > 0"
+          v-if="news.media && news.media.length > 0"
           class="space-y-6 pt-10 border-t border-gray-100"
         >
           <h2 class="text-2xl font-black text-gray-900">Galeri Media</h2>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div
-              v-for="media in news.medias"
+              v-for="media in news.media"
               :key="media.id"
               class="aspect-square rounded-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
             >

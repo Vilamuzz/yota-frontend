@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { X, Image as ImageIcon, Camera, LayoutGrid, ArrowLeft } from 'lucide-vue-next'
+import { X, Image as ImageIcon, Camera, LayoutGrid, Plus } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -16,26 +16,25 @@ const router = useRouter()
 const { showToast } = useToast()
 const { createMutation, validationErrors } = useGalleryCreate()
 
+interface MediaFileItem {
+  file: File
+  preview: string
+  alt: string
+  order: number
+}
+
 const form = reactive({
   title: '',
   category: '' as MediaCategory | '',
-  content: '',
-  status: MediaStatus.Draft,
+  description: '',
+  status: MediaStatus.DRAFT,
   coverImage: null as File | null,
   coverPreview: null as string | null,
-  mediaFiles: [] as File[],
-  mediaPreviews: [] as string[],
+  medias: [] as MediaFileItem[],
 })
 
 const errors = ref<Record<string, string>>({})
-
 const categories = Object.values(MediaCategory)
-const statuses = [
-  { label: 'Draft', value: MediaStatus.Draft },
-  { label: 'Terbitkan', value: MediaStatus.Published },
-  { label: 'Arsipkan', value: MediaStatus.Archived },
-]
-
 const isLoading = computed(() => createMutation.isPending.value)
 
 watch(
@@ -64,25 +63,63 @@ const handleMediasChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files) {
     const files = Array.from(target.files)
-    form.mediaFiles = [...form.mediaFiles, ...files]
-    const newPreviews = files.map((file) => URL.createObjectURL(file))
-    form.mediaPreviews = [...form.mediaPreviews, ...newPreviews]
+    const newMediaItems = files.map((file, index) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      alt: '',
+      order: form.medias.length + index + 1,
+    }))
+    form.medias = [...form.medias, ...newMediaItems]
   }
 }
 
 const removeMedia = (index: number) => {
-  form.mediaFiles.splice(index, 1)
-  form.mediaPreviews.splice(index, 1)
+  form.medias.splice(index, 1)
+  // Re-order remaining items
+  form.medias.forEach((item, idx) => {
+    item.order = idx + 1
+  })
 }
 
-const handleSubmit = () => {
+const handleSubmit = (status: MediaStatus = MediaStatus.PUBLISHED) => {
+  if (status === MediaStatus.DRAFT) {
+    if (!form.title.trim()) {
+      errors.value = { title: 'Judul wajib diisi untuk draf' }
+      return
+    }
+
+    createMutation.mutate(
+      {
+        title: form.title.trim(),
+        status: MediaStatus.DRAFT,
+        description: form.description.trim() || '',
+        category: (form.category as MediaCategory) || MediaCategory.Others,
+        coverImage: form.coverImage!,
+        mediaFiles: form.medias.map((m) => m.file),
+        mediaAlts: form.medias.map((m) => m.alt || form.title.trim()),
+      },
+      {
+        onSuccess: () => {
+          showToast('Draf galeri berhasil disimpan!', 'success')
+          router.push({ name: 'dashboard-galleries' })
+        },
+        onError: (err) => {
+          showToast(extractError(err, 'Gagal menyimpan draf galeri'), 'error')
+        },
+      },
+    )
+    return
+  }
+
   const result = createGallerySchema.safeParse({
     title: form.title,
     category: form.category,
-    content: form.content,
-    status: form.status,
+    description: form.description,
+    status: MediaStatus.PUBLISHED,
     coverImage: form.coverImage,
-    medias: form.mediaFiles,
+    mediaFiles: form.medias.map((m) => m.file),
+    mediaAlts: form.medias.map((m) => m.alt),
+    mediaOrders: form.medias.map((m) => m.order),
   })
 
   const zodErrors = getZodErrors(result)
@@ -95,19 +132,21 @@ const handleSubmit = () => {
 
   createMutation.mutate(
     {
-      ...result.data,
-      category: result.data.category as MediaCategory,
-      status: result.data.status as MediaStatus,
+      title: result.data.title,
+      category: result.data.category,
+      description: result.data.description,
+      status: MediaStatus.PUBLISHED,
       coverImage: result.data.coverImage,
-      medias: result.data.medias,
+      mediaFiles: result.data.mediaFiles,
+      mediaAlts: result.data.mediaAlts,
     },
     {
       onSuccess: () => {
-        showToast('Galeri berhasil ditambahkan!', 'success')
+        showToast('Galeri berhasil diterbitkan!', 'success')
         router.push({ name: 'dashboard-galleries' })
       },
       onError: (err) => {
-        showToast(extractError(err, 'Gagal menambahkan galeri'), 'error')
+        showToast(extractError(err, 'Gagal menerbitkan galeri'), 'error')
       },
     },
   )
@@ -119,26 +158,17 @@ const handleSubmit = () => {
     <template #title>Tambah Galeri Baru</template>
 
     <div class="max-w-full mx-auto space-y-6">
-      <!-- Header Actions -->
-      <div class="flex items-center justify-between">
-        <BaseButton
-          variant="outline"
-          size="md"
-          @click="router.push({ name: 'dashboard-galleries' })"
-        >
-          <ArrowLeft :size="18" class="mr-2" />
-          Kembali
-        </BaseButton>
-      </div>
-
-      <form @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <form
+        @submit.prevent="handleSubmit(MediaStatus.PUBLISHED)"
+        class="grid grid-cols-1 lg:grid-cols-3 gap-6"
+      >
         <!-- Left Column: Content Information -->
         <div class="lg:col-span-2 space-y-6">
           <div
             class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
           >
             <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
-              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-500">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300">
                 <ImageIcon :size="20" />
               </div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
@@ -157,7 +187,7 @@ const handleSubmit = () => {
 
             <div>
               <label
-                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
               >
                 Kategori <span class="text-red-500">*</span>
               </label>
@@ -168,7 +198,7 @@ const handleSubmit = () => {
               >
                 <option value="" disabled>Pilih Kategori</option>
                 <option v-for="cat in categories" :key="cat" :value="cat">
-                  {{ cat }}
+                  {{ cat.charAt(0).toUpperCase() + cat.slice(1) }}
                 </option>
               </select>
               <p
@@ -181,22 +211,22 @@ const handleSubmit = () => {
 
             <div>
               <label
-                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
               >
-                Keterangan Singkat
+                Deskripsi Galeri
               </label>
               <textarea
-                v-model="form.content"
+                v-model="form.description"
                 rows="6"
-                placeholder="Berikan deskripsi singkat tentang foto-foto di album ini..."
+                placeholder="Berikan deskripsi lengkap tentang galeri ini..."
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500 transition-all duration-200 outline-none resize-none"
-                :class="{ 'border-red-500': errors.content || validationErrors?.content }"
+                :class="{ 'border-red-500': errors.description || validationErrors?.description }"
               ></textarea>
               <p
-                v-if="errors.content || validationErrors?.content"
+                v-if="errors.description || validationErrors?.description"
                 class="mt-1 text-xs text-red-600"
               >
-                {{ errors.content || validationErrors?.content }}
+                {{ errors.description || validationErrors?.description }}
               </p>
             </div>
           </div>
@@ -214,9 +244,9 @@ const handleSubmit = () => {
               </h3>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               <!-- Upload Button -->
-              <div class="relative group aspect-square">
+              <div class="relative group h-40">
                 <input
                   type="file"
                   multiple
@@ -228,31 +258,44 @@ const handleSubmit = () => {
                   class="h-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center text-gray-400 group-hover:border-primary-400 group-hover:bg-primary-50/5 transition-all duration-200"
                 >
                   <Plus :size="24" class="mb-1" />
-                  <span class="text-[10px] font-bold uppercase tracking-wider">Tambah</span>
+                  <span class="text-[10px] font-bold uppercase tracking-wider">Tambah Foto</span>
                 </div>
               </div>
 
-              <!-- Previews -->
+              <!-- Previews with Metadata -->
               <div
-                v-for="(preview, index) in form.mediaPreviews"
+                v-for="(item, index) in form.medias"
                 :key="index"
-                class="relative aspect-square rounded-xl overflow-hidden group border border-gray-100 dark:border-gray-700"
+                class="bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-700 p-3 space-y-3"
               >
-                <img :src="preview" class="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  @click="removeMedia(index)"
-                  class="absolute top-2 right-2 p-1 bg-white/90 dark:bg-gray-800/90 rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X :size="14" />
-                </button>
+                <div class="relative aspect-video rounded-lg overflow-hidden group">
+                  <img :src="item.preview" class="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    @click="removeMedia(index)"
+                    class="absolute top-2 right-2 p-1 bg-white/90 dark:bg-gray-800/90 rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X :size="14" />
+                  </button>
+                  <div
+                    class="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/50 text-white text-[10px] rounded"
+                  >
+                    #{{ item.order }}
+                  </div>
+                </div>
+                <BaseInput
+                  :id="'media-alt-' + index"
+                  v-model="item.alt"
+                  placeholder="Alt text (deskripsi foto)"
+                  size="sm"
+                />
               </div>
             </div>
             <p
-              v-if="errors.medias || validationErrors?.medias"
+              v-if="errors.mediaFiles || validationErrors?.media"
               class="mt-1 text-xs text-red-600 text-center"
             >
-              {{ errors.medias || validationErrors?.medias }}
+              {{ errors.mediaFiles || validationErrors?.media }}
             </p>
           </div>
         </div>
@@ -313,54 +356,27 @@ const handleSubmit = () => {
           <div
             class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
           >
-            <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-              Pengaturan Galeri
-            </h3>
-
-            <div>
-              <label
-                class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2"
-                >Status</label
-              >
-              <div class="grid grid-cols-1 gap-2">
-                <button
-                  v-for="s in statuses"
-                  :key="s.value"
-                  type="button"
-                  @click="form.status = s.value"
-                  class="flex items-center justify-between px-3 py-2 rounded-xl border transition-all duration-200 text-xs font-medium"
-                  :class="[
-                    form.status === s.value
-                      ? 'bg-primary-50 border-primary-200 text-primary-700 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-400'
-                      : 'border-gray-100 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50',
-                  ]"
-                >
-                  {{ s.label }}
-                  <div
-                    v-if="form.status === s.value"
-                    class="w-2 h-2 rounded-full bg-primary-500"
-                  ></div>
-                </button>
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-3 pt-4 border-t border-gray-50 dark:border-gray-700">
-              <BaseButton
-                type="submit"
-                variant="primary"
-                :loading="isLoading"
-                class="w-full py-4 rounded-xl"
-              >
-                SIMPAN GALERI
+            <div class="flex flex-col gap-3">
+              <BaseButton type="submit" variant="primary" :loading="isLoading" class="w-full">
+                Simpan
               </BaseButton>
               <BaseButton
                 type="button"
                 variant="outline"
+                @click="handleSubmit(MediaStatus.DRAFT)"
+                :disabled="isLoading"
+                class="w-full"
+              >
+                Simpan Draf
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="danger"
                 @click="router.push({ name: 'dashboard-galleries' })"
                 :disabled="isLoading"
-                class="w-full rounded-xl"
+                class="w-full"
               >
-                BATAL
+                Batal
               </BaseButton>
             </div>
           </div>

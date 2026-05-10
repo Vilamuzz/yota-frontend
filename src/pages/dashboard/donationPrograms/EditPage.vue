@@ -262,7 +262,7 @@ const handleSaveDraft = () => handleSubmit(false)
                   :class="
                     imageError
                       ? 'border-red-300 bg-red-50 dark:bg-red-900/20'
-                      : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-[#121212]/50 hover:bg-gray-100 dark:hover:bg-[#121212]'
                   "
                 >
                   <Upload :size="32" class="text-gray-400 mb-2" />
@@ -307,7 +307,7 @@ const handleSaveDraft = () => handleSubmit(false)
                     v-model="form.description"
                     rows="5"
                     placeholder="Describe the goal of this donation campaign…"
-                    class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                    class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none dark:bg-[#121212] dark:text-gray-200 dark:border-gray-700"
                     :class="
                       descriptionError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
                     "
@@ -330,7 +330,7 @@ const handleSaveDraft = () => handleSubmit(false)
                     <select
                       id="category"
                       v-model="form.category"
-                      class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                      class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-[#121212] dark:text-gray-200 dark:border-gray-700"
                       :class="
                         categoryError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
                       "

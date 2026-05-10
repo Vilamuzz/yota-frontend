@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/vue-query'
 import { socialProgramService } from '@/services/socialProgram.service'
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
-import type { SocialProgramDetailResponse } from '@/types/socialProgram'
+import type { SocialProgramDetailResponse } from '@/types/socialprogramt'
 import type { ApiError } from '@/types/response'
 
 export const useSocialProgramDetail = (id: MaybeRefOrGetter<string>) => {

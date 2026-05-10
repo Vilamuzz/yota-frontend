@@ -43,6 +43,16 @@ export const galleryService = {
     return response.data
   },
 
+  updatePublishGallery: async (id: string) => {
+    const response = await api.patch(`${API.GALLERIES_ADMIN}/${id}/publish`)
+    return response.data
+  },
+
+  updateArchivedGallery: async (id: string) => {
+    const response = await api.patch(`${API.GALLERIES_ADMIN}/${id}/archive`)
+    return response.data
+  },
+
   deleteGallery: async (id: string) => {
     const response = await api.delete(`${API.GALLERIES_ADMIN}/${id}`)
     return response.data

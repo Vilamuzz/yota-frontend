@@ -5,7 +5,7 @@ import type {
   SocialProgramDetailResponse,
   SocialProgramQueryParams,
   UpdateSocialProgramRequest,
-} from '@/types/socialProgram'
+} from '@/types/socialprogramt'
 import { api } from '@/utils/api'
 
 export const socialProgramService = {

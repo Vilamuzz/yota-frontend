@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { socialProgramService } from '@/services/socialProgram.service'
-import type { CreateSocialProgramRequest, SocialProgram } from '@/types/socialProgram'
+import type { CreateSocialProgramRequest, SocialProgram } from '@/types/socialprogramt'
 import type { ApiError, ApiResponse } from '@/types/response'
 
 export const useSocialProgramCreate = () => {
@@ -12,7 +12,8 @@ export const useSocialProgramCreate = () => {
     ApiError,
     CreateSocialProgramRequest
   >({
-    mutationFn: (data: CreateSocialProgramRequest) => socialProgramService.createSocialProgram(data),
+    mutationFn: (data: CreateSocialProgramRequest) =>
+      socialProgramService.createSocialProgram(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
     },

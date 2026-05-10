@@ -1,6 +1,6 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useSocialProgramList } from './useSocialProgramList'
-import type { SocialProgramQueryParams } from '@/types/socialProgram'
+import type { SocialProgramQueryParams } from '@/types/socialprogramt'
 import { useCursorPagination } from '../ui/usePagination'
 
 export function useSocialProgramFilters() {

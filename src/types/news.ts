@@ -7,7 +7,7 @@ export interface News {
   title: string
   coverImage: string
   category: MediaCategory
-  medias: Media[]
+  media: Media[]
   content: string
   status: MediaStatus
   views: number
@@ -43,7 +43,8 @@ export interface CreateNewsRequest {
   content: string
   status: MediaStatus
   coverImage: File
-  medias?: File[]
+  mediaFiles: File[]
+  mediaAlts: string[]
 }
 
 export interface UpdateNewsRequest {
@@ -52,7 +53,12 @@ export interface UpdateNewsRequest {
   content?: string
   status?: MediaStatus
   coverImage?: File
-  medias?: File[]
+  mediaFiles?: File[]
+  mediaAlts?: string[]
+  mediaOrders?: number[]
+  mediaIds?: string[]
+  updateMediaAlts?: string[]
+  updateMediaOrders?: number[]
 }
 
 export interface CreateNewsCommentRequest {

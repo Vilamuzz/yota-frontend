@@ -81,8 +81,21 @@ export const dashboardNavigation: NavItem[] = [
   {
     icon: CirclePoundSterling,
     label: 'Program Sosial',
-    route: '/dashboard/social-programs',
     roles: [ROLES.SOCIAL_MANAGER],
+    children: [
+      {
+        label: 'Data Program',
+        route: '/dashboard/social-programs',
+      },
+      {
+        label: 'Riwayat Langganan',
+        route: '/dashboard/social-programs/subscriptions',
+      },
+      {
+        label: 'Riwayat Pelanggan',
+        route: '/dashboard/social-programs/customers',
+      },
+    ],
   },
   {
     icon: Baby,
@@ -141,25 +154,6 @@ export const dashboardNavigation: NavItem[] = [
     label: 'Layanan Ambulans',
     route: '/dashboard/ambulance-services',
     roles: [ROLES.AMBULANCE_MANAGER],
-  },
-  {
-    icon: NotepadText,
-    label: 'Manajemen Program',
-    roles: [ROLES.SOCIAL_MANAGER],
-    children: [
-      {
-        label: 'Data Program',
-        route: '/dashboard/social-programs',
-      },
-      {
-        label: 'Riwayat Langganan',
-        route: '/dashboard/social-programs/subscriptions',
-      },
-      {
-        label: 'Riwayat Pelanggan',
-        route: '/dashboard/social-programs/customers',
-      },
-    ],
   },
   {
     icon: NotepadText,

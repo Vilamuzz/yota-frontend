@@ -1,9 +1,18 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Plus, Trash2, Edit, Newspaper, RotateCcw, Image as ImageIcon } from 'lucide-vue-next'
+import {
+  Plus,
+  Trash2,
+  Edit,
+  Newspaper,
+  RotateCcw,
+  Image as ImageIcon,
+  Play,
+  Archive,
+} from 'lucide-vue-next'
 import { useNewsAdminList } from '@/composables/news/useNewsAdminList'
-import { useNewsDelete } from '@/composables/news/useNewsDelete'
+import { useNewsUpdate } from '@/composables/news/useNewsUpdate'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useToast } from '@/composables/ui/useToast'
 import { formatDate } from '@/utils/format'
@@ -17,7 +26,7 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 
 const { showToast } = useToast()
-const { deleteMutation } = useNewsDelete()
+const { deleteMutation, publishMutation, archiveMutation } = useNewsUpdate()
 
 const queryParams = reactive<NewsQueryParams>({
   limit: 10,
@@ -40,7 +49,9 @@ const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
   useCursorPagination(queryParams)
 
 const isDeleteModalOpen = ref(false)
-const selectedNewsId = ref<string | null>(null)
+const isPublishModalOpen = ref(false)
+const isArchiveModalOpen = ref(false)
+const selectedNews = ref<any>(null)
 
 const hasActiveFilters = computed(
   () => queryParams.category !== undefined || queryParams.status !== undefined,
@@ -66,21 +77,61 @@ function clearFilters() {
   resetPagination()
 }
 
-function openDeleteModal(id: string) {
-  selectedNewsId.value = id
+function openDeleteModal(news: any) {
+  selectedNews.value = news
   isDeleteModalOpen.value = true
 }
 
 function handleConfirmDelete() {
-  if (selectedNewsId.value) {
-    deleteMutation.mutate(selectedNewsId.value, {
+  if (selectedNews.value) {
+    deleteMutation.mutate(selectedNews.value.id, {
       onSuccess: () => {
         showToast('Berita berhasil dihapus', 'success')
         isDeleteModalOpen.value = false
-        selectedNewsId.value = null
+        selectedNews.value = null
       },
       onError: () => {
         showToast('Gagal menghapus berita', 'error')
+      },
+    })
+  }
+}
+
+function openPublishModal(news: any) {
+  selectedNews.value = news
+  isPublishModalOpen.value = true
+}
+
+function handleConfirmPublish() {
+  if (selectedNews.value) {
+    publishMutation.mutate(selectedNews.value.id, {
+      onSuccess: () => {
+        showToast('Berita berhasil diterbitkan', 'success')
+        isPublishModalOpen.value = false
+        selectedNews.value = null
+      },
+      onError: () => {
+        showToast('Gagal menerbitkan berita', 'error')
+      },
+    })
+  }
+}
+
+function openArchiveModal(news: any) {
+  selectedNews.value = news
+  isArchiveModalOpen.value = true
+}
+
+function handleConfirmArchive() {
+  if (selectedNews.value) {
+    archiveMutation.mutate(selectedNews.value.id, {
+      onSuccess: () => {
+        showToast('Berita berhasil diarsipkan', 'success')
+        isArchiveModalOpen.value = false
+        selectedNews.value = null
+      },
+      onError: () => {
+        showToast('Gagal mengarsipkan berita', 'error')
       },
     })
   }
@@ -101,6 +152,14 @@ function formatCategory(category: string) {
     <div class="space-y-6">
       <!-- Header Section -->
       <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <BaseButton
+          variant="primary"
+          :to="{ name: 'dashboard-news-create' }"
+          class="w-full sm:w-auto"
+        >
+          <Plus :size="20" class="mr-1" />
+          Tambah Berita
+        </BaseButton>
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <BaseSearch
             v-model="searchQuery"
@@ -112,7 +171,7 @@ function formatCategory(category: string) {
               <div class="space-y-4 w-64">
                 <div>
                   <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                   >
                     Kategori
                   </label>
@@ -129,7 +188,7 @@ function formatCategory(category: string) {
 
                 <div>
                   <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                   >
                     Status
                   </label>
@@ -149,13 +208,13 @@ function formatCategory(category: string) {
                     @click="clearFilters"
                     class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   >
-                    RESET
+                    Reset
                   </button>
                   <button
                     @click="closeDropdown"
                     class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
                   >
-                    APPLY
+                    Apply
                   </button>
                 </div>
               </div>
@@ -172,15 +231,6 @@ function formatCategory(category: string) {
             Reset
           </BaseButton>
         </div>
-
-        <BaseButton
-          variant="primary"
-          :to="{ name: 'dashboard-news-create' }"
-          class="w-full sm:w-auto"
-        >
-          <Plus :size="20" class="mr-1" />
-          Tambah Berita
-        </BaseButton>
       </div>
 
       <!-- Table Section -->
@@ -259,6 +309,22 @@ function formatCategory(category: string) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
+                <button
+                  v-if="item.status === MediaStatus.DRAFT || item.status === MediaStatus.ARCHIVED"
+                  class="p-1 hover:bg-green-50 text-green-600 rounded transition-colors duration-150 dark:hover:bg-green-900/20"
+                  title="Terbitkan berita"
+                  @click="openPublishModal(item)"
+                >
+                  <Play :size="18" />
+                </button>
+                <button
+                  v-if="item.status === MediaStatus.PUBLISHED"
+                  class="p-1 hover:bg-orange-50 text-orange-600 rounded transition-colors duration-150 dark:hover:bg-orange-900/20"
+                  title="Arsipkan berita"
+                  @click="openArchiveModal(item)"
+                >
+                  <Archive :size="18" />
+                </button>
                 <RouterLink
                   :to="{ name: 'dashboard-news-edit', params: { id: item.id } }"
                   class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
@@ -267,9 +333,10 @@ function formatCategory(category: string) {
                   <Edit :size="18" />
                 </RouterLink>
                 <button
+                  v-if="item.status === MediaStatus.DRAFT"
                   class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 dark:hover:bg-red-900/20"
                   title="Hapus berita"
-                  @click="openDeleteModal(item.id)"
+                  @click="openDeleteModal(item)"
                 >
                   <Trash2 :size="18" />
                 </button>
@@ -283,12 +350,38 @@ function formatCategory(category: string) {
     <!-- Delete Confirmation Modal -->
     <ConfirmationModal
       :show="isDeleteModalOpen"
-      title="Hapus Berita"
+      :title="`Hapus ${selectedNews?.title}?`"
       message="Apakah Anda yakin ingin menghapus berita ini? Tindakan ini tidak dapat dibatalkan."
       variant="danger"
       :primary-button-loading="deleteMutation.isPending.value"
       @close="isDeleteModalOpen = false"
       @confirm="handleConfirmDelete"
+    />
+
+    <!-- Publish Confirmation Modal -->
+    <ConfirmationModal
+      :show="isPublishModalOpen"
+      :title="`Terbitkan ${selectedNews?.title}?`"
+      message="Berita ini akan dipublikasikan dan dapat dilihat oleh publik. Pastikan semua konten sudah benar."
+      primary-button-text="Terbitkan"
+      secondary-button-text="Batal"
+      :primary-button-loading="publishMutation.isPending.value"
+      @primary="handleConfirmPublish"
+      @secondary="isPublishModalOpen = false"
+      @close="isPublishModalOpen = false"
+    />
+
+    <!-- Archive Confirmation Modal -->
+    <ConfirmationModal
+      :show="isArchiveModalOpen"
+      :title="`Arsipkan ${selectedNews?.title}?`"
+      message="Berita ini akan diarsipkan dan tidak lagi terlihat oleh publik. Anda masih dapat mengaksesnya dari dashboard admin."
+      primary-button-text="Arsipkan"
+      secondary-button-text="Batal"
+      :primary-button-loading="archiveMutation.isPending.value"
+      @primary="handleConfirmArchive"
+      @secondary="isArchiveModalOpen = false"
+      @close="isArchiveModalOpen = false"
     />
   </DashboardLayout>
 </template>

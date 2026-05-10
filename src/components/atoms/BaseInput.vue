@@ -74,7 +74,7 @@ const passwordStrength = computed(() => {
 
 const inputClasses = computed(() => {
   const base =
-    'w-full border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600'
+    'w-full border rounded-lg focus:ring-2 focus:ring-primary-500 transition-all duration-200 outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[#121212] border-gray-300 dark:border-gray-700'
 
   const sizes = {
     sm: 'px-3 py-1.5 text-xs',
