@@ -85,7 +85,7 @@ const formatCurrency = (value: number) => {
 // ================== VIEW DETAIL ==================
 const handleView = (customer: any) => {
   router.push({
-    name: 'dashboard-social-program-customers-detail',
+    name: 'dashboard-social-programs-customers-detail',
     params: { id: customer.id.toString() },
     query: { customer: JSON.stringify(customer) },
   })

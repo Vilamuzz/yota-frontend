@@ -6,105 +6,53 @@ import { useFosterChildrenFilters } from '@/composables/fosterChildren/useFoster
 import { useFosterChildrenDelete } from '@/composables/fosterChildren/useFosterChildrenDelete'
 import { useToast } from '@/composables/ui/useToast'
 import { formatDate } from '@/utils/format'
-import { Category, Gender } from '@/types/fosterChildren'
+import { extractError } from '@/utils/error'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
-import {
-  Category,
-  Gender,
-  type FosterChildren,
-  type FosterChildrenQueryParams,
-} from '@/types/fosterChildren'
+import { Category, Gender, type FosterChildren } from '@/types/fosterChildren'
 
-const router = useRouter()
+const { showToast } = useToast()
 
-const queryParams = reactive<FosterChildrenQueryParams>({
-  limit: 10,
-  search: undefined,
-  gender: undefined,
-  category: undefined,
-  isGraduated: undefined,
-  nextCursor: undefined,
-  prevCursor: undefined,
-})
+const {
+  queryParams,
+  limitOptions,
+  searchQuery,
+  pageOffset,
+  fosterChildren,
+  pagination,
+  isLoading,
+  hasActiveFilters,
+  handleNextPage,
+  handlePrevPage,
+  clearFilters,
+} = useFosterChildrenFilters()
 
-const limitOptions = [10, 25, 50, 100]
+const { deleteMutation } = useFosterChildrenDelete()
 
-const searchQuery = ref('')
-let searchTimeout: ReturnType<typeof setTimeout>
+const isDeleteModalOpen = ref(false)
+const selectedChild = ref<FosterChildren | null>(null)
 
-watch(searchQuery, (val) => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    queryParams.search = val || undefined
-    resetPagination()
-  }, 400)
-})
-
-watch(
-  () => [queryParams.gender, queryParams.category, queryParams.isGraduated, queryParams.limit],
-  () => resetPagination(),
-)
-
-const pageOffset = ref(0)
-
-function resetPagination() {
-  queryParams.nextCursor = undefined
-  queryParams.prevCursor = undefined
-  pageOffset.value = 0
+const openDeleteModal = (child: FosterChildren) => {
+  selectedChild.value = child
+  isDeleteModalOpen.value = true
 }
 
-// Fetch foster children via composable
-const { listQuery, fosterChildren, pagination } = useFosterChildrenList(queryParams)
+const handleConfirmDelete = async () => {
+  if (!selectedChild.value) return
 
-const displayChildren = computed(() => fosterChildren.value)
-
-function handleNextPage() {
-  if (pagination.value?.nextCursor) {
-    queryParams.nextCursor = pagination.value.nextCursor
-    queryParams.prevCursor = undefined
-    pageOffset.value += 1
-  }
-}
-
-function handlePrevPage() {
-  if (pagination.value?.prevCursor) {
-    queryParams.prevCursor = pagination.value.prevCursor
-    queryParams.nextCursor = undefined
-    pageOffset.value -= 1
-  }
-}
-
-const getStatusColor = (isGraduated: boolean) => {
-  return isGraduated
-    ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
-    : 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-}
-
-const confirmShow = ref(false)
-const confirmChild = ref<FosterChildren | null>(null)
-const deleteChild = (child: FosterChildren) => {
-  confirmChild.value = child
-  confirmShow.value = true
-}
-
-function handleConfirmDelete() {
-  if (selectedChildId.value) {
-    deleteMutation.mutate(selectedChildId.value, {
-      onSuccess: () => {
-        showToast('Data anak asuh berhasil dihapus', 'success')
-        isDeleteModalOpen.value = false
-        selectedChildId.value = null
-      },
-      onError: () => {
-        showToast('Gagal menghapus data anak asuh', 'error')
-      },
-    })
-  }
+  deleteMutation.mutate(selectedChild.value.id, {
+    onSuccess: () => {
+      showToast('Data anak asuh berhasil dihapus', 'success')
+      isDeleteModalOpen.value = false
+      selectedChild.value = null
+    },
+    onError: (error) => {
+      showToast(extractError(error) || 'Gagal menghapus data anak asuh', 'error')
+    },
+  })
 }
 </script>
 
@@ -115,6 +63,15 @@ function handleConfirmDelete() {
     <div class="space-y-6">
       <!-- Header Section -->
       <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <BaseButton
+          variant="primary"
+          :to="{ name: 'dashboard-foster-children-create' }"
+          class="w-full sm:w-auto"
+        >
+          <Plus :size="20" class="mr-1" />
+          Tambah Anak Asuh
+        </BaseButton>
+
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <BaseSearch
             v-model="searchQuery"
@@ -201,20 +158,10 @@ function handleConfirmDelete() {
             Reset
           </BaseButton>
         </div>
-
-        <BaseButton
-          variant="primary"
-          :to="{ name: 'dashboard-foster-children-create' }"
-          class="w-full sm:w-auto"
-        >
-          <Plus :size="20" class="mr-1" />
-          Tambah Anak Asuh
-        </BaseButton>
       </div>
 
-      <!-- Table Section -->
       <BaseTable
-        :loading="listQuery.isPending.value"
+        :loading="isLoading"
         loading-message="Memuat data anak asuh..."
         :is-empty="fosterChildren.length === 0"
         empty-message="Tidak ada data anak asuh"
@@ -330,7 +277,7 @@ function handleConfirmDelete() {
                 <button
                   class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 dark:hover:bg-red-900/20"
                   title="Hapus data"
-                  @click="openDeleteModal(child.id)"
+                  @click="openDeleteModal(child)"
                 >
                   <Trash2 :size="18" />
                 </button>
@@ -344,12 +291,14 @@ function handleConfirmDelete() {
     <!-- Delete Confirmation Modal -->
     <ConfirmationModal
       :show="isDeleteModalOpen"
-      title="Hapus Data Anak Asuh"
+      :title="`Hapus ${selectedChild?.name}?`"
       message="Apakah Anda yakin ingin menghapus data ini? Semua informasi terkait anak asuh ini akan dihapus permanen."
-      variant="danger"
-      :primary-button-loading="deleteMutation.isPending.value"
+      danger-button-text="Hapus"
+      secondary-button-text="Batal"
+      :danger-button-loading="deleteMutation.isPending.value"
+      @danger="handleConfirmDelete"
+      @secondary="isDeleteModalOpen = false"
       @close="isDeleteModalOpen = false"
-      @confirm="handleConfirmDelete"
     />
   </DashboardLayout>
 </template>

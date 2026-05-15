@@ -3,7 +3,6 @@ import type { Pagination, PaginationParams, Response } from './response'
 
 export interface FosterChildrenCandidate {
   id: string
-  slug: string
   name: string
   profilePicture: string
   gender: Gender
@@ -38,25 +37,28 @@ export interface FosterChildrenCandidateQueryParams extends PaginationParams {
 
 export interface FosterChildrenCandidateCreateRequest {
   name: string
-  profilePicture: File
   gender: Gender
-  address: string
-  birthPlace: string
-  birthDate: string
   category: Category
+  birthDate: string
+  birthPlace: string
+  address: string
+  profilePicture: File
   familyCard: File
   sktm: File
-  achievements: Achievement[]
-  isGraduated: boolean
   submitterName: string
   submitterPhone: string
   submitterAddress: string
   submitterIdCard: File
+  status?: FosterChildrenCandidateStatus
+  rejectionReason?: string
 }
 
-export interface FosterChildrenCandidateUpdateStatusRequest {
-  status: string
-  rejectionReason: string
+export enum FosterChildrenCandidateStatus {
+  PENDING = 'pending',
+  SOCIAL_MANAGER_ACCEPTED = 'social_manager_accepted',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  CANCELED = 'canceled',
 }
 
 export type FosterChildrenCandidateResponse = Response<FosterChildrenCandidate>

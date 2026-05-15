@@ -203,7 +203,7 @@ const latestNews = [
           </div>
         </div>
         <RouterLink
-          to="/donation-program"
+          to="/donation-programs"
           class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
           >Selengkapnya >></RouterLink
         >
@@ -250,7 +250,7 @@ const latestNews = [
 
     <!-- Gallery Section -->
     <section class="w-full mt-16">
-      <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
+      <div class="max-w-7xl mx-auto py-8 md:px-12 lg:px-24">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">
           Galeri Yayasan OTA
         </h2>

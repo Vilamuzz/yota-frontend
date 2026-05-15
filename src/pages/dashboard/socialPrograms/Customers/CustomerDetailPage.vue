@@ -124,7 +124,7 @@ const customerId = route.params.customerId as string
 
 const handleBack = () => {
   router.push({
-    name: 'dashboard-social-program-customers-detail',
+    name: 'dashboard-social-programs-customers-detail',
     params: { id: customerId },
     query: { customer: JSON.stringify(customerData) },
   })

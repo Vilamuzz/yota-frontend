@@ -145,7 +145,7 @@ function handleConfirmArchive() {
                     v-model="queryParams.status"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option :value="undefined">All</option>
+                    <option :value="undefined">Semua</option>
                     <option v-for="status in statuses" :key="status" :value="status">
                       {{ status.charAt(0).toUpperCase() + status.slice(1) }}
                     </option>

@@ -8,13 +8,13 @@ export const prayerService = {
     return response.data
   },
 
-  amenPrayer: async (slug: string, id: string) => {
-    const response = await api.post(`${API.DONATION_PROGRAMS}/prayers/${id}/amen`)
+  amenPrayer: async (slug: string) => {
+    const response = await api.post(`${API.DONATION_PROGRAMS}/prayers/${slug}/amen`)
     return response.data
   },
 
-  reportPrayer: async (id: string, reason: string) => {
-    const response = await api.post(`${API.DONATION_PROGRAMS}/prayers/${id}/report`, {
+  reportPrayer: async (slug: string, reason: string) => {
+    const response = await api.post(`${API.DONATION_PROGRAMS}/prayers/${slug}/report`, {
       reason,
     })
     return response.data

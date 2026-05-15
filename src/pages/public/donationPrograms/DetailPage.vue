@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
-import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
+import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
 import { Share2, Flag, Heart, ArrowLeft } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -239,20 +239,30 @@ const handleShare = () => {
 
   <!-- Content State -->
   <template v-else-if="program">
+    <!-- Sticky Header -->
+    <div
+      class="sticky top-0 z-40 bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4 font-poppins"
+    >
+      <!-- Back Button -->
+      <button
+        class="flex items-center justify-center shrink-0 text-gray-700 hover:text-gray-900 transition"
+        @click="$router.back()"
+      >
+        <ArrowLeft :size="28" />
+      </button>
+
+      <!-- Title -->
+      <h1 class="text-lg md:text-xl font-bold text-primary-500 line-clamp-1">
+        {{ program.title }}
+      </h1>
+    </div>
+
     <div class="relative min-h-screen bg-white pb-24 md:pb-8">
       <!-- Hero Image Section -->
       <div class="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
-        <!-- Glass Back Button -->
-        <button
-          class="absolute top-6 left-6 z-20 p-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/40 transition-all duration-300 shadow-lg"
-          @click="$router.back()"
-        >
-          <ArrowLeft :size="24" />
-        </button>
-
         <!-- Gradient Overlay -->
         <div
-          class="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+          class="absolute inset-0 z-10 bg-linear-to-t from-black/60 via-transparent to-transparent"
         />
 
         <img
@@ -321,7 +331,7 @@ const handleShare = () => {
                 <div class="flex justify-between items-end">
                   <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      class="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-1000 ease-out"
+                      class="h-full bg-linear-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-1000 ease-out"
                       :style="{ width: `${progressPercent}%` }"
                     />
                   </div>
@@ -333,14 +343,14 @@ const handleShare = () => {
 
               <!-- Desktop Actions -->
               <div class="hidden md:flex gap-4 pt-4">
-                <BaseButton variant="outline" size="lg" class="flex-1" @click="handleShare">
+                <BaseButton variant="secondary" size="lg" class="flex-1" @click="handleShare">
                   <Share2 :size="18" class="mr-2" />
                   Bagikan
                 </BaseButton>
                 <BaseButton
                   variant="primary"
                   size="lg"
-                  class="flex-[2] shadow-lg shadow-primary-200"
+                  class="flex-2 shadow-lg shadow-primary-200"
                   @click="$router.push(`/donation-programs/${program.slug}/form`)"
                 >
                   Donasi Sekarang
@@ -386,7 +396,7 @@ const handleShare = () => {
                   <div class="flex items-start justify-between">
                     <div class="flex items-center gap-4">
                       <div
-                        class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-300 to-primary-500 text-white flex items-center justify-center text-lg font-bold shadow-sm shadow-primary-200"
+                        class="w-12 h-12 rounded-full bg-linear-to-br from-primary-300 to-primary-500 text-white flex items-center justify-center text-lg font-bold shadow-sm shadow-primary-200"
                       >
                         {{ getInitials(pray.name) }}
                       </div>
@@ -503,10 +513,11 @@ const handleShare = () => {
   </div>
 
   <!-- Report Modal -->
-  <ConfirmationModal
+  <PublicConfirmationModal
     :show="showReportModal"
     title="Laporkan Doa"
     message="Silakan jelaskan mengapa Anda ingin melaporkan doa ini"
+    :icon="Flag"
     primary-button-text="Kirim Laporan"
     secondary-button-text="Batal"
     :primary-button-loading="reportMutation.isPending.value"
@@ -523,5 +534,5 @@ const handleShare = () => {
       />
       <p v-if="reportMutation.isError.value" class="text-red-500 text-sm">Gagal mengirim laporan</p>
     </div>
-  </ConfirmationModal>
+  </PublicConfirmationModal>
 </template>

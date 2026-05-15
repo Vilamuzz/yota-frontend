@@ -1,27 +1,31 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Plus, HandHeart, RotateCcw, Trash2, Eye } from 'lucide-vue-next'
+import { Plus, Trash2, Eye, HandHeart } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useFosterChildrenTransactionList } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionList'
 import { useFosterChildrenTransactionDelete } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionDelete'
+import { useFosterChildrenTransactionCreateOffline } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionCreateOffline'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useToast } from '@/composables/ui/useToast'
-import BaseFilter from '@/components/atoms/BaseFilter.vue'
+import { extractError } from '@/utils/error'
 import BaseButton from '@/components/atoms/BaseButton.vue'
+import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
+import BaseModal from '@/components/organisms/BaseModal.vue'
 import DetailModal from '@/components/organisms/DetailModal.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
 import type { FosterChildrenTransactionQueryParams } from '@/types/fosterChildrenTransaction'
 import { getStatusColor } from '@/utils/statusColor'
 
-const router = useRouter()
+const route = useRoute()
+const { showToast } = useToast()
+const childId = route.params.id as string
 
 const queryParams = reactive<FosterChildrenTransactionQueryParams>({
   limit: 10,
-  status: undefined,
   nextCursor: undefined,
   prevCursor: undefined,
 })
@@ -36,21 +40,71 @@ const { fosterChildrenTransactions, pagination, isLoading } = useFosterChildrenT
   childId,
   queryParams,
 )
+const { deleteMutation } = useFosterChildrenTransactionDelete()
+const { createMutation } = useFosterChildrenTransactionCreateOffline()
+
+const isCreateModalOpen = ref(false)
+const donorName = ref('')
+const donorEmail = ref('')
+const grossAmount = ref('')
+const errors = ref<Record<string, string>>({})
+const isSubmitting = computed(() => createMutation.isPending.value)
+
+const formatCurrencyPreview = computed(() => {
+  const num = Number(grossAmount.value)
+  if (!num || isNaN(num)) return ''
+  return formatCurrency(num)
+})
+
+function resetForm() {
+  donorName.value = ''
+  donorEmail.value = ''
+  grossAmount.value = ''
+  errors.value = {}
+}
+
+function handleCreateTransaction() {
+  if (!grossAmount.value || Number(grossAmount.value) < 1000) {
+    errors.value = { grossAmount: 'Nominal minimal Rp 1.000' }
+    return
+  }
+
+  createMutation.mutate(
+    {
+      id: childId,
+      data: {
+        grossAmount: Number(grossAmount.value),
+        donorName: donorName.value.trim() || undefined,
+        donorEmail: donorEmail.value.trim() || undefined,
+      },
+    },
+    {
+      onSuccess: () => {
+        showToast('Transaksi offline berhasil dicatat!', 'success')
+        isCreateModalOpen.value = false
+        resetForm()
+      },
+      onError: (err) => {
+        showToast(
+          extractError(err, 'Gagal mencatat transaksi offline. Silahkan coba lagi.'),
+          'error',
+        )
+      },
+    },
+  )
+}
+
+const handleCreate = () => {
+  isCreateModalOpen.value = true
+}
 
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
   useCursorPagination(queryParams)
 
-const hasActiveFilters = computed(() => queryParams.status !== undefined)
-
 watch(
-  () => [queryParams.status, queryParams.limit],
+  () => queryParams.limit,
   () => resetPagination(),
 )
-
-function clearFilters() {
-  queryParams.status = undefined
-  resetPagination()
-}
 
 function openDeleteModal(id: string) {
   selectedTransactionId.value = id
@@ -80,114 +134,32 @@ function handleConfirmDelete() {
 
 <template>
   <DashboardLayout>
-    <template #title>Manajemen Transaksi Anak Asuh</template>
-
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <BaseFilter
-            v-model="queryParams.status"
-            :options="[
-              { label: 'Semua Status', value: undefined },
-              { label: 'Success', value: 'success' },
-              { label: 'Pending', value: 'pending' },
-              { label: 'Failed', value: 'failed' },
-            ]"
-            class="w-full sm:w-48"
-          />
-          <BaseButton
-            v-if="hasActiveFilters"
-            variant="outline"
-            class="whitespace-nowrap"
-            @click="clearFilters"
-          >
-            <RotateCcw :size="16" class="mr-2" />
-            Reset Filter
-          </BaseButton>
-        </div>
-
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
         <BaseButton variant="primary" @click="handleCreate">
           <Plus :size="20" class="mr-1" />
           Tambah Transaksi Offline
         </BaseButton>
       </div>
 
-      <!-- Filters & Search -->
-      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <BaseSearch v-model="searchInput" placeholder="Cari nama donatur..." class="w-full sm:max-w-xs" />
-
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default="{ closeDropdown }">
-              <div class="space-y-4 w-64">
-                <div>
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
-                    Metode Donasi
-                  </label>
-                  <select
-                    v-model="queryParams.method"
-                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="all">Semua Metode</option>
-                    <option v-for="method in methods" :key="method" :value="method">
-                      {{ method }}
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
-                    Status
-                  </label>
-                  <select
-                    v-model="queryParams.status"
-                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="all">Semua Status</option>
-                    <option v-for="status in statuses" :key="status" :value="status">
-                      {{ status }}
-                    </option>
-                  </select>
-                </div>
-
-                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                  <button
-                    @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-                  >
-                    RESET
-                  </button>
-                  <button
-                    @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
-                  >
-                    APPLY
-                  </button>
-                </div>
-              </div>
-            </template>
-          </BaseFilter>
-        </div>
-      </div>
-
       <!-- Table Content -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-all duration-300">
-        <BaseTable
-          :loading="false"
-          loading-message="Memuat data riwayat donasi anak asuh..."
-          :is-empty="filteredTransactions.length === 0"
-          empty-message="Tidak ada riwayat donasi anak asuh yang ditemukan."
-          :has-prev="queryParams.page > 1"
-          :has-next="queryParams.page * queryParams.limit < filteredTransactions.length"
-          v-model:limit="queryParams.limit"
-          :limit-options="limitOptions"
-          @prev="handlePrevPage"
-          @next="handleNextPage"
-        >
-          <template #empty-icon>
-            <Baby :size="64" class="text-gray-300 dark:text-gray-600 mb-2" />
-          </template>
+
+      <BaseTable
+        :loading="isLoading"
+        loading-message="Memuat data riwayat donasi anak asuh..."
+        :is-empty="fosterChildrenTransactions.length === 0"
+        empty-message="Tidak ada riwayat donasi anak asuh yang ditemukan."
+        :has-prev="!!pagination?.prevCursor"
+        :has-next="!!pagination?.nextCursor"
+        v-model:limit="queryParams.limit"
+        :limit-options="limitOptions"
+        @prev="handlePrevPage(pagination)"
+        @next="handleNextPage(pagination)"
+      >
+        <template #empty-icon>
+          <HandHeart :size="96" class="mx-auto mb-2 text-gray-300" />
+        </template>
 
         <template #headers>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
@@ -207,10 +179,12 @@ function handleConfirmDelete() {
             :key="transaction.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
           >
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-500 dark:text-gray-400">
               {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+            <td
+              class="px-6 py-4 whitespace-nowrap font-semibold max-w-50 truncate text-gray-900 dark:text-white"
+            >
               {{ transaction.donorName || 'Anonim' }}
             </td>
             <td
@@ -219,7 +193,7 @@ function handleConfirmDelete() {
               {{ transaction.isOnline ? 'Online' : 'Offline' }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+              class="px-6 py-4 whitespace-nowrap font-bold text-right text-gray-900 dark:text-white"
             >
               {{ formatCurrency(transaction.grossAmount) }}
             </td>
@@ -275,16 +249,24 @@ function handleConfirmDelete() {
         </div>
 
         <div class="text-gray-500 dark:text-gray-400 font-medium">Nama Donatur</div>
-        <div class="text-gray-900 dark:text-white font-bold">: {{ selectedTransaction.donorName || 'Anonim' }}</div>
+        <div class="text-gray-900 dark:text-white font-bold">
+          : {{ selectedTransaction.donorName || 'Anonim' }}
+        </div>
 
         <div class="text-gray-500 dark:text-gray-400 font-medium">Nominal Donasi</div>
-        <div class="text-gray-900 dark:text-white font-bold">: {{ formatCurrency(selectedTransaction.grossAmount) }}</div>
+        <div class="text-gray-900 dark:text-white font-bold">
+          : {{ formatCurrency(selectedTransaction.grossAmount) }}
+        </div>
 
         <div class="text-gray-500 dark:text-gray-400 font-medium">Tanggal Donasi</div>
-        <div class="text-gray-900 dark:text-white font-bold">: {{ formatDate(selectedTransaction.createdAt) }}</div>
+        <div class="text-gray-900 dark:text-white font-bold">
+          : {{ formatDate(selectedTransaction.createdAt) }}
+        </div>
 
         <div class="text-gray-500 dark:text-gray-400 font-medium">Metode Donasi</div>
-        <div class="text-gray-900 dark:text-white font-bold">: {{ selectedTransaction.isOnline ? 'Online' : 'Offline' }}</div>
+        <div class="text-gray-900 dark:text-white font-bold">
+          : {{ selectedTransaction.isOnline ? 'Online' : 'Offline' }}
+        </div>
 
         <div class="text-gray-500 dark:text-gray-400 font-medium">Status</div>
         <div class="flex items-center gap-1">
@@ -312,5 +294,86 @@ function handleConfirmDelete() {
       @danger="handleConfirmDelete"
       @secondary="isDeleteModalOpen = false"
     />
+
+    <!-- Create Transaction Modal -->
+    <BaseModal
+      :show="isCreateModalOpen"
+      title="Tambah Transaksi Offline"
+      description="Catat donasi yang diterima secara langsung."
+      @close="isCreateModalOpen = false"
+    >
+      <form @submit.prevent="handleCreateTransaction" class="space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="space-y-5">
+            <!-- Amount -->
+            <div>
+              <label
+                for="gross-amount"
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
+                Amount (IDR) <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="gross-amount"
+                v-model="grossAmount"
+                type="number"
+                min="1000"
+                placeholder="e.g. 100000"
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-[#121212] dark:text-gray-100 outline-none"
+                :class="
+                  errors.grossAmount
+                    ? 'border-red-300 dark:border-red-500/50 focus:ring-red-500 dark:focus:ring-red-500/50'
+                    : ''
+                "
+              />
+              <p v-if="formatCurrencyPreview" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                ≈ {{ formatCurrencyPreview }}
+              </p>
+              <p v-if="errors.grossAmount" class="mt-1 text-xs text-red-600">
+                {{ errors.grossAmount }}
+              </p>
+            </div>
+
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              Detail ini akan dicatat sebagai transaksi offline langsung ke sistem.
+            </p>
+          </div>
+
+          <div class="space-y-5">
+            <!-- Donor Name -->
+            <BaseInput
+              id="donor-name"
+              v-model="donorName"
+              label="Donor Name (Optional)"
+              placeholder="e.g. Hamba Allah"
+              :error="errors.donorName"
+            />
+
+            <!-- Donor Email -->
+            <BaseInput
+              id="donor-email"
+              v-model="donorEmail"
+              label="Donor Email (Optional)"
+              placeholder="e.g. email@example.com"
+              :error="errors.donorEmail"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t dark:border-gray-700">
+          <BaseButton
+            type="button"
+            variant="outline"
+            :disabled="isSubmitting"
+            @click="isCreateModalOpen = false"
+          >
+            Batal
+          </BaseButton>
+          <BaseButton type="submit" variant="primary" :loading="isSubmitting">
+            Catat Transaksi
+          </BaseButton>
+        </div>
+      </form>
+    </BaseModal>
   </DashboardLayout>
 </template>

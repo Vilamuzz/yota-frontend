@@ -25,7 +25,6 @@ export interface SocialProgramTransactionQueryParams extends PaginationParams {
 }
 
 export interface CreateSocialProgramTransactionRequest {
-  accountId: string
   grossAmount: number
 }
 

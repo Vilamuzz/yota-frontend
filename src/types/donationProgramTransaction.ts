@@ -2,14 +2,13 @@ import type { Response, Pagination, PaginationParams } from './response'
 
 export interface DonationProgramTransaction {
   id: string
-  donationId: string
+  donationProgramTitle: string
   orderId: string
   donorName: string
   donorEmail: string
   grossAmount: number
   isOnline: boolean
   transactionStatus: TransactionStatus
-  transactionId: string
   snapToken: string
   paidAt: string | null
   createdAt: string

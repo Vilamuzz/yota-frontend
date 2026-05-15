@@ -18,8 +18,8 @@ import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useFosterChildrenUpdate } from '@/composables/fosterChildren/useFosterChildrenUpdate'
 import { useFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenDetail'
-import { updateChildSchema } from '@/schemas/fosterChildren.schema'
-import { Category, Gender, type Achievement, type AchievementRequest } from '@/types/fosterChildren'
+import { updateFosterChildrenSchema } from '@/schemas/fosterChildren.schema'
+import { Category, Gender, type Achievement } from '@/types/fosterChildren'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
@@ -31,10 +31,6 @@ const fosterChildId = route.params.id as string
 const { updateMutation, validationErrors } = useFosterChildrenUpdate()
 const { detailQuery } = useFosterChildrenDetail(fosterChildId)
 const { showToast } = useToast()
-
-const fosterChildId = route.params.id as string
-const { detailQuery } = useFosterChildrenDetail(fosterChildId)
-const { updateMutation, validationErrors } = useFosterChildrenUpdate()
 
 const genders = Object.values(Gender)
 const categories = Object.values(Category)
@@ -97,29 +93,25 @@ watch(
   },
   { deep: true },
 )
-const birthDateError = computed(
-  () => fieldErrors.value.birthDate || validationErrors.value?.birthDate || '',
-)
-const addressError = computed(
-  () => fieldErrors.value.address || validationErrors.value?.address || '',
-)
-const imageError = computed(
-  () =>
-    fieldErrors.value.profilePicture ||
-    fieldErrors.value.image ||
-    validationErrors.value?.profilePicture ||
-    '',
-)
-const achievementsError = computed(
-  () => fieldErrors.value.achievements || validationErrors.value?.achievements || '',
-)
-const isGraduatedError = computed(
-  () => fieldErrors.value.isGraduated || validationErrors.value?.isGraduated || '',
-)
-const achivementError = computed(() => fieldErrors.value.achivement || '')
 
-const isFetching = computed(() => detailQuery.isPending.value)
-const isLoading = computed(() => updateMutation.isPending.value)
+const handleProfilePictureChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    form.profilePictureFile = file
+    form.profilePicturePreview = URL.createObjectURL(file)
+  }
+}
+
+const handleFileChange = (event: Event, type: 'familyCard' | 'sktm' | 'achievement') => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    if (type === 'familyCard') form.familyCardFile = file
+    else if (type === 'sktm') form.sktmFile = file
+    else form.achievementFile = file
+  }
+}
 
 const addAchievement = () => {
   if (form.achievementInput.trim() && form.achievementFile) {
@@ -143,15 +135,13 @@ const formatCategory = (cat: string) => {
 }
 
 const handleSubmit = () => {
-  const result = updateChildSchema.safeParse({
+  const result = updateFosterChildrenSchema.safeParse({
     ...form,
     profilePicture: form.profilePictureFile || undefined,
     familyCard: form.familyCardFile || undefined,
     sktm: form.sktmFile || undefined,
-    achievements: [
-      ...form.existingAchievements.map((a) => a.title),
-      ...form.achievements.map((a) => a.title),
-    ],
+    achievements: form.achievements.map((a) => a.file),
+    achivementNotes: form.achievements.map((a) => a.title),
   })
 
   const zodErrors = getZodErrors(result)
@@ -162,26 +152,10 @@ const handleSubmit = () => {
     return
   }
 
-  // Prepare achievements for update
-  // Note: For existing ones, we don't have the File object,
-  // so the backend implementation needs to handle IDs or titles for retention.
-  // We'll follow the pattern of sending new files.
-  const newAchievements: AchievementRequest[] = form.achievements.map((a) => ({
-    title: a.title,
-    url: a.file,
-    alt: a.title,
-  }))
-
   updateMutation.mutate(
     {
       id: fosterChildId,
-      data: {
-        ...result.data,
-        profilePicture: form.profilePictureFile || undefined,
-        familyCard: form.familyCardFile || undefined,
-        sktm: form.sktmFile || undefined,
-        achievements: newAchievements, // Depending on backend, might need to include existing IDs
-      },
+      data: result.data,
     },
     {
       onSuccess: () => {
@@ -201,7 +175,7 @@ const handleSubmit = () => {
     <template #title>Edit Anak Asuh</template>
 
     <div v-if="isFetching" class="flex flex-col items-center justify-center py-24">
-      <Loader2 class="w-12 h-12 text-primary-500 animate-spin mb-4" />
+      <Loader2 class="w-12 h-12 text-primary-300 animate-spin mb-4" />
       <p class="text-gray-500 font-medium">Memuat data anak asuh...</p>
     </div>
 
@@ -225,7 +199,7 @@ const handleSubmit = () => {
             class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
           >
             <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
-              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-500">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300">
                 <User :size="20" />
               </div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
@@ -370,7 +344,7 @@ const handleSubmit = () => {
                 </BaseButton>
               </div>
 
-              <div class="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+              <div class="space-y-2 max-h-75 overflow-y-auto pr-2">
                 <!-- Existing Achievements -->
                 <div v-if="form.existingAchievements.length > 0" class="space-y-2">
                   <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">
@@ -509,7 +483,7 @@ const handleSubmit = () => {
                     v-if="form.familyCardPreview && !form.familyCardFile"
                     :href="form.familyCardPreview"
                     target="_blank"
-                    class="text-[10px] text-primary-500 hover:underline"
+                    class="text-[10px] text-primary-300 hover:underline"
                     >Lihat Saat Ini</a
                   >
                 </div>
@@ -531,7 +505,7 @@ const handleSubmit = () => {
                     <div class="flex items-center gap-2 min-w-0">
                       <FileText
                         :size="18"
-                        :class="form.familyCardFile ? 'text-primary-500' : 'text-gray-400'"
+                        :class="form.familyCardFile ? 'text-primary-300' : 'text-gray-400'"
                       />
                       <span class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
                         form.familyCardFile ? form.familyCardFile.name : 'Ganti File KK'
@@ -552,7 +526,7 @@ const handleSubmit = () => {
                     v-if="form.sktmPreview && !form.sktmFile"
                     :href="form.sktmPreview"
                     target="_blank"
-                    class="text-[10px] text-primary-500 hover:underline"
+                    class="text-[10px] text-primary-300 hover:underline"
                     >Lihat Saat Ini</a
                   >
                 </div>
@@ -567,7 +541,7 @@ const handleSubmit = () => {
                     class="flex items-center justify-between p-3 border-2 border-dashed rounded-xl transition-colors"
                     :class="
                       form.sktmFile
-                        ? 'border-primary-500 bg-primary-50/10'
+                        ? 'border-primary-300 bg-primary-50/10'
                         : 'border-gray-200 dark:border-gray-700'
                     "
                   >
@@ -590,7 +564,7 @@ const handleSubmit = () => {
                 class="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 mt-2"
               >
                 <div class="flex items-center gap-2">
-                  <GraduationCap :size="18" class="text-primary-500" />
+                  <GraduationCap :size="18" class="text-primary-300" />
                   <span class="text-xs font-bold text-gray-700 dark:text-gray-300">LULUS</span>
                 </div>
                 <button
@@ -609,41 +583,26 @@ const handleSubmit = () => {
           </div>
 
           <!-- Actions -->
-          <div class="flex flex-col gap-3">
-            <BaseButton
-              type="submit"
-              variant="primary"
-              :loading="isLoading"
-              class="w-full py-4 rounded-xl shadow-lg shadow-primary-500/20"
-            >
-              PERBARUI DATA ANAK
-            </BaseButton>
-            <BaseButton
-              type="button"
-              variant="outline"
-              @click="router.push({ name: 'dashboard-foster-children' })"
-              :disabled="isLoading"
-              class="w-full rounded-xl"
-            >
-              BATAL
-            </BaseButton>
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <div class="flex flex-col gap-3">
+              <BaseButton type="submit" variant="primary" :loading="isLoading" class="w-full">
+                Simpan Pembaruan
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="danger"
+                @click="router.push({ name: 'dashboard-foster-children' })"
+                :disabled="isLoading"
+                class="w-full"
+              >
+                Batal
+              </BaseButton>
+            </div>
           </div>
         </div>
       </form>
     </div>
   </DashboardLayout>
 </template>
-
-<style scoped>
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* Firefox */
-input[type='number'] {
-  -moz-appearance: textfield;
-}
-</style>

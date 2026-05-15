@@ -29,6 +29,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
+  focus: [event: FocusEvent]
+  blur: [event: FocusEvent]
 }>()
 
 const showPassword = ref(false)
@@ -138,6 +140,8 @@ const togglePasswordVisibility = () => {
           $slots.suffix || (showPasswordToggle && type === 'password') ? 'pr-10' : '',
         ]"
         @input="handleInput"
+        @focus="$emit('focus', $event)"
+        @blur="$emit('blur', $event)"
       />
 
       <!-- Suffix Slot -->

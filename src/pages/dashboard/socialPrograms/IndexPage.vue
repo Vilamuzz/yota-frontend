@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, reactive } from 'vue'
-import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Plus, Heart } from 'lucide-vue-next'
+import { Eye, SquarePen, Trash2, Plus, Heart, Check, X, AlertCircle } from 'lucide-vue-next'
+import { useSocialProgramStatus } from '@/composables/socialProgram/useSocialProgramStatus'
+import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
+import { useToast } from '@/composables/ui/useToast'
 
 import { useSocialProgramList } from '@/composables/socialProgram/useSocialProgramList'
 import { useCursorPagination } from '@/composables/ui/usePagination'
@@ -12,15 +14,16 @@ import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import type { SocialProgram, SocialProgramQueryParams } from '@/types/socialprogramt'
+import type { SocialProgram, SocialProgramQueryParams } from '@/types/socialProgram'
+import { SocialProgramStatusEnum } from '@/types/socialProgram'
 import { getStatusColor } from '@/utils/statusColor'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
 
-const router = useRouter()
 const authStore = useAuthStore()
 
+const statuses = Object.values(SocialProgramStatusEnum)
 const isChairman = computed(() => authStore.activeRole === ROLES.CHAIRMAN)
 
 const queryParams = reactive<SocialProgramQueryParams>({
@@ -80,30 +83,54 @@ const handleConfirmDelete = async () => {
   confirmProgram.value = null
 }
 
-const statuses = [
-  { value: 'active', label: 'Berjalan' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'completed', label: 'Selesai' },
-]
+const { showToast } = useToast()
+const { approveMutation, rejectMutation } = useSocialProgramStatus()
 
-const handleCreate = () => {
-  router.push({ name: 'dashboard-social-program-create' })
+// APPROVE
+const approveConfirmShow = ref(false)
+const approveProgram = ref<SocialProgram | null>(null)
+
+const handleApprove = (program: SocialProgram) => {
+  approveProgram.value = program
+  approveConfirmShow.value = true
 }
 
-const handleView = (program: SocialProgram) => {
-  router.push({
-    name: 'dashboard-social-program-detail',
-    params: { id: program.id.toString() },
-    query: { program: JSON.stringify(program) },
+const handleConfirmApprove = async () => {
+  if (!approveProgram.value) return
+  approveMutation.mutate(approveProgram.value.id, {
+    onSuccess: () => {
+      showToast('Program berhasil disetujui!', 'success')
+      approveConfirmShow.value = false
+    },
+    onError: (err) => {
+      showToast(err.response?.data?.message || 'Gagal menyetujui program', 'error')
+    },
   })
 }
 
-const handleEdit = (program: SocialProgram) => {
-  router.push({
-    name: 'dashboard-social-program-edit',
-    params: { id: program.id.toString() },
-    query: { program: JSON.stringify(program) },
-  })
+// REJECT
+const rejectModalShow = ref(false)
+const rejectProgram = ref<SocialProgram | null>(null)
+
+const handleReject = (program: SocialProgram) => {
+  rejectProgram.value = program
+  rejectModalShow.value = true
+}
+
+const handleConfirmReject = async (reason: string) => {
+  if (!rejectProgram.value) return
+  rejectMutation.mutate(
+    { id: rejectProgram.value.id, reason },
+    {
+      onSuccess: () => {
+        showToast('Program berhasil ditolak', 'success')
+        rejectModalShow.value = false
+      },
+      onError: (err) => {
+        showToast(err.response?.data?.message || 'Gagal menolak program', 'error')
+      },
+    },
+  )
 }
 </script>
 
@@ -113,7 +140,19 @@ const handleEdit = (program: SocialProgram) => {
 
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <div
+        class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between"
+        :class="{ 'justify-end': isChairman }"
+      >
+        <BaseButton
+          v-if="!isChairman"
+          variant="primary"
+          class="flex items-center gap-2"
+          :to="{ name: 'dashboard-social-programs-create' }"
+        >
+          <Plus :size="16" />
+          Tambah Program
+        </BaseButton>
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <BaseSearch v-model="searchQuery" placeholder="Cari Program..." class="w-full sm:w-64" />
           <BaseFilter :has-active-filters="hasActiveFilters">
@@ -125,9 +164,9 @@ const handleEdit = (program: SocialProgram) => {
                     v-model="queryParams.status"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
                   >
-                    <option :value="undefined">Semua Status</option>
-                    <option v-for="status in statuses" :key="status.value" :value="status.value">
-                      {{ status.label }}
+                    <option :value="undefined">Semua</option>
+                    <option v-for="status in statuses" :key="status" :value="status">
+                      {{ status.charAt(0).toUpperCase() + status.slice(1) }}
                     </option>
                   </select>
                 </div>
@@ -150,11 +189,6 @@ const handleEdit = (program: SocialProgram) => {
             </template>
           </BaseFilter>
         </div>
-
-        <BaseButton variant="primary" class="flex items-center gap-2" @click="handleCreate">
-          <Plus :size="16" />
-          Tambah Program
-        </BaseButton>
       </div>
 
       <!-- Table Section -->
@@ -236,24 +270,56 @@ const handleEdit = (program: SocialProgram) => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <button
-                  @click="handleView(program)"
+                <RouterLink
+                  :to="{
+                    name: 'dashboard-social-programs-detail',
+                    params: { id: program.id },
+                  }"
                   class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Lihat detail"
                 >
                   <Eye :size="18" />
-                </button>
-                <template v-if="!isChairman">
-                  <button
-                    @click="handleEdit(program)"
+                </RouterLink>
+
+                <template v-if="isChairman">
+                  <template v-if="program.status === SocialProgramStatusEnum.PENDING">
+                    <button
+                      @click="handleApprove(program)"
+                      class="p-1 text-green-600 hover:bg-green-50 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700"
+                      title="Setujui program"
+                    >
+                      <Check :size="18" />
+                    </button>
+                    <button
+                      @click="handleReject(program)"
+                      class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700"
+                      title="Tolak program"
+                    >
+                      <X :size="18" />
+                    </button>
+                  </template>
+                </template>
+
+                <template v-else>
+                  <RouterLink
+                    v-if="
+                      program.status !== SocialProgramStatusEnum.COMPLETED &&
+                      program.status !== SocialProgramStatusEnum.REJECTED
+                    "
+                    :to="{
+                      name: 'dashboard-social-programs-edit',
+                      params: { id: program.id },
+                    }"
                     class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                     title="Edit program"
                   >
                     <SquarePen :size="18" />
-                  </button>
+                  </RouterLink>
+
                   <button
+                    v-if="program.status === SocialProgramStatusEnum.PENDING"
                     @click="deleteProgram(program)"
-                    class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 inline-block dark:hover:bg-red-900/20"
+                    class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700"
                     title="Hapus program"
                   >
                     <Trash2 :size="18" />
@@ -266,6 +332,34 @@ const handleEdit = (program: SocialProgram) => {
       </BaseTable>
     </div>
   </DashboardLayout>
+
+  <!-- APPROVE CONFIRMATION MODAL -->
+  <ConfirmationModal
+    :show="approveConfirmShow"
+    :title="`Setujui ${approveProgram?.title}?`"
+    message="Program ini akan disetujui dan status akan berubah menjadi Aktif/Berjalan."
+    primary-button-text="Setujui"
+    secondary-button-text="Batal"
+    :icon="Check"
+    :primary-button-loading="approveMutation.isPending.value"
+    @primary="handleConfirmApprove"
+    @secondary="approveConfirmShow = false"
+    @close="approveConfirmShow = false"
+  />
+
+  <!-- REJECT MODAL -->
+  <RejectConfirmationModal
+    :show="rejectModalShow"
+    :title="`Tolak ${rejectProgram?.title}?`"
+    message="Berikan alasan penolakan untuk program ini."
+    primary-button-text="Tolak"
+    secondary-button-text="Batal"
+    :icon="AlertCircle"
+    :primary-button-loading="rejectMutation.isPending.value"
+    @primary="handleConfirmReject"
+    @secondary="rejectModalShow = false"
+    @close="rejectModalShow = false"
+  />
 
   <!-- MODAL -->
   <ConfirmationModal

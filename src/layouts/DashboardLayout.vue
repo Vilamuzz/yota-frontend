@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { Motion } from 'motion-v'
 import { useRoute, useRouter } from 'vue-router'
 import { useCurrentUser } from '@/composables/account/useCurrentUser'
-import { ChevronDown, User, ChevronRight, Check, Sun, Moon } from 'lucide-vue-next'
+import { ChevronDown, User, ChevronRight, Check, Sun, Moon, Globe } from 'lucide-vue-next'
 import { useTheme } from '@/composables/ui/useTheme'
 import { useRoleSwitch } from '@/composables/auth/useRoleSwitch'
 import { useAuthStore } from '@/stores/auth'
@@ -27,19 +27,32 @@ const breadcrumbs = computed(() => {
     return crumbs
   }
 
-  // Check if route has an activeMenu indicating a parent hierarchy
-  if (route.meta.activeMenu) {
+  const resolveParents = (routeName: string, visited = new Set<string>()): any[] => {
+    if (visited.has(routeName)) return []
+    visited.add(routeName)
+
     try {
-      const parentRoute = router.resolve({ name: route.meta.activeMenu as string })
-      if (parentRoute) {
-        crumbs.push({
-          label: (parentRoute.meta.title as string) || 'Menu',
-          path: parentRoute.path,
-        })
-      }
+      const resolved = router.resolve({ name: routeName })
+      if (!resolved || resolved.matched.length === 0 || resolved.name === route.name) return []
+
+      const parents = resolved.meta.activeMenu
+        ? resolveParents(resolved.meta.activeMenu as string, visited)
+        : []
+
+      return [
+        ...parents,
+        {
+          label: (resolved.meta.title as string) || 'Menu',
+          path: resolved.path,
+        },
+      ]
     } catch {
-      // Ignore if activeMenu is not a valid route name
+      return []
     }
+  }
+
+  if (route.meta.activeMenu) {
+    crumbs.push(...resolveParents(route.meta.activeMenu as string))
   }
 
   // Current page
@@ -207,6 +220,15 @@ const handleRoleSwitch = (role: Role) => {
               </div>
 
               <!-- Menu Items -->
+              <RouterLink
+                to="/"
+                @click="showUserMenu = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors duration-150"
+              >
+                <Globe :size="16" />
+                <span>Lihat Website</span>
+              </RouterLink>
+
               <RouterLink
                 to="/dashboard/profile"
                 @click="showUserMenu = false"

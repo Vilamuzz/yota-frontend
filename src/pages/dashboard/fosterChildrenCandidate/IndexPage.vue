@@ -14,9 +14,10 @@ import { useFosterChildrenCandidateList } from '@/composables/fosterChildrenCand
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { getStatusColor } from '@/utils/statusColor'
 import { formatDate } from '@/utils/format'
-import type {
-  FosterChildrenCandidate,
-  FosterChildrenCandidateQueryParams,
+import {
+  FosterChildrenCandidateStatus,
+  type FosterChildrenCandidate,
+  type FosterChildrenCandidateQueryParams,
 } from '@/types/fosterChildrenCandidate'
 
 const router = useRouter()
@@ -27,7 +28,7 @@ const queryParams = reactive<FosterChildrenCandidateQueryParams>({
   search: undefined,
   gender: undefined,
   category: undefined,
-  status: 'all',
+  status: undefined,
   nextCursor: undefined,
   prevCursor: undefined,
 })
@@ -57,7 +58,7 @@ const clearFilters = () => {
   queryParams.search = undefined
   queryParams.gender = undefined
   queryParams.category = undefined
-  queryParams.status = 'all'
+  queryParams.status = undefined
   resetPagination()
 }
 
@@ -70,30 +71,47 @@ const role = computed(() => {
   return ROLES.SOCIAL_MANAGER
 })
 
-const statusByRole: Record<string, string[]> = {
-  [ROLES.CHAIRMAN]: ['Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
-  [ROLES.SOCIAL_MANAGER]: ['Diajukan', 'Menunggu Verifikasi', 'Disetujui', 'Ditolak'],
-}
+const statusByRole = computed(() => {
+  const common = [
+    { label: 'Menunggu Verifikasi', value: FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED },
+    { label: 'Disetujui', value: FosterChildrenCandidateStatus.ACCEPTED },
+    { label: 'Ditolak', value: FosterChildrenCandidateStatus.REJECTED },
+  ]
 
-const statuses = computed(() => {
-  return ['all', ...(statusByRole[role.value] ?? [])]
+  if (role.value === ROLES.SOCIAL_MANAGER) {
+    return [{ label: 'Diajukan', value: FosterChildrenCandidateStatus.PENDING }, ...common]
+  }
+
+  return common
 })
+
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case FosterChildrenCandidateStatus.PENDING:
+      return 'Diajukan'
+    case FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED:
+      return 'Menunggu Verifikasi'
+    case FosterChildrenCandidateStatus.ACCEPTED:
+      return 'Disetujui'
+    case FosterChildrenCandidateStatus.REJECTED:
+      return 'Ditolak'
+    case FosterChildrenCandidateStatus.CANCELED:
+      return 'Dibatalkan'
+    default:
+      return status
+  }
+}
 
 const hasActiveFilters = computed(
   () =>
     queryParams.gender !== undefined ||
     queryParams.category !== undefined ||
-    queryParams.status !== 'all',
+    queryParams.status !== undefined,
 )
 
 const handleView = (child: FosterChildrenCandidate) => {
-  const routeName =
-    role.value === ROLES.CHAIRMAN
-      ? 'chairman-foster-children-candidates-detail'
-      : 'dashboard-foster-children-candidates-detail'
-
   router.push({
-    name: routeName,
+    name: 'dashboard-foster-children-candidates-detail',
     params: { id: child.id },
   })
 }
@@ -102,23 +120,8 @@ const handleView = (child: FosterChildrenCandidate) => {
 <template>
   <DashboardLayout>
     <div class="space-y-6">
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-            <Baby :size="24" class="text-primary-400 dark:text-primary-500" />
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Ajuan Anak Asuh</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              Review dan verifikasi pengajuan anak asuh baru.
-            </p>
-          </div>
-        </div>
-      </div>
-
       <!-- Filters & Search -->
-      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-end">
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <BaseSearch
             v-model="searchInput"
@@ -170,8 +173,13 @@ const handleView = (child: FosterChildrenCandidate) => {
                     v-model="queryParams.status"
                     class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
                   >
-                    <option v-for="status in statuses" :key="status" :value="status">
-                      {{ status === 'all' ? 'Semua Status' : status }}
+                    <option :value="undefined">Semua Status</option>
+                    <option
+                      v-for="status in statusByRole"
+                      :key="status.value"
+                      :value="status.value"
+                    >
+                      {{ status.label }}
                     </option>
                   </select>
                 </div>
@@ -295,7 +303,7 @@ const handleView = (child: FosterChildrenCandidate) => {
                   getStatusColor(child.status),
                 ]"
               >
-                {{ child.status }}
+                {{ getStatusLabel(child.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">

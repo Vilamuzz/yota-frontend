@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Camera, Layout, Info, CreditCard } from 'lucide-vue-next'
+import { Camera, Layout, Info, CreditCard, X } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -10,23 +10,44 @@ import { createSocialProgramSchema } from '@/schemas/socialProgram.schema'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
+import { formatCurrency } from '@/utils/format'
 
 const router = useRouter()
 const { createMutation, validationErrors } = useSocialProgramCreate()
 const { showToast } = useToast()
 
+const coverImageInputRef = ref<HTMLInputElement | null>(null)
 const errors = ref<Record<string, string>>({})
 const form = reactive({
   title: '',
   description: '',
   minimumAmount: '',
   billingDay: '',
-  status: 'pending',
   coverImageFile: null as File | null,
   coverImagePreview: null as string | null,
 })
 
 const isLoading = computed(() => createMutation.isPending.value)
+
+const formatCurrencyPreview = computed(() => {
+  const num = Number(form.minimumAmount)
+  if (!num || isNaN(num)) return ''
+  return formatCurrency(num)
+})
+
+const titleError = computed(() => errors.value.title || validationErrors.value?.title || '')
+const descriptionError = computed(
+  () => errors.value.description || validationErrors.value?.description || '',
+)
+const minimumAmountError = computed(
+  () => errors.value.minimumAmount || validationErrors.value?.minimumAmount || '',
+)
+const billingDayError = computed(
+  () => errors.value.billingDay || validationErrors.value?.billingDay || '',
+)
+const coverImageError = computed(
+  () => errors.value.coverImage || validationErrors.value?.coverImage || '',
+)
 
 watch(
   () => form,
@@ -41,21 +62,38 @@ watch(
   { deep: true },
 )
 
+const triggerImageInput = () => {
+  coverImageInputRef.value?.click()
+}
+
 const handleCoverImageChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
     const file = target.files[0]
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      errors.value.coverImage = 'Hanya file JPG, PNG, atau WebP yang diperbolehkan'
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      errors.value.coverImage = 'Ukuran gambar maksimal 2 MB'
+      return
+    }
+
     form.coverImageFile = file
     form.coverImagePreview = URL.createObjectURL(file)
   }
 }
 
-const handleSubmit = () => {
-  if (!form.coverImageFile) {
-    showToast('Foto sampul wajib diunggah', 'error')
-    return
-  }
+const removeImage = () => {
+  form.coverImageFile = null
+  form.coverImagePreview = null
+  if (coverImageInputRef.value) coverImageInputRef.value.value = ''
+}
 
+const handleSubmit = () => {
   const result = createSocialProgramSchema.safeParse({
     ...form,
     minimumAmount: form.minimumAmount === '' ? undefined : form.minimumAmount,
@@ -63,9 +101,13 @@ const handleSubmit = () => {
   })
 
   const zodErrors = getZodErrors(result)
-  errors.value = zodErrors
+  const coverImageValidation: Record<string, string> = form.coverImageFile
+    ? {}
+    : { coverImage: 'Foto sampul wajib diunggah' }
 
-  if (!result.success) {
+  errors.value = { ...zodErrors, ...coverImageValidation }
+
+  if (!result.success || Object.keys(coverImageValidation).length > 0) {
     showToast('Mohon lengkapi semua field yang wajib diisi', 'error')
     return
   }
@@ -73,7 +115,7 @@ const handleSubmit = () => {
   createMutation.mutate(
     {
       ...result.data,
-      coverImage: form.coverImageFile,
+      coverImage: form.coverImageFile!,
     },
     {
       onSuccess: () => {
@@ -100,7 +142,7 @@ const handleSubmit = () => {
             class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
           >
             <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
-              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-500">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300">
                 <Layout :size="20" />
               </div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
@@ -113,13 +155,13 @@ const handleSubmit = () => {
               v-model="form.title"
               label="Judul Program"
               placeholder="Masukkan judul program sosial"
-              :error="errors.title || validationErrors?.title"
+              :error="titleError"
               required
             />
 
             <div class="space-y-1.5">
               <label
-                class="block text-xs font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider"
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 tracking-wider"
               >
                 Deskripsi Program <span class="text-red-500">*</span>
               </label>
@@ -127,14 +169,11 @@ const handleSubmit = () => {
                 v-model="form.description"
                 rows="6"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500 transition-all outline-none"
-                :class="{ 'border-red-500': errors.description || validationErrors?.description }"
+                :class="{ 'border-red-500': descriptionError }"
                 placeholder="Jelaskan detail mengenai program sosial ini..."
               ></textarea>
-              <p
-                v-if="errors.description || validationErrors?.description"
-                class="mt-1 text-xs text-red-600"
-              >
-                {{ errors.description || validationErrors?.description }}
+              <p v-if="descriptionError" class="mt-1 text-xs text-red-600">
+                {{ descriptionError }}
               </p>
             </div>
           </div>
@@ -159,7 +198,8 @@ const handleSubmit = () => {
                 type="number"
                 label="Minimal Nominal (Rp)"
                 placeholder="mis. 50000"
-                :error="errors.minimumAmount || validationErrors?.minimumAmount"
+                :error="minimumAmountError"
+                :hint="formatCurrencyPreview ? `≈ ${formatCurrencyPreview}` : undefined"
                 required
               />
 
@@ -171,7 +211,7 @@ const handleSubmit = () => {
                 placeholder="mis. 5"
                 min="1"
                 max="31"
-                :error="errors.billingDay || validationErrors?.billingDay"
+                :error="billingDayError"
                 required
               />
             </div>
@@ -202,99 +242,73 @@ const handleSubmit = () => {
 
             <div class="flex justify-center">
               <div
-                class="relative w-full aspect-video rounded-xl border-4 border-dashed overflow-hidden transition-all duration-200 group bg-gray-50 dark:bg-gray-900/50"
+                v-if="form.coverImagePreview"
+                class="relative w-full aspect-video rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden group shadow-sm"
+              >
+                <img :src="form.coverImagePreview" class="w-full h-full object-cover" />
+                <div
+                  class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center"
+                >
+                  <button
+                    type="button"
+                    @click="removeImage"
+                    class="opacity-0 group-hover:opacity-100 p-2 bg-white rounded-full shadow-lg text-red-500 hover:scale-110 transition-all duration-200"
+                  >
+                    <X :size="20" />
+                  </button>
+                </div>
+              </div>
+
+              <div
+                v-else
+                @click="triggerImageInput"
+                class="relative w-full aspect-video rounded-xl border-2 border-dashed overflow-hidden transition-all duration-200 cursor-pointer flex flex-col items-center justify-center p-4 text-center bg-gray-50 dark:bg-gray-900/50"
                 :class="[
-                  form.coverImagePreview
-                    ? 'border-primary-500'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-400',
+                  coverImageError
+                    ? 'border-red-400 bg-red-50/50'
+                    : 'border-gray-300 dark:border-gray-700 hover:border-primary-400 hover:bg-gray-100/50',
                 ]"
               >
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="absolute inset-0 opacity-0 cursor-pointer z-10"
-                  @change="handleCoverImageChange"
-                />
-
-                <div
-                  v-if="!form.coverImagePreview"
-                  class="h-full flex flex-col items-center justify-center p-4 text-center"
-                >
-                  <Camera class="text-gray-300 mb-2" :size="32" />
-                  <p class="text-[10px] font-medium text-gray-500">PILIH FOTO SAMPUL</p>
-                  <p class="text-[8px] text-gray-400 mt-1">Rekomendasi 16:9 (1280x720px)</p>
-                </div>
-
-                <template v-else>
-                  <img :src="form.coverImagePreview" class="w-full h-full object-cover" />
-                  <div
-                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                  >
-                    <Camera class="text-white" :size="24" />
-                  </div>
-                </template>
+                <Camera class="text-gray-300 mb-2" :size="32" />
+                <p class="text-[10px] font-medium text-gray-500 uppercase tracking-widest">
+                  Pilih Foto Sampul
+                </p>
+                <p class="text-[8px] text-gray-400 mt-1">
+                  Rekomendasi 16:9 (JPG, PNG, WebP &bull; Max 2 MB)
+                </p>
               </div>
+
+              <input
+                ref="coverImageInputRef"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+                @change="handleCoverImageChange"
+              />
             </div>
-            <p v-if="errors.coverImage" class="text-center text-[10px] text-red-600">
-              {{ errors.coverImage }}
+            <p v-if="coverImageError" class="text-center text-[10px] text-red-600 mt-2">
+              {{ coverImageError }}
             </p>
           </div>
 
-          <!-- Status Selection -->
+          <!-- Actions -->
           <div
             class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
           >
-            <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-              Status Program
-            </h3>
-
-            <div class="space-y-3">
-              <label
-                v-for="s in [
-                  { value: 'active', label: 'Berjalan', desc: 'Program aktif dan dapat diikuti' },
-                  { value: 'pending', label: 'Pending', desc: 'Program dalam masa persiapan' },
-                  { value: 'completed', label: 'Selesai', desc: 'Program telah berakhir' },
-                ]"
-                :key="s.value"
-                class="relative flex items-start p-3 cursor-pointer rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
-                :class="{ 'border-primary-500 bg-primary-50/10': form.status === s.value }"
+            <div class="flex flex-col gap-3">
+              <BaseButton type="submit" variant="primary" :loading="isLoading" class="w-full">
+                Simpan
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="outline"
+                :to="{ name: 'dashboard-social-programs' }"
+                :disabled="isLoading"
+                class="w-full"
               >
-                <input
-                  type="radio"
-                  name="status"
-                  :value="s.value"
-                  v-model="form.status"
-                  class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                />
-                <div class="ml-3">
-                  <span class="block text-xs font-bold text-gray-900 dark:text-white uppercase">{{
-                    s.label
-                  }}</span>
-                  <span class="block text-[10px] text-gray-500 mt-0.5">{{ s.desc }}</span>
-                </div>
-              </label>
+                Batal
+              </BaseButton>
             </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex flex-col gap-3">
-            <BaseButton
-              type="submit"
-              variant="primary"
-              :loading="isLoading"
-              class="w-full py-4 rounded-xl font-bold tracking-widest"
-            >
-              SIMPAN PROGRAM
-            </BaseButton>
-            <BaseButton
-              type="button"
-              variant="outline"
-              @click="router.push({ name: 'dashboard-social-programs' })"
-              :disabled="isLoading"
-              class="w-full rounded-xl"
-            >
-              BATAL
-            </BaseButton>
           </div>
         </div>
       </form>

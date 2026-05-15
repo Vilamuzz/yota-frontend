@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { ref, watch } from 'vue'
 
@@ -6,7 +7,7 @@ interface Props {
   show: boolean
   title: string
   message: string
-  icon?: any
+  icon?: Component
   primaryButtonText?: string
   secondaryButtonText?: string
   primaryButtonLoading?: boolean
@@ -20,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   close: []
-  primary: [reason : string]
+  primary: [reason: string]
   secondary: []
 }>()
 
@@ -32,7 +33,7 @@ watch(
     if (!val) {
       reason.value = ''
     }
-  }
+  },
 )
 
 const handlePrimary = () => {
@@ -64,30 +65,39 @@ const handlePrimary = () => {
         leave-from-class="opacity-100 scale-100"
         leave-to-class="opacity-0 scale-95"
       >
-        <div v-if="show" class="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 relative">
+        <div
+          v-if="show"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full p-6 relative"
+        >
           <!-- Modal Content -->
           <div class="text-center py-4">
             <!-- Icon -->
             <div v-if="icon" class="flex items-center justify-center mx-auto mb-4">
-              <component :is="icon" :size="48" class="text-green-600" />
+              <component :is="icon" :size="48" class="text-red-500" />
             </div>
 
             <!-- Title -->
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ title }}</h2>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">{{ title }}</h2>
 
             <!-- Message -->
-            <p class="text-gray-600 text-sm mb-6 whitespace-pre-line text-center leading-relaxed">
+            <p
+              class="text-gray-600 dark:text-gray-300 text-sm mb-6 whitespace-pre-line text-center leading-relaxed"
+            >
               {{ message }}
             </p>
 
             <div class="mb-6 text-left">
-              <label class="block text-xs font-poppins text-gray-700 mb-1">Alasan Penolakan</label>
+              <label
+                class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5"
+              >
+                Alasan Penolakan
+              </label>
               <textarea
                 v-model="reason"
-                rows="3"
-                placeholder="Masukkan alasan penolakan pengajuan anak asuh"
-                class="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none">
-              </textarea>
+                rows="4"
+                placeholder="Masukkan alasan penolakan..."
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none transition-all"
+              ></textarea>
             </div>
 
             <!-- Custom Content Slot -->
@@ -123,3 +133,4 @@ const handlePrimary = () => {
     </div>
   </Transition>
 </template>
+

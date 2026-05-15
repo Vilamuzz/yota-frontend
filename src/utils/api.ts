@@ -30,8 +30,13 @@ api.interceptors.response.use(
       window.location.pathname.includes('/auth') || window.location.pathname.includes('/login')
 
     if (error.response?.status === 401 && !isAuthRoute) {
+      const token = localStorage.getItem('token')
       localStorage.removeItem('token')
-      window.location.href = '/login?message=session_expired'
+
+      const message = token ? 'session_expired' : 'login_required'
+      const currentPath = encodeURIComponent(window.location.pathname + window.location.search)
+
+      window.location.href = `/login?message=${message}&redirect=${currentPath}`
     }
     return Promise.reject(error)
   },

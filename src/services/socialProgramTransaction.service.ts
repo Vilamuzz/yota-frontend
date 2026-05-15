@@ -7,10 +7,10 @@ import { api } from '@/utils/api'
 
 export const socialProgramTransactionService = {
   createSocialProgramTransaction: async (
-    slug: string,
+    id: string,
     data: CreateSocialProgramTransactionRequest,
   ) => {
-    const response = await api.post(`${API.SOCIAL_PROGRAMS}/${slug}/transactions`, data)
+    const response = await api.post(`${API.SOCIAL_PROGRAMS}/subscriptions/invoices/${id}/pay`, data)
     return response.data
   },
 

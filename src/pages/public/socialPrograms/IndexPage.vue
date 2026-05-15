@@ -1,61 +1,35 @@
 <script setup lang="ts">
 import PublicLayout from '@/layouts/PublicLayout.vue'
-import { ref, computed } from 'vue'
+import { ref, reactive, watch } from 'vue'
+import BasePublicSearch from '@/components/atoms/BasePublicSearch.vue'
 import SocialProgramCard from '@/components/molecules/SocialProgramCard.vue'
+import { usePublishedSocialProgramList } from '@/composables/socialProgram/usePublishedSocialProgramList'
+import type { SocialProgramQueryParams } from '@/types/socialProgram'
 
 const searchQuery = ref('')
+const queryParams = reactive<SocialProgramQueryParams>({
+  limit: 12,
+  search: undefined,
+})
 
-const programs = ref([
-  {
-    id: 1,
-    title: 'Santunan Rutin Anak Yatim Piatu & Dhuafa Setiap Bulan',
-    minimum: 500000,
-    image: 'https://picsum.photos/400/250?1',
-  },
-  {
-    id: 2,
-    title: 'Santunan Rutin Anak Yatim Piatu & Dhuafa Setiap Bulan',
-    minimum: 500000,
-    image: 'https://picsum.photos/400/250?2',
-  },
-  {
-    id: 3,
-    title: 'Santunan Rutin Anak Yatim Piatu & Dhuafa Setiap Bulan',
-    minimum: 500000,
-    image: 'https://picsum.photos/400/250?3',
-  },
-  {
-    id: 4,
-    title: 'Santunan Rutin Anak Yatim Piatu & Dhuafa Setiap Bulan',
-    minimum: 500000,
-    image: 'https://picsum.photos/400/250?4',
-  },
-  {
-    id: 5,
-    title: 'Santunan Rutin Anak Yatim Piatu & Dhuafa Setiap Bulan',
-    minimum: 500000,
-    image: 'https://picsum.photos/400/250?5',
-  },
-  {
-    id: 6,
-    title: 'Santunan Rutin Anak Yatim Piatu & Dhuafa Setiap Bulan',
-    minimum: 500000,
-    image: 'https://picsum.photos/400/250?6',
-  },
-])
+const { socialPrograms, isLoading } = usePublishedSocialProgramList(queryParams)
 
-const filteredPrograms = computed(() =>
-  programs.value.filter((p) => p.title.toLowerCase().includes(searchQuery.value.toLowerCase())),
-)
+let searchTimeout: ReturnType<typeof setTimeout>
+watch(searchQuery, (val) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    queryParams.search = val || undefined
+  }, 400)
+})
 </script>
 
 <template>
   <PublicLayout>
-    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-4 font-[var(--font-poppins)]">
+    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-18 font-poppins">
       <div class="max-w-7xl mx-auto">
         <!-- TITLE -->
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-[var(--color-primary-500)] mb-3">PROGRAM SOSIAL</h1>
+          <h1 class="text-3xl font-bold text-primary-500 mb-3">PROGRAM SOSIAL</h1>
 
           <p class="text-gray-500 max-w-2xl mx-auto">
             Mari berpartisipasi dalam berbagai program sosial untuk membantu saudara kita yang
@@ -65,87 +39,33 @@ const filteredPrograms = computed(() =>
 
         <!-- SEARCH + BUTTON -->
         <div class="flex justify-center mb-10">
-          <div class="flex items-center gap-3 w-full max-w-xl">
-            <!-- Search -->
-            <div class="relative flex-1">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Mau konsisten sedekah untuk siapa?"
-                class="w-full border border-gray-300 rounded-full py-3 px-5 pr-10 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-300)]"
-              />
-
-              <svg
-                class="w-5 h-5 text-gray-400 absolute right-4 top-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-4.35-4.35M16 10a6 6 0 11-12 0 6 6 0 0112 0z"
-                />
-              </svg>
-            </div>
-
-            <!-- SORT -->
-            <button
-              class="w-11 h-11 bg-[var(--color-primary-300)] hover:bg-[var(--color-primary-400)] transition text-white rounded-full flex items-center justify-center shadow"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 4h18M6 8h12M10 12h4M12 16h0M14 20h-4"
-                />
-              </svg>
-            </button>
-
-            <!-- FILTER -->
-            <button
-              class="w-11 h-11 bg-[var(--color-primary-300)] hover:bg-[var(--color-primary-400)] transition text-white rounded-full flex items-center justify-center shadow"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 4h18l-7 8v6l-4 2v-8L3 4z"
-                />
-              </svg>
-            </button>
-          </div>
+          <BasePublicSearch v-model="searchQuery" />
         </div>
 
         <!-- GRID -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            v-for="i in 6"
+            :key="i"
+            class="bg-white rounded-xl h-80 animate-pulse border border-gray-200"
+          ></div>
+        </div>
+
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <SocialProgramCard
-            v-for="program in filteredPrograms"
+            v-for="program in socialPrograms"
             :key="program.id"
             :program="program"
           />
 
           <!-- EMPTY STATE -->
           <div
-            v-if="filteredPrograms.length === 0"
-            class="col-span-3 text-center py-16 text-gray-400"
+            v-if="socialPrograms.length === 0"
+            class="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-16"
           >
-            Program tidak ditemukan.
+            <div class="bg-white rounded-2xl p-12 border border-dashed border-gray-300">
+              <p class="text-gray-400">Program tidak ditemukan.</p>
+            </div>
           </div>
         </div>
       </div>

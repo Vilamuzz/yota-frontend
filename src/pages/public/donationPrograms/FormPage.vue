@@ -3,16 +3,19 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import { ArrowLeft } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { formatCurrency, formatNumber } from '@/utils/format'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
 import { useDonationProgramTransactionCreate } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCreate'
+import { useToast } from '@/composables/ui/useToast'
+import { extractError } from '@/utils/error'
 
 const route = useRoute()
+const router = useRouter()
 const slug = computed(() => route.params.slug as string)
 
-// Composables
 const { detailQuery } = useDonationProgramDetail(slug)
 const { createMutation } = useDonationProgramTransactionCreate()
+const { showToast } = useToast()
 
 const handleBack = () => {
   window.history.back()
@@ -99,46 +102,38 @@ const selectedAmount = computed(() => {
 
 const canContinue = computed(() => selectedAmount.value !== null && !createMutation.isPending.value)
 
-const handleSubmit = async () => {
+const handleSubmit = () => {
   const donationId = detailQuery.data.value?.data?.id
   if (!donationId || !selectedAmount.value) return
 
-  const response = await createMutation.mutateAsync({
-    slug: slug.value,
-    data: {
-      grossAmount: selectedAmount.value,
-      donorName: donorName.value || undefined,
-      donorEmail: donorEmail.value || undefined,
-      prayerContent: prayerContent.value || undefined,
+  createMutation.mutate(
+    {
+      slug: slug.value,
+      data: {
+        grossAmount: selectedAmount.value,
+        donorName: donorName.value || undefined,
+        donorEmail: donorEmail.value || undefined,
+        prayerContent: prayerContent.value || undefined,
+      },
     },
-  })
-
-  const snapToken = response?.data?.snapToken
-  if (snapToken && window.snap) {
-    window.snap.pay(snapToken, {
-      onSuccess: function () {
-        window.location.href =
-          '/donation-programs/callback?order_id=' +
-          response.data?.orderId +
-          '&transaction_status=settlement'
+    {
+      onSuccess: (response) => {
+        const snapToken = response?.data?.snapToken
+        if (snapToken) {
+          router.push({
+            path: '/invoices',
+            query: { pay: snapToken }
+          })
+        } else {
+          showToast('Berhasil membuat transaksi donasi', 'success')
+          router.push({ path: '/invoices' })
+        }
       },
-      onPending: function () {
-        window.location.href =
-          '/donation-programs/callback?order_id=' +
-          response.data?.orderId +
-          '&transaction_status=pending'
+      onError: (err) => {
+        showToast(extractError(err, 'Gagal membuat transaksi donasi'), 'error')
       },
-      onError: function () {
-        window.location.href =
-          '/donation-programs/callback?order_id=' +
-          response.data?.orderId +
-          '&transaction_status=error'
-      },
-      onClose: function () {
-        // Handle when user closes the modal without completing payment
-      },
-    })
-  }
+    },
+  )
 }
 </script>
 

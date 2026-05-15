@@ -7,7 +7,7 @@ export const chairmanSocialManagerRoutes: RouteRecordRaw[] = [
     meta: { role: [ROLES.CHAIRMAN, ROLES.SOCIAL_MANAGER] },
     children: [
       {
-        path: 'foster-children-candidates',
+        path: 'foster-children/candidates',
         name: 'dashboard-foster-children-candidates',
         component: () => import('@/pages/dashboard/fosterChildrenCandidate/IndexPage.vue'),
         meta: {
@@ -15,7 +15,7 @@ export const chairmanSocialManagerRoutes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'foster-children-candidates/:id/detail',
+        path: 'foster-children/candidates/:id/detail',
         name: 'dashboard-foster-children-candidates-detail',
         component: () => import('@/pages/dashboard/fosterChildrenCandidate/DetailPage.vue'),
         meta: {

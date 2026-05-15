@@ -5,21 +5,21 @@ import type {
   SocialProgramDetailResponse,
   SocialProgramQueryParams,
   UpdateSocialProgramRequest,
-} from '@/types/socialprogramt'
+} from '@/types/socialProgram'
 import { api } from '@/utils/api'
 
 export const socialProgramService = {
   getPublishedSocialProgramList: async (
     params: SocialProgramQueryParams,
   ): Promise<SocialProgramListResponse> => {
-    const response = await api.get<SocialProgramListResponse>(API.DONATION_PROGRAMS, {
+    const response = await api.get<SocialProgramListResponse>(API.SOCIAL_PROGRAMS, {
       params,
     })
     return response.data
   },
 
   getPublishedSocialProgramDetail: async (slug: string): Promise<SocialProgramDetailResponse> => {
-    const response = await api.get<SocialProgramDetailResponse>(`${API.DONATION_PROGRAMS}/${slug}`)
+    const response = await api.get<SocialProgramDetailResponse>(`${API.SOCIAL_PROGRAMS}/${slug}`)
     return response.data
   },
 
@@ -55,6 +55,21 @@ export const socialProgramService = {
 
   deleteSocialProgram: async (id: string) => {
     const response = await api.delete(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}`)
+    return response.data
+  },
+
+  approveSocialProgram: async (id: string) => {
+    const response = await api.patch(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}/approve`)
+    return response.data
+  },
+
+  rejectSocialProgram: async (id: string, data: { reason: string }) => {
+    const response = await api.patch(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}/reject`, data)
+    return response.data
+  },
+
+  completeSocialProgram: async (id: string) => {
+    const response = await api.patch(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}/complete`)
     return response.data
   },
 }

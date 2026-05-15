@@ -6,9 +6,8 @@ import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAmbulanceDelete } from '@/composables/ambulance/useAmbulanceDelete'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useToast } from '@/composables/ui/useToast'
-import { formatDate } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
-import type { AmbulanceQueryParams } from '@/types/ambulance'
+import { type AmbulanceQueryParams, AmbulanceStatus } from '@/types/ambulance'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -31,9 +30,9 @@ const searchQuery = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
 
 const statuses = [
-  { label: 'Tersedia', value: 'available' },
-  { label: 'Sedang Digunakan', value: 'in_use' },
-  { label: 'Pemeliharaan', value: 'maintenance' },
+  { label: 'Tersedia', value: AmbulanceStatus.Available },
+  { label: 'Sedang Digunakan', value: AmbulanceStatus.InUse },
+  { label: 'Pemeliharaan', value: AmbulanceStatus.Maintenance },
 ]
 
 const { ambulances, pagination, isLoading } = useAmbulanceList(queryParams)
@@ -153,7 +152,7 @@ function getStatusLabel(status: string) {
 
         <BaseButton
           variant="primary"
-          :to="{ name: 'dashboard-ambulances-create' }"
+          :to="{ name: 'dashboard-ambulance-create' }"
           class="w-full sm:w-auto"
         >
           <Plus :size="20" class="mr-1" />
@@ -183,11 +182,13 @@ function getStatusLabel(status: string) {
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
             Plat Nomor
           </th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Model</th>
-          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Pemeliharaan Terakhir
+            Sopir
           </th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Telepon
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
             Aksi
           </th>
@@ -208,7 +209,10 @@ function getStatusLabel(status: string) {
               {{ ambulance.plateNumber }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ ambulance.model }}
+              {{ ambulance.driverName }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+              {{ ambulance.driverPhone }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
@@ -220,13 +224,10 @@ function getStatusLabel(status: string) {
                 {{ getStatusLabel(ambulance.status) }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ formatDate(ambulance.lastMaintenance) }}
-            </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
                 <RouterLink
-                  :to="{ name: 'dashboard-ambulances-edit', params: { id: ambulance.id } }"
+                  :to="{ name: 'dashboard-ambulance-edit', params: { id: ambulance.id } }"
                   class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Edit ambulans"
                 >

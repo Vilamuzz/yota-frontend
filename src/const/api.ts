@@ -3,6 +3,7 @@ export const API = {
   AUTH_GOOGLE: '/api/auth/oauth/google',
   ME: '/api/me',
   ACCOUNTS: '/api/admin/accounts',
+  ACCOUNTS_SUPERADMIN: '/api/superadmin/accounts',
   DONATION_PROGRAMS: '/api/donation-programs',
   DONATION_PROGRAMS_ADMIN: '/api/admin/donation-programs',
   FOSTER_CHILDREN: '/api/foster-children',
@@ -17,8 +18,4 @@ export const API = {
   AMBULANCES_ADMIN: '/api/admin/ambulances',
   AMBULANCE_SERVICES: '/api/ambulance-services',
   AMBULANCE_SERVICES_ADMIN: '/api/admin/ambulance-services',
-  SOCIAL_PROGRAM_INVOICES: '/api/social-program-invoices',
-  SOCIAL_PROGRAM_INVOICES_ADMIN: '/api/admin/social-program-invoices',
-  SOCIAL_PROGRAM_SUBSCRIPTIONS: '/api/social-program-subscriptions',
-  SOCIAL_PROGRAM_SUBSCRIPTIONS_ADMIN: '/api/admin/social-program-subscriptions',
 }

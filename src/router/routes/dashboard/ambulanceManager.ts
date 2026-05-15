@@ -12,19 +12,19 @@ export const ambulanceManagerRoutes: RouteRecordRaw[] = [
           {
             path: '',
             name: 'dashboard-ambulance',
-            component: () => import('@/pages/dashboard/ambulance/IndexPage.vue'),
+            component: () => import('@/pages/dashboard/ambulances/IndexPage.vue'),
             meta: { title: 'Layanan Ambulans' },
           },
           {
             path: 'create',
             name: 'dashboard-ambulance-create',
-            component: () => import('@/pages/dashboard/ambulance/CreatePage.vue'),
+            component: () => import('@/pages/dashboard/ambulances/CreatePage.vue'),
             meta: { title: 'Tambah Layanan Ambulans' },
           },
           {
             path: ':id/edit',
             name: 'dashboard-ambulance-edit',
-            component: () => import('@/pages/dashboard/ambulance/EditPage.vue'),
+            component: () => import('@/pages/dashboard/ambulances/EditPage.vue'),
             meta: { title: 'Edit Layanan Ambulans' },
           },
         ],

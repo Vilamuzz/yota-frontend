@@ -7,20 +7,22 @@ import type {
 import { api } from '@/utils/api'
 
 export const socialProgramInvoiceService = {
-  getInvoices: async (params: SocialProgramInvoiceQueryParams): Promise<SocialProgramInvoiceListResponse> => {
-    const response = await api.get<SocialProgramInvoiceListResponse>(API.SOCIAL_PROGRAM_INVOICES_ADMIN, {
-      params,
-    })
+  getMyInvoices: async (
+    params: SocialProgramInvoiceQueryParams,
+  ): Promise<SocialProgramInvoiceListResponse> => {
+    const response = await api.get<SocialProgramInvoiceListResponse>(
+      `${API.SOCIAL_PROGRAMS}/subscriptions/invoices/me`,
+      {
+        params,
+      },
+    )
     return response.data
   },
 
-  getInvoiceDetail: async (id: string): Promise<SocialProgramInvoiceResponse> => {
-    const response = await api.get<SocialProgramInvoiceResponse>(`${API.SOCIAL_PROGRAM_INVOICES_ADMIN}/${id}`)
-    return response.data
-  },
-
-  updateInvoiceStatus: async (id: string, status: string) => {
-    const response = await api.put(`${API.SOCIAL_PROGRAM_INVOICES_ADMIN}/${id}/status`, { status })
+  getMyInvoiceDetail: async (id: string): Promise<SocialProgramInvoiceResponse> => {
+    const response = await api.get<SocialProgramInvoiceResponse>(
+      `${API.SOCIAL_PROGRAMS}/subscriptions/invoices/me/${id}`,
+    )
     return response.data
   },
 }

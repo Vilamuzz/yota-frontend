@@ -16,8 +16,8 @@ export const fosterChildrenService = {
     return response.data
   },
 
-  getFosterChildrenDetail: async (slug: string): Promise<FosterChildrenDetailResponse> => {
-    const response = await api.get<FosterChildrenDetailResponse>(`${API.FOSTER_CHILDREN}/${slug}`)
+  getFosterChildrenDetail: async (id: string): Promise<FosterChildrenDetailResponse> => {
+    const response = await api.get<FosterChildrenDetailResponse>(`${API.FOSTER_CHILDREN}/${id}`)
     return response.data
   },
 

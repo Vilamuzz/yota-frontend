@@ -40,24 +40,9 @@ export const dashboardNavigation: NavItem[] = [
   },
   {
     icon: CirclePoundSterling,
-    label: 'Pemasukan Donasi',
+    label: 'Riwayat Donasi',
     roles: [ROLES.FINANCE],
     route: '/dashboard/income/donation-programs',
-  },
-  {
-    icon: CirclePoundSterling,
-    label: 'Pemasukan',
-    roles: [ROLES.SOCIAL_MANAGER],
-    children: [
-      {
-        label: 'Program Sosial',
-        route: '/dashboard/income/social-programs',
-      },
-      {
-        label: 'Anak Asuh',
-        route: '/dashboard/income/foster-children',
-      },
-    ],
   },
   {
     icon: CirclePoundSterling,
@@ -88,11 +73,11 @@ export const dashboardNavigation: NavItem[] = [
         route: '/dashboard/social-programs',
       },
       {
-        label: 'Riwayat Langganan',
+        label: 'Daftar Program Langganan',
         route: '/dashboard/social-programs/subscriptions',
       },
       {
-        label: 'Riwayat Pelanggan',
+        label: 'Daftar Pelanggan',
         route: '/dashboard/social-programs/customers',
       },
     ],
@@ -108,11 +93,11 @@ export const dashboardNavigation: NavItem[] = [
       },
       {
         label: 'Ajuan Anak Asuh',
-        route: '/dashboard/foster-children/submissions',
+        route: '/dashboard/foster-children/candidates',
       },
       {
         label: 'Riwayat Donasi Anak Asuh',
-        route: '/dashboard/foster-children/donations',
+        route: '/dashboard/foster-children/income',
       },
     ],
   },
@@ -165,6 +150,6 @@ export const dashboardNavigation: NavItem[] = [
     icon: Baby,
     label: 'Anak Asuh',
     roles: [ROLES.CHAIRMAN],
-    route: '/dashboard/chairman/foster-children/submissions',
+    route: '/dashboard/foster-children/candidates',
   },
 ]

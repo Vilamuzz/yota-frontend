@@ -30,7 +30,8 @@ const buttonClasses = computed(() => {
     secondary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
     danger: 'bg-danger-500 text-white hover:bg-red-700 focus:ring-red-500',
     white: 'bg-white text-primary-300 hover:bg-gray-300',
-    outline: 'bg-white text-gray-600 hover:bg-gray-300',
+    outline:
+      'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:ring-gray-200',
   }
 
   const sizes = {

@@ -12,7 +12,8 @@ export const createFosterChildrenSchema = z.object({
   profilePicture: z.instanceof(File, { message: 'Image file is required' }),
   familyCard: z.instanceof(File, { message: 'Family Card is required'}),
   sktm: z.instanceof(File,{message: 'SKTM is required'}),
-  achievements: z.array(z.string()).optional(),
+  achievements: z.array(z.instanceof(File)).default([]),
+  achivementNotes: z.array(z.string()).default([]),
 })
 
 export type CreateFosterChildrenFormData = z.infer<typeof createFosterChildrenSchema>
@@ -28,7 +29,8 @@ export const updateFosterChildrenSchema = z.object({
   profilePicture: z.instanceof(File).optional(),
   familyCard: z.instanceof(File).optional(),
   sktm: z.instanceof(File).optional(),
-  achievements: z.array(z.string()).optional(),
+  achievements: z.array(z.instanceof(File)).optional(),
+  achivementNotes: z.array(z.string()).optional(),
 })
 
 export type FosterChildrenFormData = z.infer<typeof updateFosterChildrenSchema>
