@@ -14,12 +14,25 @@ const handleView = (fosterChildren: FosterChildren) => {
 function calculateAge(birthDate: string): number {
   if (!birthDate) return 0
 
-  // Format: DD-MM-YYYY
-  const [dayStr, monthStr, yearStr] = birthDate.split('-')
+  // Expecting Format: YYYY-MM-DD
+  const parts = birthDate.split('-')
+  const [p1, p2, p3] = parts
 
-  const day = Number(dayStr)
-  const month = Number(monthStr)
-  const year = Number(yearStr)
+  if (!p1 || !p2 || !p3) return 0
+
+  let year: number, month: number, day: number
+
+  if (p1.length === 4) {
+    // YYYY-MM-DD
+    year = Number(p1)
+    month = Number(p2)
+    day = Number(p3)
+  } else {
+    // DD-MM-YYYY (legacy or alternative)
+    day = Number(p1)
+    month = Number(p2)
+    year = Number(p3)
+  }
 
   if (!day || !month || !year) return 0
 

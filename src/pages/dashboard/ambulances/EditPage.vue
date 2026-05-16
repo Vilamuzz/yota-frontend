@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useAmbulanceDetail } from '@/composables/ambulance/useAmbulanceDetail'
 import { useAmbulanceUpdate } from '@/composables/ambulance/useAmbulanceUpdate'
+import { useDriverAccountList } from '@/composables/account/useAccountList'
 import { ambulanceSchema } from '@/schemas/ambulance.schema'
+import { AmbulanceStatus } from '@/types/ambulance'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
-import { Ambulance as AmbulanceIcon, Loader2 } from 'lucide-vue-next'
+import { Ambulance as AmbulanceIcon, Loader2, Upload, Camera, ShieldCheck, Settings } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -18,44 +20,87 @@ const { showToast } = useToast()
 
 const ambulanceId = route.params.id as string
 const { detailQuery } = useAmbulanceDetail(ambulanceId)
-const { updateMutation } = useAmbulanceUpdate()
+const { updateMutation, validationErrors } = useAmbulanceUpdate()
 
-const plateNumber = ref<string>('')
-const model = ref<string>('')
-const status = ref<string>('available')
+const form = reactive({
+  plateNumber: '',
+  driverId: '',
+  status: AmbulanceStatus.Available as string,
+  image: null as File | null,
+  imagePreview: null as string | null,
+})
+
+const driverQueryParams = reactive({
+  limit: 100,
+  search: undefined,
+})
+
+const { accounts: drivers, isLoading: isLoadingDrivers } = useDriverAccountList(driverQueryParams)
+
 const errors = ref<Record<string, string>>({})
+
+const statuses = [
+  { label: 'Tersedia', value: AmbulanceStatus.Available },
+  { label: 'Sedang Digunakan', value: AmbulanceStatus.InUse },
+  { label: 'Pemeliharaan', value: AmbulanceStatus.Maintenance },
+]
 
 const isFetching = computed(() => detailQuery.isPending.value)
 const isLoading = computed(() => updateMutation.isPending.value)
-
-const statuses = [
-  { label: 'Tersedia', value: 'available' },
-  { label: 'Sedang Digunakan', value: 'in_use' },
-  { label: 'Pemeliharaan', value: 'maintenance' },
-]
 
 watch(
   () => detailQuery.data.value,
   (response) => {
     if (!response?.data) return
     const data = response.data
-    plateNumber.value = data.plateNumber
-    model.value = data.model
-    status.value = data.status
+    form.plateNumber = data.plateNumber
+    form.driverId = data.driverId || ''
+    form.status = data.status
+    if (data.image) {
+      form.imagePreview = data.image
+    }
   },
   { immediate: true },
 )
 
+watch(
+  () => form,
+  () => {
+    if (Object.keys(errors.value).length > 0) {
+      errors.value = {}
+    }
+    if (updateMutation.isError.value) {
+      updateMutation.reset()
+    }
+  },
+  { deep: true },
+)
+
+const handleImageChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    form.image = file
+    form.imagePreview = URL.createObjectURL(file)
+  }
+}
+
 const handleSubmit = () => {
-  const result = ambulanceSchema.safeParse({
-    plateNumber: plateNumber.value.trim(),
-    model: model.value.trim(),
-    status: status.value,
+  // Use a partial schema or allow image to be null for update
+  const result = ambulanceSchema.partial({ image: true }).safeParse({
+    plateNumber: form.plateNumber.trim(),
+    driverId: form.driverId,
+    status: form.status,
+    image: form.image,
   })
 
   const zodErrors = getZodErrors(result)
   errors.value = zodErrors
-  if (!result.success) return
+
+  if (!result.success) {
+    showToast('Mohon lengkapi data dengan benar', 'error')
+    return
+  }
 
   updateMutation.mutate(
     {
@@ -65,7 +110,7 @@ const handleSubmit = () => {
     {
       onSuccess: () => {
         showToast('Ambulans berhasil diperbarui!', 'success')
-        router.push({ name: 'dashboard-ambulances' })
+        router.push({ name: 'dashboard-ambulance' })
       },
       onError: (err) => {
         showToast(extractError(err, 'Gagal memperbarui ambulans'), 'error')
@@ -79,157 +124,189 @@ const handleSubmit = () => {
   <DashboardLayout>
     <template #title>Edit Ambulans</template>
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-full mx-auto space-y-6">
       <div
         v-if="isFetching"
-        class="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+        class="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm"
       >
         <Loader2 class="w-10 h-10 text-primary-500 animate-spin mb-4" />
-        <p class="text-gray-500 dark:text-gray-400 font-medium">Memuat data ambulans...</p>
+        <p class="text-gray-500 dark:text-gray-400 font-medium tracking-wide">
+          Memuat data ambulans...
+        </p>
       </div>
 
-      <div
-        v-else
-        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
-      >
-        <div
-          class="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"
-        >
-          <div class="flex items-center gap-3">
-            <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-500">
-              <AmbulanceIcon :size="24" />
+      <form v-else @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Vehicle Details -->
+        <div class="lg:col-span-2 space-y-6">
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
+          >
+            <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-500">
+                <AmbulanceIcon :size="20" />
+              </div>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Informasi Kendaraan
+              </h3>
             </div>
-            <div>
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">Perbarui Data Armada</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                Ubah informasi kendaraan ambulans di bawah ini.
-              </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <BaseInput
+                id="plateNumber"
+                v-model="form.plateNumber"
+                label="Nomor Plat"
+                placeholder="mis. AD 1234 ABC"
+                :error="errors.plateNumber || validationErrors?.plateNumber"
+                required
+              />
+              <div>
+                <label
+                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
+                >
+                  Sopir <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="form.driverId"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
+                  :class="{ 'border-red-500': errors.driverId || validationErrors?.driverId }"
+                  :disabled="isLoadingDrivers"
+                >
+                  <option value="" disabled>
+                    {{ isLoadingDrivers ? 'Memuat sopir...' : 'Pilih Sopir' }}
+                  </option>
+                  <option v-for="driver in drivers" :key="driver.id" :value="driver.id">
+                    {{ driver.username }} ({{ driver.email }})
+                  </option>
+                </select>
+                <p
+                  v-if="errors.driverId || validationErrors?.driverId"
+                  class="mt-1 text-xs text-red-600"
+                >
+                  {{ errors.driverId || validationErrors?.driverId }}
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700 flex items-start gap-3"
+            >
+              <ShieldCheck class="text-green-500 shrink-0 mt-0.5" :size="18" />
+              <div>
+                <p
+                  class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-1"
+                >
+                  Status Verifikasi
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  Pastikan data nomor plat sesuai dengan STNK kendaraan untuk keperluan administrasi
+                  dan pelacakan.
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="p-6 space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <BaseInput
-              id="plateNumber"
-              v-model="plateNumber"
-              label="Nomor Plat"
-              placeholder="mis. B 1234 XYZ"
-              :error="errors.plateNumber"
-              required
-            />
-
-            <BaseInput
-              id="model"
-              v-model="model"
-              label="Model Kendaraan"
-              placeholder="mis. Toyota Hiace"
-              :error="errors.model"
-              required
-            />
-
-            <div class="md:col-span-2">
-              <label
-                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
-              >
-                Status Kendaraan
-              </label>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <label
-                  v-for="s in statuses"
-                  :key="s.value"
-                  class="relative flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-200"
-                  :class="[
-                    status === s.value
-                      ? 'border-primary-500 bg-primary-50/50 dark:bg-primary-900/10 ring-1 ring-primary-500'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800',
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    name="status"
-                    :value="s.value"
-                    v-model="status"
-                    class="sr-only"
-                  />
-                  <div class="flex items-center gap-3">
-                    <div
-                      class="w-4 h-4 rounded-full border flex items-center justify-center"
-                      :class="[
-                        status === s.value
-                          ? 'border-primary-500 bg-primary-500'
-                          : 'border-gray-300 dark:border-gray-600',
-                      ]"
-                    >
-                      <div
-                        v-if="status === s.value"
-                        class="w-1.5 h-1.5 rounded-full bg-white"
-                      ></div>
-                    </div>
-                    <span
-                      class="text-sm font-medium"
-                      :class="[
-                        status === s.value
-                          ? 'text-primary-700 dark:text-primary-400'
-                          : 'text-gray-700 dark:text-gray-300',
-                      ]"
-                    >
-                      {{ s.label }}
-                    </span>
-                  </div>
-                </label>
-              </div>
-              <p v-if="errors.status" class="mt-1 text-xs text-red-600">
-                {{ errors.status }}
-              </p>
-            </div>
-          </div>
-
+        <!-- Right Column: Status & Actions -->
+        <div class="space-y-6">
+          <!-- Ambulance Image -->
           <div
-            class="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-100 dark:border-yellow-900/30 flex gap-3"
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
           >
-            <div class="text-yellow-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+            <h3
+              class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider text-center"
+            >
+              Foto Ambulans
+            </h3>
+
+            <div class="flex justify-center">
+              <div
+                class="relative w-full aspect-video rounded-xl border-4 border-dashed overflow-hidden transition-all duration-200 group bg-gray-50 dark:bg-gray-900/50"
+                :class="[
+                  form.imagePreview
+                    ? 'border-primary-500'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-400',
+                ]"
               >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="16" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12.01" y2="8" />
-              </svg>
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                  @change="handleImageChange"
+                />
+
+                <div
+                  v-if="!form.imagePreview"
+                  class="h-full flex flex-col items-center justify-center p-4 text-center"
+                >
+                  <Camera class="text-gray-300 mb-2" :size="32" />
+                  <p class="text-[10px] font-medium text-gray-500 uppercase">
+                    Pilih Foto Kendaraan
+                  </p>
+                </div>
+
+                <template v-else>
+                  <img :src="form.imagePreview" class="w-full h-full object-cover" />
+                  <div
+                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                  >
+                    <Upload class="text-white" :size="24" />
+                  </div>
+                </template>
+              </div>
             </div>
-            <p class="text-xs text-yellow-800 dark:text-yellow-300 leading-relaxed">
-              Perubahan status akan langsung terlihat pada sistem pemesanan ambulans publik.
-              Pastikan data yang Anda masukkan sudah valid.
+            <p v-if="errors.image" class="text-center text-[10px] text-red-600">
+              {{ errors.image }}
             </p>
           </div>
 
-          <!-- Action Buttons -->
           <div
-            class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700"
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
           >
-            <BaseButton
-              type="button"
-              variant="outline"
-              :to="{ name: 'dashboard-ambulances' }"
-              :disabled="isLoading"
-            >
-              Batal
-            </BaseButton>
-            <BaseButton type="submit" variant="primary" :loading="isLoading">
-              <template #loading>Menyimpan…</template>
-              Perbarui Ambulans
-            </BaseButton>
+            <div class="flex items-center gap-2 mb-2">
+              <Settings class="text-gray-400" :size="16" />
+              <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Pengaturan Status
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2">
+              <button
+                v-for="s in statuses"
+                :key="s.value"
+                type="button"
+                @click="form.status = s.value"
+                class="flex items-center justify-between px-3 py-3 rounded-xl border transition-all duration-200 text-xs font-medium"
+                :class="[
+                  form.status === s.value
+                    ? 'bg-primary-50 border-primary-200 text-primary-700 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-300'
+                    : 'border-gray-100 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50',
+                ]"
+              >
+                {{ s.label }}
+                <div
+                  v-if="form.status === s.value"
+                  class="w-2 h-2 rounded-full bg-primary-300 shadow-[0_0_8px_rgba(var(--color-primary-500),0.8)]"
+                ></div>
+              </button>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-4 border-t border-gray-50 dark:border-gray-700">
+              <BaseButton type="submit" variant="primary" :loading="isLoading" class="w-full">
+                Simpan Perubahan
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="danger"
+                @click="router.push({ name: 'dashboard-ambulance' })"
+                :disabled="isLoading"
+                class="w-full"
+              >
+                Batal
+              </BaseButton>
+            </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   </DashboardLayout>
 </template>

@@ -12,11 +12,17 @@ export const publicRoutes: RouteRecordRaw[] = [
     component: () => import('@/pages/public/AboutPage.vue'),
   },
   {
-    path: '/donation-program',
+    path: '/profile',
+    name: 'public-profile',
+    meta: { requiresAuth: true },
+    component: () => import('@/pages/public/ProfilePage.vue'),
+  },
+  {
+    path: '/donation-programs',
     children: [
       {
         path: '',
-        name: 'donation-program',
+        name: 'donation-programs',
         component: () => import('@/pages/public/donationPrograms/IndexPage.vue'),
       },
       {
@@ -28,11 +34,6 @@ export const publicRoutes: RouteRecordRaw[] = [
         path: ':slug/form',
         name: 'donation-program-form',
         component: () => import('@/pages/public/donationPrograms/FormPage.vue'),
-      },
-      {
-        path: 'callback',
-        name: 'donation-program-callback',
-        component: () => import('@/pages/public/donationPrograms/CallbackPage.vue'),
       },
     ],
   },
@@ -60,6 +61,18 @@ export const publicRoutes: RouteRecordRaw[] = [
         component: () => import('@/pages/public/fosterChildren/FormPage.vue'),
       },
       {
+        path: 'submission',
+        name: 'foster-children-candidate-submission',
+        meta: { requiresAuth: true },
+        component: () => import('@/pages/public/fosterChildren/FormSubmission.vue'),
+      },
+      {
+        path: 'history',
+        name: 'foster-children-candidate-history',
+        meta: { requiresAuth: true },
+        component: () => import('@/pages/public/fosterChildren/HistorySubmissionPage.vue'),
+      },
+      {
         path: ':slug/form',
         name: 'foster-children-submission',
         component: () => import('@/pages/public/fosterChildren/FormSubmission.vue'),
@@ -67,11 +80,11 @@ export const publicRoutes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/social-program',
+    path: '/social-programs',
     children: [
       {
         path: '',
-        name: 'social-program',
+        name: 'social-programs',
         component: () => import('@/pages/public/socialPrograms/IndexPage.vue'),
       },
       {
@@ -83,6 +96,12 @@ export const publicRoutes: RouteRecordRaw[] = [
         path: ':slug/form',
         name: 'social-program-form',
         component: () => import('@/pages/public/socialPrograms/FormPage.vue'),
+      },
+      {
+        path: 'invoices/:id/pay',
+        name: 'social-program-invoice-pay',
+        meta: { requiresAuth: true },
+        component: () => import('@/pages/public/socialPrograms/InvoicePaymentPage.vue'),
       },
     ],
   },
@@ -104,13 +123,28 @@ export const publicRoutes: RouteRecordRaw[] = [
 
   {
     path: '/news',
-    name: 'news',
-    component: () => import('@/pages/public/news/IndexPage.vue'),
+    children: [
+      {
+        path: '',
+        name: 'news',
+        component: () => import('@/pages/public/news/IndexPage.vue'),
+      },
+      {
+        path: ':slug',
+        name: 'news-detail',
+        component: () => import('@/pages/public/news/DetailPage.vue'),
+      },
+    ],
   },
   {
     path: '/reports',
     name: 'reports',
     component: () => import('@/pages/public/reports/IndexPage.vue'),
   },
-
+  {
+    path: '/invoices',
+    name: 'public-invoices',
+    meta: { requiresAuth: true },
+    component: () => import('@/pages/public/InvoicePage.vue'),
+  },
 ]

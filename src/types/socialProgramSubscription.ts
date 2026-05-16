@@ -1,12 +1,17 @@
-import type { Pagination, Response } from './response'
+import type { Pagination, PaginationParams, Response } from './response'
 
 export interface SocialProgramSubscription {
   id: string
-  socialProgramId: string
-  accountId: string
-  amount: number
-  status: string
+  username: string
+  period: string
+  status: SocialProgramSubscriptionStatus
   createdAt: string
+}
+
+export enum SocialProgramSubscriptionStatus {
+  ACTIVE = 'active',
+  PAUSED = 'paused',
+  INACTIVE = 'inactive',
 }
 
 export interface SocialProgramSubscriptionList {
@@ -16,8 +21,10 @@ export interface SocialProgramSubscriptionList {
 
 export interface SocialProgramSubscriptionQueryParams extends PaginationParams {
   status?: string
-  socialProgramId?: string
-  accountId?: string
+}
+
+export interface CreateOfflineSocialProgramSubscriptionRequest {
+  accountId: string
 }
 
 export type SocialProgramSubscriptionResponse = Response<SocialProgramSubscription>

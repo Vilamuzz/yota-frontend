@@ -7,8 +7,8 @@ export interface Gallery {
   title: string
   coverImage: string
   category: MediaCategory
-  medias: Media[]
-  content: string
+  media: Media[]
+  description: string
   status: MediaStatus
   views: number
   publishedAt: string
@@ -28,19 +28,25 @@ export interface GalleryQueryParams extends PaginationParams {
 export interface CreateGalleryRequest {
   title: string
   category: MediaCategory
-  content: string
+  description: string
   status: MediaStatus
   coverImage: File
-  medias?: File[]
+  mediaFiles: File[]
+  mediaAlts: string[]
 }
 
 export interface UpdateGalleryRequest {
   title?: string
   category?: MediaCategory
-  content?: string
+  description?: string
   status?: MediaStatus
   coverImage?: File
-  medias?: File[]
+  mediaFiles?: File[]
+  mediaAlts?: string[]
+  mediaOrders?: number[]
+  mediaIds?: string[]
+  updateMediaAlts?: string[]
+  updateMediaOrders?: number[]
 }
 
 export type GalleryResponse = Response<Gallery>

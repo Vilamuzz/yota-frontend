@@ -14,6 +14,7 @@ export const useNewsUpdate = () => {
   >({
     mutationFn: ({ id, data }) => newsService.updateNews(id, data),
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['news-admin'] })
       queryClient.invalidateQueries({ queryKey: ['news'] })
       queryClient.invalidateQueries({ queryKey: ['newsDetail', variables.id] })
     },
@@ -22,6 +23,23 @@ export const useNewsUpdate = () => {
   const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
     mutationFn: (id) => newsService.deleteNews(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['news-admin'] })
+      queryClient.invalidateQueries({ queryKey: ['news'] })
+    },
+  })
+
+  const publishMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => newsService.updatePublishNews(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['news-admin'] })
+      queryClient.invalidateQueries({ queryKey: ['news'] })
+    },
+  })
+
+  const archiveMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => newsService.updateArchivedNews(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['news-admin'] })
       queryClient.invalidateQueries({ queryKey: ['news'] })
     },
   })
@@ -33,6 +51,8 @@ export const useNewsUpdate = () => {
   return {
     updateMutation,
     deleteMutation,
+    publishMutation,
+    archiveMutation,
     validationErrors,
   }
 }

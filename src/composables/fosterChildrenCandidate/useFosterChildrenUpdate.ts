@@ -1,40 +1,39 @@
-import { computed } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fosterChildrenCandidateService } from '@/services/fosterChildrenCandidate.service'
-import type { FosterChildrenCandidateUpdateStatusRequest, FosterChildrenCandidate } from '@/types/fosterChildrenCandidate'
-import type { ApiError, ApiResponse } from '@/types/response'
+import type { FosterChildrenCandidateResponse } from '@/types/fosterChildrenCandidate'
+import type { ApiError } from '@/types/response'
 
 export const useFosterChildrenCandidateUpdate = () => {
   const queryClient = useQueryClient()
 
-  const updateMutation = useMutation<
-    ApiResponse<FosterChildrenCandidate>,
-    ApiError,
-    { id: string; data: FosterChildrenCandidateUpdateStatusRequest }
-  >({
-    mutationFn: ({ id, data }) => fosterChildrenCandidateService.updateFosterChildrenCandidateStatus(id, data),
-    onSuccess: (_, variables) => {
+  const acceptMutation = useMutation<FosterChildrenCandidateResponse, ApiError, string>({
+    mutationFn: (id) => fosterChildrenCandidateService.acceptFosterChildrenCandidate(id),
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['fosterChildrenCandidate'] })
       queryClient.invalidateQueries({
-        queryKey: ['fosterChildrenCandidateDetail', variables.id],
+        queryKey: ['fosterChildrenCandidateDetail', id],
       })
     },
   })
 
-  const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
-    mutationFn: (id) => fosterChildrenCandidateService.deleteFosterChildreCandidate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
+  const rejectMutation = useMutation<
+    FosterChildrenCandidateResponse,
+    ApiError,
+    { id: string; rejectionReason: string }
+  >({
+    mutationFn: ({ id, rejectionReason }) =>
+      fosterChildrenCandidateService.rejectFosterChildrenCandidate(id, { rejectionReason }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['fosterChildrenCandidate'] })
+      queryClient.invalidateQueries({
+        queryKey: ['fosterChildrenCandidateDetail', id],
+      })
     },
   })
 
-  const validationErrors = computed(
-    () => updateMutation.error.value?.response?.data?.validation ?? null,
-  )
-
   return {
-    updateMutation,
-    deleteMutation,
-    validationErrors,
+    acceptMutation,
+    rejectMutation,
   }
 }
+

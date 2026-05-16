@@ -1,71 +1,47 @@
 <script setup lang="ts">
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { ArrowLeft, Eye, X, Baby, CheckCircle2 } from 'lucide-vue-next'
+import { ArrowLeft, Eye, X, Baby, CheckCircle2, Loader2, AlertCircle } from 'lucide-vue-next'
 import { useRouter, useRoute } from 'vue-router'
 import { ref, computed } from 'vue'
-import { Category, Gender } from '@/types/fosterChildren'
-import type { FosterChildrenCandidate } from '@/types/fosterChildrenCandidate'
+import { FosterChildrenCandidateStatus } from '@/types/fosterChildrenCandidate'
+import { useFosterChildrenCandidateDetail } from '@/composables/fosterChildrenCandidate/useFosterChildrenCandidateDetail'
+import { useFosterChildrenCandidateUpdate } from '@/composables/fosterChildrenCandidate/useFosterChildrenUpdate'
+import { useToast } from '@/composables/ui/useToast'
+import { getStatusColor } from '@/utils/statusColor'
+import { formatDate } from '@/utils/format'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import RejectConfirmationModal from '@/components/molecules/RejectConfirmationModal.vue'
+import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
 import { ROLES } from '@/const/roles'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const fosterChildrenCandidateId = route.params.id as string
+const { showToast } = useToast()
 
-const fosterChildrenCandidate = computed(() => {
-  return fosterChildrenCandidates.value.find((c) => c.id === fosterChildrenCandidateId)
-})
+const { detailQuery } = useFosterChildrenCandidateDetail(fosterChildrenCandidateId)
+const { acceptMutation, rejectMutation } = useFosterChildrenCandidateUpdate()
 
-const fosterChildrenCandidates = ref<FosterChildrenCandidate[]>([
-  {
-    id: '1',
-    name: 'Faris Ahad',
-    slug: 'faris-ahad',
-    gender: Gender.male,
-    category: Category.yatim,
-    birthPlace: 'Bandung',
-    birthDate: '10-05-2014',
-    address: 'Jl. Melati No. 12 Bandung',
-    profilePicture: 'https://i.pravatar.cc/150?img=1',
-    isGraduated: false,
-    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    submitterName: 'Choi Youngjae',
-    submitterPhone: '081234567890',
-    submitterAddress: 'Jl. Melati No.2 Bandung',
-    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    submittedBy: '',
-    status: 'Diajukan',
-    rejectionReason: '',
-    createdAt: '2024-01-01',
-    achievements: [],
-  },
-  {
-    id: '2',
-    name: 'Tia Mutiara',
-    slug: 'tia-mutiara',
-    gender: Gender.female,
-    category: Category.piatu,
-    birthPlace: 'Garut',
-    birthDate: '2015-02-15',
-    address: 'Jl. Mawar No. 5 Garut',
-    profilePicture: 'https://i.pravatar.cc/150?img=2',
-    isGraduated: false,
-    familyCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    sktm: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    submitterName: 'Jung Woojin',
-    submitterPhone: '081234567891',
-    submitterAddress: 'Jl Mawar No. 7 Garut',
-    submitterIdCard: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    status: 'Menunggu Verifikasi',
-    rejectionReason: '',
-    submittedBy: '',
-    createdAt: '2024-01-02',
-    achievements: [],
-  },
-])
+const fosterChildrenCandidate = computed(() => detailQuery.data.value?.data)
+const isLoading = computed(() => detailQuery.isPending.value)
+
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case FosterChildrenCandidateStatus.PENDING:
+      return 'Diajukan'
+    case FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED:
+      return 'Menunggu Verifikasi Ketua'
+    case FosterChildrenCandidateStatus.ACCEPTED:
+      return 'Disetujui'
+    case FosterChildrenCandidateStatus.REJECTED:
+      return 'Ditolak'
+    case FosterChildrenCandidateStatus.CANCELED:
+      return 'Dibatalkan'
+    default:
+      return status
+  }
+}
 
 const showImagePreview = ref(false)
 const previewImageUrl = ref<string | null>(null)
@@ -129,26 +105,46 @@ const verifyConfig = computed(() => {
 const openVerifyModal = () => {
   confirmVerify.value = true
 }
+
+const isUpdating = computed(() => acceptMutation.isPending.value || rejectMutation.isPending.value)
+
 const confirmVerifyAction = () => {
-  if (role.value === ROLES.CHAIRMAN) {
-    console.log('Pengajuan disetujui oleh Ketua Yayasan')
-  } else {
-    console.log('Pengajuan diverifikasi oleh Koodinator Sosial')
-  }
-  confirmVerify.value = false
+  acceptMutation.mutate(fosterChildrenCandidateId, {
+    onSuccess: () => {
+      showToast(
+        role.value === ROLES.CHAIRMAN
+          ? 'Pengajuan berhasil disetujui'
+          : 'Pengajuan berhasil diverifikasi',
+        'success',
+      )
+      confirmVerify.value = false
+    },
+    onError: () => {
+      showToast('Gagal memproses pengajuan', 'error')
+    },
+  })
 }
 
 const openRejectModal = () => {
   confirmReject.value = true
 }
+
 const handleReject = (reason: string) => {
-  console.log('Alasan reject:', reason)
-  if (role.value === ROLES.CHAIRMAN) {
-    console.log('Pengajuan ditolak oleh Ketua')
-  } else {
-    console.log('Pengajuan ditolak oleh Social Manager')
-  }
-  confirmReject.value = false
+  rejectMutation.mutate(
+    {
+      id: fosterChildrenCandidateId,
+      rejectionReason: reason,
+    },
+    {
+      onSuccess: () => {
+        showToast('Pengajuan berhasil ditolak', 'success')
+        confirmReject.value = false
+      },
+      onError: () => {
+        showToast('Gagal menolak pengajuan', 'error')
+      },
+    },
+  )
 }
 
 const verifyRejectConfig = computed(() => {
@@ -191,8 +187,33 @@ const verifyRejectConfig = computed(() => {
         </div>
       </div>
 
+      <!-- Loading State -->
       <div
-        v-if="fosterChildrenCandidate"
+        v-if="isLoading"
+        class="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
+      >
+        <Loader2 class="w-12 h-12 text-primary-500 animate-spin mb-4" />
+        <p class="text-gray-500 font-medium animate-pulse">Memuat detail ajuan...</p>
+      </div>
+
+      <!-- Error / Not Found State -->
+      <div
+        v-else-if="!fosterChildrenCandidate"
+        class="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-center px-6"
+      >
+        <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-full mb-4 text-red-500">
+          <AlertCircle :size="48" />
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Data Tidak Ditemukan</h3>
+        <p class="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-8">
+          Maaf, kami tidak dapat menemukan detail pengajuan yang Anda cari. Data mungkin telah
+          dihapus atau link tidak valid.
+        </p>
+        <BaseButton variant="outline" @click="handleCancel"> Kembali ke Daftar </BaseButton>
+      </div>
+
+      <div
+        v-else
         class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
       >
         <div class="grid grid-cols-1 lg:grid-cols-2">
@@ -225,7 +246,7 @@ const verifyRejectConfig = computed(() => {
                 <span class="text-sm font-medium text-gray-500 dark:text-gray-400">TTL</span>
                 <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200"
                   >{{ fosterChildrenCandidate.birthPlace }},
-                  {{ fosterChildrenCandidate.birthDate }}</span
+                  {{ formatDate(fosterChildrenCandidate.birthDate) }}</span
                 >
               </div>
               <div class="grid grid-cols-3 gap-4">
@@ -369,20 +390,31 @@ const verifyRejectConfig = computed(() => {
                     <span
                       :class="[
                         'px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider border',
-                        fosterChildrenCandidate.status === 'Diajukan'
-                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
-                          : fosterChildrenCandidate.status === 'Menunggu Verifikasi'
-                            ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800'
-                            : fosterChildrenCandidate.status === 'Disetujui'
-                              ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-                              : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800',
+                        getStatusColor(fosterChildrenCandidate.status),
                       ]"
                     >
-                      {{ fosterChildrenCandidate.status }}
+                      {{ getStatusLabel(fosterChildrenCandidate.status) }}
                     </span>
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div
+              v-if="
+                fosterChildrenCandidate.status === FosterChildrenCandidateStatus.REJECTED &&
+                fosterChildrenCandidate.rejectionReason
+              "
+              class="mt-4 p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl"
+            >
+              <h4
+                class="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2"
+              >
+                Alasan Penolakan
+              </h4>
+              <p class="text-sm text-red-700 dark:text-red-300">
+                {{ fosterChildrenCandidate.rejectionReason }}
+              </p>
             </div>
 
             <!-- Piagam / Prestasi -->
@@ -415,19 +447,45 @@ const verifyRejectConfig = computed(() => {
 
         <!-- Action Footer -->
         <div
+          v-if="
+            fosterChildrenCandidate.status === FosterChildrenCandidateStatus.PENDING ||
+            (fosterChildrenCandidate.status ===
+              FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED &&
+              role === ROLES.CHAIRMAN)
+          "
           class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
         >
           <p class="text-xs text-gray-500 dark:text-gray-400 italic">
-            Dikirim pada {{ fosterChildrenCandidate.createdAt }}
+            Dikirim pada {{ formatDate(fosterChildrenCandidate.createdAt) }}
           </p>
           <div class="flex items-center gap-3">
-            <BaseButton variant="danger" size="md" class="px-8" @click="openRejectModal">
+            <BaseButton
+              variant="danger"
+              size="md"
+              class="px-8"
+              @click="openRejectModal"
+              :disabled="isUpdating"
+            >
               Tolak
             </BaseButton>
-            <BaseButton variant="primary" size="md" class="px-8" @click="openVerifyModal">
+            <BaseButton
+              variant="primary"
+              size="md"
+              class="px-8"
+              @click="openVerifyModal"
+              :disabled="isUpdating"
+            >
               {{ verifyConfig.buttonText }}
             </BaseButton>
           </div>
+        </div>
+        <div
+          v-else
+          class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700"
+        >
+          <p class="text-xs text-gray-500 dark:text-gray-400 italic">
+            Dikirim pada {{ formatDate(fosterChildrenCandidate.createdAt) }}
+          </p>
         </div>
       </div>
     </div>

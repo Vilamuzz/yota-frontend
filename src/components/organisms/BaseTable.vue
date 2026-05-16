@@ -62,32 +62,32 @@ defineEmits<{
 
     <!-- Pagination -->
     <div
-      v-if="!loading && !isEmpty && (hasPrev || hasNext)"
-      class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between"
+      v-if="!loading && !isEmpty"
+      class="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
     >
       <div class="flex items-center gap-2">
         <button
           @click="$emit('prev')"
           :disabled="!hasPrev"
-          class="p-2 rounded-lg border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+          class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
         >
           <ChevronLeft :size="18" />
         </button>
         <button
           @click="$emit('next')"
           :disabled="!hasNext"
-          class="p-2 rounded-lg border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+          class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
         >
           <ChevronRight :size="18" />
         </button>
       </div>
 
-      <div class="flex items-center gap-2 text-sm text-gray-600">
+      <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
         <span>Show</span>
         <select
           :value="limit"
           @change="$emit('update:limit', Number(($event.target as HTMLSelectElement).value))"
-          class="px-2 py-1 border border-gray-300 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+          class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-colors"
         >
           <option v-for="opt in limitOptions" :key="opt" :value="opt">{{ opt }}</option>
         </select>

@@ -1,9 +1,13 @@
 import { z } from 'zod'
+import { AmbulanceStatus } from '@/types/ambulance'
 
 export const ambulanceSchema = z.object({
   plateNumber: z.string().min(1, 'Nomor plat wajib diisi'),
-  model: z.string().min(1, 'Model ambulans wajib diisi'),
-  status: z.string().min(1, 'Status wajib dipilih'),
+  status: z.nativeEnum(AmbulanceStatus, {
+    message: 'Status wajib dipilih',
+  }),
+  driverId: z.string().min(1, 'Sopir wajib dipilih'),
+  image: z.instanceof(File, { message: 'Foto ambulans wajib diunggah' }),
 })
 
 export type AmbulanceFormData = z.infer<typeof ambulanceSchema>

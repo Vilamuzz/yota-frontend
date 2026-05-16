@@ -4,13 +4,22 @@ export interface SocialProgram {
   id: string
   slug: string
   title: string
-  description: string
   coverImage: string
-  status: string
+  status: SocialProgramStatusEnum
+  description: string
   minimumAmount: number
   billingDay: number
+  isSubscribed: boolean
+  subscriptionId?: string
   totalSubscribers: number
   createdAt: string
+}
+
+export enum SocialProgramStatusEnum {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  REJECTED = 'rejected',
 }
 
 export interface SocialProgramList {
@@ -30,7 +39,6 @@ export interface CreateSocialProgramRequest {
   title: string
   coverImage: File
   description: string
-  status: string
   minimumAmount: number
   billingDay: number
 }
@@ -39,7 +47,6 @@ export interface UpdateSocialProgramRequest {
   title?: string
   coverImage?: File
   description?: string
-  status?: string
   minimumAmount?: number
   billingDay?: number
 }

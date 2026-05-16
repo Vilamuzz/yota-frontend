@@ -57,7 +57,7 @@ export interface UpdateUserProfileRequest {
   defaultAccountRoleId: number
   phone: string
   address: string
-  profilePicture: string
+  profilePicture: File
 }
 
 export interface UpdateUserPasswordRequest {

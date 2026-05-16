@@ -33,7 +33,7 @@ const statuses = Object.values(DonationProgramStatusEnum)
 
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <BaseSearch v-model="searchQuery" placeholder="Cari donasi..." class="w-full sm:w-64" />
           <BaseFilter :has-active-filters="hasActiveFilters">

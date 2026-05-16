@@ -2,7 +2,6 @@ import type { Pagination, PaginationParams, Response } from './response'
 
 export interface FosterChildren {
   id: string
-  slug: string
   name: string
   profilePicture: string
   gender: Gender
@@ -18,14 +17,14 @@ export interface FosterChildren {
 }
 
 export enum Gender {
-  male = 'Laki-laki',
-  female = 'Perempuan',
+  male = 'laki-laki',
+  female = 'perempuan',
 }
 
 export enum Category {
   yatim = 'yatim',
   piatu = 'piatu',
-  yatimPiatu = 'yatim-piatu',
+  yatimPiatu = 'yatim piatu',
 }
 
 export interface Achievement {
@@ -55,16 +54,17 @@ export interface AchievementRequest {
 
 export interface CreateFosterChildrenRequest {
   name: string
-  profilePicture: File
   gender: Gender
-  address: string
-  birthPlace: string
-  birthDate: string
+  isGraduated: boolean
   category: Category
+  birthDate: string
+  birthPlace: string
+  address: string
+  profilePicture: File
   familyCard: File
   sktm: File
-  achievements: AchievementRequest[]
-  isGraduated: boolean
+  achievements: File[]
+  achivementNotes: string[]
 }
 
 export interface UpdateFosterChildrenRequest {
@@ -77,7 +77,8 @@ export interface UpdateFosterChildrenRequest {
   category?: Category
   familyCard?: File
   sktm?: File
-  achievements?: AchievementRequest[]
+  achievements?: File[]
+  achivementNotes?: string[]
   isGraduated?: boolean
 }
 

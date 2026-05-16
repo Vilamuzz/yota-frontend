@@ -38,7 +38,7 @@ function stripHtml(html: string) {
         <ImageIcon :size="48" stroke-width="1" />
       </div>
       <div
-        class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        class="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
       ></div>
 
       <!-- Category Badge -->
@@ -50,7 +50,7 @@ function stripHtml(html: string) {
     </div>
 
     <!-- Content -->
-    <div class="p-8 flex flex-col flex-grow">
+    <div class="p-8 flex flex-col grow">
       <!-- Meta -->
       <div class="flex items-center gap-4 text-xs text-gray-400 mb-4">
         <div class="flex items-center gap-1.5">
@@ -74,11 +74,15 @@ function stripHtml(html: string) {
       </p>
 
       <!-- Read More Link -->
-      <div class="mt-auto flex items-center gap-2 text-primary-600 font-bold text-sm">
+      <div
+        class="mt-auto flex items-center gap-2 text-white font-bold text-sm rounded-3xl bg-primary-400 py-2 px-5 w-fit"
+      >
         <span>Baca Selengkapnya</span>
-        <ArrowRight :size="16" class="transition-transform duration-300 group-hover:translate-x-2" />
+        <ArrowRight
+          :size="16"
+          class="transition-transform duration-300 group-hover:translate-x-2"
+        />
       </div>
     </div>
   </RouterLink>
 </template>
-

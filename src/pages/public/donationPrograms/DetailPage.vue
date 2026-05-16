@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import BaseSkeleton from '@/components/atoms/BaseSkeleton.vue'
-import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
+import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
+import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
 import { Share2, Flag, Heart, ArrowLeft } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { usePublishedDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
+import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
 import { usePrayerList } from '@/composables/prayer/usePrayerList'
 import { usePrayerAmen } from '@/composables/prayer/usePrayerAmen'
 import { usePrayerReport } from '@/composables/prayer/usePrayerReport'
@@ -14,21 +14,19 @@ import { formatCurrency, formatDate } from '@/utils/format'
 const route = useRoute()
 const donationSlug = computed(() => route.params.slug as string)
 
-const { publishedDonationProgramDetailQuery } = usePublishedDonationProgramDetail(donationSlug)
+const { detailQuery } = useDonationProgramDetail(donationSlug)
 
-const { prayerListQuery, prayers } = usePrayerList(donationSlug.value)
+const { listQuery, prayers } = usePrayerList(donationSlug.value)
 
-// Prayer Mutations
 const { createMutation: amenMutation } = usePrayerAmen()
 const { createMutation: reportMutation } = usePrayerReport()
 
-// Report Modal State
 const showReportModal = ref(false)
 const reportPrayerId = ref<string>('')
 const reportReason = ref('')
 
 const program = computed(() => {
-  const d = publishedDonationProgramDetailQuery.data.value?.data
+  const d = detailQuery.data.value?.data
   if (!d) return null
 
   return {
@@ -39,6 +37,8 @@ const program = computed(() => {
     collected: d.collectedFund,
     target: d.fundTarget,
     endDate: d.endDate,
+    category: d.category,
+    status: d.status,
   }
 })
 
@@ -156,7 +156,7 @@ const handleShare = () => {
 
 <template>
   <!-- Loading State -->
-  <template v-if="publishedDonationProgramDetailQuery.isLoading.value">
+  <template v-if="detailQuery.isLoading.value">
     <!-- Skeleton Hero Image -->
     <div class="w-full overflow-hidden">
       <BaseSkeleton variant="image" class="h-[60vh] w-full rounded-none" />
@@ -231,153 +231,279 @@ const handleShare = () => {
 
   <!-- Error State -->
   <div
-    v-else-if="publishedDonationProgramDetailQuery.isError.value"
+    v-else-if="detailQuery.isError.value"
     class="flex items-center justify-center min-h-screen text-red-500 text-center px-6"
   >
-    {{ publishedDonationProgramDetailQuery.error.value?.message || 'Gagal memuat detail donasi.' }}
+    {{ detailQuery.error.value?.message || 'Gagal memuat detail donasi.' }}
   </div>
 
   <!-- Content State -->
   <template v-else-if="program">
-    <!-- Hero Image -->
-    <div class="w-full overflow-hidden">
-      <button class="absolute top-4 left-4 z-10" @click="$router.back()">
-        <ArrowLeft :size="36" class="text-white" />
+    <!-- Sticky Header -->
+    <div
+      class="sticky top-0 z-40 bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4 font-poppins"
+    >
+      <!-- Back Button -->
+      <button
+        class="flex items-center justify-center shrink-0 text-gray-700 hover:text-gray-900 transition"
+        @click="$router.back()"
+      >
+        <ArrowLeft :size="28" />
       </button>
-      <img
-        :src="program.image"
-        :alt="program.title"
-        class="w-full h-[60vh] object-cover object-center"
-      />
+
+      <!-- Title -->
+      <h1 class="text-lg md:text-xl font-bold text-primary-500 line-clamp-1">
+        {{ program.title }}
+      </h1>
     </div>
 
-    <!-- Content -->
-    <div class="px-6 md:px-12 lg:px-24 py-8 space-y-4">
-      <!-- Title -->
-      <h1 class="text-2xl font-bold text-gray-900 leading-snug">{{ program.title }}</h1>
-
-      <!-- Collected Fund -->
-      <div>
-        <p class="text-sm text-gray-500">Terkumpul</p>
-        <p class="text-xl font-bold text-primary-400">{{ formatCurrency(program.collected) }}</p>
-      </div>
-
-      <!-- Target & Remaining Days -->
-      <div class="flex justify-between items-end">
-        <div>
-          <p class="text-sm text-gray-500">Target</p>
-          <p class="font-semibold text-gray-700">{{ formatCurrency(program.target) }}</p>
-        </div>
-        <div class="text-right">
-          <p class="text-sm text-gray-500">Sisa Hari</p>
-          <p class="font-bold text-gray-900">{{ remainingDays }}</p>
-        </div>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+    <div class="relative min-h-screen bg-white pb-24 md:pb-8">
+      <!-- Hero Image Section -->
+      <div class="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
+        <!-- Gradient Overlay -->
         <div
-          class="h-full bg-primary-400 rounded-full transition-all duration-500"
-          :style="{ width: `${progressPercent}%` }"
+          class="absolute inset-0 z-10 bg-linear-to-t from-black/60 via-transparent to-transparent"
         />
+
+        <img
+          :src="program.image"
+          :alt="program.title"
+          class="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700"
+        />
+
+        <!-- Title Over Image (Mobile Only) -->
+        <div class="absolute bottom-6 left-6 right-6 z-20 md:hidden">
+          <span
+            class="inline-block px-3 py-1 mb-3 rounded-full bg-primary-400 text-white text-[10px] font-bold uppercase tracking-wider"
+          >
+            {{ program.category }}
+          </span>
+          <h1 class="text-2xl font-bold text-white leading-tight shadow-text">
+            {{ program.title }}
+          </h1>
+        </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex gap-3 pt-2">
-        <BaseButton variant="outline" size="lg" @click="handleShare">
-          <Share2 :size="16" class="mr-2" />
-          Bagikan
-        </BaseButton>
+      <!-- Main Content -->
+      <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <!-- Left Column: Details -->
+          <div class="lg:col-span-2 space-y-8">
+            <!-- Title Section (Desktop Only) -->
+            <div class="hidden md:block space-y-3">
+              <span
+                class="inline-block px-3 py-1 rounded-full bg-primary-50 text-primary-600 text-xs font-bold uppercase tracking-wider"
+              >
+                {{ program.category }}
+              </span>
+              <h1 class="text-4xl font-extrabold text-gray-900 leading-tight">
+                {{ program.title }}
+              </h1>
+            </div>
+
+            <!-- Stats Card (Vibrant Info) -->
+            <div
+              class="bg-gray-50 rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-6"
+            >
+              <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div class="space-y-1">
+                  <p class="text-sm text-gray-500 font-medium">Dana Terkumpul</p>
+                  <p class="text-3xl md:text-4xl font-black text-primary-500">
+                    {{ formatCurrency(program.collected) }}
+                  </p>
+                </div>
+                <div
+                  class="flex items-center gap-8 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-8"
+                >
+                  <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Target</p>
+                    <p class="font-bold text-gray-800">{{ formatCurrency(program.target) }}</p>
+                  </div>
+                  <div class="text-right md:text-left">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Sisa Hari</p>
+                    <p class="font-bold text-gray-900">{{ remainingDays }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Premium Progress Bar -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-end">
+                  <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      class="h-full bg-linear-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-1000 ease-out"
+                      :style="{ width: `${progressPercent}%` }"
+                    />
+                  </div>
+                </div>
+                <p class="text-right text-sm font-bold text-primary-600">
+                  {{ Math.round(progressPercent) }}% Tercapai
+                </p>
+              </div>
+
+              <!-- Desktop Actions -->
+              <div class="hidden md:flex gap-4 pt-4">
+                <BaseButton variant="secondary" size="lg" class="flex-1" @click="handleShare">
+                  <Share2 :size="18" class="mr-2" />
+                  Bagikan
+                </BaseButton>
+                <BaseButton
+                  variant="primary"
+                  size="lg"
+                  class="flex-2 shadow-lg shadow-primary-200"
+                  @click="$router.push(`/donation-programs/${program.slug}/form`)"
+                >
+                  Donasi Sekarang
+                </BaseButton>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-4">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="h-6 w-1.5 bg-primary-400 rounded-full"></div>
+                <h2 class="text-xl font-bold text-gray-800">Tentang Program</h2>
+              </div>
+              <div class="prose prose-primary max-w-none">
+                <p
+                  v-for="(paragraph, index) in program.description.trim().split('\n\n')"
+                  :key="index"
+                  class="text-gray-600 leading-relaxed text-lg mb-6 last:mb-0"
+                >
+                  {{ paragraph }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Prayers Section -->
+            <div class="space-y-6 pt-8 border-t border-gray-100">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="h-6 w-1.5 bg-primary-400 rounded-full"></div>
+                  <h2 class="text-xl font-bold text-gray-800">Doa-doa Orang Baik</h2>
+                </div>
+                <span class="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
+                  {{ prays.length }} Doa
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div
+                  v-for="pray in prays"
+                  :key="pray.id"
+                  class="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-4"
+                >
+                  <div class="flex items-start justify-between">
+                    <div class="flex items-center gap-4">
+                      <div
+                        class="w-12 h-12 rounded-full bg-linear-to-br from-primary-300 to-primary-500 text-white flex items-center justify-center text-lg font-bold shadow-sm shadow-primary-200"
+                      >
+                        {{ getInitials(pray.name) }}
+                      </div>
+                      <div>
+                        <h3 class="font-bold text-gray-900">{{ pray.name }}</h3>
+                        <p class="text-xs text-gray-400">{{ pray.date }}</p>
+                      </div>
+                    </div>
+                    <button
+                      class="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+                      @click="openReportModal(pray.id)"
+                    >
+                      <Flag :size="16" />
+                    </button>
+                  </div>
+
+                  <p class="text-gray-600 text-sm leading-relaxed italic">"{{ pray.message }}"</p>
+
+                  <div class="flex items-center gap-6 pt-2 border-t border-gray-50">
+                    <button
+                      class="flex items-center gap-2 text-xs transition-all duration-200 px-3 py-1.5 rounded-full"
+                      :class="
+                        isPrayerAmened(pray)
+                          ? 'bg-primary-50 text-primary-500 font-bold'
+                          : 'text-gray-400 hover:bg-gray-50 hover:text-primary-500'
+                      "
+                      @click="handleAmenPrayer(pray)"
+                    >
+                      <Heart :size="16" :fill="isPrayerAmened(pray) ? 'currentColor' : 'none'" />
+                      <span>{{ getPrayerAmenCount(pray) }} Amen</span>
+                    </button>
+                    <button
+                      class="flex items-center gap-2 text-xs text-gray-400 hover:text-primary-500 transition-colors"
+                    >
+                      <Share2 :size="16" />
+                      <span>Bagikan</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-if="!listQuery.isLoading.value && prays.length === 0"
+                class="bg-gray-50 rounded-2xl p-10 text-center border border-dashed border-gray-200"
+              >
+                <Heart :size="48" class="mx-auto mb-3 text-gray-300" />
+                <p class="text-gray-500 font-medium">Jadilah yang pertama mendoakan program ini.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Quick Info (Sticky on Desktop) -->
+          <div class="hidden lg:block">
+            <div class="sticky top-24 space-y-6">
+              <div
+                class="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-100/50 space-y-6"
+              >
+                <h3 class="text-xl font-bold text-gray-900">Dukung Program Ini</h3>
+                <p class="text-gray-500 text-sm leading-relaxed">
+                  Bantuan Anda sangat berarti untuk mewujudkan program ini. Mari berbagi kebaikan
+                  bersama kami.
+                </p>
+                <div class="space-y-3">
+                  <BaseButton
+                    variant="primary"
+                    size="lg"
+                    full-width
+                    class="h-14 text-lg font-bold shadow-lg shadow-primary-200"
+                    @click="$router.push(`/donation-programs/${program.slug}/form`)"
+                  >
+                    Donasi Sekarang
+                  </BaseButton>
+                  <BaseButton
+                    variant="outline"
+                    size="lg"
+                    full-width
+                    class="h-14 font-semibold"
+                    @click="handleShare"
+                  >
+                    Bagikan
+                  </BaseButton>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Sticky CTA -->
+      <div
+        class="fixed bottom-0 left-0 right-0 z-30 p-4 bg-white/80 backdrop-blur-xl border-t border-gray-100 md:hidden flex gap-3 shadow-2xl"
+      >
+        <button
+          @click="handleShare"
+          class="p-4 rounded-2xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+        >
+          <Share2 :size="24" />
+        </button>
         <BaseButton
           variant="primary"
           size="lg"
-          class="flex-1"
-          @click="$router.push(`/donation/${program.slug}/form`)"
+          class="flex-1 h-14 font-bold shadow-lg shadow-primary-200"
+          @click="$router.push(`/donation-programs/${program.slug}/form`)"
         >
           Donasi Sekarang
         </BaseButton>
       </div>
-
-      <!-- Description -->
-      <div class="mt-8 pt-6 border-t border-gray-200">
-        <h2 class="text-lg font-bold text-gray-800 mb-3">Tentang Program</h2>
-        <p
-          v-for="(paragraph, index) in program.description.trim().split('\n\n')"
-          :key="index"
-          class="text-gray-600 leading-relaxed mb-4 last:mb-0"
-        >
-          {{ paragraph }}
-        </p>
-      </div>
-
-      <!-- Prays(Comments) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-        <div
-          v-for="pray in prays"
-          :key="pray.id"
-          class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col gap-3"
-        >
-          <!-- Top: Avatar + Name/Date + Report -->
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-start gap-3">
-              <!-- Initials Avatar -->
-              <div
-                class="w-9 h-9 rounded-full bg-primary-400 text-white flex items-center justify-center text-sm font-bold shrink-0"
-              >
-                {{ getInitials(pray.name) }}
-              </div>
-              <!-- Name & Date -->
-              <div>
-                <h3 class="font-semibold text-gray-800 leading-tight">{{ pray.name }}</h3>
-                <span class="text-xs text-gray-400">{{ pray.date }}</span>
-              </div>
-            </div>
-            <!-- Report Button -->
-            <button
-              class="text-gray-400 hover:text-red-500 transition-colors duration-200 shrink-0 mt-0.5"
-              title="Laporkan"
-              :disabled="reportMutation.isPending.value"
-              @click="openReportModal(pray.id)"
-            >
-              <Flag :size="15" />
-            </button>
-          </div>
-
-          <!-- Message -->
-          <p class="text-gray-600 text-sm leading-relaxed pl-12">{{ pray.message }}</p>
-
-          <!-- Bottom Actions -->
-          <div class="flex items-center gap-4 pl-12">
-            <button
-              class="flex items-center gap-1.5 text-xs transition-colors duration-200"
-              :class="
-                isPrayerAmened(pray)
-                  ? 'text-primary-400 font-semibold'
-                  : 'text-gray-400 hover:text-primary-400'
-              "
-              :disabled="amenMutation.isPending.value"
-              @click="handleAmenPrayer(pray)"
-            >
-              <span>{{ getPrayerAmenCount(pray) }}</span>
-              <Heart :size="14" :fill="isPrayerAmened(pray) ? 'currentColor' : 'none'" />
-              <span>Amen</span>
-            </button>
-            <button
-              class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary-400 transition-colors duration-200"
-            >
-              <Share2 :size="14" />
-              <span>Bagikan</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <p
-        v-if="!prayerListQuery.isLoading.value && prays.length === 0"
-        class="text-sm text-gray-500 mt-2"
-      >
-        Belum ada doa untuk program ini.
-      </p>
     </div>
   </template>
 
@@ -387,10 +513,11 @@ const handleShare = () => {
   </div>
 
   <!-- Report Modal -->
-  <ConfirmationModal
+  <PublicConfirmationModal
     :show="showReportModal"
     title="Laporkan Doa"
     message="Silakan jelaskan mengapa Anda ingin melaporkan doa ini"
+    :icon="Flag"
     primary-button-text="Kirim Laporan"
     secondary-button-text="Batal"
     :primary-button-loading="reportMutation.isPending.value"
@@ -407,5 +534,5 @@ const handleShare = () => {
       />
       <p v-if="reportMutation.isError.value" class="text-red-500 text-sm">Gagal mengirim laporan</p>
     </div>
-  </ConfirmationModal>
+  </PublicConfirmationModal>
 </template>

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/auth.service'
 import type { LoginRequest, LoginResponse } from '@/types/auth'
 import type { ApiError } from '@/types/response'
+import { ROLES } from '@/const/roles'
 
 export const useLogin = () => {
   const authStore = useAuthStore()
@@ -16,7 +17,13 @@ export const useLogin = () => {
       if (data.data?.token) {
         authStore.setToken(data.data.token)
         await authStore.initUser()
-        await router.push('/dashboard')
+
+        const role = authStore.activeRole
+        if (role === ROLES.ORANG_TUA_ASUH) {
+          router.push('/')
+        } else {
+          router.push('/dashboard')
+        }
       }
     },
     onError: (err, variables) => {

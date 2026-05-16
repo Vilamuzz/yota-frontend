@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Camera, Upload, X, FileImage, Newspaper, ArrowLeft } from 'lucide-vue-next'
+import { Camera, Upload, X, FileImage, Newspaper } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -16,25 +16,25 @@ const router = useRouter()
 const { showToast } = useToast()
 const { createMutation, validationErrors } = useNewsCreate()
 
+interface MediaFileItem {
+  file: File
+  preview: string
+  alt: string
+}
+
 const form = reactive({
   title: '',
   category: '' as MediaCategory | '',
   content: '',
-  status: MediaStatus.Draft,
+  status: MediaStatus.DRAFT,
   coverImage: null as File | null,
   coverPreview: null as string | null,
-  mediaFiles: [] as File[],
-  mediaPreviews: [] as string[],
+  medias: [] as MediaFileItem[],
 })
 
 const errors = ref<Record<string, string>>({})
 
 const categories = Object.values(MediaCategory)
-const statuses = [
-  { label: 'Draft', value: MediaStatus.Draft },
-  { label: 'Terbitkan', value: MediaStatus.Published },
-  { label: 'Arsipkan', value: MediaStatus.Archived },
-]
 
 const isLoading = computed(() => createMutation.isPending.value)
 
@@ -64,15 +64,17 @@ const handleMediasChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files) {
     const files = Array.from(target.files)
-    form.mediaFiles = [...form.mediaFiles, ...files]
-    const newPreviews = files.map((file) => URL.createObjectURL(file))
-    form.mediaPreviews = [...form.mediaPreviews, ...newPreviews]
+    const newMediaItems = files.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      alt: '',
+    }))
+    form.medias = [...form.medias, ...newMediaItems]
   }
 }
 
 const removeMedia = (index: number) => {
-  form.mediaFiles.splice(index, 1)
-  form.mediaPreviews.splice(index, 1)
+  form.medias.splice(index, 1)
 }
 
 const formatCategory = (cat: string) => {
@@ -82,12 +84,41 @@ const formatCategory = (cat: string) => {
     .join(' ')
 }
 
-const handleSubmit = () => {
+const handleSubmit = (status: MediaStatus = MediaStatus.PUBLISHED) => {
+  if (status === MediaStatus.DRAFT) {
+    if (!form.title.trim()) {
+      errors.value = { title: 'Judul wajib diisi untuk draf' }
+      return
+    }
+
+    createMutation.mutate(
+      {
+        title: form.title.trim(),
+        status: MediaStatus.DRAFT,
+        content: form.content.trim() || '',
+        category: (form.category as MediaCategory) || MediaCategory.Others,
+        coverImage: form.coverImage!,
+        mediaFiles: form.medias.map((m) => m.file),
+        mediaAlts: form.medias.map((m) => m.alt || form.title.trim()),
+      },
+      {
+        onSuccess: () => {
+          showToast('Draf berita berhasil disimpan!', 'success')
+          router.push({ name: 'dashboard-news' })
+        },
+        onError: (err) => {
+          showToast(extractError(err, 'Gagal menyimpan draf berita'), 'error')
+        },
+      },
+    )
+    return
+  }
+
   const result = newsSchema.safeParse({
     title: form.title.trim(),
     category: form.category,
     content: form.content.trim(),
-    status: form.status,
+    status: MediaStatus.PUBLISHED,
   })
 
   const zodErrors = getZodErrors(result)
@@ -104,19 +135,21 @@ const handleSubmit = () => {
 
   createMutation.mutate(
     {
-      ...result.data,
+      title: result.data.title,
       category: result.data.category as MediaCategory,
-      status: result.data.status as MediaStatus,
+      content: result.data.content,
+      status: MediaStatus.PUBLISHED,
       coverImage: form.coverImage,
-      medias: form.mediaFiles.length > 0 ? form.mediaFiles : undefined,
+      mediaFiles: form.medias.map((m) => m.file),
+      mediaAlts: form.medias.map((m) => m.alt),
     },
     {
       onSuccess: () => {
-        showToast('Berita berhasil dibuat!', 'success')
+        showToast('Berita berhasil diterbitkan!', 'success')
         router.push({ name: 'dashboard-news' })
       },
       onError: (err) => {
-        showToast(extractError(err, 'Gagal membuat berita'), 'error')
+        showToast(extractError(err, 'Gagal menerbitkan berita'), 'error')
       },
     },
   )
@@ -128,22 +161,17 @@ const handleSubmit = () => {
     <template #title>Tambah Berita Baru</template>
 
     <div class="max-w-full mx-auto space-y-6">
-      <!-- Header Actions -->
-      <div class="flex items-center justify-between">
-        <BaseButton variant="outline" size="md" @click="router.push({ name: 'dashboard-news' })">
-          <ArrowLeft :size="18" class="mr-2" />
-          Kembali
-        </BaseButton>
-      </div>
-
-      <form @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <form
+        @submit.prevent="handleSubmit(MediaStatus.PUBLISHED)"
+        class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
+      >
         <!-- Left: Basic Info -->
         <div class="lg:col-span-2 space-y-6">
           <div
             class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-5"
           >
             <div class="flex items-center gap-3 pb-2 border-b border-gray-50 dark:border-gray-700">
-              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-500">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300">
                 <Newspaper :size="20" />
               </div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
@@ -160,51 +188,33 @@ const handleSubmit = () => {
               required
             />
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label
-                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
-                >
-                  Kategori <span class="text-red-500">*</span>
-                </label>
-                <select
-                  v-model="form.category"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
-                  :class="{ 'border-red-500': errors.category || validationErrors?.category }"
-                >
-                  <option value="" disabled>Pilih Kategori</option>
-                  <option v-for="cat in categories" :key="cat" :value="cat">
-                    {{ formatCategory(cat) }}
-                  </option>
-                </select>
-                <p
-                  v-if="errors.category || validationErrors?.category"
-                  class="mt-1 text-xs text-red-600"
-                >
-                  {{ errors.category || validationErrors?.category }}
-                </p>
-              </div>
-
-              <div>
-                <label
-                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
-                >
-                  Status <span class="text-red-500">*</span>
-                </label>
-                <select
-                  v-model="form.status"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
-                >
-                  <option v-for="s in statuses" :key="s.value" :value="s.value">
-                    {{ s.label }}
-                  </option>
-                </select>
-              </div>
+            <div>
+              <label
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
+              >
+                Kategori <span class="text-red-500">*</span>
+              </label>
+              <select
+                v-model="form.category"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
+                :class="{ 'border-red-500': errors.category || validationErrors?.category }"
+              >
+                <option value="" disabled>Pilih Kategori</option>
+                <option v-for="cat in categories" :key="cat" :value="cat">
+                  {{ formatCategory(cat) }}
+                </option>
+              </select>
+              <p
+                v-if="errors.category || validationErrors?.category"
+                class="mt-1 text-xs text-red-600"
+              >
+                {{ errors.category || validationErrors?.category }}
+              </p>
             </div>
 
             <div>
               <label
-                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
               >
                 Isi Berita <span class="text-red-500">*</span>
               </label>
@@ -215,7 +225,10 @@ const handleSubmit = () => {
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500 transition-all duration-200 outline-none resize-none"
                 :class="{ 'border-red-500': errors.content || validationErrors?.content }"
               ></textarea>
-              <p v-if="errors.content || validationErrors?.content" class="mt-1 text-xs text-red-600">
+              <p
+                v-if="errors.content || validationErrors?.content"
+                class="mt-1 text-xs text-red-600"
+              >
                 {{ errors.content || validationErrors?.content }}
               </p>
             </div>
@@ -223,18 +236,20 @@ const handleSubmit = () => {
 
           <!-- Multi Media Upload -->
           <div
-            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+            class="relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
           >
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                <h3
+                  class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider"
+                >
                   Media Pendukung
                 </h3>
                 <p class="text-xs text-gray-500 mt-1">
                   Tambahkan foto-foto tambahan untuk memperkaya isi berita.
                 </p>
               </div>
-              <label class="cursor-pointer">
+              <label class="cursor-pointer relative">
                 <input
                   type="file"
                   multiple
@@ -243,7 +258,7 @@ const handleSubmit = () => {
                   @change="handleMediasChange"
                 />
                 <div
-                  class="flex items-center gap-2 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-xs font-bold hover:bg-primary-100 transition-colors"
+                  class="flex items-center gap-2 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-300 rounded-lg text-xs font-bold hover:bg-primary-100 transition-colors"
                 >
                   <Upload :size="16" />
                   TAMBAH MEDIA
@@ -252,22 +267,30 @@ const handleSubmit = () => {
             </div>
 
             <div
-              v-if="form.mediaPreviews.length > 0"
-              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
+              v-if="form.medias.length > 0"
+              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
             >
               <div
-                v-for="(preview, index) in form.mediaPreviews"
+                v-for="(item, index) in form.medias"
                 :key="index"
-                class="relative aspect-square rounded-xl overflow-hidden group bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
+                class="bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-700 p-3 space-y-3"
               >
-                <img :src="preview" class="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  @click="removeMedia(index)"
-                  class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X :size="12" />
-                </button>
+                <div class="relative aspect-video rounded-lg overflow-hidden group">
+                  <img :src="item.preview" class="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    @click="removeMedia(index)"
+                    class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X :size="12" />
+                  </button>
+                </div>
+                <BaseInput
+                  :id="'media-alt-' + index"
+                  v-model="item.alt"
+                  placeholder="Alt text (deskripsi foto)"
+                  size="sm"
+                />
               </div>
             </div>
 
@@ -345,24 +368,32 @@ const handleSubmit = () => {
             </div>
           </div>
 
-          <div class="flex flex-col gap-3">
-            <BaseButton
-              type="submit"
-              variant="primary"
-              :loading="isLoading"
-              class="w-full py-4 rounded-xl shadow-lg shadow-primary-500/20"
-            >
-              SIMPAN BERITA
-            </BaseButton>
-            <BaseButton
-              type="button"
-              variant="outline"
-              @click="router.push({ name: 'dashboard-news' })"
-              :disabled="isLoading"
-              class="w-full rounded-xl"
-            >
-              BATAL
-            </BaseButton>
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <div class="flex flex-col gap-3">
+              <BaseButton type="submit" variant="primary" :loading="isLoading" class="w-full">
+                Simpan
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="outline"
+                @click="handleSubmit(MediaStatus.DRAFT)"
+                :disabled="isLoading"
+                class="w-full"
+              >
+                Simpan Draf
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="danger"
+                @click="router.push({ name: 'dashboard-news' })"
+                :disabled="isLoading"
+                class="w-full"
+              >
+                Batal
+              </BaseButton>
+            </div>
           </div>
         </div>
       </form>

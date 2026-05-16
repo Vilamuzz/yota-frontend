@@ -19,18 +19,19 @@ export interface DonationProgram {
 export enum DonationProgramStatusEnum {
   DRAFT = 'draft',
   ACTIVE = 'active',
-  PAUSED = 'paused',
   COMPLETED = 'completed',
+  EXPIRED = 'expired',
+  ARCHIVED = 'archived',
 }
 
 export enum DonationProgramCategoryEnum {
-  EDUCATION = 'education',
-  HEALTH = 'health',
-  ENVIRONMENT = 'environment',
-  SOCIAL = 'social',
-  DISASTER = 'disaster',
-  HUMANITY = 'humanity',
-  OTHER = 'other',
+  EDUCATION = 'pendidikan',
+  HEALTH = 'kesehatan',
+  ENVIRONMENT = 'lingkungan',
+  SOCIAL = 'sosial',
+  DISASTER = 'bencana',
+  HUMANITY = 'kemanusiaan',
+  OTHER = 'lainnya',
 }
 
 export interface DonationProgramList {
@@ -45,13 +46,13 @@ export interface DonationProgramQueryParams extends PaginationParams {
 
 export interface CreateDonationProgramRequest {
   title: string
-  coverImage: File
-  category: DonationProgramCategoryEnum
   status: DonationProgramStatusEnum
-  description: string
-  fundTarget: number
-  startDate: string
-  endDate: string
+  coverImage?: File
+  category?: DonationProgramCategoryEnum
+  description?: string
+  fundTarget?: number
+  startDate?: string
+  endDate?: string
 }
 
 export interface UpdateDonationProgramRequest {

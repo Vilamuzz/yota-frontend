@@ -2,18 +2,18 @@ import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { donationProgramTransactionService } from '@/services/donationProgramTransaction.service'
 import type { ApiError, ApiResponse } from '@/types/response'
 
-export const useDonationProgramTransactionDelete = () => {
+export const useDonationProgramTransactionCancel = () => {
   const queryClient = useQueryClient()
 
-  const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
+  const cancelMutation = useMutation<ApiResponse<void>, ApiError, string>({
     mutationFn: (id: string) =>
-      donationProgramTransactionService.deleteDonationProgramTransaction(id),
+      donationProgramTransactionService.cancelDonationProgramTransaction(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['donationProgramTransactions'] })
     },
   })
 
   return {
-    deleteMutation,
+    cancelMutation,
   }
 }

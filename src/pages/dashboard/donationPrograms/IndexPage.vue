@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { SquarePen, Trash2, HandHeart, Plus } from 'lucide-vue-next'
+import { SquarePen, Trash2, HandHeart, Plus, Archive, Play } from 'lucide-vue-next'
 import { useDonationProgramFilters } from '@/composables/donationProgram/useDonationProgramFilters'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
@@ -33,7 +33,7 @@ const {
   clearFilters,
 } = useDonationProgramFilters()
 
-const { deleteMutation } = useDonationProgramUpdate()
+const { deleteMutation, activeMutation, archiveMutation } = useDonationProgramUpdate()
 const { showToast } = useToast()
 
 const categories = Object.values(DonationProgramCategoryEnum)
@@ -41,6 +41,12 @@ const statuses = Object.values(DonationProgramStatusEnum)
 
 const confirmShow = ref(false)
 const confirmDonationProgram = ref<DonationProgram | null>(null)
+
+const archiveConfirmShow = ref(false)
+const archiveDonationProgram = ref<DonationProgram | null>(null)
+
+const activeConfirmShow = ref(false)
+const activeDonationProgram = ref<DonationProgram | null>(null)
 
 function deleteDonationProgram(donationProgram: DonationProgram) {
   confirmDonationProgram.value = donationProgram
@@ -58,6 +64,46 @@ function handleConfirmDelete() {
     },
     onError: (err) => {
       showToast(extractError(err, 'Failed to delete donation program.'), 'error')
+    },
+  })
+}
+
+function handleActive(donationProgram: DonationProgram) {
+  activeDonationProgram.value = donationProgram
+  activeConfirmShow.value = true
+}
+
+function handleConfirmActive() {
+  if (!activeDonationProgram.value) return
+
+  activeMutation.mutate(activeDonationProgram.value.id, {
+    onSuccess: () => {
+      showToast('Donation program activated successfully!', 'success')
+      activeConfirmShow.value = false
+      activeDonationProgram.value = null
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Failed to activate donation program.'), 'error')
+    },
+  })
+}
+
+function handleArchive(donationProgram: DonationProgram) {
+  archiveDonationProgram.value = donationProgram
+  archiveConfirmShow.value = true
+}
+
+function handleConfirmArchive() {
+  if (!archiveDonationProgram.value) return
+
+  archiveMutation.mutate(archiveDonationProgram.value.id, {
+    onSuccess: () => {
+      showToast('Donation program archived successfully!', 'success')
+      archiveConfirmShow.value = false
+      archiveDonationProgram.value = null
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Failed to archive donation program.'), 'error')
     },
   })
 }
@@ -99,7 +145,7 @@ function handleConfirmDelete() {
                     v-model="queryParams.status"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option :value="undefined">All</option>
+                    <option :value="undefined">Semua</option>
                     <option v-for="status in statuses" :key="status" :value="status">
                       {{ status.charAt(0).toUpperCase() + status.slice(1) }}
                     </option>
@@ -143,20 +189,12 @@ function handleConfirmDelete() {
         </template>
 
         <template #headers>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Judul</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Kategori</th>
-          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
-            Target Donasi
-          </th>
-          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Tanggal Berakhir
-          </th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Tanggal Dibuat
-          </th>
-          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
+          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Program</th>
+          <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider">Target</th>
+          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
+          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Timeline</th>
+          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">
             Actions
           </th>
         </template>
@@ -167,21 +205,26 @@ function handleConfirmDelete() {
             :key="donation.id"
             class="hover:bg-gray-50 transition-colors duration-150 dark:hover:bg-gray-700"
           >
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-500 dark:text-gray-200">
+            <td class="px-4 py-4 whitespace-nowrap font-medium text-gray-500 dark:text-gray-200">
               {{ pageOffset * (queryParams.limit || 10) + index + 1 }}
             </td>
-            <td
-              class="px-6 py-4 whitespace-nowrap font-medium max-w-50 truncate dark:text-gray-200"
-            >
-              {{ donation.title }}
+            <td class="px-4 py-4 whitespace-nowrap max-w-64">
+              <div class="flex flex-col">
+                <span
+                  class="font-semibold text-gray-900 dark:text-white truncate"
+                  :title="donation.title"
+                >
+                  {{ donation.title }}
+                </span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                  {{ donation.category }}
+                </span>
+              </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium capitalize dark:text-gray-200">
-              {{ donation.category }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-right dark:text-gray-200">
+            <td class="px-4 py-4 whitespace-nowrap font-medium text-right dark:text-gray-200">
               {{ formatCurrency(donation.fundTarget) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">
+            <td class="px-4 py-4 whitespace-nowrap text-center">
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
@@ -191,15 +234,44 @@ function handleConfirmDelete() {
                 {{ donation.status.charAt(0).toUpperCase() + donation.status.slice(1) }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
-              {{ formatDate(donation.endDate) }}
+            <td class="px-4 py-4 whitespace-nowrap">
+              <div class="flex flex-col text-xs space-y-1">
+                <div class="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+                  <span class="font-medium">End:</span>
+                  <span>{{ formatDate(donation.endDate) }}</span>
+                </div>
+                <div class="flex items-center gap-1 text-gray-400 dark:text-gray-500">
+                  <span>Created:</span>
+                  <span>{{ formatDate(donation.createdAt) }}</span>
+                </div>
+              </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
-              {{ formatDate(donation.createdAt) }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center justify-center gap-2">
+            <td class="px-4 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-left gap-2">
+                <button
+                  v-if="donation.status === DonationProgramStatusEnum.DRAFT"
+                  @click="handleActive(donation)"
+                  class="p-1 text-green-600 hover:bg-green-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
+                  title="Activate donation"
+                  :disabled="activeMutation.isPending.value"
+                >
+                  <Play :size="18" />
+                </button>
+                <button
+                  v-if="donation.status === DonationProgramStatusEnum.ACTIVE"
+                  @click="handleArchive(donation)"
+                  class="p-1 text-orange-600 hover:bg-orange-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
+                  title="Archive donation"
+                  :disabled="archiveMutation.isPending.value"
+                >
+                  <Archive :size="18" />
+                </button>
                 <RouterLink
+                  v-if="
+                    donation.status !== DonationProgramStatusEnum.COMPLETED &&
+                    donation.status !== DonationProgramStatusEnum.EXPIRED &&
+                    donation.status !== DonationProgramStatusEnum.ARCHIVED
+                  "
                   :to="{ name: 'dashboard-donation-programs-edit', params: { id: donation.id } }"
                   class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Edit donation"
@@ -207,6 +279,7 @@ function handleConfirmDelete() {
                   <SquarePen :size="18" />
                 </RouterLink>
                 <button
+                  v-if="donation.status === DonationProgramStatusEnum.DRAFT"
                   @click="deleteDonationProgram(donation)"
                   class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
                   title="Delete donation"
@@ -226,11 +299,37 @@ function handleConfirmDelete() {
     :show="confirmShow"
     :title="`Delete ${confirmDonationProgram?.title}?`"
     :message="`This donation will be permanently deleted. This action cannot be undone.`"
-    primary-button-text="Delete"
+    danger-button-text="Delete"
     secondary-button-text="Cancel"
-    :primary-button-loading="deleteMutation.isPending.value"
-    @primary="handleConfirmDelete"
+    :danger-button-loading="deleteMutation.isPending.value"
+    @danger="handleConfirmDelete"
     @secondary="confirmShow = false"
     @close="confirmShow = false"
+  />
+
+  <!-- Archive Confirmation Modal -->
+  <ConfirmationModal
+    :show="archiveConfirmShow"
+    :title="`Archive ${archiveDonationProgram?.title}?`"
+    :message="`This donation will be archived and will no longer be visible to the public. You can still access it from the admin dashboard.`"
+    primary-button-text="Archive"
+    secondary-button-text="Cancel"
+    :primary-button-loading="archiveMutation.isPending.value"
+    @primary="handleConfirmArchive"
+    @secondary="archiveConfirmShow = false"
+    @close="archiveConfirmShow = false"
+  />
+
+  <!-- Active Confirmation Modal -->
+  <ConfirmationModal
+    :show="activeConfirmShow"
+    :title="`Activate ${activeDonationProgram?.title}?`"
+    :message="`This donation will be published and become visible to the public. Please make sure all details and the cover image are correct.`"
+    primary-button-text="Activate"
+    secondary-button-text="Cancel"
+    :primary-button-loading="activeMutation.isPending.value"
+    @primary="handleConfirmActive"
+    @secondary="activeConfirmShow = false"
+    @close="activeConfirmShow = false"
   />
 </template>

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { Motion } from 'motion-v'
 import { useRoute, useRouter } from 'vue-router'
 import { useCurrentUser } from '@/composables/account/useCurrentUser'
-import { ChevronDown, User, Settings, ChevronRight, Check, Sun, Moon } from 'lucide-vue-next'
+import { ChevronDown, User, ChevronRight, Check, Sun, Moon, Globe } from 'lucide-vue-next'
 import { useTheme } from '@/composables/ui/useTheme'
 import { useRoleSwitch } from '@/composables/auth/useRoleSwitch'
 import { useAuthStore } from '@/stores/auth'
@@ -27,19 +27,32 @@ const breadcrumbs = computed(() => {
     return crumbs
   }
 
-  // Check if route has an activeMenu indicating a parent hierarchy
-  if (route.meta.activeMenu) {
+  const resolveParents = (routeName: string, visited = new Set<string>()): any[] => {
+    if (visited.has(routeName)) return []
+    visited.add(routeName)
+
     try {
-      const parentRoute = router.resolve({ name: route.meta.activeMenu as string })
-      if (parentRoute) {
-        crumbs.push({
-          label: (parentRoute.meta.title as string) || 'Menu',
-          path: parentRoute.path,
-        })
-      }
+      const resolved = router.resolve({ name: routeName })
+      if (!resolved || resolved.matched.length === 0 || resolved.name === route.name) return []
+
+      const parents = resolved.meta.activeMenu
+        ? resolveParents(resolved.meta.activeMenu as string, visited)
+        : []
+
+      return [
+        ...parents,
+        {
+          label: (resolved.meta.title as string) || 'Menu',
+          path: resolved.path,
+        },
+      ]
     } catch {
-      // Ignore if activeMenu is not a valid route name
+      return []
     }
+  }
+
+  if (route.meta.activeMenu) {
+    crumbs.push(...resolveParents(route.meta.activeMenu as string))
   }
 
   // Current page
@@ -96,13 +109,13 @@ const handleRoleSwitch = (role: Role) => {
             <!-- Breadcrumbs -->
             <nav class="flex items-center text-sm font-medium text-gray-500">
               <template v-for="(crumb, index) in breadcrumbs" :key="crumb.path">
-                <router-link
+                <RouterLink
                   v-if="index < breadcrumbs.length - 1"
                   :to="crumb.path"
                   class="hover:text-primary-600 transition-colors duration-200"
                 >
                   {{ crumb.label }}
-                </router-link>
+                </RouterLink>
                 <span v-else class="text-gray-900 dark:text-gray-200">{{ crumb.label }}</span>
 
                 <ChevronRight
@@ -134,6 +147,13 @@ const handleRoleSwitch = (role: Role) => {
             >
               <!-- Avatar -->
               <div
+                v-if="user?.profilePicture"
+                class="w-10 h-10 rounded-full overflow-hidden bg-primary-300 flex items-center justify-center"
+              >
+                <img :src="user.profilePicture" alt="Avatar" class="w-full h-full object-cover" />
+              </div>
+              <div
+                v-else
                 class="w-10 h-10 rounded-full bg-primary-300 flex items-center justify-center text-white font-semibold text-sm shadow-md"
               >
                 {{ userInitials }}
@@ -200,30 +220,30 @@ const handleRoleSwitch = (role: Role) => {
               </div>
 
               <!-- Menu Items -->
-              <router-link
+              <RouterLink
+                to="/"
+                @click="showUserMenu = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors duration-150"
+              >
+                <Globe :size="16" />
+                <span>Lihat Website</span>
+              </RouterLink>
+
+              <RouterLink
                 to="/dashboard/profile"
                 @click="showUserMenu = false"
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors duration-150"
               >
                 <User :size="16" />
                 <span>My Profile</span>
-              </router-link>
-
-              <router-link
-                to="/dashboard/settings"
-                @click="showUserMenu = false"
-                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors duration-150"
-              >
-                <Settings :size="16" />
-                <span>Settings</span>
-              </router-link>
+              </RouterLink>
             </Motion>
           </div>
         </div>
       </header>
 
       <main
-        class="flex-1 overflow-y-auto bg-white dark:bg-[#121212] font-sf-pro text-gray-900 dark:text-white"
+        class="flex-1 overflow-y-auto bg-transparent dark:bg-[#121212] font-sf-pro text-gray-900 dark:text-white"
       >
         <div class="p-6">
           <slot />

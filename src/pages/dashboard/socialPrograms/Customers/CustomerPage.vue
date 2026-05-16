@@ -83,7 +83,7 @@ const getStatusClass = (status: string) => {
 }
 
 const handleBack = () => {
-  router.push({ name: 'dashboard-social-program-customers' })
+  router.push({ name: 'dashboard-social-programs-customers' })
 }
 
 // ================== PAGINATION SETTINGS ==================
@@ -92,7 +92,7 @@ const limitOptions = [10, 25, 50]
 
 const handleView = (program: any) => {
   router.push({
-    name: 'dashboard-social-program-customers-detail-detail',
+    name: 'dashboard-social-programs-customers-program-detail',
     params: {
       customerId: customerId,
       programId: program.id.toString(),

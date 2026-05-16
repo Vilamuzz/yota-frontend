@@ -59,4 +59,14 @@ export const donationProgramService = {
     const response = await api.delete(`${API.DONATION_PROGRAMS_ADMIN}/${id}`)
     return response.data
   },
+
+  updateActiveDonationProgram: async (id: string) => {
+    const response = await api.patch(`${API.DONATION_PROGRAMS_ADMIN}/${id}/active`)
+    return response.data
+  },
+
+  updateArchiveDonationProgram: async (id: string) => {
+    const response = await api.patch(`${API.DONATION_PROGRAMS_ADMIN}/${id}/archive`)
+    return response.data
+  },
 }

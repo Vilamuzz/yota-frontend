@@ -187,10 +187,11 @@ function handleConfirmDelete() {
       :show="isDeleteModalOpen"
       title="Hapus Pengeluaran"
       message="Apakah Anda yakin ingin menghapus pengeluaran ini? Tindakan ini tidak dapat dibatalkan."
-      variant="danger"
-      :primary-button-loading="deleteMutation.isPending.value"
+      danger-button-text="Ya, Hapus"
+      :danger-button-loading="deleteMutation.isPending.value"
       @close="isDeleteModalOpen = false"
-      @confirm="handleConfirmDelete"
+      @danger="handleConfirmDelete"
+      @secondary="isDeleteModalOpen = false"
     />
   </DashboardLayout>
 </template>

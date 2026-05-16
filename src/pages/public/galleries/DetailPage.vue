@@ -68,7 +68,11 @@ const handleShare = () => {
         <!-- Header -->
         <header class="space-y-8">
           <div class="relative h-112.5 rounded-3xl overflow-hidden shadow-2xl">
-            <img :src="gallery.coverImage" :alt="gallery.title" class="w-full h-full object-cover" />
+            <img
+              :src="gallery.coverImage"
+              :alt="gallery.title"
+              class="w-full h-full object-cover"
+            />
             <div class="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
             <div
               class="absolute bottom-8 left-8 right-8 flex flex-col md:flex-row md:items-end justify-between gap-6"
@@ -89,7 +93,7 @@ const handleShare = () => {
                   </div>
                   <div class="flex items-center gap-2">
                     <ImageIcon :size="16" />
-                    <span>{{ gallery.medias?.length || 0 }} Foto</span>
+                    <span>{{ gallery.media?.length || 0 }} Foto</span>
                   </div>
                 </div>
               </div>
@@ -106,21 +110,21 @@ const handleShare = () => {
         </header>
 
         <!-- Description Section -->
-        <section v-if="gallery.content" class="max-w-3xl">
+        <section v-if="gallery.description" class="max-w-3xl">
           <h2 class="text-xl font-bold text-gray-900 mb-4">Tentang Galeri</h2>
           <div class="prose prose-primary max-w-none text-gray-600 leading-relaxed">
-            <div v-html="gallery.content"></div>
+            <div v-html="gallery.description"></div>
           </div>
         </section>
 
         <!-- Media Grid -->
-        <section v-if="gallery.medias && gallery.medias.length > 0" class="space-y-6">
+        <section v-if="gallery.media && gallery.media.length > 0" class="space-y-6">
           <div class="flex items-center justify-between">
             <h2 class="text-2xl font-black text-gray-900">Koleksi Foto</h2>
           </div>
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             <div
-              v-for="media in gallery.medias"
+              v-for="media in gallery.media"
               :key="media.id"
               class="aspect-square rounded-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm border border-gray-100"
             >
@@ -143,18 +147,9 @@ const handleShare = () => {
 
           <div class="flex flex-wrap gap-4">
             <BaseButton variant="outline" :to="{ name: 'gallery' }"> Lihat Galeri Lain </BaseButton>
-            <BaseButton variant="primary" :to="{ name: 'donation-program' }">
-              Donasi Sekarang
-            </BaseButton>
           </div>
         </footer>
       </article>
     </div>
   </PublicLayout>
 </template>
-
-<style scoped>
-:deep(.prose p) {
-  @apply mb-4 last:mb-0;
-}
-</style>

@@ -4,21 +4,21 @@ import { fosterChildrenCandidateService } from '@/services/fosterChildrenCandida
 import type { FosterChildrenCandidateQueryParams, FosterChildrenCandidateListResponse } from '@/types/fosterChildrenCandidate'
 import type { ApiError } from '@/types/response'
 
-export const useFosterCandidateChildrenList = (params: MaybeRefOrGetter<FosterChildrenCandidateQueryParams>) => {
+export const useFosterChildrenCandidateList = (params: MaybeRefOrGetter<FosterChildrenCandidateQueryParams>) => {
   const listQuery = useQuery<FosterChildrenCandidateListResponse, ApiError>({
     queryKey: ['fosterChildrenCandidate', params],
-    queryFn: () => fosterChildrenCandidateService.getFosterChildrenCandidateList(toValue(params)),
+    queryFn: () => fosterChildrenCandidateService.getFosterChildrenCandidate(toValue(params)),
     retry: 1,
   })
 
-  const fosterChildrenCandidate = computed(
+  const candidates = computed(
     () => listQuery.data.value?.data?.fosterChildrenCandidates || [],
   )
   const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {
     listQuery,
-    fosterChildrenCandidate,
+    candidates,
     pagination,
     isLoading: listQuery.isPending,
   }

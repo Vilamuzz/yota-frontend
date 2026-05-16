@@ -6,8 +6,8 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useFosterChildrenCreate } from '@/composables/fosterChildren/useFosterChildrenCreate'
-import { createChildSchema } from '@/schemas/fosterChildren.schema'
-import { Category, Gender, type AchievementRequest } from '@/types/fosterChildren'
+import { createFosterChildrenSchema } from '@/schemas/fosterChildren.schema'
+import { Category, Gender } from '@/types/fosterChildren'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
@@ -95,12 +95,13 @@ const handleSubmit = () => {
     return
   }
 
-  const result = createChildSchema.safeParse({
+  const result = createFosterChildrenSchema.safeParse({
     ...form,
     profilePicture: form.profilePictureFile,
     familyCard: form.familyCardFile,
     sktm: form.sktmFile,
-    achievements: form.achievements.map((a) => a.title), // Schema might still expect string[] for validation
+    achievements: form.achievements.map((a) => a.file),
+    achivementNotes: form.achievements.map((a) => a.title),
   })
 
   const zodErrors = getZodErrors(result)
@@ -111,29 +112,15 @@ const handleSubmit = () => {
     return
   }
 
-  // Map to AchievementRequest for mutation
-  const achievements: AchievementRequest[] = form.achievements.map((a, index) => ({
-    id: String(index + 1),
-    title: a.title,
-    url: a.file,
-    alt: a.title,
-  }))
-
-  createMutation.mutate(
-    {
-      ...result.data,
-      achievements,
+  createMutation.mutate(result.data, {
+    onSuccess: () => {
+      showToast('Data anak asuh berhasil ditambahkan!', 'success')
+      router.push({ name: 'dashboard-foster-children' })
     },
-    {
-      onSuccess: () => {
-        showToast('Data anak asuh berhasil ditambahkan!', 'success')
-        router.push({ name: 'dashboard-foster-children' })
-      },
-      onError: (err) => {
-        showToast(extractError(err, 'Gagal menambahkan data anak asuh'), 'error')
-      },
+    onError: (err) => {
+      showToast(extractError(err, 'Gagal menambahkan data anak asuh'), 'error')
     },
-  )
+  })
 }
 
 const formatCategory = (cat: string) => {
@@ -153,7 +140,7 @@ const formatCategory = (cat: string) => {
             class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
           >
             <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
-              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-500">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300">
                 <User :size="20" />
               </div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
@@ -173,7 +160,7 @@ const formatCategory = (cat: string) => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label
-                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
+                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
                 >
                   Jenis Kelamin <span class="text-red-500">*</span>
                 </label>
@@ -197,7 +184,7 @@ const formatCategory = (cat: string) => {
 
               <div>
                 <label
-                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wider"
+                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
                 >
                   Kategori <span class="text-red-500">*</span>
                 </label>
@@ -298,7 +285,7 @@ const formatCategory = (cat: string) => {
                 </BaseButton>
               </div>
 
-              <div class="space-y-2 max-h-[180px] overflow-y-auto pr-2">
+              <div class="space-y-2 max-h-45 overflow-y-auto pr-2">
                 <div v-if="form.achievements.length > 0" class="space-y-2">
                   <div
                     v-for="(item, index) in form.achievements"
@@ -467,7 +454,7 @@ const formatCategory = (cat: string) => {
                 class="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 mt-2"
               >
                 <div class="flex items-center gap-2">
-                  <GraduationCap :size="18" class="text-primary-500" />
+                  <GraduationCap :size="18" class="text-primary-300" />
                   <span class="text-xs font-bold text-gray-700 dark:text-gray-300">LULUS</span>
                 </div>
                 <button
@@ -486,41 +473,26 @@ const formatCategory = (cat: string) => {
           </div>
 
           <!-- Actions -->
-          <div class="flex flex-col gap-3">
-            <BaseButton
-              type="submit"
-              variant="primary"
-              :loading="isLoading"
-              class="w-full py-4 rounded-xl"
-            >
-              SIMPAN DATA ANAK
-            </BaseButton>
-            <BaseButton
-              type="button"
-              variant="outline"
-              @click="router.push({ name: 'dashboard-foster-children' })"
-              :disabled="isLoading"
-              class="w-full rounded-xl"
-            >
-              BATAL
-            </BaseButton>
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <div class="flex flex-col gap-3">
+              <BaseButton type="submit" variant="primary" :loading="isLoading" class="w-full">
+                Simpan
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="danger"
+                @click="router.push({ name: 'dashboard-foster-children' })"
+                :disabled="isLoading"
+                class="w-full"
+              >
+                Batal
+              </BaseButton>
+            </div>
           </div>
         </div>
       </form>
     </div>
   </DashboardLayout>
 </template>
-
-<style scoped>
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* Firefox */
-input[type='number'] {
-  -moz-appearance: textfield;
-}
-</style>

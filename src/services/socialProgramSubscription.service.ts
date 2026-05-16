@@ -3,15 +3,17 @@ import type {
   SocialProgramSubscriptionListResponse,
   SocialProgramSubscriptionResponse,
   SocialProgramSubscriptionQueryParams,
+  CreateOfflineSocialProgramSubscriptionRequest,
 } from '@/types/socialProgramSubscription'
 import { api } from '@/utils/api'
 
 export const socialProgramSubscriptionService = {
   getSubscriptions: async (
+    id: string,
     params: SocialProgramSubscriptionQueryParams,
   ): Promise<SocialProgramSubscriptionListResponse> => {
     const response = await api.get<SocialProgramSubscriptionListResponse>(
-      API.SOCIAL_PROGRAM_SUBSCRIPTIONS_ADMIN,
+      `${API.SOCIAL_PROGRAMS_ADMIN}/${id}/subscriptions`,
       {
         params,
       },
@@ -19,15 +21,21 @@ export const socialProgramSubscriptionService = {
     return response.data
   },
 
-  getSubscriptionDetail: async (id: string): Promise<SocialProgramSubscriptionResponse> => {
-    const response = await api.get<SocialProgramSubscriptionResponse>(
-      `${API.SOCIAL_PROGRAM_SUBSCRIPTIONS_ADMIN}/${id}`,
-    )
+  subscribe: async (id: string): Promise<SocialProgramSubscriptionResponse> => {
+    const response = await api.post(`${API.SOCIAL_PROGRAMS}/${id}/subscribe`)
     return response.data
   },
 
-  cancelSubscription: async (id: string) => {
-    const response = await api.put(`${API.SOCIAL_PROGRAM_SUBSCRIPTIONS_ADMIN}/${id}/cancel`)
+  unsubscribe: async (id: string) => {
+    const response = await api.patch(`${API.ME}/subscriptions/${id}/deactivate`)
+    return response.data
+  },
+
+  createSubscription: async (
+    id: string,
+    payload: CreateOfflineSocialProgramSubscriptionRequest,
+  ): Promise<SocialProgramSubscriptionResponse> => {
+    const response = await api.post(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}/subscriptions`, payload)
     return response.data
   },
 }

@@ -4,6 +4,7 @@ import { financeRoutes } from './finance'
 import { publicationManagerRoutes } from './publicationManager'
 import { socialManagerRoutes } from './socialManager'
 import { chairmanSocialManagerRoutes } from './chairman'
+import { ambulanceManagerRoutes } from './ambulanceManager'
 
 export const dashboardRoutes: RouteRecordRaw[] = [
   {
@@ -22,6 +23,7 @@ export const dashboardRoutes: RouteRecordRaw[] = [
       ...financeRoutes,
       ...socialManagerRoutes,
       ...chairmanSocialManagerRoutes,
+      ...ambulanceManagerRoutes,
       {
         path: 'profile',
         name: 'profile',

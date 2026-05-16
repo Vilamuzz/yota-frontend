@@ -12,7 +12,8 @@ export const useSocialProgramCreate = () => {
     ApiError,
     CreateSocialProgramRequest
   >({
-    mutationFn: (data: CreateSocialProgramRequest) => socialProgramService.createSocialProgram(data),
+    mutationFn: (data: CreateSocialProgramRequest) =>
+      socialProgramService.createSocialProgram(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
     },

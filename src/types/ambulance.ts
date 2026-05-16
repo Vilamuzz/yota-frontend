@@ -3,9 +3,17 @@ import type { Pagination, PaginationParams, Response } from './response'
 export interface Ambulance {
   id: string
   plateNumber: string
-  model: string
-  status: 'available' | 'in_use' | 'maintenance'
-  lastMaintenance: string
+  driverId: string
+  driverName: string
+  driverPhone: string
+  status: AmbulanceStatus
+  image?: string
+}
+
+export enum AmbulanceStatus {
+  Available = 'available',
+  InUse = 'in use',
+  Maintenance = 'maintenance',
 }
 
 export interface AmbulanceList {
@@ -14,16 +22,22 @@ export interface AmbulanceList {
 }
 
 export interface AmbulanceQueryParams extends PaginationParams {
-  status?: string
+  status?: AmbulanceStatus
 }
 
 export interface CreateAmbulanceRequest {
+  driverId: string
   plateNumber: string
-  model: string
-  status: string
+  status: AmbulanceStatus
+  image: File
 }
 
-export interface UpdateAmbulanceRequest extends Partial<CreateAmbulanceRequest> {}
+export interface UpdateAmbulanceRequest {
+  driverId?: string
+  plateNumber?: string
+  status?: AmbulanceStatus
+  image?: File
+}
 
 export type AmbulanceResponse = Response<Ambulance>
 export type AmbulanceListResponse = Response<AmbulanceList>

@@ -14,7 +14,7 @@ export const useGalleryUpdate = () => {
   >({
     mutationFn: ({ id, data }) => galleryService.updateGallery(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['galleries'] })
+      queryClient.invalidateQueries({ queryKey: ['galleries-admin'] })
       queryClient.invalidateQueries({ queryKey: ['galleryDetail', variables.id] })
     },
   })
@@ -22,7 +22,21 @@ export const useGalleryUpdate = () => {
   const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
     mutationFn: (id) => galleryService.deleteGallery(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['galleries'] })
+      queryClient.invalidateQueries({ queryKey: ['galleries-admin'] })
+    },
+  })
+
+  const publishMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => galleryService.updatePublishGallery(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['galleries-admin'] })
+    },
+  })
+
+  const archiveMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => galleryService.updateArchivedGallery(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['galleries-admin'] })
     },
   })
 
@@ -33,6 +47,8 @@ export const useGalleryUpdate = () => {
   return {
     updateMutation,
     deleteMutation,
+    publishMutation,
+    archiveMutation,
     validationErrors,
   }
 }

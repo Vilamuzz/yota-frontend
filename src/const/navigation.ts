@@ -9,6 +9,7 @@ import {
   Ambulance,
   HandHeart,
   ShieldAlert,
+  Settings,
 } from 'lucide-vue-next'
 import type { NavItem } from '@/types/navigation'
 import { ROLES } from './roles'
@@ -26,6 +27,12 @@ export const dashboardNavigation: NavItem[] = [
     roles: [ROLES.SUPERADMIN],
   },
   {
+    icon: Settings,
+    label: 'Pengaturan',
+    route: '/dashboard/settings',
+    roles: [ROLES.SUPERADMIN],
+  },
+  {
     icon: HandHeart,
     label: 'Program Donasi',
     route: '/dashboard/donation-programs',
@@ -33,22 +40,9 @@ export const dashboardNavigation: NavItem[] = [
   },
   {
     icon: CirclePoundSterling,
-    label: 'Pemasukan',
+    label: 'Riwayat Donasi',
     roles: [ROLES.FINANCE],
-    children: [
-      {
-        label: 'Program Donasi',
-        route: '/dashboard/income/donation-programs',
-      },
-      {
-        label: 'Program Sosial',
-        route: '/dashboard/income/social-programs',
-      },
-      {
-        label: 'Anak Asuh',
-        route: '/dashboard/income/foster-children',
-      },
-    ],
+    route: '/dashboard/income/donation-programs',
   },
   {
     icon: CirclePoundSterling,
@@ -72,8 +66,21 @@ export const dashboardNavigation: NavItem[] = [
   {
     icon: CirclePoundSterling,
     label: 'Program Sosial',
-    route: '/dashboard/social-programs',
     roles: [ROLES.SOCIAL_MANAGER],
+    children: [
+      {
+        label: 'Data Program',
+        route: '/dashboard/social-programs',
+      },
+      {
+        label: 'Daftar Program Langganan',
+        route: '/dashboard/social-programs/subscriptions',
+      },
+      {
+        label: 'Daftar Pelanggan',
+        route: '/dashboard/social-programs/customers',
+      },
+    ],
   },
   {
     icon: Baby,
@@ -86,11 +93,11 @@ export const dashboardNavigation: NavItem[] = [
       },
       {
         label: 'Ajuan Anak Asuh',
-        route: '/dashboard/foster-children/submissions',
+        route: '/dashboard/foster-children/candidates',
       },
       {
         label: 'Riwayat Donasi Anak Asuh',
-        route: '/dashboard/foster-children/donations',
+        route: '/dashboard/foster-children/income',
       },
     ],
   },
@@ -135,25 +142,6 @@ export const dashboardNavigation: NavItem[] = [
   },
   {
     icon: NotepadText,
-    label: 'Manajemen Program',
-    roles: [ROLES.SOCIAL_MANAGER],
-    children: [
-      {
-        label: 'Data Program',
-        route: '/dashboard/social-programs',
-      },
-      {
-        label: 'Riwayat Langganan',
-        route: '/dashboard/social-programs/subscriptions',
-      },
-      {
-        label: 'Riwayat Pelanggan',
-        route: '/dashboard/social-programs/customers',
-      },
-    ],
-  },
-  {
-    icon: NotepadText,
     label: 'Program Ketua',
     roles: [ROLES.CHAIRMAN],
     route: '/dashboard/social-programs',
@@ -162,6 +150,6 @@ export const dashboardNavigation: NavItem[] = [
     icon: Baby,
     label: 'Anak Asuh',
     roles: [ROLES.CHAIRMAN],
-    route: '/dashboard/chairman/foster-children/submissions'
-  }
+    route: '/dashboard/foster-children/candidates',
+  },
 ]

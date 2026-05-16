@@ -54,7 +54,6 @@
 
       <ol class="space-y-2 text-sm text-gray-600 leading-relaxed list-decimal list-inside">
         <li>Klik tombol <b>"Berlangganan"</b>.</li>
-        <li>Pilih atau masukkan nominal donasi.</li>
         <li>Konfirmasi data dan lanjutkan ke pembayaran.</li>
         <li>Lakukan pembayaran melalui metode yang tersedia.</li>
         <li>Donasi akan tercatat otomatis setiap bulan.</li>

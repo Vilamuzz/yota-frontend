@@ -1,12 +1,20 @@
-import type { Pagination, Response } from './response'
+import type { Pagination, PaginationParams, Response } from './response'
 
 export interface SocialProgramInvoice {
   id: string
-  subscriptionId: string
+  socialProgramTitle: string
   billingPeriod: number
-  amount: number
-  status: string
+  minimumAmount: number
+  status: InvoiceStatus
   dueDate: string
+  snapToken?: string
+  createdAt: string
+}
+
+export enum InvoiceStatus {
+  PENDING = 'pending',
+  PAID = 'paid',
+  OVERDUE = 'overdue',
 }
 
 export interface SocialProgramInvoiceList {

@@ -18,7 +18,7 @@ export const donationProgramTransactionService = {
     id: string,
     data: CreateDonationProgramTransactionRequest,
   ) => {
-    const response = await api.post(`${API.DONATION_PROGRAMS}/${id}/transactions`, data)
+    const response = await api.post(`${API.DONATION_PROGRAMS_ADMIN}/${id}/transactions`, data)
     return response.data
   },
 
@@ -26,7 +26,7 @@ export const donationProgramTransactionService = {
     id: string,
     params: DonationProgramTransactionQueryParams,
   ) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS}/${id}/transactions`, {
+    const response = await api.get(`${API.DONATION_PROGRAMS_ADMIN}/${id}/transactions`, {
       params,
     })
     return response.data
@@ -37,8 +37,13 @@ export const donationProgramTransactionService = {
     return response.data
   },
 
-  deleteDonationProgramTransaction: async (id: string) => {
-    const response = await api.delete(`${API.DONATION_PROGRAMS}/transactions/${id}`)
+  cancelDonationProgramTransaction: async (id: string) => {
+    const response = await api.post(`${API.DONATION_PROGRAMS_ADMIN}/transactions/${id}/cancel`)
+    return response.data
+  },
+
+  getMyDonationProgramTransactions: async () => {
+    const response = await api.get(`${API.DONATION_PROGRAMS}/transactions/me`)
     return response.data
   },
 }

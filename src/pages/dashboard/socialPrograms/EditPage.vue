@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Camera, Layout, Info, CreditCard, ArrowLeft, Loader2 } from 'lucide-vue-next'
+import { Camera, Layout, Info, CreditCard, Loader2, X } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -11,6 +11,7 @@ import { updateSocialProgramSchema } from '@/schemas/socialProgram.schema'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
+import { formatCurrency } from '@/utils/format'
 
 const router = useRouter()
 const route = useRoute()
@@ -20,6 +21,7 @@ const programId = route.params.id as string
 const { detailQuery } = useSocialProgramDetail(programId)
 const { updateMutation, validationErrors } = useSocialProgramUpdate()
 
+const coverImageInputRef = ref<HTMLInputElement | null>(null)
 const errors = ref<Record<string, string>>({})
 const form = reactive({
   title: '',
@@ -33,6 +35,12 @@ const form = reactive({
 
 const isFetching = computed(() => detailQuery.isPending.value)
 const isLoading = computed(() => updateMutation.isPending.value)
+
+const formatCurrencyPreview = computed(() => {
+  const num = Number(form.minimumAmount)
+  if (!num || isNaN(num)) return ''
+  return formatCurrency(num)
+})
 
 // Hydrate form data
 watch(
@@ -64,13 +72,35 @@ watch(
   { deep: true },
 )
 
+const triggerImageInput = () => {
+  coverImageInputRef.value?.click()
+}
+
 const handleCoverImageChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
     const file = target.files[0]
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      errors.value.coverImage = 'Hanya file JPG, PNG, atau WebP yang diperbolehkan'
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      errors.value.coverImage = 'Ukuran gambar maksimal 2 MB'
+      return
+    }
+
     form.coverImageFile = file
     form.coverImagePreview = URL.createObjectURL(file)
   }
+}
+
+const removeImage = () => {
+  form.coverImageFile = null
+  form.coverImagePreview = detailQuery.data.value?.data?.coverImage || null
+  if (coverImageInputRef.value) coverImageInputRef.value.value = ''
 }
 
 const handleSubmit = () => {
@@ -115,23 +145,12 @@ const handleSubmit = () => {
 
     <div v-if="isFetching" class="flex flex-col items-center justify-center py-24">
       <Loader2 class="w-12 h-12 text-primary-500 animate-spin mb-4" />
-      <p class="text-gray-500 font-medium tracking-widest uppercase text-xs">Memuat data program...</p>
+      <p class="text-gray-500 font-medium tracking-widest uppercase text-xs">
+        Memuat data program...
+      </p>
     </div>
 
     <div v-else class="max-w-full mx-auto space-y-6">
-      <!-- Header Actions -->
-      <div class="flex items-center justify-between">
-        <BaseButton
-          variant="outline"
-          size="md"
-          @click="router.push({ name: 'dashboard-social-programs' })"
-          class="rounded-xl"
-        >
-          <ArrowLeft :size="18" class="mr-2" />
-          KEMBALI
-        </BaseButton>
-      </div>
-
       <form @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column: Primary Information -->
         <div class="lg:col-span-2 space-y-6">
@@ -139,7 +158,7 @@ const handleSubmit = () => {
             class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
           >
             <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
-              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-500">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300">
                 <Layout :size="20" />
               </div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
@@ -158,7 +177,7 @@ const handleSubmit = () => {
 
             <div class="space-y-1.5">
               <label
-                class="block text-xs font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider"
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 tracking-wider"
               >
                 Deskripsi Program <span class="text-red-500">*</span>
               </label>
@@ -199,6 +218,7 @@ const handleSubmit = () => {
                 label="Minimal Nominal (Rp)"
                 placeholder="mis. 50000"
                 :error="errors.minimumAmount || validationErrors?.minimumAmount"
+                :hint="formatCurrencyPreview ? `≈ ${formatCurrencyPreview}` : undefined"
                 required
               />
 
@@ -241,99 +261,83 @@ const handleSubmit = () => {
 
             <div class="flex justify-center">
               <div
-                class="relative w-full aspect-video rounded-xl border-4 border-dashed overflow-hidden transition-all duration-200 group bg-gray-50 dark:bg-gray-900/50"
+                v-if="form.coverImagePreview"
+                class="relative w-full aspect-video rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden group shadow-sm"
+              >
+                <img :src="form.coverImagePreview" class="w-full h-full object-cover" />
+                <div
+                  class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center"
+                >
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      @click="triggerImageInput"
+                      class="opacity-0 group-hover:opacity-100 p-2 bg-white rounded-full shadow-lg text-primary-600 hover:scale-110 transition-all duration-200"
+                    >
+                      <Camera :size="20" />
+                    </button>
+                    <button
+                      v-if="form.coverImageFile"
+                      type="button"
+                      @click="removeImage"
+                      class="opacity-0 group-hover:opacity-100 p-2 bg-white rounded-full shadow-lg text-red-500 hover:scale-110 transition-all duration-200"
+                    >
+                      <X :size="20" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-else
+                @click="triggerImageInput"
+                class="relative w-full aspect-video rounded-xl border-2 border-dashed overflow-hidden transition-all duration-200 cursor-pointer flex flex-col items-center justify-center p-4 text-center bg-gray-50 dark:bg-gray-900/50"
                 :class="[
-                  form.coverImagePreview
-                    ? 'border-primary-500'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-400',
+                  errors.coverImage
+                    ? 'border-red-400 bg-red-50/50'
+                    : 'border-gray-300 dark:border-gray-700 hover:border-primary-400 hover:bg-gray-100/50',
                 ]"
               >
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="absolute inset-0 opacity-0 cursor-pointer z-10"
-                  @change="handleCoverImageChange"
-                />
-
-                <div
-                  v-if="!form.coverImagePreview"
-                  class="h-full flex flex-col items-center justify-center p-4 text-center"
-                >
-                  <Camera class="text-gray-300 mb-2" :size="32" />
-                  <p class="text-[10px] font-medium text-gray-500 uppercase tracking-widest">Pilih Foto Sampul</p>
-                  <p class="text-[8px] text-gray-400 mt-1">Rekomendasi 16:9 (1280x720px)</p>
-                </div>
-
-                <template v-else>
-                  <img :src="form.coverImagePreview" class="w-full h-full object-cover" />
-                  <div
-                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                  >
-                    <Camera class="text-white" :size="24" />
-                  </div>
-                </template>
+                <Camera class="text-gray-300 mb-2" :size="32" />
+                <p class="text-[10px] font-medium text-gray-500 uppercase tracking-widest">
+                  Pilih Foto Sampul
+                </p>
+                <p class="text-[8px] text-gray-400 mt-1">
+                  Rekomendasi 16:9 (JPG, PNG, WebP &bull; Max 2 MB)
+                </p>
               </div>
+
+              <input
+                ref="coverImageInputRef"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+                @change="handleCoverImageChange"
+              />
             </div>
-            <p v-if="errors.coverImage" class="text-center text-[10px] text-red-600">
+            <p v-if="errors.coverImage" class="text-center text-[10px] text-red-600 mt-2">
               {{ errors.coverImage }}
             </p>
           </div>
 
-          <!-- Status Selection -->
+          <!-- Actions -->
           <div
             class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
           >
-            <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-              Status Program
-            </h3>
-
-            <div class="space-y-3">
-              <label
-                v-for="s in [
-                  { value: 'active', label: 'Berjalan', desc: 'Program aktif dan dapat diikuti' },
-                  { value: 'pending', label: 'Pending', desc: 'Program dalam masa persiapan' },
-                  { value: 'completed', label: 'Selesai', desc: 'Program telah berakhir' },
-                ]"
-                :key="s.value"
-                class="relative flex items-start p-3 cursor-pointer rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
-                :class="{ 'border-primary-500 bg-primary-50/10 shadow-sm shadow-primary-500/5': form.status === s.value }"
+            <div class="flex flex-col gap-3">
+              <BaseButton type="submit" variant="primary" :loading="isLoading" class="w-full">
+                Simpan Perubahan
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="outline"
+                @click="router.push({ name: 'dashboard-social-programs' })"
+                :disabled="isLoading"
+                class="w-full"
               >
-                <input
-                  type="radio"
-                  name="status"
-                  :value="s.value"
-                  v-model="form.status"
-                  class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                />
-                <div class="ml-3">
-                  <span class="block text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest">{{
-                    s.label
-                  }}</span>
-                  <span class="block text-[10px] text-gray-500 mt-0.5">{{ s.desc }}</span>
-                </div>
-              </label>
+                Batal
+              </BaseButton>
             </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex flex-col gap-3">
-            <BaseButton
-              type="submit"
-              variant="primary"
-              :loading="isLoading"
-              class="w-full py-4 rounded-xl font-bold tracking-[0.2em] shadow-lg shadow-primary-500/20"
-            >
-              PERBARUI PROGRAM
-            </BaseButton>
-            <BaseButton
-              type="button"
-              variant="outline"
-              @click="router.push({ name: 'dashboard-social-programs' })"
-              :disabled="isLoading"
-              class="w-full rounded-xl uppercase tracking-widest text-xs"
-            >
-              Batal
-            </BaseButton>
           </div>
         </div>
       </form>

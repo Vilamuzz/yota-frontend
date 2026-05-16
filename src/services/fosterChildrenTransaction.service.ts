@@ -18,7 +18,7 @@ export const fosterChildrenTransactionService = {
     id: string,
     data: CreateFosterChildrenTransactionRequest,
   ) => {
-    const response = await api.post(`${API.FOSTER_CHILDREN}/${id}/transactions`, data)
+    const response = await api.post(`${API.FOSTER_CHILDREN_ADMIN}/${id}/transactions`, data)
     return response.data
   },
 
@@ -26,9 +26,14 @@ export const fosterChildrenTransactionService = {
     id: string,
     params: FosterChildrenTransactionQueryParams,
   ) => {
-    const response = await api.get(`${API.FOSTER_CHILDREN}/${id}/transactions`, {
+    const response = await api.get(`${API.FOSTER_CHILDREN_ADMIN}/${id}/transactions`, {
       params,
     })
+    return response.data
+  },
+
+  getMyFosterChildrenTransactions: async () => {
+    const response = await api.get(`${API.FOSTER_CHILDREN}/transactions/me`)
     return response.data
   },
 

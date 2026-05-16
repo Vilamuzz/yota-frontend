@@ -13,6 +13,7 @@ export interface FosterChildrenTransaction {
   snapToken: string
   paidAt: string | null
   createdAt: string
+  fosterChildrenName?: string
 }
 
 export interface FosterChildrenTransactionList {
