@@ -18,7 +18,10 @@ export const socialProgramTransactionService = {
     id: string,
     data: CreateSocialProgramTransactionRequest,
   ) => {
-    const response = await api.post(`${API.SOCIAL_PROGRAMS}/${id}/transactions`, data)
+    const response = await api.post(
+      `${API.SOCIAL_PROGRAMS_ADMIN}/subscriptions/invoices/${id}/pay-offline`,
+      data,
+    )
     return response.data
   },
 

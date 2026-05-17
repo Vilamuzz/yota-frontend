@@ -20,3 +20,11 @@ export const formatDate = (dateString: string) => {
     timeZone: 'Asia/Jakarta',
   })
 }
+export const formatMonth = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('id-ID', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Asia/Jakarta',
+  })
+}

@@ -8,6 +8,8 @@ export interface FosterChildrenCandidate {
   gender: Gender
   category: Category
   address: string
+  schoolName: string
+  educationLevel: number
   birthPlace: string
   birthDate: string
   isGraduated: boolean
@@ -41,6 +43,8 @@ export interface FosterChildrenCandidateCreateRequest {
   category: Category
   birthDate: string
   birthPlace: string
+  schoolName: string
+  educationLevel: number
   address: string
   profilePicture: File
   familyCard: File

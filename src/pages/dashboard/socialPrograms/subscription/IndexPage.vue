@@ -221,15 +221,19 @@ const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRe
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ sub.period }}
+              {{ sub.totalPaidPeriods }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
-              <button
-                class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-600 dark:text-gray-300"
+              <RouterLink
+                :to="{
+                  name: 'dashboard-social-program-subscription-invoices',
+                  params: { id: programId, subscriptionId: sub.id },
+                }"
+                class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-600 dark:text-gray-300 inline-block"
                 title="Lihat detail tagihan"
               >
                 <Eye :size="18" />
-              </button>
+              </RouterLink>
             </td>
           </tr>
         </template>

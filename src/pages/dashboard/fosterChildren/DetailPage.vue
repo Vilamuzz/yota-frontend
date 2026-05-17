@@ -14,12 +14,13 @@ const children = ref<FosterChildren[]>([
   {
     id: '1',
     name: 'Faris Ahad',
-    slug: 'faris-ahad',
     gender: Gender.male,
     category: Category.yatim,
     birthPlace: 'Bandung',
     birthDate: '10-05-2014',
     address: 'Jl. Melati No. 12 Bandung',
+    schoolName: 'SDN 1 Bandung',
+    educationLevel: 1,
     profilePicture: 'https://i.pravatar.cc/150?img=1',
     achievements: [
       {
@@ -43,12 +44,13 @@ const children = ref<FosterChildren[]>([
   {
     id: '2',
     name: 'Tia Mutiara',
-    slug: 'tia-mutiara',
     gender: Gender.female,
     category: Category.piatu,
     birthPlace: 'Garut',
     birthDate: '15-02-2015',
     address: 'Jl. Mawar No. 5 Garut',
+    schoolName: 'SDN 2 Garut',
+    educationLevel: 1,
     profilePicture: 'https://i.pravatar.cc/150?img=2',
     achievements: [
       {
@@ -66,12 +68,13 @@ const children = ref<FosterChildren[]>([
   {
     id: '3',
     name: 'Ahmad Rizki',
-    slug: 'ahmad-rizki',
     gender: Gender.male,
     category: Category.yatimPiatu,
     birthPlace: 'Tasikmalaya',
     birthDate: '20-03-2013',
     address: 'Jl. Anggrek No. 9 Tasikmalaya',
+    schoolName: 'SMPN 1 Tasikmalaya',
+    educationLevel: 2,
     profilePicture: 'https://i.pravatar.cc/150?img=4',
     achievements: [
       {
@@ -125,11 +128,20 @@ const handleCancel = () => {
   router.push({ name: 'dashboard-foster-children' })
 }
 
-const handleEdit = (child: FosterChildren) => {
-  router.push({
-    name: 'dashboard-foster-children-edit',
-    params: { id: child.id },
-  })
+const handleEdit = () => {
+  if (child.value) {
+    router.push({
+      name: 'dashboard-foster-children-edit',
+      params: { id: child.value.id },
+    })
+  }
+}
+
+const getEducationLevelLabel = (level?: number) => {
+  if (level !== undefined && level >= 1 && level <= 12) {
+    return `Kelas ${level}`
+  }
+  return '-'
 }
 </script>
 
@@ -183,6 +195,12 @@ const handleEdit = (child: FosterChildren) => {
 
               <div class="text-gray-500">Tanggal Lahir</div>
               <div>: {{ child.birthDate }}</div>
+
+              <div class="text-gray-500">Nama Sekolah / Univ</div>
+              <div>: {{ child.schoolName || '-' }}</div>
+
+              <div class="text-gray-500">Tingkat Pendidikan</div>
+              <div>: {{ getEducationLevelLabel(child.educationLevel) }}</div>
 
               <div class="text-gray-500">Alamat</div>
               <div>: {{ child.address }}</div>

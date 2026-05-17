@@ -3,19 +3,44 @@ import type { Pagination, PaginationParams, Response } from './response'
 export interface SocialProgramSubscription {
   id: string
   username: string
-  period: string
   status: SocialProgramSubscriptionStatus
+  totalPaidPeriods: number
+  createdAt: string
+}
+
+export interface SocialProgramSubscriber {
+  id: string
+  email: string
+  username: string
+  totalSubscription: number
+  totalDonation: number
+}
+
+export interface SubscriberSubscription {
+  id: string
+  socialProgramTitle: string
+  status: SocialProgramSubscriptionStatus
+  totalDonation: number
   createdAt: string
 }
 
 export enum SocialProgramSubscriptionStatus {
   ACTIVE = 'active',
-  PAUSED = 'paused',
   INACTIVE = 'inactive',
 }
 
 export interface SocialProgramSubscriptionList {
   subscriptions: SocialProgramSubscription[]
+  pagination: Pagination
+}
+
+export interface SocialProgramSubscriberList {
+  subscribers: SocialProgramSubscriber[]
+  pagination: Pagination
+}
+
+export interface SubscriberSubscriptionList {
+  subscriptions: SubscriberSubscription[]
   pagination: Pagination
 }
 
@@ -29,3 +54,6 @@ export interface CreateOfflineSocialProgramSubscriptionRequest {
 
 export type SocialProgramSubscriptionResponse = Response<SocialProgramSubscription>
 export type SocialProgramSubscriptionListResponse = Response<SocialProgramSubscriptionList>
+export type SocialProgramSubscriberResponse = Response<SocialProgramSubscriber>
+export type SocialProgramSubscriberListResponse = Response<SocialProgramSubscriberList>
+export type SubscriberSubscriptionListResponse = Response<SubscriberSubscriptionList>

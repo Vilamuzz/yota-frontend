@@ -74,7 +74,7 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
             path: 'subscriptions',
             name: 'dashboard-social-program-list-subscriptions',
             component: () =>
-              import('@/pages/dashboard/socialPrograms/Subscriptions/SocialProgramPage.vue'),
+              import('@/pages/dashboard/socialPrograms/subscription/SocialProgramPage.vue'),
             meta: {
               title: 'Daftar Program Langganan',
             },
@@ -82,36 +82,46 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
           {
             path: 'subscriptions/:id',
             name: 'dashboard-social-program-detail-subscriptions',
-            component: () => import('@/pages/dashboard/socialPrograms/Subscriptions/IndexPage.vue'),
+            component: () => import('@/pages/dashboard/socialPrograms/subscription/IndexPage.vue'),
             meta: {
               title: 'Detail Riwayat Langganan',
               activeMenu: 'dashboard-social-program-list-subscriptions',
             },
           },
           {
-            path: 'customers',
-            name: 'dashboard-social-programs-customers',
+            path: 'subscriptions/:id/invoices/:subscriptionId',
+            name: 'dashboard-social-program-subscription-invoices',
             component: () =>
-              import('@/pages/dashboard/socialPrograms/Customers/CustomerHistoryPage.vue'),
-            meta: { title: 'Riwayat Pelanggan' },
-          },
-          {
-            path: 'customers/:id',
-            name: 'dashboard-social-programs-customers-detail',
-            component: () => import('@/pages/dashboard/socialPrograms/Customers/CustomerPage.vue'),
+              import('@/pages/dashboard/socialPrograms/subscription/InvoiceListPage.vue'),
             meta: {
-              title: 'Detail Pelanggan',
-              activeMenu: 'dashboard-social-programs-customers',
+              title: 'Daftar Tagihan',
+              activeMenu: 'dashboard-social-program-list-subscriptions',
             },
           },
           {
-            path: 'customers/:customerId/program/:programId',
-            name: 'dashboard-social-programs-customers-program-detail',
+            path: 'subscribers',
+            name: 'dashboard-social-programs-subscribers',
             component: () =>
-              import('@/pages/dashboard/socialPrograms/Customers/CustomerDetailPage.vue'),
+              import('@/pages/dashboard/socialPrograms/subscribers/SubscribersPage.vue'),
+            meta: { title: 'Pelanggan Program' },
+          },
+          {
+            path: 'subscribers/:id',
+            name: 'dashboard-social-programs-subscribers-detail',
+            component: () => import('@/pages/dashboard/socialPrograms/subscribers/IndexPage.vue'),
+            meta: {
+              title: 'Detail Pelanggan',
+              activeMenu: 'dashboard-social-programs-subscribers',
+            },
+          },
+          {
+            path: 'subscribers/:subscriberId/subscriptions/:programId',
+            name: 'dashboard-social-programs-subscribers-program-detail',
+            component: () =>
+              import('@/pages/dashboard/socialPrograms/subscribers/InvoiceListPage.vue'),
             meta: {
               title: 'Detail Program Pelanggan',
-              activeMenu: 'dashboard-social-programs-customers',
+              activeMenu: 'dashboard-social-programs-subscribers',
             },
           },
 
