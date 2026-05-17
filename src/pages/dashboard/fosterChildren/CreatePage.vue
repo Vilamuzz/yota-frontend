@@ -18,6 +18,20 @@ const { showToast } = useToast()
 
 const genders = Object.values(Gender)
 const categories = Object.values(Category)
+const educationLevels = [
+  { label: 'Kelas 1', value: 1 },
+  { label: 'Kelas 2', value: 2 },
+  { label: 'Kelas 3', value: 3 },
+  { label: 'Kelas 4', value: 4 },
+  { label: 'Kelas 5', value: 5 },
+  { label: 'Kelas 6', value: 6 },
+  { label: 'Kelas 7', value: 7 },
+  { label: 'Kelas 8', value: 8 },
+  { label: 'Kelas 9', value: 9 },
+  { label: 'Kelas 10', value: 10 },
+  { label: 'Kelas 11', value: 11 },
+  { label: 'Kelas 12', value: 12 },
+]
 
 const errors = ref<Record<string, string>>({})
 const form = reactive({
@@ -27,6 +41,8 @@ const form = reactive({
   address: '',
   gender: '' as Gender | '',
   category: '' as Category | '',
+  schoolName: '',
+  educationLevel: undefined as number | undefined,
   isGraduated: false,
   achievementInput: '',
   achievementFile: null as File | null,
@@ -97,6 +113,7 @@ const handleSubmit = () => {
 
   const result = createFosterChildrenSchema.safeParse({
     ...form,
+    educationLevel: form.educationLevel !== undefined ? Number(form.educationLevel) : undefined,
     profilePicture: form.profilePictureFile,
     familyCard: form.familyCardFile,
     sktm: form.sktmFile,
@@ -224,6 +241,40 @@ const formatCategory = (cat: string) => {
                 :error="errors.birthDate || validationErrors?.birthDate"
                 required
               />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <BaseInput
+                id="schoolName"
+                v-model="form.schoolName"
+                label="Nama Sekolah / Universitas"
+                placeholder="Masukkan nama sekolah atau universitas"
+                :error="errors.schoolName || validationErrors?.schoolName"
+                required
+              />
+              <div>
+                <label
+                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
+                >
+                  Tingkat Pendidikan <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="form.educationLevel"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
+                  :class="{ 'border-red-500': errors.educationLevel || validationErrors?.educationLevel }"
+                >
+                  <option :value="undefined" disabled>Pilih Tingkat Pendidikan</option>
+                  <option v-for="el in educationLevels" :key="el.value" :value="el.value">
+                    {{ el.label }}
+                  </option>
+                </select>
+                <p
+                  v-if="errors.educationLevel || validationErrors?.educationLevel"
+                  class="mt-1 text-xs text-red-600"
+                >
+                  {{ errors.educationLevel || validationErrors?.educationLevel }}
+                </p>
+              </div>
             </div>
 
             <BaseInput
