@@ -16,6 +16,7 @@ export const getStatusColor = (status: string) => {
     case AmbulanceStatus.Available:
     case FosterChildrenCandidateStatus.ACCEPTED:
     case FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED:
+    case 'paid':
       return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
     case DonationProgramStatusEnum.COMPLETED:
     case SocialProgramStatusEnum.COMPLETED:
@@ -35,6 +36,7 @@ export const getStatusColor = (status: string) => {
     case SocialProgramSubscriptionStatus.INACTIVE:
     case FosterChildrenCandidateStatus.REJECTED:
     case FosterChildrenCandidateStatus.CANCELED:
+    case 'overdue':
       return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
     case DonationProgramStatusEnum.ARCHIVED:
     case TransactionStatus.EXPIRED:

@@ -7,6 +7,8 @@ export interface FosterChildren {
   gender: Gender
   category: Category
   address: string
+  schoolName: string
+  educationLevel: number
   birthPlace: string
   birthDate: string
   isGraduated: boolean
@@ -60,6 +62,8 @@ export interface CreateFosterChildrenRequest {
   birthDate: string
   birthPlace: string
   address: string
+  schoolName: string
+  educationLevel: number
   profilePicture: File
   familyCard: File
   sktm: File
@@ -72,6 +76,8 @@ export interface UpdateFosterChildrenRequest {
   profilePicture?: File
   gender?: Gender
   address?: string
+  schoolName?: string
+  educationLevel?: number
   birthPlace?: string
   birthDate?: string
   category?: Category

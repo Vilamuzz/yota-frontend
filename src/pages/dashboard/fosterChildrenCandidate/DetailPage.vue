@@ -160,6 +160,12 @@ const verifyRejectConfig = computed(() => {
     message: `Silakan lengkapi alasan penolakan sebelum melanjutkan.`,
   }
 })
+const getEducationLevelLabel = (level?: number) => {
+  if (level !== undefined && level >= 1 && level <= 12) {
+    return `Kelas ${level}`
+  }
+  return '-'
+}
 </script>
 
 <template>
@@ -253,6 +259,22 @@ const verifyRejectConfig = computed(() => {
                 <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Kategori</span>
                 <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200 capitalize">{{
                   fosterChildrenCandidate.category
+                }}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-4">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                  >Sekolah / Univ</span
+                >
+                <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200">{{
+                  fosterChildrenCandidate.schoolName || '-'
+                }}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-4">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                  >Tingkat Pendidikan</span
+                >
+                <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200 capitalize">{{
+                  getEducationLevelLabel(fosterChildrenCandidate.educationLevel)
                 }}</span>
               </div>
               <div class="grid grid-cols-3 gap-4">

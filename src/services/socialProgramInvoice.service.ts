@@ -25,4 +25,17 @@ export const socialProgramInvoiceService = {
     )
     return response.data
   },
+
+  getSubscriptionInvoices: async (
+    subscriptionId: string,
+    params: SocialProgramInvoiceQueryParams,
+  ): Promise<SocialProgramInvoiceListResponse> => {
+    const response = await api.get<SocialProgramInvoiceListResponse>(
+      `${API.SOCIAL_PROGRAMS_ADMIN}/subscriptions/invoices/subscription/${subscriptionId}`,
+      {
+        params,
+      },
+    )
+    return response.data
+  },
 }
