@@ -78,7 +78,7 @@ export const dashboardNavigation: NavItem[] = [
       },
       {
         label: 'Daftar Pelanggan',
-        route: '/dashboard/social-programs/customers',
+        route: '/dashboard/social-programs/subscribers',
       },
     ],
   },

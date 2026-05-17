@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { Eye, EyeOff } from 'lucide-vue-next'
 
 interface Props {
-  modelValue: string
+  modelValue: string | number
   id: string
   type?: string
   label?: string
@@ -28,7 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string]
+  'update:modelValue': [value: string | number]
   focus: [event: FocusEvent]
   blur: [event: FocusEvent]
 }>()
@@ -48,7 +48,7 @@ const passwordStrength = computed(() => {
     return { level: 0, text: '', color: '' }
   }
 
-  const password = props.modelValue
+  const password = String(props.modelValue)
   let strength = 0
 
   // Length check

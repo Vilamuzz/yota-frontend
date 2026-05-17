@@ -18,6 +18,8 @@ export const useSocialProgramTransactionCreateOffline = () => {
       socialProgramTransactionService.createOfflineSocialProgramTransaction(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialProgramTransactions'] })
+      queryClient.invalidateQueries({ queryKey: ['social-program-invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['social-program-subscriptions'] })
     },
   })
 
