@@ -15,7 +15,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  secondaryButtonText: 'Cancel',
+  secondaryButtonText: '',
   dangerButtonLoading: false,
   primaryButtonLoading: false,
 })
@@ -57,13 +57,17 @@ const emit = defineEmits<{
           class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden font-poppins"
         >
           <!-- Background Decoration -->
-          <div class="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-50" />
-          
+          <div
+            class="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-50"
+          />
+
           <!-- Modal Content -->
           <div class="relative text-center py-2">
             <!-- Icon -->
             <div v-if="icon" class="flex items-center justify-center mx-auto mb-6">
-              <div class="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center text-primary-500">
+              <div
+                class="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center text-primary-500"
+              >
                 <component :is="icon" :size="40" />
               </div>
             </div>
@@ -72,9 +76,7 @@ const emit = defineEmits<{
             <h2 class="text-2xl font-bold text-gray-900 mb-3">{{ title }}</h2>
 
             <!-- Message -->
-            <p
-              class="text-gray-500 text-sm mb-8 whitespace-pre-line text-center leading-relaxed"
-            >
+            <p class="text-gray-500 text-sm mb-8 whitespace-pre-line text-center leading-relaxed">
               {{ message }}
             </p>
 
@@ -109,7 +111,7 @@ const emit = defineEmits<{
 
               <BaseButton
                 v-if="secondaryButtonText"
-                variant="ghost"
+                variant="outline"
                 full-width
                 size="lg"
                 class="text-gray-400 hover:text-gray-600"

@@ -5,6 +5,7 @@ export interface Prayer {
   username: string
   content: string
   amenCount: number
+  reportCount: number
   isAmen: boolean
   createdAt: string
 }
@@ -12,10 +13,6 @@ export interface Prayer {
 export interface PrayerList {
   prayers: Prayer[]
   pagination: Pagination
-}
-
-export interface ReportPrayer {
-  reason: string
 }
 
 export type PrayerResponse = Response<Prayer>

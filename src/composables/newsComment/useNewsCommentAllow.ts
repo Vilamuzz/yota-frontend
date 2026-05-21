@@ -3,18 +3,17 @@ import { newsCommentService } from '@/services/newsComment.service'
 import type { NewsCommentResponse } from '@/types/news'
 import type { ApiError } from '@/types/response'
 
-export const useNewsCommentDelete = () => {
+export const useNewsCommentAllow = () => {
   const queryClient = useQueryClient()
 
-  const deleteMutation = useMutation<NewsCommentResponse, ApiError, string>({
-    mutationFn: (commentId) => newsCommentService.deleteNewsComment(commentId),
+  const allowMutation = useMutation<NewsCommentResponse, ApiError, string>({
+    mutationFn: (id) => newsCommentService.allowNewsComment(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['newsComments'] })
       queryClient.invalidateQueries({ queryKey: ['admin-news-comments'] })
     },
   })
 
   return {
-    deleteMutation,
+    allowMutation,
   }
 }
