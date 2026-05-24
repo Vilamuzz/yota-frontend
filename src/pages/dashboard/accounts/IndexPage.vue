@@ -11,7 +11,8 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import { getAccountStatusColor } from '@/utils/statusColor'
+import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const queryParams = reactive<AccountQueryParam>({
   limit: 10,
@@ -228,46 +229,38 @@ function handleConfirmAction() {
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                  getAccountStatusColor(account.isBanned),
+                  getStatusColor(account.isBanned ? 'banned' : 'active'),
                 ]"
               >
-                {{ account.isBanned ? 'Banned' : 'Active' }}
+                {{ account.isBanned ? 'Nonaktif' : 'Aktif' }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-200">
               {{ new Date(account.createdAt).toLocaleDateString() }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
-              <button
-                @click="openViewModal(account)"
-                class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
-                title="View details"
-              >
+              <BaseIconButton @click="openViewModal(account)" variant="info" title="Lihat Detail">
                 <Eye :size="18" />
-              </button>
-              <button
-                @click="openEditModal(account)"
-                class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
-                title="Edit account"
-              >
+              </BaseIconButton>
+              <BaseIconButton @click="openEditModal(account)" variant="primary" title="Edit Akun">
                 <SquarePen :size="18" />
-              </button>
-              <button
+              </BaseIconButton>
+              <BaseIconButton
                 v-if="!account.isBanned"
                 @click="openBanConfirm(account)"
-                class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
-                title="Ban account"
+                variant="danger"
+                title="Ban Akun"
               >
                 <Ban :size="18" />
-              </button>
-              <button
+              </BaseIconButton>
+              <BaseIconButton
                 v-else
                 @click="openUnbanConfirm(account)"
-                class="p-1 text-green-600 hover:bg-green-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
-                title="Unban account"
+                variant="success"
+                title="Unban Akun"
               >
                 <UserCheck :size="18" />
-              </button>
+              </BaseIconButton>
             </td>
           </tr>
         </template>

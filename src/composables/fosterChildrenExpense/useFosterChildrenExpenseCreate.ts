@@ -5,6 +5,7 @@ import type {
   FosterChildrenExpenseResponse,
 } from '@/types/fosterChildrenExpense'
 import type { ApiError } from '@/types/response'
+import { computed } from 'vue'
 
 export const useFosterChildrenExpenseCreate = () => {
   const queryClient = useQueryClient()
@@ -21,7 +22,12 @@ export const useFosterChildrenExpenseCreate = () => {
     },
   })
 
+  const validationErrors = computed(
+    () => createMutation.error.value?.response?.data?.validation ?? null,
+  )
+
   return {
     createMutation,
+    validationErrors,
   }
 }

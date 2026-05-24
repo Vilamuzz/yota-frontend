@@ -19,7 +19,9 @@ export interface NewsComment {
   id: string
   username: string
   content: string
+  replies?: NewsComment[]
   createdAt: string
+  reportCount?: number
 }
 
 export interface NewsList {
@@ -28,7 +30,7 @@ export interface NewsList {
 }
 
 export interface NewsCommentList {
-  newsComments: NewsComment[]
+  comments: NewsComment[]
   pagination: Pagination
 }
 
@@ -62,7 +64,7 @@ export interface UpdateNewsRequest {
 }
 
 export interface CreateNewsCommentRequest {
-  slug: string
+  parentCommentId?: string
   content: string
 }
 

@@ -5,6 +5,7 @@ import type {
   DonationProgramExpenseResponse,
 } from '@/types/donationProgramExpense'
 import type { ApiError } from '@/types/response'
+import { computed } from 'vue'
 
 export const useDonationProgramExpenseCreate = () => {
   const queryClient = useQueryClient()
@@ -21,7 +22,12 @@ export const useDonationProgramExpenseCreate = () => {
     },
   })
 
+  const validationErrors = computed(
+    () => createMutation.error.value?.response?.data?.validation ?? null,
+  )
+
   return {
     createMutation,
+    validationErrors,
   }
 }

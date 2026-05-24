@@ -9,6 +9,7 @@ import { useSocialProgramSubscriberList } from '@/composables/socialProgramSubsc
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import type { SocialProgramSubscriptionQueryParams } from '@/types/socialProgramSubscription'
 import { formatCurrency } from '@/utils/format'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const queryParams = reactive<SocialProgramSubscriptionQueryParams>({
   limit: 10,
@@ -69,7 +70,7 @@ watch(searchQuery, (val) => {
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nama</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
-          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
             Total Program Diikuti
           </th>
           <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
@@ -96,7 +97,7 @@ watch(searchQuery, (val) => {
               {{ item.email }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+              class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200"
             >
               {{ item.totalSubscription }}
             </td>
@@ -107,16 +108,16 @@ watch(searchQuery, (val) => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <RouterLink
+                <BaseIconButton
                   :to="{
-                    name: 'dashboard-social-programs-subscribers-detail',
-                    params: { id: item.id },
+                    name: 'dashboard-social-program-detail-subscribers',
+                    params: { subscriberId: item.id },
                   }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Lihat detail"
+                  variant="info"
                 >
                   <Eye :size="18" />
-                </RouterLink>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

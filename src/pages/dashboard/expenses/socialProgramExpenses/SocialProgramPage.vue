@@ -6,8 +6,9 @@ import { useSocialProgramFilters } from '@/composables/socialProgram/useSocialPr
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency, formatStatus } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const {
   queryParams,
@@ -30,7 +31,7 @@ const {
     <template #title>Pengeluaran Program Sosial</template>
 
     <div class="space-y-6">
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <BaseSearch
             v-model="searchQuery"
@@ -127,21 +128,21 @@ const {
                   getStatusColor(program.status),
                 ]"
               >
-                {{ program.status.charAt(0).toUpperCase() + program.status.slice(1) }}
+                {{ formatStatus(program.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <RouterLink
+                <BaseIconButton
                   :to="{
                     name: 'dashboard-social-programs-expense-transaction',
                     params: { id: program.id },
                   }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Lihat transaksi"
+                  variant="primary"
                 >
                   <Eye :size="18" />
-                </RouterLink>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

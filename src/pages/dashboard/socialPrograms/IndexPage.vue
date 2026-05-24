@@ -17,9 +17,10 @@ import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { SocialProgram, SocialProgramQueryParams } from '@/types/socialProgram'
 import { SocialProgramStatusEnum } from '@/types/socialProgram'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatCurrency, formatDate } from '@/utils/format'
+import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const authStore = useAuthStore()
 
@@ -254,15 +255,7 @@ const handleConfirmReject = async (reason: string) => {
                   getStatusColor(program.status),
                 ]"
               >
-                {{
-                  program.status === 'active'
-                    ? 'Berjalan'
-                    : program.status === 'pending'
-                      ? 'Pending'
-                      : program.status === 'completed'
-                        ? 'Selesai'
-                        : program.status
-                }}
+                {{ formatStatus(program.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
@@ -270,38 +263,38 @@ const handleConfirmReject = async (reason: string) => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <RouterLink
+                <BaseIconButton
                   :to="{
                     name: 'dashboard-social-programs-detail',
                     params: { id: program.id },
                   }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Lihat detail"
+                  variant="info"
                 >
                   <Eye :size="18" />
-                </RouterLink>
+                </BaseIconButton>
 
                 <template v-if="isChairman">
                   <template v-if="program.status === SocialProgramStatusEnum.PENDING">
-                    <button
+                    <BaseIconButton
                       @click="handleApprove(program)"
-                      class="p-1 text-green-600 hover:bg-green-50 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700"
                       title="Setujui program"
+                      variant="success"
                     >
                       <Check :size="18" />
-                    </button>
-                    <button
+                    </BaseIconButton>
+                    <BaseIconButton
                       @click="handleReject(program)"
-                      class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700"
                       title="Tolak program"
+                      variant="danger"
                     >
                       <X :size="18" />
-                    </button>
+                    </BaseIconButton>
                   </template>
                 </template>
 
                 <template v-else>
-                  <RouterLink
+                  <BaseIconButton
                     v-if="
                       program.status !== SocialProgramStatusEnum.COMPLETED &&
                       program.status !== SocialProgramStatusEnum.REJECTED
@@ -310,20 +303,20 @@ const handleConfirmReject = async (reason: string) => {
                       name: 'dashboard-social-programs-edit',
                       params: { id: program.id },
                     }"
-                    class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                     title="Edit program"
+                    variant="primary"
                   >
                     <SquarePen :size="18" />
-                  </RouterLink>
+                  </BaseIconButton>
 
-                  <button
+                  <BaseIconButton
                     v-if="program.status === SocialProgramStatusEnum.PENDING"
                     @click="deleteProgram(program)"
-                    class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700"
                     title="Hapus program"
+                    variant="danger"
                   >
                     <Trash2 :size="18" />
-                  </button>
+                  </BaseIconButton>
                 </template>
               </div>
             </td>

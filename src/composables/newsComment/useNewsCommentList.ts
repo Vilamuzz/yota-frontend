@@ -1,10 +1,10 @@
-import { computed, toValue } from 'vue'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { newsCommentService } from '@/services/newsComment.service'
 import type { NewsCommentListResponse } from '@/types/news'
 import type { ApiError } from '@/types/response'
 
-export const useNewsCommentList = (slug: string) => {
+export const useNewsCommentList = (slug: MaybeRefOrGetter<string>) => {
   const listQuery = useQuery<NewsCommentListResponse, ApiError>({
     queryKey: ['newsComments', slug],
     queryFn: () => newsCommentService.getListNewsComment(toValue(slug)),
@@ -12,7 +12,7 @@ export const useNewsCommentList = (slug: string) => {
     retry: 1,
   })
 
-  const newsComments = computed(() => listQuery.data.value?.data?.newsComments || [])
+  const newsComments = computed(() => listQuery.data.value?.data?.comments || [])
   const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {

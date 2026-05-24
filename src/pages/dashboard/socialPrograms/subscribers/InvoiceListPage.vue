@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { FileText, ArrowLeft, Calendar, CreditCard, Clock } from 'lucide-vue-next'
+import { computed, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { FileText, Calendar, CreditCard, Clock } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
@@ -10,7 +10,7 @@ import { useCursorPagination } from '@/composables/ui/usePagination'
 import type { SocialProgramInvoiceQueryParams } from '@/types/socialProgramInvoice'
 import { InvoiceStatus } from '@/types/socialProgramInvoice'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatCurrency, formatDate, formatMonth } from '@/utils/format'
+import { formatCurrency, formatDate, formatMonth, formatStatus } from '@/utils/format'
 import { useSocialProgramTransactionCreateOffline } from '@/composables/socialProgramTransaction/useSocialProgramTransactionCreateOffline'
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
@@ -18,18 +18,19 @@ import PayOfflineInvoiceModal from '@/components/molecules/PayOfflineInvoiceModa
 import type { CreateSocialProgramTransactionRequest } from '@/types/socialProgramTransaction'
 import type { SocialProgramInvoice } from '@/types/socialProgramInvoice'
 import BaseButton from '@/components/atoms/BaseButton.vue'
+import { useSubscriberSubscriptionDetail } from '@/composables/socialProgramSubscription/useSubscriberSubscriptionDetail'
 
 const route = useRoute()
-const router = useRouter()
-const subscriberId = route.params.subscriberId as string
-const programId = route.params.programId as string
+const subscriptionId = route.params.programId as string
+const { detailQuery, isLoading: isSubscriptionLoading } = useSubscriberSubscriptionDetail(subscriptionId)
+const subscription = computed(() => detailQuery.data.value?.data)
 
 const queryParams = reactive<SocialProgramInvoiceQueryParams>({
   limit: 10,
   status: undefined,
 })
 
-const { invoices, pagination, isLoading } = useSocialProgramInvoiceList(programId, queryParams)
+const { invoices, pagination, isLoading } = useSocialProgramInvoiceList(subscriptionId, queryParams)
 const { pageOffset, handleNextPage, handlePrevPage } = useCursorPagination(queryParams)
 
 const limitOptions = [10, 25, 50, 100]
@@ -64,41 +65,51 @@ const handlePayOffline = (payload: CreateSocialProgramTransactionRequest) => {
     },
   )
 }
-
-const getInvoiceStatusLabel = (status: InvoiceStatus) => {
-  switch (status) {
-    case InvoiceStatus.PAID:
-      return 'Sudah Dibayar'
-    case InvoiceStatus.PENDING:
-      return 'Menunggu Pembayaran'
-    case InvoiceStatus.OVERDUE:
-      return 'Jatuh Tempo'
-    default:
-      return status
-  }
-}
-
-const handleBack = () => {
-  router.push({
-    name: 'dashboard-social-programs-subscribers-detail',
-    params: { id: subscriberId },
-  })
-}
 </script>
 
 <template>
   <DashboardLayout>
     <div class="space-y-6">
-      <!-- Action Bar -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <button
-          @click="handleBack"
-          class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+      <div
+        v-if="!isSubscriptionLoading && subscription"
+        class="grid grid-cols-1 md:grid-cols-12 gap-5"
+      >
+        <div
+          class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
         >
-          <ArrowLeft :size="22" />
-          <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Daftar Tagihan</h2>
-        </button>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ subscription.socialProgramTitle }}
+          </h1>
+          <p class="text-sm text-gray-400 mt-1">Nama Program</p>
+        </div>
 
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
+            {{ formatCurrency(subscription.totalDonation) }}
+          </h3>
+          <p class="text-sm text-gray-400 mt-1">Total Donasi</p>
+        </div>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <div class="flex items-baseline gap-2">
+            <h3 class="text-4xl font-bold text-gray-900 dark:text-white">
+              {{ subscription.totalPaidPeriods }}
+            </h3>
+            <span class="text-xl font-semibold text-gray-800 dark:text-gray-200">Bulan</span>
+          </div>
+          <p class="text-sm text-gray-400 mt-1">Lama Berlangganan</p>
+        </div>
+      </div>
+      <div v-else-if="isSubscriptionLoading" class="animate-pulse flex gap-5">
+        <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl w-full"></div>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <BaseFilter>
             <template #default>
@@ -180,11 +191,11 @@ const handleBack = () => {
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
                 :class="[
-                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border uppercase tracking-wider',
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border tracking-wider',
                   getStatusColor(invoice.status),
                 ]"
               >
-                {{ getInvoiceStatusLabel(invoice.status) }}
+                {{ formatStatus(invoice.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">

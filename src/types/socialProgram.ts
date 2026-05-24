@@ -1,5 +1,12 @@
 import type { Pagination, PaginationParams, Response } from './response'
 
+export enum SocialProgramStatusEnum {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  REJECTED = 'rejected',
+}
+
 export interface SocialProgram {
   id: string
   slug: string
@@ -12,23 +19,14 @@ export interface SocialProgram {
   isSubscribed: boolean
   subscriptionId?: string
   totalSubscribers: number
+  collectedFund?: number
+  totalExpense?: number
   createdAt: string
-}
-
-export enum SocialProgramStatusEnum {
-  PENDING = 'pending',
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-  REJECTED = 'rejected',
 }
 
 export interface SocialProgramList {
   socialPrograms: SocialProgram[]
   pagination: Pagination
-}
-
-export interface SocialProgramDetail {
-  socialProgram: SocialProgram
 }
 
 export interface SocialProgramQueryParams extends PaginationParams {
@@ -53,4 +51,3 @@ export interface UpdateSocialProgramRequest {
 
 export type SocialProgramResponse = Response<SocialProgram>
 export type SocialProgramListResponse = Response<SocialProgramList>
-export type SocialProgramDetailResponse = Response<SocialProgram>

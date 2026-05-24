@@ -5,7 +5,14 @@ import { Motion } from 'motion-v'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLogout } from '@/composables/auth/useLogout'
-import { CircleAlert, LogOut, LayoutDashboard, Receipt, ChevronDown, History } from 'lucide-vue-next'
+import {
+  CircleAlert,
+  LogOut,
+  LayoutDashboard,
+  Receipt,
+  ChevronDown,
+  History,
+} from 'lucide-vue-next'
 import { ROLES } from '@/const/roles'
 
 const router = useRouter()
@@ -97,25 +104,29 @@ const dropdownLinks = [
       <div class="bg-primary-500 text-white rounded-xl px-6 py-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center">
-            <router-link to="/" class="text-2xl font-bold cursor-pointer">Yota</router-link>
+            <RouterLink to="/" class="text-2xl font-bold cursor-pointer">Yota</RouterLink>
           </div>
 
           <div class="flex items-center gap-8">
             <div class="hidden md:flex items-center gap-6 font-sf-pro">
-              <router-link
+              <RouterLink
                 v-for="link in navLinks"
                 :key="link.to"
                 :to="link.to"
                 class="hover:text-primary-300 transition duration-200"
               >
                 {{ link.label }}
-              </router-link>
+              </RouterLink>
 
               <!-- Services Dropdown -->
-              <div class="relative" ref="servicesMenuRef">
+              <div
+                class="relative flex items-center h-full"
+                ref="servicesMenuRef"
+                @mouseenter="isServicesMenuOpen = true"
+                @mouseleave="isServicesMenuOpen = false"
+              >
                 <button
-                  @click="isServicesMenuOpen = !isServicesMenuOpen"
-                  class="flex items-center gap-1 hover:text-primary-300 transition duration-200"
+                  class="flex items-center gap-1 hover:text-primary-300 transition duration-200 py-3"
                 >
                   Layanan
                   <ChevronDown
@@ -130,17 +141,21 @@ const dropdownLinks = [
                   :animate="{ opacity: 1, y: 0, scale: 1 }"
                   :exit="{ opacity: 0, y: -10, scale: 0.95 }"
                   :transition="{ duration: 0.2 }"
-                  class="absolute left-0 mt-3 w-48 bg-white rounded-xl shadow-xl overflow-hidden z-50 p-1.5 border border-gray-100"
+                  class="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-52 z-50"
                 >
-                  <router-link
-                    v-for="link in dropdownLinks"
-                    :key="link.to"
-                    :to="link.to"
-                    class="block p-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition font-medium"
-                    @click="isServicesMenuOpen = false"
+                  <div
+                    class="bg-white rounded-xl shadow-xl overflow-hidden p-1.5 border border-gray-100"
                   >
-                    {{ link.label }}
-                  </router-link>
+                    <RouterLink
+                      v-for="link in dropdownLinks"
+                      :key="link.to"
+                      :to="link.to"
+                      class="block p-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition font-medium"
+                      @click="isServicesMenuOpen = false"
+                    >
+                      {{ link.label }}
+                    </RouterLink>
+                  </div>
                 </Motion>
               </div>
             </div>
@@ -284,18 +299,18 @@ const dropdownLinks = [
               <h4 class="text-sm font-semibold mb-3">Layanan</h4>
               <ul class="text-sm space-y-2">
                 <li>
-                  <router-link to="/donation-programs" class="hover:text-primary-300"
-                    >Donasi</router-link
+                  <RouterLink to="/donation-programs" class="hover:text-primary-300"
+                    >Program Donasi</RouterLink
                   >
                 </li>
                 <li>
-                  <router-link to="/social-programs" class="hover:text-primary-300"
-                    >Program Sosial</router-link
+                  <RouterLink to="/social-programs" class="hover:text-primary-300"
+                    >Program Sosial</RouterLink
                   >
                 </li>
                 <li>
-                  <router-link to="/foster-children" class="hover:text-primary-300"
-                    >Anak Asuh</router-link
+                  <RouterLink to="/foster-children" class="hover:text-primary-300"
+                    >Anak Asuh</RouterLink
                   >
                 </li>
               </ul>

@@ -7,6 +7,7 @@ import type {
   SocialProgramSubscriberListResponse,
   SocialProgramSubscriberResponse,
   SubscriberSubscriptionListResponse,
+  SubscriberSubscriptionResponse,
 } from '@/types/socialProgramSubscription'
 import { api } from '@/utils/api'
 
@@ -52,6 +53,20 @@ export const socialProgramSubscriptionService = {
       {
         params,
       },
+    )
+    return response.data
+  },
+
+  getSubscriptionByID: async (id: string): Promise<SocialProgramSubscriptionResponse> => {
+    const response = await api.get<SocialProgramSubscriptionResponse>(
+      `${API.SOCIAL_PROGRAMS_ADMIN}/subscriptions/${id}`,
+    )
+    return response.data
+  },
+
+  getSubscriberSubscriptionByID: async (id: string): Promise<SubscriberSubscriptionResponse> => {
+    const response = await api.get<SubscriberSubscriptionResponse>(
+      `${API.SOCIAL_PROGRAMS_ADMIN}/subscribers/subscription/${id}`,
     )
     return response.data
   },

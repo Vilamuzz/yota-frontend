@@ -18,6 +18,8 @@ import { useSocialProgramSubscriptionCreate } from '@/composables/socialProgramS
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
 import type { CreateOfflineSocialProgramSubscriptionRequest } from '@/types/socialProgramSubscription'
+import { formatCurrency, formatStatus } from '@/utils/format'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const route = useRoute()
 const programId = route.params.id as string
@@ -85,46 +87,6 @@ const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRe
     <template #title>Daftar Subscriber Program</template>
 
     <div class="space-y-6">
-      <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <BaseButton
-          variant="primary"
-          class="flex items-center gap-2"
-          @click="isAddModalOpen = true"
-        >
-          <Plus :size="16" />
-          Tambah Pelanggan
-        </BaseButton>
-
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <BaseSearch
-            v-model="searchQuery"
-            placeholder="Cari Subscriber..."
-            class="w-full sm:w-64"
-          />
-          <BaseFilter>
-            <template #default>
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
-                  <select
-                    v-model="queryParams.status"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
-                  >
-                    <option :value="undefined">Semua</option>
-                    <option :value="SocialProgramSubscriptionStatus.ACTIVE">Aktif</option>
-                    <option :value="SocialProgramSubscriptionStatus.PAUSED">
-                      Diterima (Paused)
-                    </option>
-                    <option :value="SocialProgramSubscriptionStatus.INACTIVE">Berhenti</option>
-                  </select>
-                </div>
-              </div>
-            </template>
-          </BaseFilter>
-        </div>
-      </div>
-
       <!-- Program Info Card -->
       <div
         v-if="program"
@@ -153,6 +115,43 @@ const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRe
         </div>
       </div>
 
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <BaseButton
+          variant="primary"
+          class="flex items-center gap-2"
+          @click="isAddModalOpen = true"
+        >
+          <Plus :size="16" />
+          Tambah Pelanggan
+        </BaseButton>
+
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <BaseSearch
+            v-model="searchQuery"
+            placeholder="Cari Subscriber..."
+            class="w-full sm:w-64"
+          />
+          <BaseFilter>
+            <template #default>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
+                  >
+                    <option :value="undefined">Semua</option>
+                    <option :value="SocialProgramSubscriptionStatus.ACTIVE">Aktif</option>
+                    <option :value="SocialProgramSubscriptionStatus.INACTIVE">Berhenti</option>
+                  </select>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
+        </div>
+      </div>
+
       <!-- Table Section -->
       <BaseTable
         :loading="isLoading"
@@ -173,12 +172,15 @@ const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRe
         <template #headers>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Subscriber
+            Nama Pelanggan
           </th>
 
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
             Lama Berlangganan
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+            Total Donasi
           </th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
             Aksi
@@ -211,29 +213,30 @@ const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRe
                   getStatusColor(sub.status),
                 ]"
               >
-                {{
-                  sub.status === SocialProgramSubscriptionStatus.ACTIVE
-                    ? 'Aktif'
-                    : sub.status === SocialProgramSubscriptionStatus.PAUSED
-                      ? 'Diterima'
-                      : 'Berhenti'
-                }}
+                {{ formatStatus(sub.status) }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300"
+            >
               {{ sub.totalPaidPeriods }}
             </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300"
+            >
+              {{ formatCurrency(sub.totalDonation) }}
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
-              <RouterLink
+              <BaseIconButton
                 :to="{
                   name: 'dashboard-social-program-subscription-invoices',
                   params: { id: programId, subscriptionId: sub.id },
                 }"
-                class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-600 dark:text-gray-300 inline-block"
+                variant="info"
                 title="Lihat detail tagihan"
               >
                 <Eye :size="18" />
-              </RouterLink>
+              </BaseIconButton>
             </td>
           </tr>
         </template>

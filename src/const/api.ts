@@ -10,6 +10,7 @@ export const API = {
   FOSTER_CHILDREN_ADMIN: '/api/admin/foster-children',
   SOCIAL_PROGRAMS: '/api/social-programs',
   SOCIAL_PROGRAMS_ADMIN: '/api/admin/social-programs',
+  FINANCE_RECORD: '/api/finance-records',
   GALLERIES: '/api/galleries',
   GALLERIES_ADMIN: '/api/admin/galleries',
   NEWS: '/api/news',

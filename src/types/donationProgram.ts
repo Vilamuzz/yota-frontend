@@ -1,5 +1,13 @@
 import type { Pagination, PaginationParams, Response } from './response'
 
+export enum DonationProgramStatusEnum {
+  DRAFT = 'draft',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  EXPIRED = 'expired',
+  ARCHIVED = 'archived',
+}
+
 export interface DonationProgram {
   id: string
   slug: string
@@ -9,19 +17,11 @@ export interface DonationProgram {
   status: DonationProgramStatusEnum
   description: string
   collectedFund: number
+  totalExpense?: number
   fundTarget: number
   startDate: string
   endDate: string
-  publishedAt?: string
   createdAt: string
-}
-
-export enum DonationProgramStatusEnum {
-  DRAFT = 'draft',
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-  EXPIRED = 'expired',
-  ARCHIVED = 'archived',
 }
 
 export enum DonationProgramCategoryEnum {
