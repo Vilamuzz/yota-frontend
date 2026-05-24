@@ -6,8 +6,9 @@ import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { DonationProgramCategoryEnum, DonationProgramStatusEnum } from '@/types/donationProgram'
-import { formatCurrency, formatDate } from '@/utils/format'
+import { formatCurrency, formatStatus } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const {
   queryParams,
@@ -109,9 +110,6 @@ const statuses = Object.values(DonationProgramStatusEnum)
             Dana Terkumpul
           </th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Tanggal Berakhir
-          </th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
             Aksi
           </th>
@@ -153,26 +151,21 @@ const statuses = Object.values(DonationProgramStatusEnum)
                   getStatusColor(donationProgram.status),
                 ]"
               >
-                {{
-                  donationProgram.status.charAt(0).toUpperCase() + donationProgram.status.slice(1)
-                }}
+                {{ formatStatus(donationProgram.status) }}
               </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
-              {{ formatDate(donationProgram.endDate) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <RouterLink
+                <BaseIconButton
                   :to="{
                     name: 'dashboard-donation-programs-expense-transaction',
                     params: { id: donationProgram.id },
                   }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Lihat transaksi"
+                  variant="primary"
                 >
                   <Eye :size="18" />
-                </RouterLink>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

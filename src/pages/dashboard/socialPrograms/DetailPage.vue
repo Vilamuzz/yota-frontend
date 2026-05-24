@@ -1,21 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import {
-  Layout,
-  CreditCard,
-  Info,
-  Pencil,
-  Calendar,
-  Check,
-  X,
-  AlertCircle,
-  ArrowLeft,
-} from 'lucide-vue-next'
+import { Layout, CreditCard, Info, Pencil, Calendar, Check, X, AlertCircle } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useSocialProgramDetail } from '@/composables/socialProgram/useSocialProgramDetail'
-import { formatCurrency, formatDate } from '@/utils/format'
+import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
@@ -52,7 +42,7 @@ const handleConfirmApprove = async () => {
       showToast('Program berhasil disetujui!', 'success')
       approveConfirmShow.value = false
     },
-    onError: (err: any) => {
+    onError: (err) => {
       showToast(err.response?.data?.message || 'Gagal menyetujui program', 'error')
     },
   })
@@ -72,7 +62,7 @@ const handleConfirmReject = async (reason: string) => {
         showToast('Program berhasil ditolak', 'success')
         rejectModalShow.value = false
       },
-      onError: (err: any) => {
+      onError: (err) => {
         showToast(err.response?.data?.message || 'Gagal menolak program', 'error')
       },
     },
@@ -96,39 +86,6 @@ const handleBack = () => {
     <template #title>Detail Program Sosial</template>
 
     <div class="max-w-full mx-auto space-y-6">
-      <!-- HEADER WITH BACK BUTTON -->
-      <div class="flex items-center justify-between">
-        <button
-          @click="handleBack"
-          class="group flex items-center gap-2 text-gray-500 hover:text-primary-600 transition-colors"
-        >
-          <div
-            class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:border-primary-200 dark:group-hover:border-primary-900 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/10 transition-all"
-          >
-            <ArrowLeft :size="18" />
-          </div>
-          <span class="text-sm font-medium">Kembali ke Daftar</span>
-        </button>
-
-        <div
-          v-if="program"
-          :class="[
-            'px-3 py-1 rounded-full text-xs font-semibold border uppercase tracking-wider',
-            getStatusColor(program.status),
-          ]"
-        >
-          {{
-            program.status === 'active'
-              ? 'Berjalan'
-              : program.status === 'pending'
-                ? 'Pending'
-                : program.status === 'completed'
-                  ? 'Selesai'
-                  : program.status
-          }}
-        </div>
-      </div>
-
       <div
         v-if="isLoading && !program"
         class="flex flex-col items-center justify-center py-20 space-y-4"
@@ -179,15 +136,7 @@ const handleBack = () => {
                     getStatusColor(program.status),
                   ]"
                 >
-                  {{
-                    program.status === 'active'
-                      ? 'Berjalan'
-                      : program.status === 'pending'
-                        ? 'Pending'
-                        : program.status === 'completed'
-                          ? 'Selesai'
-                          : program.status
-                  }}
+                  {{ formatStatus(program.status) }}
                 </div>
               </div>
 

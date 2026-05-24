@@ -4,7 +4,7 @@ import { Gender, Category } from '@/types/fosterChildren'
 import type { FosterChildrenQueryParams } from '@/types/fosterChildren'
 import { useCursorPagination } from '../ui/usePagination'
 
-export function useFosterChildrenFilters() {
+export function useFosterChildrenFilters(isAdmin: boolean = false) {
   const queryParams = reactive<FosterChildrenQueryParams>({
     limit: 10,
     search: undefined,
@@ -39,7 +39,7 @@ export function useFosterChildrenFilters() {
     () => resetPagination(),
   )
 
-  const { fosterChildren, pagination, isLoading, listQuery } = useFosterChildrenList(queryParams)
+  const { fosterChildren, pagination, isLoading, listQuery } = useFosterChildrenList(queryParams, isAdmin)
   const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
     useCursorPagination(queryParams)
 

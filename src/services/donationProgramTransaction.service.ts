@@ -32,11 +32,6 @@ export const donationProgramTransactionService = {
     return response.data
   },
 
-  getDonationProgramTransactionDetail: async (id: string) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS}/transactions/${id}`)
-    return response.data
-  },
-
   cancelDonationProgramTransaction: async (id: string) => {
     const response = await api.post(`${API.DONATION_PROGRAMS_ADMIN}/transactions/${id}/cancel`)
     return response.data

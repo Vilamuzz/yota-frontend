@@ -13,12 +13,13 @@ import { ROLES } from '@/const/roles'
 import { useFosterChildrenCandidateList } from '@/composables/fosterChildrenCandidate/useFosterChildrenCandidateList'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatDate } from '@/utils/format'
+import { formatDate, formatStatus } from '@/utils/format'
 import {
   FosterChildrenCandidateStatus,
   type FosterChildrenCandidate,
   type FosterChildrenCandidateQueryParams,
 } from '@/types/fosterChildrenCandidate'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const router = useRouter()
 
@@ -84,23 +85,6 @@ const statusByRole = computed(() => {
 
   return common
 })
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case FosterChildrenCandidateStatus.PENDING:
-      return 'Diajukan'
-    case FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED:
-      return 'Menunggu Verifikasi'
-    case FosterChildrenCandidateStatus.ACCEPTED:
-      return 'Disetujui'
-    case FosterChildrenCandidateStatus.REJECTED:
-      return 'Ditolak'
-    case FosterChildrenCandidateStatus.CANCELED:
-      return 'Dibatalkan'
-    default:
-      return status
-  }
-}
 
 const hasActiveFilters = computed(
   () =>
@@ -279,19 +263,19 @@ const handleView = (child: FosterChildrenCandidate) => {
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
               <span
                 :class="[
-                  'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border',
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
                   child.gender === Gender.male
                     ? 'bg-blue-50 border-blue-100 text-blue-700 dark:bg-blue-900/20 dark:border-blue-900/30 dark:text-blue-400'
                     : 'bg-pink-50 border-pink-100 text-pink-700 dark:bg-pink-900/20 dark:border-pink-900/30 dark:text-pink-400',
                 ]"
               >
-                {{ child.gender }}
+                {{ child.gender === Gender.male ? 'Laki-laki' : 'Perempuan' }}
               </span>
             </td>
             <td
               class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300 capitalize"
             >
-              {{ child.category }}
+              {{ formatStatus(child.category) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
               {{ child.submitterName }}
@@ -303,20 +287,16 @@ const handleView = (child: FosterChildrenCandidate) => {
                   getStatusColor(child.status),
                 ]"
               >
-                {{ getStatusLabel(child.status) }}
+                {{ formatStatus(child.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
               {{ formatDate(child.createdAt) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
-              <button
-                @click="handleView(child)"
-                class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
-                title="Lihat detail"
-              >
+              <BaseIconButton @click="handleView(child)" title="Lihat detail" variant="info">
                 <Eye :size="18" />
-              </button>
+              </BaseIconButton>
             </td>
           </tr>
         </template>

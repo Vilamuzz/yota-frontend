@@ -554,15 +554,18 @@ const handleSubmit = () => {
 
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2"
-                  >Nama Sekolah / Universitas <span class="text-red-500">*</span></label
+                  >Nama Sekolah <span class="text-red-500">*</span></label
                 >
                 <input
                   v-model="form.schoolName"
                   type="text"
-                  placeholder="Masukkan nama sekolah atau universitas"
+                  placeholder="Masukkan nama sekolah"
                   class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 />
-                <p v-if="errors.schoolName || validationErrors?.schoolName" class="mt-1 text-xs text-red-600">
+                <p
+                  v-if="errors.schoolName || validationErrors?.schoolName"
+                  class="mt-1 text-xs text-red-600"
+                >
                   {{ errors.schoolName || validationErrors?.schoolName }}
                 </p>
               </div>

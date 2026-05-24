@@ -2,8 +2,8 @@ import { API } from '@/const/api'
 import type {
   CreateSocialProgramRequest,
   SocialProgramListResponse,
-  SocialProgramDetailResponse,
   SocialProgramQueryParams,
+  SocialProgramResponse,
   UpdateSocialProgramRequest,
 } from '@/types/socialProgram'
 import { api } from '@/utils/api'
@@ -18,8 +18,8 @@ export const socialProgramService = {
     return response.data
   },
 
-  getPublishedSocialProgramDetail: async (slug: string): Promise<SocialProgramDetailResponse> => {
-    const response = await api.get<SocialProgramDetailResponse>(`${API.SOCIAL_PROGRAMS}/${slug}`)
+  getPublishedSocialProgramDetail: async (slug: string): Promise<SocialProgramResponse> => {
+    const response = await api.get<SocialProgramResponse>(`${API.SOCIAL_PROGRAMS}/${slug}`)
     return response.data
   },
 
@@ -32,10 +32,8 @@ export const socialProgramService = {
     return response.data
   },
 
-  getSocialProgramDetail: async (id: string): Promise<SocialProgramDetailResponse> => {
-    const response = await api.get<SocialProgramDetailResponse>(
-      `${API.SOCIAL_PROGRAMS_ADMIN}/${id}`,
-    )
+  getSocialProgramDetail: async (id: string): Promise<SocialProgramResponse> => {
+    const response = await api.get<SocialProgramResponse>(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}`)
     return response.data
   },
 

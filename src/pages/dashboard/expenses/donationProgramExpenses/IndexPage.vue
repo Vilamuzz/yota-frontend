@@ -2,23 +2,31 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Trash2, Receipt, Plus, RotateCcw } from 'lucide-vue-next'
+import { Trash2, Receipt, Plus, RotateCcw, File, Eye } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useDonationProgramExpenseList } from '@/composables/donationProgramExpense/useDonationProgramExpenseList'
 import { useDonationProgramExpenseDelete } from '@/composables/donationProgramExpense/useDonationProgramExpenseDelete'
+import { useDonationProgramExpenseDetail } from '@/composables/donationProgramExpense/useDonationProgramExpenseDetail'
+import { useDonationProgramAdminDetail } from '@/composables/donationProgram/useDonationProgramAdminDetail'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useToast } from '@/composables/ui/useToast'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
+import ExpenseDetailModal from '@/components/molecules/ExpenseDetailModal.vue'
+import FilePreviewModal from '@/components/molecules/FilePreviewModal.vue'
 import type { PaginationParams } from '@/types/response'
+import type { DonationProgramExpense } from '@/types/donationProgramExpense'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const route = useRoute()
 const { showToast } = useToast()
-const { deleteMutation } = useDonationProgramExpenseDelete()
-
 const donationId = route.params.id as string
+const { deleteMutation } = useDonationProgramExpenseDelete(donationId)
+
+const { detailQuery, isDonationLoading } = useDonationProgramAdminDetail(donationId)
+const donation = computed(() => detailQuery.data.value?.data)
 
 const queryParams = reactive<PaginationParams>({
   limit: 10,
@@ -29,7 +37,18 @@ const queryParams = reactive<PaginationParams>({
 
 const limitOptions = [10, 25, 50, 100]
 const isDeleteModalOpen = ref(false)
+const isDetailModalOpen = ref(false)
+const isFilePreviewModalOpen = ref(false)
+const selectedFileUrl = ref<string | null>(null)
 const selectedExpenseId = ref<string | null>(null)
+const selectedExpenseDetail = ref<DonationProgramExpense | null>(null)
+const selectedExpenseIdForDetail = ref<string>('')
+const { detailQuery: expenseDetailQuery } = useDonationProgramExpenseDetail(
+  selectedExpenseIdForDetail,
+)
+const modalExpenseData = computed(
+  () => expenseDetailQuery.data.value?.data || selectedExpenseDetail.value,
+)
 const searchInput = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
 
@@ -67,6 +86,17 @@ function openDeleteModal(id: string) {
   isDeleteModalOpen.value = true
 }
 
+function openDetailModal(expense: DonationProgramExpense) {
+  selectedExpenseDetail.value = expense
+  selectedExpenseIdForDetail.value = expense.id
+  isDetailModalOpen.value = true
+}
+
+function openFilePreviewModal(fileUrl: string) {
+  selectedFileUrl.value = fileUrl
+  isFilePreviewModalOpen.value = true
+}
+
 function handleConfirmDelete() {
   if (selectedExpenseId.value) {
     deleteMutation.mutate(selectedExpenseId.value, {
@@ -88,8 +118,52 @@ function handleConfirmDelete() {
     <template #title>Manajemen Pengeluaran Donasi</template>
 
     <div class="space-y-6">
+      <!-- Stats Grid -->
+      <div v-if="!isDonationLoading && donation" class="grid grid-cols-1 md:grid-cols-12 gap-5">
+        <div
+          class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ donation.title }}
+          </h1>
+          <p class="text-sm text-gray-400 mt-1">Program Donasi</p>
+        </div>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
+            {{ formatCurrency(donation.collectedFund) }}
+          </h3>
+          <p class="text-sm text-gray-400 mt-1">Total Donasi</p>
+        </div>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ formatCurrency(donation.collectedFund - (donation.totalExpense || 0)) }}
+          </h3>
+          <p class="text-sm text-gray-400 mt-1">Sisa Saldo</p>
+        </div>
+      </div>
+      <div v-else-if="isDonationLoading" class="animate-pulse flex gap-5">
+        <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl w-full"></div>
+      </div>
+
       <!-- Header Section -->
       <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <BaseButton
+          variant="primary"
+          :to="{
+            name: 'dashboard-donation-programs-expense-transaction-create',
+            params: { id: donationId },
+          }"
+          class="w-full sm:w-auto"
+        >
+          <Plus :size="20" class="mr-1" />
+          Tambah Pengeluaran
+        </BaseButton>
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <BaseSearch
             v-model="searchInput"
@@ -106,18 +180,6 @@ function handleConfirmDelete() {
             Reset
           </BaseButton>
         </div>
-
-        <BaseButton
-          variant="primary"
-          :to="{
-            name: 'dashboard-donation-programs-expense-transaction-create',
-            params: { id: donationId },
-          }"
-          class="w-full sm:w-auto"
-        >
-          <Plus :size="20" class="mr-1" />
-          Tambah Pengeluaran
-        </BaseButton>
       </div>
 
       <!-- Table Section -->
@@ -140,8 +202,13 @@ function handleConfirmDelete() {
         <template #headers>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Judul</th>
-          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Nominal</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tanggal</th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+            Nominal
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+            Tanggal Pengeluaran
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Bukti</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
             Aksi
           </th>
@@ -162,22 +229,44 @@ function handleConfirmDelete() {
               {{ expense.title }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+              class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200"
             >
               {{ formatCurrency(expense.amount) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+            <td
+              class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200"
+            >
               {{ formatDate(expense.expenseDate) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <button
-                  class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 inline-block dark:hover:bg-red-900/20"
+                <BaseIconButton
+                  variant="success"
+                  v-if="expense.proofFile"
+                  @click="openFilePreviewModal(expense.proofFile)"
+                  title="Lihat bukti pengeluaran"
+                >
+                  <File :size="18" />
+                </BaseIconButton>
+                <span v-else class="text-gray-500 dark:text-gray-400">-</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-center gap-2">
+                <BaseIconButton
+                  variant="primary"
+                  @click="openDetailModal(expense)"
+                  title="Lihat detail pengeluaran"
+                >
+                  <Eye :size="18" />
+                </BaseIconButton>
+                <BaseIconButton
+                  variant="danger"
                   title="Hapus pengeluaran"
                   @click="openDeleteModal(expense.id)"
                 >
                   <Trash2 :size="18" />
-                </button>
+                </BaseIconButton>
               </div>
             </td>
           </tr>
@@ -195,6 +284,20 @@ function handleConfirmDelete() {
       @close="isDeleteModalOpen = false"
       @danger="handleConfirmDelete"
       @secondary="isDeleteModalOpen = false"
+    />
+
+    <!-- Expense Detail Modal -->
+    <ExpenseDetailModal
+      :show="isDetailModalOpen"
+      :expense="modalExpenseData"
+      @close="isDetailModalOpen = false"
+    />
+
+    <!-- File Preview Modal -->
+    <FilePreviewModal
+      :show="isFilePreviewModalOpen"
+      :file-url="selectedFileUrl"
+      @close="isFilePreviewModalOpen = false"
     />
   </DashboardLayout>
 </template>

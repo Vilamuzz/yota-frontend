@@ -1,12 +1,17 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fosterChildrenCandidateService } from '@/services/fosterChildrenCandidate.service'
-import type { FosterChildrenCandidateQueryParams, FosterChildrenCandidateListResponse } from '@/types/fosterChildrenCandidate'
+import type {
+  FosterChildrenCandidateQueryParams,
+  FosterChildrenCandidateListResponse,
+} from '@/types/fosterChildrenCandidate'
 import type { ApiError } from '@/types/response'
 
-export const useMyFosterChildrenCandidateList = (params: MaybeRefOrGetter<FosterChildrenCandidateQueryParams>) => {
+export const useMyFosterChildrenCandidateList = (
+  params: MaybeRefOrGetter<FosterChildrenCandidateQueryParams>,
+) => {
   const listQuery = useQuery<FosterChildrenCandidateListResponse, ApiError>({
-    queryKey: ['myFosterChildrenCandidate', params],
+    queryKey: ['myFosterChildrenCandidates', params],
     queryFn: () => fosterChildrenCandidateService.getMyFosterChildrenCandidateList(toValue(params)),
     retry: 1,
   })

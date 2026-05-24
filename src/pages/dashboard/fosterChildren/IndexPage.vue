@@ -5,7 +5,7 @@ import { Plus, Trash2, Edit, Baby, RotateCcw, GraduationCap, User } from 'lucide
 import { useFosterChildrenFilters } from '@/composables/fosterChildren/useFosterChildrenFilters'
 import { useFosterChildrenDelete } from '@/composables/fosterChildren/useFosterChildrenDelete'
 import { useToast } from '@/composables/ui/useToast'
-import { formatDate } from '@/utils/format'
+import { formatDate, formatStatus } from '@/utils/format'
 import { extractError } from '@/utils/error'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
@@ -13,6 +13,8 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { Category, Gender, type FosterChildren } from '@/types/fosterChildren'
+import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const { showToast } = useToast()
 
@@ -28,7 +30,7 @@ const {
   handleNextPage,
   handlePrevPage,
   clearFilters,
-} = useFosterChildrenFilters()
+} = useFosterChildrenFilters(true)
 
 const { deleteMutation } = useFosterChildrenDelete()
 
@@ -239,27 +241,17 @@ const handleConfirmDelete = async () => {
             <td
               class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300"
             >
-              {{
-                child.category === Category.yatim
-                  ? 'Yatim'
-                  : child.category === Category.piatu
-                    ? 'Piatu'
-                    : 'Yatim Piatu'
-              }}
+              {{ formatStatus(child.category) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
-                v-if="child.isGraduated"
-                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-50 border-green-100 text-green-700 dark:bg-green-900/20 dark:border-green-900/30 dark:text-green-400"
+                :class="[
+                  'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                  getStatusColor(child.isGraduated ? 'completed' : 'active'),
+                ]"
               >
-                <GraduationCap :size="12" />
-                Lulus
-              </span>
-              <span
-                v-else
-                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-primary-50 border-primary-100 text-primary-700 dark:bg-primary-900/20 dark:border-primary-900/30 dark:text-primary-400"
-              >
-                Aktif
+                <GraduationCap v-if="child.isGraduated" :size="12" />
+                {{ child.isGraduated ? 'Lulus' : 'Aktif' }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
@@ -267,20 +259,20 @@ const handleConfirmDelete = async () => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <RouterLink
+                <BaseIconButton
                   :to="{ name: 'dashboard-foster-children-edit', params: { id: child.id } }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
-                  title="Edit data"
+                  title="Edit Anak Asuh"
+                  variant="primary"
                 >
                   <Edit :size="18" />
-                </RouterLink>
-                <button
-                  class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 dark:hover:bg-red-900/20"
-                  title="Hapus data"
+                </BaseIconButton>
+                <BaseIconButton
+                  variant="danger"
+                  title="Hapus Anak Asuh"
                   @click="openDeleteModal(child)"
                 >
                   <Trash2 :size="18" />
-                </button>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

@@ -16,6 +16,7 @@ export const getStatusColor = (status: string) => {
     case AmbulanceStatus.Available:
     case FosterChildrenCandidateStatus.ACCEPTED:
     case FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED:
+    case 'active':
     case 'paid':
       return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
     case DonationProgramStatusEnum.COMPLETED:
@@ -26,7 +27,6 @@ export const getStatusColor = (status: string) => {
     case TransactionStatus.PENDING:
     case MediaStatus.DRAFT:
     case SocialProgramStatusEnum.PENDING:
-    case SocialProgramSubscriptionStatus.PAUSED:
     case AmbulanceStatus.Maintenance:
     case FosterChildrenCandidateStatus.PENDING:
       return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
@@ -36,6 +36,7 @@ export const getStatusColor = (status: string) => {
     case SocialProgramSubscriptionStatus.INACTIVE:
     case FosterChildrenCandidateStatus.REJECTED:
     case FosterChildrenCandidateStatus.CANCELED:
+    case 'banned':
     case 'overdue':
       return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
     case DonationProgramStatusEnum.ARCHIVED:
@@ -45,10 +46,4 @@ export const getStatusColor = (status: string) => {
     default:
       return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
   }
-}
-
-export const getAccountStatusColor = (isBanned: boolean) => {
-  return isBanned
-    ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
-    : 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
 }

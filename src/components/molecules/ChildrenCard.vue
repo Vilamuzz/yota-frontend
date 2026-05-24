@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { FosterChildren } from '@/types/fosterChildren'
+import type { FosterChildrenListItem } from '@/types/fosterChildren'
+import { formatStatus } from '@/utils/format'
 
 defineProps<{
-  fosterChildren: FosterChildren
+  fosterChildren: FosterChildrenListItem
 }>()
 
 const emit = defineEmits(['view'])
 
-const handleView = (fosterChildren: FosterChildren) => {
+const handleView = (fosterChildren: FosterChildrenListItem) => {
   emit('view', fosterChildren)
 }
 
@@ -54,24 +55,26 @@ function calculateAge(birthDate: string): number {
 </script>
 
 <template>
-  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-37.5">
-    <div class="flex flex-col items-center text-center space-y-1 hover:scale-105 transition">
+  <button
+    class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-37.5 w-full text-left cursor-pointer hover:shadow-md hover:border-primary-300 transition-all duration-200 group"
+    @click="handleView(fosterChildren)"
+  >
+    <div
+      class="flex flex-col items-center text-center space-y-1 group-hover:scale-105 transition-transform duration-200"
+    >
       <img
         :src="fosterChildren.profilePicture"
         :alt="fosterChildren.name"
         class="w-20 h-20 rounded-full object-cover border-2 border-green-600"
       />
-      <button
-        class="bg-primary-300 text-white text-md px-3 py-1 rounded-full font-medium"
-        @click="handleView(fosterChildren)"
-      >
+      <span class="bg-primary-300 text-white text-md px-3 py-1 rounded-full font-medium">
         {{ fosterChildren.name }}
-      </button>
+      </span>
 
       <div class="flex text-sm divide-x">
-        <span class="font-bold px-1">{{ fosterChildren.category }}</span>
+        <span class="font-bold px-1">{{ formatStatus(fosterChildren.category) }}</span>
         <span class="font-normal px-1">{{ calculateAge(fosterChildren.birthDate) }} Tahun</span>
       </div>
     </div>
-  </div>
+  </button>
 </template>

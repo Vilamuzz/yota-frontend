@@ -10,7 +10,8 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import type { SocialProgramQueryParams } from '@/types/socialProgram'
 import { SocialProgramStatusEnum } from '@/types/socialProgram'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatDate } from '@/utils/format'
+import { formatDate, formatStatus } from '@/utils/format'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const statuses = Object.values(SocialProgramStatusEnum)
 
@@ -120,7 +121,7 @@ const clearFilters = () => {
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
             Nama Program
           </th>
-          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
             Total Subscriber
           </th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
@@ -145,7 +146,7 @@ const clearFilters = () => {
               {{ program.title }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+              class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200"
             >
               {{ program.totalSubscribers }}
             </td>
@@ -156,13 +157,7 @@ const clearFilters = () => {
                   getStatusColor(program.status),
                 ]"
               >
-                {{
-                  program.status === 'active'
-                    ? 'Berjalan'
-                    : program.status === 'completed'
-                      ? 'Selesai'
-                      : program.status
-                }}
+                {{ formatStatus(program.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
@@ -170,16 +165,16 @@ const clearFilters = () => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <RouterLink
+                <BaseIconButton
                   :to="{
                     name: 'dashboard-social-program-detail-subscriptions',
                     params: { id: program.id },
                   }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Lihat detail"
+                  variant="info"
                 >
                   <Eye :size="18" />
-                </RouterLink>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

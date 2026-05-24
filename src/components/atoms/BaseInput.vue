@@ -16,6 +16,8 @@ interface Props {
   size?: 'sm' | 'md' | 'lg'
   showPasswordToggle?: boolean
   showPasswordStrength?: boolean
+  min?: string | number
+  max?: string | number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -134,6 +136,8 @@ const togglePasswordVisibility = () => {
         :required="required"
         :autocomplete="autocomplete"
         :disabled="disabled"
+        :min="min"
+        :max="max"
         :class="[
           inputClasses,
           $slots.prefix ? 'pl-10' : '',

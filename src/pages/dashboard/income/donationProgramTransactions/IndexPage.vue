@@ -22,6 +22,8 @@ import {
   type DonationProgramTransactionQueryParams,
 } from '@/types/donationProgramTransaction'
 import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
+import { useDonationProgramAdminDetail } from '@/composables/donationProgram'
 
 const router = useRouter()
 const { showToast } = useToast()
@@ -29,6 +31,9 @@ const { cancelMutation } = useDonationProgramTransactionCancel()
 const { createMutation } = useDonationProgramTransactionCreateOffline()
 
 const donationId = router.currentRoute.value.params.id as string
+
+const { detailQuery, isDonationLoading } = useDonationProgramAdminDetail(donationId)
+const donation = computed(() => detailQuery.data.value?.data)
 
 const isCreateModalOpen = ref(false)
 const donorName = ref('')
@@ -77,6 +82,14 @@ function handleCreateTransaction() {
         resetForm()
       },
       onError: (err) => {
+        const apiValidation = err.response?.data?.validation
+        if (apiValidation) {
+          const messages = Object.values(apiValidation).join(', ')
+          if (messages) {
+            showToast(messages, 'error')
+            return
+          }
+        }
         showToast(
           extractError(err, 'Gagal membuat transaksi offline. Silahkan coba lagi.'),
           'error',
@@ -130,8 +143,41 @@ function handleConfirmCancel() {
     <template #title>Manajemen Transaksi Donasi</template>
 
     <div class="space-y-6">
+      <!-- Stats Grid -->
+      <div v-if="!isDonationLoading && donation" class="grid grid-cols-1 md:grid-cols-12 gap-5">
+        <div
+          class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ donation.title }}
+          </h1>
+          <p class="text-sm text-gray-400 mt-1">Program Donasi</p>
+        </div>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
+            {{ formatCurrency(donation.collectedFund) }}
+          </h3>
+          <p class="text-sm text-gray-400 mt-1">Total Donasi</p>
+        </div>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ formatCurrency(donation.collectedFund - (donation.totalExpense || 0)) }}
+          </h3>
+          <p class="text-sm text-gray-400 mt-1">Sisa Saldo</p>
+        </div>
+      </div>
+      <div v-else-if="isDonationLoading" class="animate-pulse flex gap-5">
+        <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl w-full"></div>
+      </div>
+
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-start">
         <BaseButton variant="primary" class="w-full sm:w-auto" @click="isCreateModalOpen = true">
           <Plus :size="20" class="mr-1" />
           Tambah Transaksi Donasi
@@ -209,16 +255,16 @@ function handleConfirmCancel() {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <button
+                <BaseIconButton
                   v-if="
                     transaction.transactionStatus !== TransactionStatus.CANCEL &&
                     !transaction.isOnline
                   "
-                  class="p-1 hover:bg-orange-50 text-orange-500 rounded transition-colors duration-150 inline-block dark:hover:bg-orange-900/20"
+                  variant="danger"
                   @click="openCancelModal(transaction.id)"
                 >
                   <XCircle :size="18" />
-                </button>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

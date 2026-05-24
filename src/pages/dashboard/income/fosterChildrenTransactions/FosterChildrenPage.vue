@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, Baby } from 'lucide-vue-next'
+import { Eye, Baby, GraduationCap } from 'lucide-vue-next'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 import { Category, Gender, type FosterChildrenQueryParams } from '@/types/fosterChildren'
 import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
 import { useCursorPagination } from '@/composables/ui/usePagination'
-import { formatDate } from '@/utils/format'
+import { formatDate, formatStatus } from '@/utils/format'
+import { getStatusColor } from '@/utils/statusColor'
 
 const queryParams = reactive<FosterChildrenQueryParams>({
   limit: 10,
@@ -23,7 +25,7 @@ const queryParams = reactive<FosterChildrenQueryParams>({
 const searchInput = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
 
-const { fosterChildren, pagination, isLoading } = useFosterChildrenList(queryParams)
+const { fosterChildren, pagination, isLoading } = useFosterChildrenList(queryParams, true)
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
   useCursorPagination(queryParams)
 
@@ -59,13 +61,6 @@ const hasActiveFilters = computed(() => {
     queryParams.isGraduated !== undefined
   )
 })
-
-const getStatusColor = (isGraduated: boolean) => {
-  if (isGraduated) {
-    return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
-  }
-  return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-}
 </script>
 
 <template>
@@ -193,12 +188,21 @@ const getStatusColor = (isGraduated: boolean) => {
             <td
               class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 capitalize"
             >
-              {{ child.gender }}
+              <span
+                :class="[
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                  child.gender === Gender.male
+                    ? 'bg-blue-50 border-blue-100 text-blue-700 dark:bg-blue-900/20 dark:border-blue-900/30 dark:text-blue-400'
+                    : 'bg-pink-50 border-pink-100 text-pink-700 dark:bg-pink-900/20 dark:border-pink-900/30 dark:text-pink-400',
+                ]"
+              >
+                {{ child.gender === Gender.male ? 'Laki-laki' : 'Perempuan' }}
+              </span>
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 capitalize"
+              class="px-6 py-4 whitespace-nowrap text-left text-sm text-gray-600 dark:text-gray-300"
             >
-              {{ child.category }}
+              {{ formatStatus(child.category) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
               {{ formatDate(child.createdAt) }}
@@ -206,25 +210,26 @@ const getStatusColor = (isGraduated: boolean) => {
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
                 :class="[
-                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all duration-300',
-                  getStatusColor(child.isGraduated),
+                  'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                  getStatusColor(child.isGraduated ? 'completed' : 'active'),
                 ]"
               >
+                <GraduationCap v-if="child.isGraduated" :size="12" />
                 {{ child.isGraduated ? 'Lulus' : 'Aktif' }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <div class="flex items-center justify-center gap-2">
-                <RouterLink
+                <BaseIconButton
                   :to="{
                     name: 'dashboard-foster-children-transaction-detail',
                     params: { id: child.id },
                   }"
-                  class="p-2 inline-flex items-center text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all"
                   title="Lihat Riwayat Donasi"
+                  variant="info"
                 >
                   <Eye :size="18" />
-                </RouterLink>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

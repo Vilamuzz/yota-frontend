@@ -1,4 +1,8 @@
-import type { CreateDonationProgramExpenseRequest } from '@/types/donationProgramExpense'
+import type {
+  CreateDonationProgramExpenseRequest,
+  DonationProgramExpenseListResponse,
+  DonationProgramExpenseResponse,
+} from '@/types/donationProgramExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
 import type { PaginationParams } from '@/types/response'
@@ -11,20 +15,41 @@ export const donationProgramExpenseService = {
     return response.data
   },
 
-  getDonationProgramExpenses: async (id: string, params: PaginationParams) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS_ADMIN}/${id}/expenses`, {
-      params,
-    })
+  getDonationProgramExpenses: async (
+    id: string,
+    params: PaginationParams,
+  ): Promise<DonationProgramExpenseListResponse> => {
+    const response = await api.get<DonationProgramExpenseListResponse>(
+      `${API.DONATION_PROGRAMS_ADMIN}/${id}/expenses`,
+      {
+        params,
+      },
+    )
     return response.data
   },
 
-  getDonationProgramExpenseDetail: async (id: string) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS_ADMIN}/expenses/${id}`)
+  getDonationProgramExpenseDetail: async (id: string): Promise<DonationProgramExpenseResponse> => {
+    const response = await api.get<DonationProgramExpenseResponse>(
+      `${API.DONATION_PROGRAMS_ADMIN}/expenses/${id}`,
+    )
     return response.data
   },
 
   deleteDonationProgramExpense: async (id: string) => {
     const response = await api.delete(`${API.DONATION_PROGRAMS_ADMIN}/expenses/${id}`)
+    return response.data
+  },
+
+  getPublicDonationProgramExpenses: async (
+    slug: string,
+    params: PaginationParams,
+  ): Promise<DonationProgramExpenseListResponse> => {
+    const response = await api.get<DonationProgramExpenseListResponse>(
+      `${API.DONATION_PROGRAMS}/${slug}/expenses`,
+      {
+        params,
+      },
+    )
     return response.data
   },
 }

@@ -1,4 +1,4 @@
-import type { CreateFosterChildrenExpenseRequest } from '@/types/fosterChildrenExpense'
+import type { CreateFosterChildrenExpenseRequest, FosterChildrenExpenseListResponse, FosterChildrenExpenseResponse } from '@/types/fosterChildrenExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
 import type { PaginationParams } from '@/types/response'
@@ -12,7 +12,7 @@ export const fosterChildrenExpenseService = {
     if (data.note) formData.append('note', data.note)
     if (data.proofFile) formData.append('proofFile', data.proofFile)
 
-    const response = await api.post(`${API.FOSTER_CHILDREN}/${id}/expenses`, formData, {
+    const response = await api.post(`${API.FOSTER_CHILDREN_ADMIN}/${id}/expenses`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -20,20 +20,20 @@ export const fosterChildrenExpenseService = {
     return response.data
   },
 
-  getFosterChildrenExpenses: async (id: string, params: PaginationParams) => {
-    const response = await api.get(`${API.FOSTER_CHILDREN}/${id}/expenses`, {
+  getFosterChildrenExpenses: async (id: string, params: PaginationParams): Promise<FosterChildrenExpenseListResponse> => {
+    const response = await api.get<FosterChildrenExpenseListResponse>(`${API.FOSTER_CHILDREN}/${id}/expenses`, {
       params,
     })
     return response.data
   },
 
-  getFosterChildrenExpenseDetail: async (id: string) => {
-    const response = await api.get(`${API.FOSTER_CHILDREN}/expenses/${id}`)
+  getFosterChildrenExpenseDetail: async (id: string): Promise<FosterChildrenExpenseResponse> => {
+    const response = await api.get<FosterChildrenExpenseResponse>(`${API.FOSTER_CHILDREN}/expenses/${id}`)
     return response.data
   },
 
   deleteFosterChildrenExpense: async (id: string) => {
-    const response = await api.delete(`${API.FOSTER_CHILDREN}/expenses/${id}`)
+    const response = await api.delete(`${API.FOSTER_CHILDREN_ADMIN}/expenses/${id}`)
     return response.data
   },
 }
