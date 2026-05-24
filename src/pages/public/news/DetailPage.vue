@@ -1,13 +1,28 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { usePublishedNewsDetail } from '@/composables/news/useNewsDetail'
 import { formatDate } from '@/utils/format'
-import { ArrowLeft, Calendar, Clock, Share2, Link2, BookOpen, Tag } from 'lucide-vue-next'
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Share2,
+  Link2,
+  BookOpen,
+  Tag,
+  Send,
+  User,
+  Flag,
+} from 'lucide-vue-next'
 import { useToast } from '@/composables/ui/useToast'
+import { useNewsCommentCreate } from '@/composables/newsComment/useNewsCommentCreate'
+import { useNewsCommentList } from '@/composables/newsComment/useNewsCommentList'
+import { useNewsCommentReport } from '@/composables/newsComment/useNewsCommentReport'
+import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +30,108 @@ const { showToast } = useToast()
 const slug = computed(() => route.params.slug as string)
 
 const { detailQuery } = usePublishedNewsDetail(slug)
+const { newsComments, isLoading: isLoadingComments } = useNewsCommentList(slug)
+const { createMutation, validationErrors } = useNewsCommentCreate()
+const { createMutation: reportMutation } = useNewsCommentReport()
+
+const commentContent = ref('')
+const replyContent = ref('')
+const replyingTo = ref<{ commentId: string; targetId: string; username: string } | null>(null)
+const commentInputRef = ref<HTMLTextAreaElement | null>(null)
+
+const isReportModalOpen = ref(false)
+const reportingCommentId = ref<string>('')
+const reportReason = ref('')
+
+const openReportModal = (id: string) => {
+  reportingCommentId.value = id
+  reportReason.value = ''
+  isReportModalOpen.value = true
+}
+
+const closeReportModal = () => {
+  isReportModalOpen.value = false
+  reportingCommentId.value = ''
+  reportReason.value = ''
+}
+
+const submitReport = () => {
+  if (!reportReason.value.trim() || reportMutation.isPending.value) return
+
+  reportMutation.mutate(
+    {
+      newsCommentID: reportingCommentId.value,
+      reason: reportReason.value,
+    },
+    {
+      onSuccess: () => {
+        showToast('Komentar berhasil dilaporkan.', 'success')
+        closeReportModal()
+      },
+      onError: () => {
+        showToast('Gagal melaporkan komentar.', 'error')
+      },
+    },
+  )
+}
+
+const autoResize = (event: Event) => {
+  const el = event.target as HTMLTextAreaElement
+  el.style.height = 'auto'
+  el.style.height = `${el.scrollHeight}px`
+}
+
+const cancelReply = () => {
+  replyingTo.value = null
+  replyContent.value = ''
+}
+
+const submitComment = () => {
+  if (!commentContent.value.trim() || createMutation.isPending.value) return
+
+  createMutation.mutate(
+    {
+      slug: slug.value,
+      data: { content: commentContent.value },
+    },
+    {
+      onSuccess: () => {
+        commentContent.value = ''
+        if (commentInputRef.value) {
+          commentInputRef.value.style.height = 'auto'
+        }
+        showToast('Komentar berhasil dikirim!', 'success')
+      },
+      onError: () => {
+        showToast('Gagal mengirim komentar.', 'error')
+      },
+    },
+  )
+}
+
+const submitReply = () => {
+  if (!replyContent.value.trim() || createMutation.isPending.value || !replyingTo.value) return
+
+  createMutation.mutate(
+    {
+      slug: slug.value,
+      data: {
+        content: replyContent.value,
+        parentCommentId: replyingTo.value.commentId,
+      },
+    },
+    {
+      onSuccess: () => {
+        replyContent.value = ''
+        replyingTo.value = null
+        showToast('Balasan berhasil dikirim!', 'success')
+      },
+      onError: () => {
+        showToast('Gagal mengirim balasan.', 'error')
+      },
+    },
+  )
+}
 
 const news = computed(() => detailQuery.data.value?.data)
 
@@ -216,6 +333,236 @@ const formatCategory = (cat: string) => {
                 </div>
               </div>
             </section>
+
+            <!-- Comments Section -->
+            <section class="mt-12 pt-10 border-t border-gray-100 space-y-6">
+              <h2 class="text-xl font-black text-gray-900 flex items-center gap-2">
+                <span class="w-1 h-6 bg-primary-400 rounded-full inline-block"></span>
+                Komentar ({{ newsComments.length }})
+              </h2>
+
+              <!-- Comment Form -->
+              <div class="flex gap-4">
+                <div
+                  class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 shrink-0"
+                >
+                  <User :size="20" />
+                </div>
+                <div class="flex-1 flex flex-row gap-3">
+                  <textarea
+                    ref="commentInputRef"
+                    v-model="commentContent"
+                    rows="1"
+                    @input="autoResize"
+                    placeholder="Tulis komentar Anda di sini..."
+                    class="w-full bg-white border-b border-gray-200 text-sm focus:outline-none focus:border-primary-400 transition-colors resize-none overflow-hidden"
+                    :disabled="createMutation.isPending.value"
+                  ></textarea>
+                  <div v-if="validationErrors?.content" class="text-xs text-red-500 font-medium">
+                    {{ validationErrors.content[0] }}
+                  </div>
+
+                  <div class="flex items-end">
+                    <button
+                      :disabled="!commentContent.trim() || createMutation.isPending.value"
+                      @click="submitComment"
+                      class="bg-primary-400 disabled:bg-gray-400 text-white rounded-full p-2 hover:bg-primary-500 transition-colors cursor-pointer"
+                    >
+                      <span class="flex items-center gap-2">
+                        <Send :size="14" />
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Comments List -->
+              <div v-if="isLoadingComments" class="space-y-4">
+                <BaseSkeleton variant="text-sm" class="w-full h-12" v-for="i in 1" :key="i" />
+              </div>
+              <div
+                v-else-if="newsComments.length === 0"
+                class="text-center py-8 text-gray-500 text-sm"
+              >
+                Belum ada komentar. Jadilah yang pertama berkomentar!
+              </div>
+              <div v-else class="space-y-5">
+                <div v-for="comment in newsComments" :key="comment.id" class="flex flex-col gap-4">
+                  <div class="flex gap-4">
+                    <div
+                      class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 shrink-0 font-bold text-sm"
+                    >
+                      {{ comment.username.charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="flex-1 space-y-1">
+                      <div class="flex items-baseline gap-2">
+                        <h4 class="font-bold text-gray-900 text-sm">{{ comment.username }}</h4>
+                        <span class="text-xs text-gray-400">{{
+                          formatDate(comment.createdAt)
+                        }}</span>
+                      </div>
+                      <p class="text-gray-700 text-sm leading-relaxed">{{ comment.content }}</p>
+                      <div class="flex items-center gap-1 pt-1">
+                        <button
+                          @click="
+                            replyingTo = {
+                              commentId: comment.id,
+                              targetId: comment.id,
+                              username: comment.username,
+                            }
+                          "
+                          class="text-xs text-primary-500 font-semibold hover:text-primary-600 transition-colors flex items-center gap-1 hover:bg-primary-500 hover:text-white rounded-full px-2 py-1"
+                        >
+                          Balas
+                        </button>
+                        <button
+                          @click="openReportModal(comment.id)"
+                          class="text-xs text-gray-400 font-semibold hover:text-red-500 transition-colors flex items-center gap-1 hover:bg-red-500 hover:text-white rounded-full px-2 py-1"
+                        >
+                          <Flag :size="12" />
+                          Laporkan
+                        </button>
+                      </div>
+
+                      <!-- Reply Input for main comment -->
+                      <div v-if="replyingTo?.targetId === comment.id" class="flex gap-3 pt-3">
+                        <div
+                          class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 shrink-0"
+                        >
+                          <User :size="16" />
+                        </div>
+                        <div class="flex-1 space-y-2">
+                          <span
+                            class="text-xs text-primary-700 font-medium flex items-center gap-2"
+                          >
+                            Membalas <span class="font-bold">{{ replyingTo.username }}</span>
+                          </span>
+                          <textarea
+                            v-model="replyContent"
+                            @input="autoResize"
+                            rows="1"
+                            placeholder="Tulis balasan Anda..."
+                            class="w-full bg-transparent border-b border-gray-200 text-sm focus:outline-none focus:border-primary-400 transition-colors resize-none overflow-hidden"
+                            :disabled="createMutation.isPending.value"
+                          ></textarea>
+                          <div
+                            v-if="validationErrors?.content"
+                            class="text-xs text-red-500 font-medium"
+                          >
+                            {{ validationErrors.content[0] }}
+                          </div>
+                          <div class="flex justify-end gap-2 pt-1">
+                            <button
+                              @click="cancelReply"
+                              class="disabled:bg-gray-400 text-gray-500 text-xs rounded-full px-3 py-1.5 hover:bg-gray-200 transition-colors font-medium"
+                            >
+                              Batal
+                            </button>
+                            <button
+                              :disabled="!replyContent.trim() || createMutation.isPending.value"
+                              @click="submitReply"
+                              class="bg-primary-400 disabled:bg-gray-400 text-white text-xs rounded-full px-3 py-1.5 hover:bg-primary-500 transition-colors font-medium"
+                            >
+                              <template v-if="createMutation.isPending.value">Mengirim...</template>
+                              <template v-else>Balas</template>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Replies -->
+                  <div v-if="comment.replies && comment.replies.length > 0" class="pl-14 space-y-4">
+                    <div v-for="reply in comment.replies" :key="reply.id" class="flex gap-3">
+                      <div
+                        class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 shrink-0 font-bold text-xs"
+                      >
+                        {{ reply.username.charAt(0).toUpperCase() }}
+                      </div>
+                      <div class="flex-1 space-y-1">
+                        <div class="flex items-baseline gap-2">
+                          <h4 class="font-bold text-gray-900 text-sm">{{ reply.username }}</h4>
+                          <span class="text-xs text-gray-400">{{
+                            formatDate(reply.createdAt)
+                          }}</span>
+                        </div>
+                        <p class="text-gray-700 text-sm leading-relaxed">{{ reply.content }}</p>
+                        <div class="flex items-center gap-1 pt-1">
+                          <button
+                            @click="
+                              replyingTo = {
+                                commentId: comment.id,
+                                targetId: reply.id,
+                                username: reply.username,
+                              }
+                            "
+                            class="text-xs text-primary-500 font-semibold hover:text-primary-600 transition-colors flex items-center gap-1 hover:bg-primary-500 hover:text-white rounded-full px-2 py-1"
+                          >
+                            Balas
+                          </button>
+                          <button
+                            @click="openReportModal(reply.id)"
+                            class="text-xs text-gray-400 font-semibold hover:text-red-500 transition-colors flex items-center gap-1 hover:bg-red-500 hover:text-white rounded-full px-2 py-1"
+                          >
+                            <Flag :size="12" />
+                            Laporkan
+                          </button>
+                        </div>
+
+                        <!-- Reply Input for nested reply -->
+                        <div v-if="replyingTo?.targetId === reply.id" class="flex gap-3 pt-3">
+                          <div
+                            class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 shrink-0"
+                          >
+                            <User :size="16" />
+                          </div>
+                          <div class="flex-1 space-y-2">
+                            <span
+                              class="text-xs text-primary-700 font-medium flex items-center gap-2"
+                            >
+                              Membalas <span class="font-bold">{{ replyingTo.username }}</span>
+                            </span>
+                            <textarea
+                              v-model="replyContent"
+                              @input="autoResize"
+                              rows="1"
+                              placeholder="Tulis balasan Anda..."
+                              class="w-full bg-transparent border-b border-gray-200 text-sm focus:outline-none focus:border-primary-400 transition-colors resize-none overflow-hidden"
+                              :disabled="createMutation.isPending.value"
+                            ></textarea>
+                            <div
+                              v-if="validationErrors?.content"
+                              class="text-xs text-red-500 font-medium"
+                            >
+                              {{ validationErrors.content[0] }}
+                            </div>
+                            <div class="flex justify-end gap-2 pt-1">
+                              <button
+                                @click="cancelReply"
+                                class="disabled:bg-gray-400 text-gray-500 text-xs rounded-full px-3 py-1.5 hover:bg-gray-200 transition-colors font-medium"
+                              >
+                                Batal
+                              </button>
+                              <button
+                                :disabled="!replyContent.trim() || createMutation.isPending.value"
+                                @click="submitReply"
+                                class="bg-primary-400 disabled:bg-gray-400 text-white text-xs rounded-full px-3 py-1.5 hover:bg-primary-500 transition-colors font-medium"
+                              >
+                                <template v-if="createMutation.isPending.value"
+                                  >Mengirim...</template
+                                >
+                                <template v-else>Balas</template>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
 
           <!-- Sidebar - Right -->
@@ -305,5 +652,25 @@ const formatCategory = (cat: string) => {
         </div>
       </div>
     </div>
+
+    <!-- Report Modal -->
+    <PublicConfirmationModal
+      :show="isReportModalOpen"
+      title="Laporkan Komentar"
+      message="Beritahu kami alasan Anda melaporkan komentar ini."
+      primary-button-text="Kirim Laporan"
+      :primary-button-loading="reportMutation.isPending.value"
+      @primary="submitReport"
+      @close="closeReportModal"
+    >
+      <div class="mt-4">
+        <textarea
+          v-model="reportReason"
+          rows="3"
+          placeholder="Tulis alasan laporan Anda di sini..."
+          class="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"
+        ></textarea>
+      </div>
+    </PublicConfirmationModal>
   </PublicLayout>
 </template>

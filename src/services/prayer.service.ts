@@ -1,6 +1,7 @@
 import { api } from '@/utils/api'
 import { API } from '@/const/api'
 import type { PrayerListResponse, PrayerResponse } from '@/types/prayer'
+import type { PaginationParams } from '@/types/response'
 
 export const prayerService = {
   getListPrayer: async (slug: string): Promise<PrayerListResponse> => {
@@ -22,6 +23,23 @@ export const prayerService = {
 
   deletePrayer: async (id: string): Promise<PrayerResponse> => {
     const response = await api.delete<PrayerResponse>(`${API.DONATION_PROGRAMS}/prayers/${id}`)
+    return response.data
+  },
+
+  getAdminPrayers: async (params?: PaginationParams): Promise<PrayerListResponse> => {
+    const response = await api.get<PrayerListResponse>(`${API.DONATION_PROGRAMS}/prayers`, {
+      params,
+    })
+    return response.data
+  },
+
+  deleteAdminPrayer: async (id: string): Promise<PrayerResponse> => {
+    const response = await api.delete<PrayerResponse>(`${API.DONATION_PROGRAMS}/prayers/${id}`)
+    return response.data
+  },
+
+  allowPrayer: async (id: string): Promise<PrayerResponse> => {
+    const response = await api.patch<PrayerResponse>(`${API.DONATION_PROGRAMS}/prayers/${id}/allow`)
     return response.data
   },
 }

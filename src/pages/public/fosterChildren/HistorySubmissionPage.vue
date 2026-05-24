@@ -4,9 +4,23 @@ import { useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BasePublicSearch from '@/components/atoms/BasePublicSearch.vue'
+import { extractError } from '@/utils/error'
+import type { ApiError } from '@/types/response'
 import { useMyFosterChildrenCandidateList } from '@/composables/fosterChildrenCandidate/useMyFosterChildrenCandidateList'
+import { useMyFosterChildrenCandidateCancel } from '@/composables/fosterChildrenCandidate/useMyFosterChildrenCandidateCancel'
+import { useToast } from '@/composables/ui/useToast'
+import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
 import { useCursorPagination } from '@/composables/ui/usePagination'
-import { Loader2, X, Clock, CheckCircle2, XCircle, Search, FileText } from 'lucide-vue-next'
+import {
+  Loader2,
+  X,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Search,
+  FileText,
+  AlertTriangle,
+} from 'lucide-vue-next'
 import { formatDate } from '@/utils/format'
 import type { FosterChildrenCandidateQueryParams } from '@/types/fosterChildrenCandidate'
 
@@ -21,6 +35,34 @@ const queryParams = reactive<FosterChildrenCandidateQueryParams>({
 const { listQuery, fosterChildrenCandidate, pagination, isLoading } =
   useMyFosterChildrenCandidateList(queryParams)
 const { resetPagination, handleNextPage, handlePrevPage } = useCursorPagination(queryParams)
+const { cancelMutation } = useMyFosterChildrenCandidateCancel()
+const { showToast } = useToast()
+
+const showCancelModal = ref(false)
+const candidateToCancel = ref<{ id: string; name: string } | null>(null)
+
+const handleCancel = (id: string, name: string) => {
+  candidateToCancel.value = { id, name }
+  showCancelModal.value = true
+}
+
+const confirmCancel = () => {
+  if (!candidateToCancel.value) return
+
+  cancelMutation.mutate(candidateToCancel.value.id, {
+    onSuccess: () => {
+      showToast('Pengajuan berhasil dibatalkan.', 'success')
+      showCancelModal.value = false
+      candidateToCancel.value = null
+    },
+    onError: (err) => {
+      const errorMsg = extractError(err, 'Gagal membatalkan pengajuan.')
+      showToast(errorMsg, 'error')
+      showCancelModal.value = false
+      candidateToCancel.value = null
+    },
+  })
+}
 
 const isError = listQuery.isError
 
@@ -36,21 +78,24 @@ watch(searchQuery, (val) => {
 const getStatusConfig = (status: string) => {
   switch (status.toLowerCase()) {
     case 'accepted':
-    case 'diterima':
       return {
         icon: CheckCircle2,
         class: 'bg-green-50 text-green-700 border-green-200',
         label: 'Diterima',
       }
     case 'rejected':
-    case 'ditolak':
       return {
         icon: XCircle,
         class: 'bg-red-50 text-red-700 border-red-200',
         label: 'Ditolak',
       }
+    case 'cancelled':
+      return {
+        icon: XCircle,
+        class: 'bg-gray-50 text-gray-700 border-gray-200',
+        label: 'Dibatalkan',
+      }
     case 'pending':
-    case 'menunggu':
     default:
       return {
         icon: Clock,
@@ -96,11 +141,15 @@ const getStatusConfig = (status: string) => {
           </div>
           <h3 class="text-lg font-bold text-gray-900 mb-2">Gagal Memuat Data</h3>
           <p class="text-gray-600 max-w-md mx-auto">
-            Terjadi kesalahan saat mengambil riwayat. Silakan coba lagi.
+            {{
+              listQuery.error.value
+                ? extractError(
+                    listQuery.error.value as unknown as ApiError,
+                    'Terjadi kesalahan saat mengambil riwayat. Silakan coba lagi.',
+                  )
+                : 'Terjadi kesalahan saat mengambil riwayat. Silakan coba lagi.'
+            }}
           </p>
-          <BaseButton variant="outline" class="mt-6" @click="listQuery.refetch()">
-            Coba Lagi
-          </BaseButton>
         </div>
 
         <template v-else>
@@ -159,6 +208,21 @@ const getStatusConfig = (status: string) => {
                   </p>
                 </div>
               </div>
+
+              <!-- Cancel Button for Pending Status -->
+              <div
+                v-if="candidate.status.toLowerCase() === 'pending'"
+                class="w-full md:w-auto shrink-0 mt-4 md:mt-0"
+              >
+                <BaseButton
+                  variant="danger"
+                  class="w-full md:w-auto text-sm py-2"
+                  @click="handleCancel(candidate.id, candidate.name)"
+                  :disabled="cancelMutation.isPending.value"
+                >
+                  Batalkan Pengajuan
+                </BaseButton>
+              </div>
             </div>
           </div>
 
@@ -215,5 +279,19 @@ const getStatusConfig = (status: string) => {
         </template>
       </div>
     </div>
+
+    <!-- Cancel Confirmation Modal -->
+    <PublicConfirmationModal
+      :show="showCancelModal"
+      title="Batalkan Pengajuan"
+      :message="`Apakah Anda yakin ingin membatalkan pengajuan untuk ${candidateToCancel?.name}? Tindakan ini tidak dapat dibatalkan.`"
+      :icon="AlertTriangle"
+      secondary-button-text="Tutup"
+      danger-button-text="Ya, Batalkan"
+      :danger-button-loading="cancelMutation.isPending.value"
+      @secondary="showCancelModal = false"
+      @danger="confirmCancel"
+      @close="showCancelModal = false"
+    />
   </PublicLayout>
 </template>

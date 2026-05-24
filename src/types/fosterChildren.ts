@@ -6,15 +6,17 @@ export interface FosterChildren {
   profilePicture: string
   gender: Gender
   category: Category
-  address: string
-  schoolName: string
-  educationLevel: number
-  birthPlace: string
+  address?: string
+  schoolName?: string
+  educationLevel?: number
+  birthPlace?: string
   birthDate: string
   isGraduated: boolean
-  familyCard: string
-  sktm: string
-  achievements: Achievement[]
+  familyCard?: string
+  sktm?: string
+  achievements?: Achievement[]
+  collectedFund?: number
+  totalExpense?: number
   createdAt: string
 }
 
@@ -90,4 +92,3 @@ export interface UpdateFosterChildrenRequest {
 
 export type FosterChildrenResponse = Response<FosterChildren>
 export type FosterChildrenListResponse = Response<FosterChildrenList>
-export type FosterChildrenDetailResponse = Response<FosterChildren>

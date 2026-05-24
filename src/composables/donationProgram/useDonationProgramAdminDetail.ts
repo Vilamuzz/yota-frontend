@@ -14,5 +14,6 @@ export const useDonationProgramAdminDetail = (id: MaybeRefOrGetter<string>) => {
 
   return {
     detailQuery,
+    isDonationLoading: detailQuery.isLoading,
   }
 }

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { reactive, ref, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { ArrowLeft, Eye } from 'lucide-vue-next'
+import { Eye } from 'lucide-vue-next'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
@@ -10,11 +10,12 @@ import { useSocialProgramSubscriber } from '@/composables/socialProgramSubscript
 import { useSocialProgramSubscriptionListByAccount } from '@/composables/socialProgramSubscription/useSocialProgramSubscriptionListByAccount'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import type { SocialProgramSubscriptionQueryParams } from '@/types/socialProgramSubscription'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency, formatStatus } from '@/utils/format'
+import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
-const router = useRouter()
 const route = useRoute()
-const subscriberId = route.params.id as string
+const subscriberId = route.params.subscriberId as string
 
 const { subscriber, isLoading: isSubscriberLoading } = useSocialProgramSubscriber(subscriberId)
 
@@ -43,53 +44,11 @@ watch(searchQuery, (val) => {
     resetPagination()
   }, 400)
 })
-
-const getStatusClass = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'bg-[#D1FAE5] text-[#10B981] dark:bg-emerald-900/30 dark:text-emerald-400'
-    case 'inactive':
-      return 'bg-[#FFE4E6] text-[#F43F5E] dark:bg-rose-900/30 dark:text-rose-400'
-    default:
-      return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-  }
-}
-
-const formatStatus = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'Aktif'
-    case 'inactive':
-      return 'Tidak Aktif'
-    default:
-      return status
-  }
-}
-
-const handleBack = () => {
-  router.push({ name: 'dashboard-social-programs-subscribers' })
-}
 </script>
 
 <template>
   <DashboardLayout>
     <div class="space-y-6">
-      <!-- Search and Action Bar -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <button
-          @click="handleBack"
-          class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
-        >
-          <ArrowLeft :size="22" />
-          <h2 class="text-lg font-semibold text-gray-800 dark:text-white">
-            Detail Pelanggan: {{ subscriber?.username || 'Memuat...' }}
-          </h2>
-        </button>
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <BaseSearch v-model="searchQuery" placeholder="Cari Program..." class="w-full sm:w-64" />
-          <BaseFilter />
-        </div>
-      </div>
       <!-- Stats Grid -->
       <div v-if="!isSubscriberLoading && subscriber" class="grid grid-cols-1 md:grid-cols-12 gap-5">
         <div
@@ -126,6 +85,14 @@ const handleBack = () => {
         <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl w-full"></div>
       </div>
 
+      <!-- Search and Action Bar -->
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchQuery" placeholder="Cari Program..." class="w-full sm:w-64" />
+          <BaseFilter />
+        </div>
+      </div>
+
       <!-- Table Section -->
       <BaseTable
         :loading="isSubscriptionsLoading"
@@ -150,6 +117,9 @@ const handleBack = () => {
           <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
             Total Donasi Program
           </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+            Lama Berlangganan
+          </th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
             Riwayat
           </th>
@@ -169,7 +139,10 @@ const handleBack = () => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
-                :class="['px-3 py-1 text-xs font-medium rounded-md', getStatusClass(item.status)]"
+                :class="[
+                  'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                  getStatusColor(item.status),
+                ]"
               >
                 {{ formatStatus(item.status) }}
               </span>
@@ -179,21 +152,26 @@ const handleBack = () => {
             >
               {{ formatCurrency(item.totalDonation) }}
             </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-green-600 dark:text-green-500"
+            >
+              {{ item.totalPaidPeriods }}
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <RouterLink
+                <BaseIconButton
                   :to="{
-                    name: 'dashboard-social-programs-subscribers-program-detail',
+                    name: 'dashboard-social-program-subscribers-invoices',
                     params: {
                       subscriberId: subscriberId,
                       programId: item.id,
                     },
                   }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
-                  title="Lihat detail"
+                  title="Lihat Detail"
+                  variant="info"
                 >
                   <Eye :size="18" />
-                </RouterLink>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

@@ -12,8 +12,8 @@ export const useSocialProgramInvoiceList = (
     queryFn: () => socialProgramInvoiceService.getSubscriptionInvoices(subscriptionId, params),
   })
 
-  const invoices = computed(() => listQuery.data.value?.data.invoices || [])
-  const pagination = computed(() => listQuery.data.value?.data.pagination)
+  const invoices = computed(() => listQuery.data.value?.data?.invoices || [])
+  const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {
     listQuery,

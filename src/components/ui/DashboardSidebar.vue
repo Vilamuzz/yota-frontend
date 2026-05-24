@@ -7,15 +7,36 @@ const isInitialized = ref(false)
 </script>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ChevronDown, LogOut } from 'lucide-vue-next'
 import { Motion, AnimatePresence } from 'motion-v'
 import { useLogout } from '@/composables/auth/useLogout'
 import { useNavigation } from '@/composables/navigation/useNavigation'
 
 const route = useRoute()
+const router = useRouter()
 const { logout } = useLogout()
 const { visibleMenu } = useNavigation()
+
+const isMenuActive = (menuRoute: string | undefined) => {
+  if (!menuRoute) return false
+  if (route.path === menuRoute) return true
+  
+  let currentActiveMenu = route.meta.activeMenu as string | undefined
+  const visited = new Set<string>()
+  
+  while (currentActiveMenu && !visited.has(currentActiveMenu)) {
+    visited.add(currentActiveMenu)
+    try {
+      const resolved = router.resolve({ name: currentActiveMenu })
+      if (resolved && resolved.path === menuRoute) return true
+      currentActiveMenu = resolved.meta.activeMenu as string | undefined
+    } catch {
+      break
+    }
+  }
+  return false
+}
 
 const toggleDropdown = (label: string) => {
   if (openDropdowns.value.has(label)) {
@@ -30,7 +51,7 @@ if (!isInitialized.value) {
   visibleMenu.value.forEach((item) => {
     if (item.children) {
       const isChildActive = item.children.some(
-        (child) => child.route && route.path.startsWith(child.route),
+        (child) => child.route && (route.path.startsWith(child.route) || isMenuActive(child.route)),
       )
       if (isChildActive) {
         openDropdowns.value.add(item.label)
@@ -63,7 +84,7 @@ const initiallyOpen = new Set(openDropdowns.value)
           <div
             :class="[
               'w-full flex items-center gap-3 px-4 py-2 rounded-sm transition-all duration-200 cursor-pointer',
-              isExactActive
+              isExactActive || isMenuActive(item.route)
                 ? 'bg-white/20 text-white shadow-sm'
                 : 'text-white/70 hover:bg-white/10 hover:text-white',
             ]"
@@ -108,7 +129,7 @@ const initiallyOpen = new Set(openDropdowns.value)
                 <div
                   :class="[
                     'w-full flex items-center px-4 py-2 text-sm rounded-sm transition-all duration-200 text-left pl-11 cursor-pointer',
-                    isActive
+                    isActive || isMenuActive(child.route)
                       ? 'bg-white/20 text-white font-medium shadow-sm'
                       : 'text-white/60 hover:text-white hover:bg-white/5',
                   ]"

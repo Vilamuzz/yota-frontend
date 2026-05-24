@@ -1,45 +1,285 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
+import { formatCurrency, formatStatus } from '@/utils/format'
+import { Heart, Users, Baby, ChevronRight, Search } from 'lucide-vue-next'
+import { useFinanceRecordSummary } from '@/composables/financeRecord/useFinanceRecordSummary'
+import { useDonationProgramList } from '@/composables/donationProgram/useDonationProgramList'
+import { usePublishedSocialProgramList } from '@/composables/socialProgram/usePublishedSocialProgramList'
+import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
 
+const router = useRouter()
+
+const activeTab = ref<'donation' | 'social' | 'foster'>('donation')
 const searchQuery = ref('')
-const reports = [
-  {
-    id: 1,
-    title: 'Laporan Donasi 1',
-    description: 'Deskripsi laporan donasi 1',
-    date: '2024-01-01',
-  },
-  {
-    id: 2,
-    title: 'Laporan Donasi 2',
-    description: 'Deskripsi laporan donasi 2',
-    date: '2024-02-01',
-  },
-]
+
+const goToDetail = (type: 'donation' | 'social' | 'foster', slug: string) => {
+  router.push({ name: 'report-detail', params: { type, slug } })
+}
+
+const { donationPrograms } = useDonationProgramList({ limit: 100 })
+const { socialPrograms } = usePublishedSocialProgramList({ limit: 100 })
+const { fosterChildren } = useFosterChildrenList({ limit: 100 })
+
+const { summaryQuery } = useFinanceRecordSummary()
+const summary = computed(() => summaryQuery.data.value?.data)
+
+const totalDonationExpense = computed(() => summary.value?.totalDonationProgramExpense || 0)
+const totalSocialExpense = computed(() => summary.value?.totalSocialProgramExpense || 0)
+const totalFosterExpense = computed(() => summary.value?.totalFosterChildrenExpenses || 0)
+const grandTotal = computed(
+  () => totalDonationExpense.value + totalSocialExpense.value + totalFosterExpense.value,
+)
+
+const totalDonationProgramsCount = computed(() => summary.value?.totalDonationProgram || 0)
+const totalSocialProgramsCount = computed(() => summary.value?.totalSocialProgram || 0)
+const totalFosterChildrenCount = computed(() => summary.value?.totalFosterChildren || 0)
+
+const filteredDonation = computed(() =>
+  donationPrograms.value.filter((p) =>
+    p.title?.toLowerCase().includes(searchQuery.value.toLowerCase()),
+  ),
+)
+const filteredSocial = computed(() =>
+  socialPrograms.value.filter((p) =>
+    p.title?.toLowerCase().includes(searchQuery.value.toLowerCase()),
+  ),
+)
+const filteredFoster = computed(() =>
+  fosterChildren.value.filter((p) =>
+    p.name?.toLowerCase().includes(searchQuery.value.toLowerCase()),
+  ),
+)
 </script>
 
 <template>
   <PublicLayout>
-    <BasePublicSearch v-model="searchQuery" />
-
-    <div class="mx-auto mt-10 px-6 md:px-12 lg:px-24">
-      <!-- Loading State -->
-      <BaseLoading v-if="publishedDonationListQuery.isLoading.value" message="Memuat data..." />
-
-      <!-- Error State -->
-      <BaseAlert v-else-if="publishedDonationListQuery.isError.value" type="error">
-        {{ publishedDonationListError || 'Gagal memuat data donasi.' }}
-      </BaseAlert>
-
-      <!-- Daftar Program Donasi -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2">
-        <DonationCard v-for="donation in donations" :key="donation.id" :donation="donation" />
-
-        <!-- Empty State -->
-        <div v-if="donations.length === 0" class="col-span-2 text-center py-16 text-gray-400">
-          Tidak ada program donasi aktif saat ini.
+    <div class="bg-gray-50 min-h-screen pt-28 pb-16 px-4 sm:px-8 lg:px-18 font-poppins">
+      <div class="max-w-7xl mx-auto">
+        <!-- Page Header -->
+        <div class="text-center mb-10">
+          <h1 class="text-3xl font-bold text-primary-500 mb-3 uppercase tracking-wide">
+            Laporan Pengeluaran
+          </h1>
+          <p class="text-gray-500 max-w-2xl mx-auto">
+            Transparansi penggunaan dana. Setiap rupiah yang Anda percayakan kami
+            pertanggungjawabkan secara terbuka dan terperinci.
+          </p>
         </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div
+            class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm col-span-2 lg:col-span-1"
+          >
+            <p class="text-xs text-gray-400 mb-1 font-medium uppercase tracking-wider">
+              Total Pengeluaran
+            </p>
+            <p class="text-2xl font-black text-gray-900">{{ formatCurrency(grandTotal) }}</p>
+            <p class="text-xs text-gray-400 mt-1">Semua program</p>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center">
+                <Heart :size="16" class="text-rose-500" />
+              </div>
+              <span class="text-xs font-medium text-gray-500">Donasi</span>
+            </div>
+            <p class="text-lg font-bold text-gray-900">
+              {{ formatCurrency(totalDonationExpense) }}
+            </p>
+            <p class="text-xs text-gray-400">{{ totalDonationProgramsCount }} program</p>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                <Users :size="16" class="text-blue-500" />
+              </div>
+              <span class="text-xs font-medium text-gray-500">Sosial</span>
+            </div>
+            <p class="text-lg font-bold text-gray-900">{{ formatCurrency(totalSocialExpense) }}</p>
+            <p class="text-xs text-gray-400">{{ totalSocialProgramsCount }} program</p>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                <Baby :size="16" class="text-emerald-500" />
+              </div>
+              <span class="text-xs font-medium text-gray-500">Anak Asuh</span>
+            </div>
+            <p class="text-lg font-bold text-gray-900">{{ formatCurrency(totalFosterExpense) }}</p>
+            <p class="text-xs text-gray-400">{{ totalFosterChildrenCount }} anak</p>
+          </div>
+        </div>
+
+        <!-- Toolbar: Search -->
+        <div class="mb-8">
+          <div class="relative w-full sm:w-80">
+            <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Cari program atau nama anak asuh..."
+              class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition"
+            />
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div
+          class="flex gap-1 bg-white rounded-2xl p-1.5 border border-gray-100 shadow-sm mb-8 w-fit"
+        >
+          <button
+            v-for="tab in [
+              { key: 'donation', label: 'Program Donasi', icon: Heart },
+              { key: 'social', label: 'Program Sosial', icon: Users },
+              { key: 'foster', label: 'Anak Asuh', icon: Baby },
+            ]"
+            :key="tab.key"
+            @click="((activeTab = tab.key as any), (searchQuery = ''))"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+            :class="
+              activeTab === tab.key
+                ? 'bg-primary-500 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            "
+          >
+            <component :is="tab.icon" :size="15" />
+            {{ tab.label }}
+          </button>
+        </div>
+
+        <!-- Donation Programs -->
+        <template v-if="activeTab === 'donation'">
+          <div v-if="filteredDonation.length > 0" class="space-y-4">
+            <div
+              v-for="program in filteredDonation"
+              :key="program.id"
+              class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:border-primary-100 transition-all duration-200 cursor-pointer"
+              @click="goToDetail('donation', program.slug)"
+            >
+              <div class="flex items-center gap-5 p-5">
+                <img
+                  :src="program.coverImage"
+                  :alt="program.title"
+                  class="w-16 h-16 rounded-xl object-cover shrink-0"
+                />
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-bold text-gray-900 truncate">{{ program.title }}</h3>
+                  <div class="flex items-center gap-4 mt-1 text-sm">
+                    <span class="text-gray-400"
+                      >Target:
+                      <span class="text-gray-700 font-medium">{{
+                        formatCurrency(program.fundTarget)
+                      }}</span></span
+                    >
+                    <span class="text-gray-400"
+                      >Terkumpul:
+                      <span class="text-gray-700 font-medium">{{
+                        formatCurrency(program.collectedFund)
+                      }}</span></span
+                    >
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-xs text-gray-400 mb-0.5">Total Pengeluaran</p>
+                  <p class="text-xl font-black text-rose-500">
+                    {{ formatCurrency(program.totalExpense!) }}
+                  </p>
+                </div>
+                <div class="ml-2 p-2 rounded-lg text-gray-400">
+                  <ChevronRight :size="20" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-center py-24 text-gray-400">
+            <Search :size="40" class="mx-auto mb-3 opacity-40" />
+            <p>Tidak ada program donasi yang cocok.</p>
+          </div>
+        </template>
+
+        <!-- Social Programs -->
+        <template v-else-if="activeTab === 'social'">
+          <div v-if="filteredSocial.length > 0" class="space-y-4">
+            <div
+              v-for="program in filteredSocial"
+              :key="program.id"
+              class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:border-primary-100 transition-all duration-200 cursor-pointer"
+              @click="goToDetail('social', program.slug)"
+            >
+              <div class="flex items-center gap-5 p-5">
+                <img
+                  :src="program.coverImage"
+                  :alt="program.title"
+                  class="w-16 h-16 rounded-xl object-cover shrink-0"
+                />
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-bold text-gray-900 truncate">{{ program.title }}</h3>
+                  <p class="text-sm text-gray-400 mt-1">
+                    <span class="font-medium text-gray-600">{{ program.totalSubscribers }}</span>
+                    pelanggan aktif
+                  </p>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-xs text-gray-400 mb-0.5">Total Pengeluaran</p>
+                  <p class="text-xl font-black text-blue-500">
+                    {{ formatCurrency(program.totalExpense!) }}
+                  </p>
+                </div>
+                <div class="ml-2 p-2 rounded-lg text-gray-400">
+                  <ChevronRight :size="20" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-center py-24 text-gray-400">
+            <Search :size="40" class="mx-auto mb-3 opacity-40" />
+            <p>Tidak ada program sosial yang cocok.</p>
+          </div>
+        </template>
+
+        <!-- Foster Children -->
+        <template v-else-if="activeTab === 'foster'">
+          <div v-if="filteredFoster.length > 0" class="space-y-4">
+            <div
+              v-for="child in filteredFoster"
+              :key="child.id"
+              class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:border-primary-100 transition-all duration-200 cursor-pointer"
+              @click="goToDetail('foster', child.id)"
+            >
+              <div class="flex items-center gap-5 p-5">
+                <img
+                  :src="child.profilePicture"
+                  :alt="child.name"
+                  class="w-16 h-16 rounded-full object-cover shrink-0 border-2 border-emerald-100"
+                />
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-bold text-gray-900">{{ child.name }}</h3>
+                  <span
+                    class="inline-block mt-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold"
+                  >
+                    {{ formatStatus(child.category) }}
+                  </span>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-xs text-gray-400 mb-0.5">Total Pengeluaran</p>
+                  <p class="text-xl font-black text-emerald-600">
+                    {{ formatCurrency(child.totalExpense!) }}
+                  </p>
+                </div>
+                <div class="ml-2 p-2 rounded-lg text-gray-400">
+                  <ChevronRight :size="20" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-center py-24 text-gray-400">
+            <Search :size="40" class="mx-auto mb-3 opacity-40" />
+            <p>Tidak ada anak asuh yang cocok.</p>
+          </div>
+        </template>
       </div>
     </div>
   </PublicLayout>

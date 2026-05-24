@@ -10,7 +10,6 @@ import {
   FileText,
   User,
   FileCheck,
-  ArrowLeft,
   Loader2,
 } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
@@ -199,18 +198,6 @@ const handleSubmit = () => {
     </div>
 
     <div v-else class="max-w-full mx-auto space-y-6">
-      <!-- Header Actions -->
-      <div class="flex items-center justify-between">
-        <BaseButton
-          variant="outline"
-          size="md"
-          @click="router.push({ name: 'dashboard-foster-children' })"
-        >
-          <ArrowLeft :size="18" class="mr-2" />
-          Kembali
-        </BaseButton>
-      </div>
-
       <form @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column: Primary Information -->
         <div class="lg:col-span-2 space-y-6">
@@ -322,7 +309,9 @@ const handleSubmit = () => {
                 <select
                   v-model="form.educationLevel"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
-                  :class="{ 'border-red-500': errors.educationLevel || validationErrors?.educationLevel }"
+                  :class="{
+                    'border-red-500': errors.educationLevel || validationErrors?.educationLevel,
+                  }"
                 >
                   <option :value="undefined" disabled>Pilih Tingkat Pendidikan</option>
                   <option v-for="el in educationLevels" :key="el.value" :value="el.value">
@@ -393,7 +382,7 @@ const handleSubmit = () => {
                   class="w-full"
                   @click="addAchievement"
                 >
-                  TAMBAH PRESTASI BARU
+                  Tambah Prestasi Baru
                 </BaseButton>
               </div>
 

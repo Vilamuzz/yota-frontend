@@ -2,8 +2,8 @@
 import { ref, computed, reactive, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Plus, Trash2, Eye, HandHeart } from 'lucide-vue-next'
-import { formatCurrency, formatDate } from '@/utils/format'
+import { Plus, Trash2, Eye, HandHeart, GraduationCap } from 'lucide-vue-next'
+import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { useFosterChildrenTransactionList } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionList'
 import { useFosterChildrenTransactionDelete } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionDelete'
 import { useFosterChildrenTransactionCreateOffline } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionCreateOffline'
@@ -19,10 +19,16 @@ import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
 import type { FosterChildrenTransactionQueryParams } from '@/types/fosterChildrenTransaction'
 import { getStatusColor } from '@/utils/statusColor'
+import { useAdminFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenAdminDetail'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const route = useRoute()
 const { showToast } = useToast()
 const childId = route.params.id as string
+
+const { detailQuery, isLoading: isChildLoading } = useAdminFosterChildrenDetail(childId)
+
+const child = computed(() => detailQuery.data.value?.data)
 
 const queryParams = reactive<FosterChildrenTransactionQueryParams>({
   limit: 10,
@@ -135,8 +141,49 @@ function handleConfirmDelete() {
 <template>
   <DashboardLayout>
     <div class="space-y-6">
+      <!-- Stats Grid -->
+      <div v-if="!isChildLoading && child" class="grid grid-cols-1 md:grid-cols-12 gap-5">
+        <div
+          class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ child.name }}
+          </h1>
+          <p class="text-sm text-gray-400 mt-1">Nama Anak Asuh</p>
+        </div>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
+            {{ formatCurrency(child.collectedFund) }}
+          </h3>
+          <p class="text-sm text-gray-400 mt-1">Total Donasi</p>
+        </div>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <div class="flex items-baseline gap-2">
+            <span
+              :class="[
+                'inline-flex items-center gap-1 px-3.5 py-0.5 rounded-full text-xl font-medium border',
+                getStatusColor(child.isGraduated ? 'completed' : 'active'),
+              ]"
+            >
+              <GraduationCap v-if="child.isGraduated" :size="12" />
+              {{ child.isGraduated ? 'Lulus' : 'Aktif' }}
+            </span>
+          </div>
+          <p class="text-sm text-gray-400 mt-1">Status Kelulusan</p>
+        </div>
+      </div>
+      <div v-else-if="isChildLoading" class="animate-pulse flex gap-5">
+        <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl w-full"></div>
+      </div>
+
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-start">
         <BaseButton variant="primary" @click="handleCreate">
           <Plus :size="20" class="mr-1" />
           Tambah Transaksi Offline
@@ -204,10 +251,7 @@ function handleConfirmDelete() {
                   getStatusColor(transaction.transactionStatus),
                 ]"
               >
-                {{
-                  transaction.transactionStatus.charAt(0).toUpperCase() +
-                  transaction.transactionStatus.slice(1)
-                }}
+                {{ formatStatus(transaction.transactionStatus) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
@@ -215,20 +259,20 @@ function handleConfirmDelete() {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <div class="flex items-center justify-center gap-2">
-                <button
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
+                <BaseIconButton
                   title="Lihat detail"
+                  variant="info"
                   @click="openDetailModal(transaction)"
                 >
                   <Eye :size="18" />
-                </button>
-                <button
-                  class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 inline-block dark:hover:bg-red-900/20"
+                </BaseIconButton>
+                <BaseIconButton
                   title="Hapus transaksi"
+                  variant="danger"
                   @click="openDeleteModal(transaction.id)"
                 >
                   <Trash2 :size="18" />
-                </button>
+                </BaseIconButton>
               </div>
             </td>
           </tr>
@@ -277,7 +321,7 @@ function handleConfirmDelete() {
               getStatusColor(selectedTransaction.transactionStatus),
             ]"
           >
-            {{ selectedTransaction.transactionStatus }}
+            {{ formatStatus(selectedTransaction.transactionStatus) }}
           </span>
         </div>
       </div>

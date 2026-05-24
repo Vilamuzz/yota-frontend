@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { ArrowLeft, Eye, X, Baby, CheckCircle2, Loader2, AlertCircle } from 'lucide-vue-next'
+import { Eye, X, Baby, CheckCircle2, Loader2, AlertCircle } from 'lucide-vue-next'
 import { useRouter, useRoute } from 'vue-router'
 import { ref, computed } from 'vue'
 import { FosterChildrenCandidateStatus } from '@/types/fosterChildrenCandidate'
@@ -8,7 +8,7 @@ import { useFosterChildrenCandidateDetail } from '@/composables/fosterChildrenCa
 import { useFosterChildrenCandidateUpdate } from '@/composables/fosterChildrenCandidate/useFosterChildrenUpdate'
 import { useToast } from '@/composables/ui/useToast'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatDate } from '@/utils/format'
+import { formatDate, formatStatus } from '@/utils/format'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
@@ -25,23 +25,6 @@ const { acceptMutation, rejectMutation } = useFosterChildrenCandidateUpdate()
 
 const fosterChildrenCandidate = computed(() => detailQuery.data.value?.data)
 const isLoading = computed(() => detailQuery.isPending.value)
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case FosterChildrenCandidateStatus.PENDING:
-      return 'Diajukan'
-    case FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED:
-      return 'Menunggu Verifikasi Ketua'
-    case FosterChildrenCandidateStatus.ACCEPTED:
-      return 'Disetujui'
-    case FosterChildrenCandidateStatus.REJECTED:
-      return 'Ditolak'
-    case FosterChildrenCandidateStatus.CANCELED:
-      return 'Dibatalkan'
-    default:
-      return status
-  }
-}
 
 const showImagePreview = ref(false)
 const previewImageUrl = ref<string | null>(null)
@@ -171,28 +154,6 @@ const getEducationLevelLabel = (level?: number) => {
 <template>
   <DashboardLayout>
     <div class="max-w-full mx-auto space-y-6">
-      <!-- Header -->
-      <div class="flex items-center gap-4">
-        <button
-          @click="handleCancel"
-          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          title="Kembali ke ajuan anak asuh"
-        >
-          <ArrowLeft :size="20" />
-        </button>
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-            <Baby :size="24" class="text-primary-400 dark:text-primary-500" />
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Detail Ajuan Anak Asuh</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              Review dan kelola detail pengajuan anak asuh.
-            </p>
-          </div>
-        </div>
-      </div>
-
       <!-- Loading State -->
       <div
         v-if="isLoading"
@@ -228,7 +189,7 @@ const getEducationLevelLabel = (level?: number) => {
             <h3
               class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
             >
-              <Baby :size="20" class="text-primary-400" />
+              <Baby :size="20" class="text-green-500" />
               Identitas Anak Asuh
             </h3>
             <div class="space-y-4">
@@ -262,9 +223,7 @@ const getEducationLevelLabel = (level?: number) => {
                 }}</span>
               </div>
               <div class="grid grid-cols-3 gap-4">
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400"
-                  >Sekolah / Univ</span
-                >
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Sekolah</span>
                 <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200">{{
                   fosterChildrenCandidate.schoolName || '-'
                 }}</span>
@@ -411,11 +370,11 @@ const getEducationLevelLabel = (level?: number) => {
                   <div class="col-span-2">
                     <span
                       :class="[
-                        'px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider border',
+                        'px-3 py-1 text-xs font-bold rounded-full tracking-wider border',
                         getStatusColor(fosterChildrenCandidate.status),
                       ]"
                     >
-                      {{ getStatusLabel(fosterChildrenCandidate.status) }}
+                      {{ formatStatus(fosterChildrenCandidate.status) }}
                     </span>
                   </div>
                 </div>

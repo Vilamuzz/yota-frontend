@@ -2,8 +2,8 @@ import { API } from '@/const/api'
 import type {
   CreateFosterChildrenRequest,
   FosterChildrenListResponse,
-  FosterChildrenDetailResponse,
   FosterChildrenQueryParams,
+  FosterChildrenResponse,
   UpdateFosterChildrenRequest,
 } from '@/types/fosterChildren'
 import { api } from '@/utils/api'
@@ -16,8 +16,8 @@ export const fosterChildrenService = {
     return response.data
   },
 
-  getFosterChildrenDetail: async (id: string): Promise<FosterChildrenDetailResponse> => {
-    const response = await api.get<FosterChildrenDetailResponse>(`${API.FOSTER_CHILDREN}/${id}`)
+  getFosterChildrenDetail: async (id: string): Promise<FosterChildrenResponse> => {
+    const response = await api.get<FosterChildrenResponse>(`${API.FOSTER_CHILDREN}/${id}`)
     return response.data
   },
 
@@ -25,6 +25,20 @@ export const fosterChildrenService = {
     params: FosterChildrenQueryParams,
   ): Promise<FosterChildrenListResponse> => {
     const response = await api.get<FosterChildrenListResponse>(API.FOSTER_CHILDREN, { params })
+    return response.data
+  },
+
+  getAdminFosterChildren: async (
+    params: FosterChildrenQueryParams,
+  ): Promise<FosterChildrenListResponse> => {
+    const response = await api.get<FosterChildrenListResponse>(API.FOSTER_CHILDREN_ADMIN, {
+      params,
+    })
+    return response.data
+  },
+
+  getAdminFosterChildrenDetail: async (id: string): Promise<FosterChildrenResponse> => {
+    const response = await api.get<FosterChildrenResponse>(`${API.FOSTER_CHILDREN_ADMIN}/${id}`)
     return response.data
   },
 

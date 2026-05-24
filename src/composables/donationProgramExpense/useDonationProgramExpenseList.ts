@@ -5,13 +5,13 @@ import type { DonationProgramExpenseListResponse } from '@/types/donationProgram
 import type { ApiError, PaginationParams } from '@/types/response'
 
 export const useDonationProgramExpenseList = (
-  id: MaybeRefOrGetter<string>,
+  slug: MaybeRefOrGetter<string>,
   params: MaybeRefOrGetter<PaginationParams>,
 ) => {
   const listQuery = useQuery<DonationProgramExpenseListResponse, ApiError>({
-    queryKey: ['donationProgramExpenses', id, params],
+    queryKey: ['donationProgramExpenses', slug, params],
     queryFn: () =>
-      donationProgramExpenseService.getDonationProgramExpenses(toValue(id), toValue(params)),
+      donationProgramExpenseService.getDonationProgramExpenses(toValue(slug), toValue(params)),
     retry: 1,
   })
 

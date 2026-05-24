@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { socialProgramExpenseSchema } from '@/schemas/socialProgramExpense.schema'
 import { useSocialProgramExpenseCreate } from '@/composables/socialProgramExpense/useSocialProgramExpenseCreate'
@@ -14,41 +14,76 @@ import { Camera, FileText } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
-const { createMutation } = useSocialProgramExpenseCreate()
+const { createMutation, validationErrors } = useSocialProgramExpenseCreate()
 const { showToast } = useToast()
 
 const socialProgramId = route.params.id as string
-const title = ref<string>('')
-const amount = ref<string>('')
-const expenseDate = ref<string>(new Date().toISOString().substring(0, 10))
-const note = ref<string>('')
-const proofFile = ref<File | null>(null)
+const form = reactive({
+  title: '',
+  amount: '',
+  expenseDate: new Date().toISOString().substring(0, 10),
+  note: '',
+  proofFile: null as File | null,
+})
 const proofPreview = ref<string | null>(null)
 const errors = ref<Record<string, string>>({})
 
 const isLoading = computed(() => createMutation.isPending.value)
 
 const formatCurrencyPreview = computed(() => {
-  const num = Number(amount.value)
+  const num = Number(form.amount)
   if (!num || isNaN(num)) return ''
   return formatCurrency(num)
 })
+
+const titleError = computed(() => errors.value.title || validationErrors.value?.title || '')
+const amountError = computed(() => errors.value.amount || validationErrors.value?.amount || '')
+const expenseDateError = computed(
+  () =>
+    errors.value.expenseDate ||
+    validationErrors.value?.expenseDate ||
+    errors.value.expense_date ||
+    validationErrors.value?.expense_date ||
+    '',
+)
+const noteError = computed(() => errors.value.note || validationErrors.value?.note || '')
+const proofFileError = computed(
+  () =>
+    errors.value.proofFile ||
+    validationErrors.value?.proofFile ||
+    errors.value.proof_file ||
+    validationErrors.value?.proof_file ||
+    '',
+)
+
+watch(
+  () => form,
+  () => {
+    if (Object.keys(errors.value).length > 0) {
+      errors.value = {}
+    }
+    if (createMutation.isError.value) {
+      createMutation.reset()
+    }
+  },
+  { deep: true },
+)
 
 const handleFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
     const file = target.files[0]
-    proofFile.value = file
+    form.proofFile = file
     proofPreview.value = URL.createObjectURL(file)
   }
 }
 
 const handleSubmit = () => {
   const result = socialProgramExpenseSchema.safeParse({
-    title: title.value.trim(),
-    amount: Number(amount.value),
-    expenseDate: expenseDate.value,
-    note: note.value.trim(),
+    title: form.title.trim(),
+    amount: Number(form.amount),
+    expenseDate: form.expenseDate,
+    note: form.note.trim(),
   })
 
   const zodErrors = getZodErrors(result)
@@ -60,7 +95,7 @@ const handleSubmit = () => {
       id: socialProgramId,
       data: {
         ...result.data,
-        proofFile: proofFile.value || undefined,
+        proofFile: form.proofFile ? (form.proofFile as unknown as File) : undefined,
       },
     },
     {
@@ -93,10 +128,10 @@ const handleSubmit = () => {
           <div class="p-6 space-y-5">
             <BaseInput
               id="title"
-              v-model="title"
+              v-model="form.title"
               label="Judul Pengeluaran"
               placeholder="mis. Pembelian Logistik"
-              :error="errors.title"
+              :error="titleError"
               required
             />
 
@@ -109,13 +144,13 @@ const handleSubmit = () => {
               </label>
               <input
                 id="amount"
-                v-model="amount"
+                v-model="form.amount"
                 type="number"
                 min="1000"
                 placeholder="mis. 500000"
                 class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-[#121212] dark:text-gray-100"
                 :class="
-                  errors.amount
+                  amountError
                     ? 'border-red-300 dark:border-red-500/50 focus:ring-red-500 dark:focus:ring-red-500/50'
                     : 'border-gray-300 dark:border-gray-700'
                 "
@@ -123,17 +158,17 @@ const handleSubmit = () => {
               <p v-if="formatCurrencyPreview" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 ≈ {{ formatCurrencyPreview }}
               </p>
-              <p v-if="errors.amount" class="mt-1 text-xs text-red-600">
-                {{ errors.amount }}
+              <p v-if="amountError" class="mt-1 text-xs text-red-600">
+                {{ amountError }}
               </p>
             </div>
 
             <BaseInput
               id="expenseDate"
-              v-model="expenseDate"
+              v-model="form.expenseDate"
               type="date"
               label="Tanggal Pengeluaran"
-              :error="errors.expenseDate"
+              :error="expenseDateError"
               required
             />
 
@@ -146,11 +181,14 @@ const handleSubmit = () => {
               </label>
               <textarea
                 id="note"
-                v-model="note"
+                v-model="form.note"
                 rows="3"
                 placeholder="Tambahkan detail pengeluaran..."
                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-[#121212] dark:text-gray-100"
               ></textarea>
+              <p v-if="noteError" class="mt-1 text-xs text-red-600">
+                {{ noteError }}
+              </p>
             </div>
           </div>
 
@@ -191,7 +229,7 @@ const handleSubmit = () => {
                   class="relative aspect-video flex items-center justify-center bg-gray-50 dark:bg-gray-900/30"
                 >
                   <img
-                    v-if="proofFile?.type.startsWith('image/')"
+                    v-if="form.proofFile?.type.startsWith('image/')"
                     :src="proofPreview"
                     class="object-contain max-h-full"
                     alt="Pratinjau Bukti"
@@ -199,7 +237,7 @@ const handleSubmit = () => {
                   <div v-else class="flex flex-col items-center">
                     <FileText :size="48" class="text-primary-500" />
                     <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mt-2">
-                      {{ proofFile?.name }}
+                      {{ form.proofFile?.name }}
                     </p>
                   </div>
 
@@ -210,6 +248,9 @@ const handleSubmit = () => {
                   </div>
                 </div>
               </div>
+              <p v-if="proofFileError" class="mt-1 text-xs text-red-600">
+                {{ proofFileError }}
+              </p>
             </div>
 
             <div

@@ -16,8 +16,9 @@ import {
   DonationProgramCategoryEnum,
   DonationProgramStatusEnum,
 } from '@/types/donationProgram'
-import { formatCurrency, formatDate } from '@/utils/format'
+import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const {
   queryParams,
@@ -190,13 +191,13 @@ function handleConfirmArchive() {
 
         <template #headers>
           <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
-          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Program</th>
+          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Program Donasi
+          </th>
           <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider">Target</th>
           <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
           <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Timeline</th>
-          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">
-            Actions
-          </th>
+          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Aksi</th>
         </template>
 
         <template #rows>
@@ -231,61 +232,63 @@ function handleConfirmArchive() {
                   getStatusColor(donation.status),
                 ]"
               >
-                {{ donation.status.charAt(0).toUpperCase() + donation.status.slice(1) }}
+                {{ formatStatus(donation.status) }}
               </span>
             </td>
             <td class="px-4 py-4 whitespace-nowrap">
               <div class="flex flex-col text-xs space-y-1">
                 <div class="flex items-center gap-1 text-gray-700 dark:text-gray-200">
-                  <span class="font-medium">End:</span>
+                  <span class="font-medium">Berakhir:</span>
                   <span>{{ formatDate(donation.endDate) }}</span>
                 </div>
                 <div class="flex items-center gap-1 text-gray-400 dark:text-gray-500">
-                  <span>Created:</span>
+                  <span>Dibuat:</span>
                   <span>{{ formatDate(donation.createdAt) }}</span>
                 </div>
               </div>
             </td>
             <td class="px-4 py-4 whitespace-nowrap">
               <div class="flex items-center justify-left gap-2">
-                <button
+                <BaseIconButton
                   v-if="donation.status === DonationProgramStatusEnum.DRAFT"
                   @click="handleActive(donation)"
-                  class="p-1 text-green-600 hover:bg-green-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
-                  title="Activate donation"
+                  title="Aktifkan program donasi"
+                  variant="success"
                   :disabled="activeMutation.isPending.value"
                 >
                   <Play :size="18" />
-                </button>
-                <button
+                </BaseIconButton>
+                <BaseIconButton
                   v-if="donation.status === DonationProgramStatusEnum.ACTIVE"
                   @click="handleArchive(donation)"
-                  class="p-1 text-orange-600 hover:bg-orange-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
-                  title="Archive donation"
+                  title="Arsipkan program donasi"
+                  variant="warning"
                   :disabled="archiveMutation.isPending.value"
                 >
                   <Archive :size="18" />
-                </button>
-                <RouterLink
+                </BaseIconButton>
+                <BaseIconButton
                   v-if="
                     donation.status !== DonationProgramStatusEnum.COMPLETED &&
                     donation.status !== DonationProgramStatusEnum.EXPIRED &&
                     donation.status !== DonationProgramStatusEnum.ARCHIVED
                   "
-                  :to="{ name: 'dashboard-donation-programs-edit', params: { id: donation.id } }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 inline-block dark:hover:bg-gray-700 dark:text-gray-200"
-                  title="Edit donation"
+                  :to="{
+                    name: 'dashboard-donation-programs-edit',
+                    params: { id: donation.id },
+                  }"
+                  title="Edit program donasi"
                 >
                   <SquarePen :size="18" />
-                </RouterLink>
-                <button
+                </BaseIconButton>
+                <BaseIconButton
                   v-if="donation.status === DonationProgramStatusEnum.DRAFT"
                   @click="deleteDonationProgram(donation)"
-                  class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
-                  title="Delete donation"
+                  title="Hapus program donasi"
+                  variant="danger"
                 >
                   <Trash2 :size="18" />
-                </button>
+                </BaseIconButton>
               </div>
             </td>
           </tr>
@@ -297,10 +300,10 @@ function handleConfirmArchive() {
   <!-- Delete Confirmation Modal -->
   <ConfirmationModal
     :show="confirmShow"
-    :title="`Delete ${confirmDonationProgram?.title}?`"
-    :message="`This donation will be permanently deleted. This action cannot be undone.`"
-    danger-button-text="Delete"
-    secondary-button-text="Cancel"
+    :title="`Hapus ${confirmDonationProgram?.title}?`"
+    :message="`Program donasi ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.`"
+    danger-button-text="Hapus"
+    secondary-button-text="Batal"
     :danger-button-loading="deleteMutation.isPending.value"
     @danger="handleConfirmDelete"
     @secondary="confirmShow = false"
@@ -310,10 +313,10 @@ function handleConfirmArchive() {
   <!-- Archive Confirmation Modal -->
   <ConfirmationModal
     :show="archiveConfirmShow"
-    :title="`Archive ${archiveDonationProgram?.title}?`"
-    :message="`This donation will be archived and will no longer be visible to the public. You can still access it from the admin dashboard.`"
-    primary-button-text="Archive"
-    secondary-button-text="Cancel"
+    :title="`Arsipkan ${archiveDonationProgram?.title}?`"
+    :message="`Program donasi ini akan diarsipkan dan tidak akan lagi terlihat oleh publik. Anda masih dapat mengaksesnya dari admin dashboard.`"
+    primary-button-text="Arsipkan"
+    secondary-button-text="Batal"
     :primary-button-loading="archiveMutation.isPending.value"
     @primary="handleConfirmArchive"
     @secondary="archiveConfirmShow = false"
@@ -323,10 +326,10 @@ function handleConfirmArchive() {
   <!-- Active Confirmation Modal -->
   <ConfirmationModal
     :show="activeConfirmShow"
-    :title="`Activate ${activeDonationProgram?.title}?`"
-    :message="`This donation will be published and become visible to the public. Please make sure all details and the cover image are correct.`"
-    primary-button-text="Activate"
-    secondary-button-text="Cancel"
+    :title="`Aktifkan ${activeDonationProgram?.title}?`"
+    :message="`Program donasi ini akan diaktifkan dan akan terlihat oleh publik. Pastikan semua detail dan gambar sampul sudah benar.`"
+    primary-button-text="Aktifkan"
+    secondary-button-text="Batal"
     :primary-button-loading="activeMutation.isPending.value"
     @primary="handleConfirmActive"
     @secondary="activeConfirmShow = false"

@@ -8,14 +8,14 @@ import type {
 import type { ApiError } from '@/types/response'
 
 export const useDonationProgramTransactionList = (
-  id: MaybeRefOrGetter<string>,
+  slug: MaybeRefOrGetter<string>,
   params: MaybeRefOrGetter<DonationProgramTransactionQueryParams>,
 ) => {
   const listQuery = useQuery<DonationProgramTransactionListResponse, ApiError>({
-    queryKey: ['donationProgramTransactions', id, params],
+    queryKey: ['donationProgramTransactions', slug, params],
     queryFn: () =>
       donationProgramTransactionService.getDonationProgramTransactions(
-        toValue(id),
+        toValue(slug),
         toValue(params),
       ),
     retry: 1,

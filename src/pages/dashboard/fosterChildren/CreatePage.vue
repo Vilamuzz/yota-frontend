@@ -105,7 +105,6 @@ const removeAchievement = (index: number) => {
 }
 
 const handleSubmit = () => {
-  // Check mandatory documents
   if (!form.familyCardFile || !form.sktmFile) {
     showToast('Kartu Keluarga dan SKTM wajib diunggah', 'error')
     return

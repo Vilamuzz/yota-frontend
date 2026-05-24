@@ -138,8 +138,18 @@ export const publicRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/reports',
-    name: 'reports',
-    component: () => import('@/pages/public/reports/IndexPage.vue'),
+    children: [
+      {
+        path: '',
+        name: 'reports',
+        component: () => import('@/pages/public/reports/IndexPage.vue'),
+      },
+      {
+        path: ':type/:slug',
+        name: 'report-detail',
+        component: () => import('@/pages/public/reports/DetailPage.vue'),
+      },
+    ],
   },
   {
     path: '/invoices',

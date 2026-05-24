@@ -5,6 +5,7 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import { useFosterParentAccountList } from '@/composables/account/useAccountList'
 import type { CreateOfflineSocialProgramSubscriptionRequest } from '@/types/socialProgramSubscription'
+import BaseIconButton from '../atoms/BaseIconButton.vue'
 
 interface Props {
   show: boolean
@@ -105,12 +106,9 @@ const canSubmit = computed(() => {
         >
           <!-- Header -->
           <div class="bg-primary-500 p-6 text-white relative">
-            <button
-              @click="emit('close')"
-              class="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
-            >
+            <BaseIconButton @click="emit('close')" variant="danger" class="absolute top-4 right-4">
               <X :size="20" />
-            </button>
+            </BaseIconButton>
             <div class="flex items-center gap-3">
               <div class="bg-white/20 p-2 rounded-lg">
                 <User :size="24" />
@@ -221,12 +219,6 @@ const canSubmit = computed(() => {
               >
                 Simpan Pelanggan
               </BaseButton>
-              <button
-                @click="emit('close')"
-                class="py-2 text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                Batal
-              </button>
             </div>
           </div>
         </div>

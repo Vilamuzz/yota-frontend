@@ -10,6 +10,7 @@ export const useNewsCommentDelete = () => {
     mutationFn: (commentId) => newsCommentService.deleteNewsComment(commentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newsComments'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-news-comments'] })
     },
   })
 
