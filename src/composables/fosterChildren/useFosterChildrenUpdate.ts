@@ -14,17 +14,8 @@ export const useFosterChildrenUpdate = () => {
   >({
     mutationFn: ({ id, data }) => fosterChildrenService.updateFosterChildren(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
-      queryClient.invalidateQueries({
-        queryKey: ['fosterChildrenDetail', variables.id],
-      })
-    },
-  })
-
-  const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
-    mutationFn: (id) => fosterChildrenService.deleteFosterChildren(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
+      queryClient.invalidateQueries({ queryKey: ['adminFosterChildren'] })
+      queryClient.invalidateQueries({ queryKey: ['adminFosterChildrenDetail', variables.id] })
     },
   })
 
@@ -34,7 +25,6 @@ export const useFosterChildrenUpdate = () => {
 
   return {
     updateMutation,
-    deleteMutation,
     validationErrors,
   }
 }

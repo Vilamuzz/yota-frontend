@@ -2,6 +2,7 @@ import type {
   CreateDonationProgramExpenseRequest,
   DonationProgramExpenseListResponse,
   DonationProgramExpenseResponse,
+  DonationProgramExpenseExportRequest,
 } from '@/types/donationProgramExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
@@ -48,6 +49,23 @@ export const donationProgramExpenseService = {
       `${API.DONATION_PROGRAMS}/${slug}/expenses`,
       {
         params,
+      },
+    )
+    return response.data
+  },
+
+  exportDonationProgramExpenseCSV: async (
+    slug: string,
+    params: DonationProgramExpenseExportRequest,
+  ): Promise<Blob> => {
+    const response = await api.get<Blob>(
+      `${API.DONATION_PROGRAMS}/${slug}/expenses/export`,
+      {
+        params: {
+          start_date: params.startDate,
+          end_date: params.endDate,
+        },
+        responseType: 'blob',
       },
     )
     return response.data
