@@ -8,7 +8,7 @@ export const useFosterChildrenDelete = () => {
   const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
     mutationFn: (id: string) => fosterChildrenService.deleteFosterChildren(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
+      queryClient.invalidateQueries({ queryKey: ['adminFosterChildren'] })
     },
   })
 

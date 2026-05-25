@@ -22,9 +22,9 @@ import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const route = useRoute()
 const { showToast } = useToast()
-const { deleteMutation } = useFosterChildrenExpenseDelete()
 
 const childId = route.params.id as string
+const { deleteMutation } = useFosterChildrenExpenseDelete(childId)
 const { detailQuery } = useAdminFosterChildrenDetail(childId)
 
 const child = computed(() => detailQuery.data.value?.data)
@@ -134,13 +134,13 @@ function handleConfirmDelete() {
         <div class="flex flex-col">
           <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Dana Terkumpul</span>
           <span class="text-lg font-semibold text-green-600 dark:text-green-400">{{
-            formatCurrency(child.collectedFund)
+            formatCurrency(child.collectedFund!)
           }}</span>
         </div>
         <div class="flex flex-col">
           <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Dana Tersisa</span>
           <span class="text-lg font-semibold text-red-600 dark:text-red-400">{{
-            formatCurrency(child.collectedFund - (child.totalExpense || 0))
+            formatCurrency(child.collectedFund! - (child.totalExpense || 0))
           }}</span>
         </div>
       </div>

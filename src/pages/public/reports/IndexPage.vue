@@ -27,7 +27,7 @@ const summary = computed(() => summaryQuery.data.value?.data)
 
 const totalDonationExpense = computed(() => summary.value?.totalDonationProgramExpense || 0)
 const totalSocialExpense = computed(() => summary.value?.totalSocialProgramExpense || 0)
-const totalFosterExpense = computed(() => summary.value?.totalFosterChildrenExpenses || 0)
+const totalFosterExpense = computed(() => summary.value?.totalFosterChildrenExpense || 0)
 const grandTotal = computed(
   () => totalDonationExpense.value + totalSocialExpense.value + totalFosterExpense.value,
 )

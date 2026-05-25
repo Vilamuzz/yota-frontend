@@ -83,15 +83,15 @@ watch(
       form.name = child.name
       form.gender = child.gender
       form.category = child.category
-      form.birthPlace = child.birthPlace
+      form.birthPlace = child.birthPlace || ''
       form.birthDate = child.birthDate
-      form.address = child.address
+      form.address = child.address || ''
       form.schoolName = child.schoolName || ''
       form.educationLevel = child.educationLevel || undefined
       form.isGraduated = child.isGraduated
       form.profilePicturePreview = child.profilePicture
-      form.familyCardPreview = child.familyCard
-      form.sktmPreview = child.sktm
+      form.familyCardPreview = child.familyCard || null
+      form.sktmPreview = child.sktm || null
       form.existingAchievements = child.achievements || []
     }
   },

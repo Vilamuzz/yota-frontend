@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Download,
   Calendar,
-  FileText,
   X,
   Receipt,
   TrendingDown,
@@ -16,6 +15,8 @@ import {
   Baby,
 } from 'lucide-vue-next'
 import { useReportDetail } from '@/composables/report/useReportDetail'
+import { donationProgramExpenseService } from '@/services/donationProgramExpense.service'
+import { useToast } from '@/composables/ui/useToast'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,17 +27,45 @@ const slug = route.params.slug as string
 const showExportModal = ref(false)
 const exportDateFrom = ref('')
 const exportDateTo = ref('')
-const exportFormat = ref<'pdf' | 'xlsx'>('pdf')
 const isExporting = ref(false)
 
-const handleExport = () => {
+const { showToast } = useToast()
+
+const handleExport = async () => {
+  if (!exportDateFrom.value || !exportDateTo.value) return
+
   isExporting.value = true
-  setTimeout(() => {
+  try {
+    if (type === 'donation') {
+      const blob = await donationProgramExpenseService.exportDonationProgramExpenseCSV(slug, {
+        startDate: exportDateFrom.value,
+        endDate: exportDateTo.value,
+      })
+
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute(
+        'download',
+        `expenses_${slug}_${exportDateFrom.value}_to_${exportDateTo.value}.csv`,
+      )
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+
+      showExportModal.value = false
+      exportDateFrom.value = ''
+      exportDateTo.value = ''
+      showToast('Laporan berhasil diunduh', 'success')
+    } else {
+      showToast(`Ekspor untuk tipe laporan ini belum didukung`, 'warning')
+    }
+  } catch (error) {
+    showToast('Gagal mengunduh laporan', 'error')
+  } finally {
     isExporting.value = false
-    showExportModal.value = false
-    exportDateFrom.value = ''
-    exportDateTo.value = ''
-  }, 1800)
+  }
 }
 
 const { detail, isLoading } = useReportDetail(type, slug)
@@ -323,31 +352,6 @@ const totalByMonth = computed(() => {
                     class="w-full pl-8 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent"
                   />
                 </div>
-              </div>
-            </div>
-
-            <div class="mb-6">
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2"
-                >Format File</label
-              >
-              <div class="grid grid-cols-2 gap-2">
-                <button
-                  v-for="fmt in [
-                    { key: 'pdf', label: 'PDF' },
-                    { key: 'xlsx', label: 'Excel (.xlsx)' },
-                  ]"
-                  :key="fmt.key"
-                  @click="exportFormat = fmt.key as any"
-                  class="flex items-center justify-center gap-2 p-3 rounded-xl border-2 text-sm font-semibold transition-all"
-                  :class="
-                    exportFormat === fmt.key
-                      ? 'border-primary-400 bg-primary-50 text-primary-600'
-                      : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
-                  "
-                >
-                  <FileText :size="16" />
-                  {{ fmt.label }}
-                </button>
               </div>
             </div>
 

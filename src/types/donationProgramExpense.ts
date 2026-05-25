@@ -23,5 +23,10 @@ export interface CreateDonationProgramExpenseRequest {
   note?: string
 }
 
+export interface DonationProgramExpenseExportRequest {
+  startDate: string
+  endDate: string
+}
+
 export type DonationProgramExpenseResponse = Response<DonationProgramExpense>
 export type DonationProgramExpenseListResponse = Response<DonationProgramExpenseList>

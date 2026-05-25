@@ -9,8 +9,8 @@ export const useSocialProgramStatus = () => {
   const approveMutation = useMutation<ApiResponse<SocialProgram>, ApiError, string>({
     mutationFn: (id) => socialProgramService.approveSocialProgram(id),
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
-      queryClient.invalidateQueries({ queryKey: ['socialProgramDetail', id] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialPrograms'] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialProgramDetail', id] })
     },
   })
 
@@ -21,16 +21,16 @@ export const useSocialProgramStatus = () => {
   >({
     mutationFn: ({ id, reason }) => socialProgramService.rejectSocialProgram(id, { reason }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
-      queryClient.invalidateQueries({ queryKey: ['socialProgramDetail', variables.id] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialPrograms'] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialProgramDetail', variables.id] })
     },
   })
 
   const completeMutation = useMutation<ApiResponse<SocialProgram>, ApiError, string>({
     mutationFn: (id) => socialProgramService.completeSocialProgram(id),
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
-      queryClient.invalidateQueries({ queryKey: ['socialProgramDetail', id] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialPrograms'] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialProgramDetail', id] })
     },
   })
 

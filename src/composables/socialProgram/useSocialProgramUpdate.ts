@@ -14,15 +14,8 @@ export const useSocialProgramUpdate = () => {
   >({
     mutationFn: ({ id, data }) => socialProgramService.updateSocialProgram(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
-      queryClient.invalidateQueries({ queryKey: ['socialProgramDetail', variables.id] })
-    },
-  })
-
-  const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
-    mutationFn: (id) => socialProgramService.deleteSocialProgram(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialPrograms'] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialProgramDetail', variables.id] })
     },
   })
 
@@ -32,7 +25,6 @@ export const useSocialProgramUpdate = () => {
 
   return {
     updateMutation,
-    deleteMutation,
     validationErrors,
   }
 }

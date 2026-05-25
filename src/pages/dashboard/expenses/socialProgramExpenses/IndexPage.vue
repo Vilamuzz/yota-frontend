@@ -22,9 +22,9 @@ import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const route = useRoute()
 const { showToast } = useToast()
-const { deleteMutation } = useSocialProgramExpenseDelete()
 
 const socialProgramId = route.params.id as string
+const { deleteMutation } = useSocialProgramExpenseDelete(socialProgramId)
 const { detailQuery } = useSocialProgramDetail(socialProgramId)
 const socialProgram = computed(() => detailQuery.data.value?.data)
 

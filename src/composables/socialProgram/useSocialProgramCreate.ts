@@ -15,7 +15,7 @@ export const useSocialProgramCreate = () => {
     mutationFn: (data: CreateSocialProgramRequest) =>
       socialProgramService.createSocialProgram(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['socialPrograms'] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialPrograms'] })
     },
   })
 

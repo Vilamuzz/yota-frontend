@@ -16,7 +16,7 @@ export const useFosterChildrenCreate = () => {
     mutationFn: (data: CreateFosterChildrenRequest) =>
       fosterChildrenService.createFosterChildren(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fosterChildren'] })
+      queryClient.invalidateQueries({ queryKey: ['adminFosterChildren'] })
     },
   })
 
