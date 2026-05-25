@@ -6,7 +6,7 @@ import type { ApiError } from '@/types/response'
 
 export const useSocialProgramDetail = (id: MaybeRefOrGetter<string>) => {
   const detailQuery = useQuery<SocialProgramResponse, ApiError>({
-    queryKey: ['socialProgramDetail', id],
+    queryKey: ['adminSocialProgramDetail', id],
     queryFn: () => socialProgramService.getSocialProgramDetail(toValue(id)),
     enabled: computed(() => !!toValue(id)),
     retry: 1,
