@@ -17,6 +17,6 @@ export const API = {
   NEWS_ADMIN: '/api/admin/news',
   AMBULANCES: '/api/ambulances',
   AMBULANCES_ADMIN: '/api/admin/ambulances',
-  AMBULANCE_SERVICES: '/api/ambulance-services',
-  AMBULANCE_SERVICES_ADMIN: '/api/admin/ambulance-services',
+  FOUNDATION_PROFILE: '/api/foundation-profile',
+  FOUNDATION_PROFILE_ADMIN: '/api/admin/foundation-profile',
 }

@@ -14,5 +14,6 @@ export const useAmbulanceDetail = (id: MaybeRefOrGetter<string>) => {
 
   return {
     detailQuery,
+    isAmbulanceLoading: detailQuery.isLoading,
   }
 }

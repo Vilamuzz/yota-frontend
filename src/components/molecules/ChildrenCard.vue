@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import type { FosterChildrenListItem } from '@/types/fosterChildren'
+import type { FosterChildren } from '@/types/fosterChildren'
 import { formatStatus } from '@/utils/format'
+import type { RouteLocationRaw } from 'vue-router'
 
 defineProps<{
-  fosterChildren: FosterChildrenListItem
+  fosterChildren: FosterChildren
+  to?: RouteLocationRaw
 }>()
 
 const emit = defineEmits(['view'])
 
-const handleView = (fosterChildren: FosterChildrenListItem) => {
+const handleView = (fosterChildren: FosterChildren) => {
   emit('view', fosterChildren)
 }
 
@@ -55,9 +57,11 @@ function calculateAge(birthDate: string): number {
 </script>
 
 <template>
-  <button
-    class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-37.5 w-full text-left cursor-pointer hover:shadow-md hover:border-primary-300 transition-all duration-200 group"
-    @click="handleView(fosterChildren)"
+  <component
+    :is="to ? 'router-link' : 'button'"
+    :to="to"
+    class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-37.5 w-full text-left cursor-pointer hover:shadow-md hover:border-primary-300 transition-all duration-200 group block"
+    @click="!to && handleView(fosterChildren)"
   >
     <div
       class="flex flex-col items-center text-center space-y-1 group-hover:scale-105 transition-transform duration-200"
@@ -76,5 +80,5 @@ function calculateAge(birthDate: string): number {
         <span class="font-normal px-1">{{ calculateAge(fosterChildren.birthDate) }} Tahun</span>
       </div>
     </div>
-  </button>
+  </component>
 </template>

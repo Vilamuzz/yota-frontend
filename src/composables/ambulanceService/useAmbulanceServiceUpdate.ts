@@ -1,33 +1,47 @@
-import { computed } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { ambulanceServiceService } from '@/services/ambulanceService.service'
 import type {
-  UpdateAmbulanceServiceStatusRequest,
-  AmbulanceService,
+  AmbulanceServiceResponse,
+  AcceptAmbulanceServiceRequestPayload,
+  RejectAmbulanceServiceRequest,
 } from '@/types/ambulanceService'
-import type { ApiError, ApiResponse } from '@/types/response'
+import type { ApiError } from '@/types/response'
 
 export const useAmbulanceServiceUpdate = () => {
   const queryClient = useQueryClient()
 
-  const updateMutation = useMutation<
-    ApiResponse<AmbulanceService>,
+  const acceptMutation = useMutation<
+    AmbulanceServiceResponse,
     ApiError,
-    { id: string; data: UpdateAmbulanceServiceStatusRequest }
+    { id: string; payload: AcceptAmbulanceServiceRequestPayload }
   >({
-    mutationFn: ({ id, data }) => ambulanceServiceService.updateAmbulanceServiceStatus(id, data),
-    onSuccess: (_, variables) => {
+    mutationFn: ({ id, payload }) =>
+      ambulanceServiceService.acceptAmbulanceServiceRequest(id, payload),
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['ambulanceServices'] })
-      queryClient.invalidateQueries({ queryKey: ['ambulanceDetail', variables.id] })
+      queryClient.invalidateQueries({
+        queryKey: ['ambulanceServiceDetail', id],
+      })
     },
   })
 
-  const validationErrors = computed(
-    () => updateMutation.error.value?.response?.data?.validation ?? null,
-  )
+  const rejectMutation = useMutation<
+    AmbulanceServiceResponse,
+    ApiError,
+    { id: string; payload: RejectAmbulanceServiceRequest }
+  >({
+    mutationFn: ({ id, payload }) =>
+      ambulanceServiceService.rejectAmbulanceServiceRequest(id, payload),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['ambulanceServices'] })
+      queryClient.invalidateQueries({
+        queryKey: ['ambulanceServiceDetail', id],
+      })
+    },
+  })
 
   return {
-    updateMutation,
-    validationErrors,
+    acceptMutation,
+    rejectMutation,
   }
 }

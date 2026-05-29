@@ -8,7 +8,7 @@ import ChildrenCard from '@/components/molecules/ChildrenCard.vue'
 import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { Users, Search, Loader2, X, ArrowUpRight } from 'lucide-vue-next'
-import type { FosterChildrenQueryParams, FosterChildren } from '@/types/fosterChildren'
+import type { FosterChildrenQueryParams } from '@/types/fosterChildren'
 
 const router = useRouter()
 const searchQuery = ref('')
@@ -38,10 +38,6 @@ watch(searchQuery, (val) => {
     resetPagination()
   }, 400)
 })
-
-const handleView = (child: FosterChildren) => {
-  router.push({ name: 'foster-children-detail', params: { slug: child.id } })
-}
 </script>
 
 <template>
@@ -61,8 +57,8 @@ const handleView = (child: FosterChildren) => {
 
         <!-- SEARCH + BUTTON -->
         <div class="flex justify-center mb-10">
-            <BasePublicSearch v-model="searchQuery" placeholder="Cari nama anak asuh..." />
-          </div>
+          <BasePublicSearch v-model="searchQuery" placeholder="Cari nama anak asuh..." />
+        </div>
 
         <!-- Loading State -->
         <div v-if="isInitialLoading" class="flex flex-col items-center justify-center py-24">
@@ -102,7 +98,7 @@ const handleView = (child: FosterChildren) => {
               v-for="child in fosterChildren"
               :key="child.id"
               :fosterChildren="child"
-              @view="handleView"
+              :to="{ name: 'foster-children-detail', params: { id: child.id } }"
               class="transform hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl rounded-2xl border-none ring-1 ring-gray-100"
             />
           </div>

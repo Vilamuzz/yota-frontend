@@ -15,7 +15,6 @@ import {
   Baby,
 } from 'lucide-vue-next'
 import { useReportDetail } from '@/composables/report/useReportDetail'
-import { donationProgramExpenseService } from '@/services/donationProgramExpense.service'
 import { useToast } from '@/composables/ui/useToast'
 
 const route = useRoute()
@@ -31,44 +30,40 @@ const isExporting = ref(false)
 
 const { showToast } = useToast()
 
+const { detail, isLoading, exportExpenses } = useReportDetail(type, slug)
+
 const handleExport = async () => {
   if (!exportDateFrom.value || !exportDateTo.value) return
 
   isExporting.value = true
   try {
-    if (type === 'donation') {
-      const blob = await donationProgramExpenseService.exportDonationProgramExpenseCSV(slug, {
-        startDate: exportDateFrom.value,
-        endDate: exportDateTo.value,
-      })
+    const blob = await exportExpenses({
+      startDate: exportDateFrom.value,
+      endDate: exportDateTo.value,
+    })
 
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute(
-        'download',
-        `expenses_${slug}_${exportDateFrom.value}_to_${exportDateTo.value}.csv`,
-      )
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute(
+      'download',
+      `expenses_${slug}_${exportDateFrom.value}_to_${exportDateTo.value}.csv`,
+    )
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
 
-      showExportModal.value = false
-      exportDateFrom.value = ''
-      exportDateTo.value = ''
-      showToast('Laporan berhasil diunduh', 'success')
-    } else {
-      showToast(`Ekspor untuk tipe laporan ini belum didukung`, 'warning')
-    }
+    showExportModal.value = false
+    exportDateFrom.value = ''
+    exportDateTo.value = ''
+    showToast('Laporan berhasil diunduh', 'success')
   } catch (error) {
     showToast('Gagal mengunduh laporan', 'error')
   } finally {
     isExporting.value = false
   }
 }
-
-const { detail, isLoading } = useReportDetail(type, slug)
 
 const accentClasses = computed(() => {
   const c = detail.value?.accentColor ?? 'rose'

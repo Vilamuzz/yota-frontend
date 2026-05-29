@@ -29,6 +29,10 @@ export const formatMonth = (dateString: string) => {
   })
 }
 
+export const getCategoryLabel = (value: string, options: { value: string; label: string }[]) => {
+  return options.find((c) => c.value === value)?.label || value
+}
+
 export const formatStatus = (status: string): string => {
   if (!status) return ''
   const statusMap: Record<string, string> = {
@@ -40,11 +44,12 @@ export const formatStatus = (status: string): string => {
     pending: 'Tertunda',
     settlement: 'Berhasil',
     cancel: 'Dibatalkan',
+    canceled: 'Dibatalkan',
     published: 'Dipublikasi',
     rejected: 'Ditolak',
     accepted: 'Diterima',
+    approved: 'Diterima',
     social_manager_accepted: 'Diterima Koordinator Sosial',
-    cancelled: 'Dibatalkan',
     available: 'Tersedia',
     inuse: 'Digunakan',
     maintenance: 'Pemeliharaan',
@@ -55,6 +60,9 @@ export const formatStatus = (status: string): string => {
     yatim: 'Yatim',
     piatu: 'Piatu',
     yatimPiatu: 'Yatim Piatu',
+    ambulance_available: 'Tersedia',
+    ambulance_unavailable: 'Tidak Tersedia',
+    ambulance_in_use: 'Digunakan',
   }
 
   return statusMap[status.toLowerCase()] || status.charAt(0).toUpperCase() + status.slice(1)

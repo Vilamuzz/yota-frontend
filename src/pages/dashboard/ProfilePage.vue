@@ -8,6 +8,7 @@ import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { Camera, User, Mail, Phone, MapPin, Lock, Save, KeyRound } from 'lucide-vue-next'
 import { extractError } from '@/utils/error'
+import { useAuthStore } from '@/stores/auth'
 
 const {
   user,
@@ -18,8 +19,15 @@ const {
   passwordValidationErrors,
 } = useCurrentUser()
 
+const authStore = useAuthStore()
 const { roles, isLoading: rolesLoading } = useRoles()
 const { showToast } = useToast()
+
+const filteredRoles = computed(() => {
+  return roles.value.filter((role) =>
+    authStore.roles.some((userRole) => userRole.toLowerCase() === role.name.toLowerCase())
+  )
+})
 
 const errors = ref<Record<string, string>>({})
 const profilePicturePreview = ref<string | null>(null)
@@ -236,7 +244,7 @@ const updatePassword = () => {
                 :disabled="rolesLoading"
               >
                 <option :value="0" disabled>Select Default Role</option>
-                <option v-for="role in roles" :key="role.id" :value="role.id">
+                <option v-for="role in filteredRoles" :key="role.id" :value="role.id">
                   {{ role.name }}
                 </option>
               </select>

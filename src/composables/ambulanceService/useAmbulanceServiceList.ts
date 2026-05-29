@@ -7,14 +7,18 @@ import type {
 } from '@/types/ambulanceService'
 import type { ApiError } from '@/types/response'
 
-export const useAmbulanceServiceList = (params: MaybeRefOrGetter<AmbulanceServiceQueryParams>) => {
+export const useAmbulanceServiceList = (
+  params: MaybeRefOrGetter<AmbulanceServiceQueryParams>,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) => {
   const listQuery = useQuery<AmbulanceServiceListResponse, ApiError>({
     queryKey: ['ambulanceServices', params],
-    queryFn: () => ambulanceServiceService.getAmbulanceServices(toValue(params)),
+    queryFn: () => ambulanceServiceService.listAmbulanceServiceRequests(toValue(params)),
     retry: 1,
+    enabled,
   })
 
-  const ambulanceServices = computed(() => listQuery.data.value?.data?.services || [])
+  const ambulanceServices = computed(() => listQuery.data.value?.data?.requests || [])
   const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {

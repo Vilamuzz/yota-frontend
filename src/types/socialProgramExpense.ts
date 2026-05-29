@@ -23,5 +23,10 @@ export interface CreateSocialProgramExpenseRequest {
   note?: string
 }
 
+export interface SocialProgramExpenseExportRequest {
+  startDate: string
+  endDate: string
+}
+
 export type SocialProgramExpenseResponse = Response<SocialProgramExpense>
 export type SocialProgramExpenseListResponse = Response<SocialProgramExpenseList>

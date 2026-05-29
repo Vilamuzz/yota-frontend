@@ -24,5 +24,10 @@ export interface CreateFosterChildrenExpenseRequest {
   note?: string
 }
 
+export interface FosterChildrenExpenseExportRequest {
+  startDate: string
+  endDate: string
+}
+
 export type FosterChildrenExpenseResponse = Response<FosterChildrenExpense>
 export type FosterChildrenExpenseListResponse = Response<FosterChildrenExpenseList>
