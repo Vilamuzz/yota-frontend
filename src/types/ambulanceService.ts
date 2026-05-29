@@ -1,18 +1,32 @@
+import type { Ambulance } from './ambulance'
 import type { Pagination, PaginationParams, Response } from './response'
+
+export enum AmbulanceServiceStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CANCELED = 'canceled',
+}
 
 export interface AmbulanceService {
   id: string
-  ambulanceId: string
-  userId: string
-  status: 'pending' | 'on_way' | 'finished' | 'cancelled'
-  pickupLocation: string
-  destinationLocation: string
-  requestedAt: string
-  finishedAt?: string
+  accountId: string
+  ambulanceId?: string
+  applicantName: string
+  applicantPhone: string
+  applicantAddress: string
+  description?: string
+  requestDate: string
+  requestReason: string
+  status: AmbulanceServiceStatus
+  assignedAmbulance?: Ambulance
+  rejectionReason?: string
+  createdAt: string
+  updatedAt?: string
 }
 
 export interface AmbulanceServiceList {
-  services: AmbulanceService[]
+  requests: AmbulanceService[]
   pagination: Pagination
 }
 
@@ -21,13 +35,20 @@ export interface AmbulanceServiceQueryParams extends PaginationParams {
 }
 
 export interface CreateAmbulanceServiceRequest {
-  ambulanceId: string
-  pickupLocation: string
-  destinationLocation: string
+  accountId?: string
+  applicantName: string
+  applicantPhone: string
+  applicantAddress: string
+  requestDate: string
+  requestReason: string
 }
 
-export interface UpdateAmbulanceServiceStatusRequest {
-  status: string
+export interface AcceptAmbulanceServiceRequestPayload {
+  ambulanceId: string
+}
+
+export interface RejectAmbulanceServiceRequest {
+  reason: string
 }
 
 export type AmbulanceServiceResponse = Response<AmbulanceService>

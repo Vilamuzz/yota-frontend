@@ -2,6 +2,7 @@ import type {
   CreateSocialProgramExpenseRequest,
   SocialProgramExpenseListResponse,
   SocialProgramExpenseResponse,
+  SocialProgramExpenseExportRequest,
 } from '@/types/socialProgramExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
@@ -52,6 +53,23 @@ export const socialProgramExpenseService = {
 
   deleteSocialProgramExpense: async (id: string) => {
     const response = await api.delete(`${API.SOCIAL_PROGRAMS_ADMIN}/expenses/${id}`)
+    return response.data
+  },
+
+  exportSocialProgramExpenseCSV: async (
+    slug: string,
+    params: SocialProgramExpenseExportRequest,
+  ): Promise<Blob> => {
+    const response = await api.get<Blob>(
+      `${API.SOCIAL_PROGRAMS}/${slug}/expenses/export`,
+      {
+        params: {
+          start_date: params.startDate,
+          end_date: params.endDate,
+        },
+        responseType: 'blob',
+      },
+    )
     return response.data
   },
 }

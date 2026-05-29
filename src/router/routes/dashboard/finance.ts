@@ -13,35 +13,29 @@ export const financeRoutes: RouteRecordRaw[] = [
             path: '',
             name: 'dashboard-donation-programs',
             component: () => import('@/pages/dashboard/donationPrograms/IndexPage.vue'),
-            meta: { title: 'Donasi' },
+            meta: { title: 'Program Donasi' },
           },
           {
             path: 'create',
             name: 'dashboard-donation-programs-create',
             component: () => import('@/pages/dashboard/donationPrograms/CreatePage.vue'),
-            meta: { title: 'Tambah Donasi', activeMenu: 'dashboard-donation-programs' },
+            meta: { title: 'Tambah Program Donasi', activeMenu: 'dashboard-donation-programs' },
           },
           {
             path: ':id',
             name: 'dashboard-donation-programs-edit',
             component: () => import('@/pages/dashboard/donationPrograms/EditPage.vue'),
-            meta: { title: 'Edit Donasi', activeMenu: 'dashboard-donation-programs' },
+            meta: { title: 'Edit Program Donasi', activeMenu: 'dashboard-donation-programs' },
           },
-        ],
-      },
-
-      {
-        path: 'income',
-        children: [
           {
-            path: 'donation-programs',
+            path: 'income',
             children: [
               {
                 path: '',
                 name: 'dashboard-donation-programs-income',
                 component: () =>
                   import('@/pages/dashboard/income/donationProgramTransactions/DonationProgramPage.vue'),
-                meta: { title: 'Pemasukan Donasi' },
+                meta: { title: 'Pemasukan Program Donasi' },
               },
               {
                 path: ':id',
@@ -49,7 +43,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/income/donationProgramTransactions/IndexPage.vue'),
                 meta: {
-                  title: 'Transaksi Donasi',
+                  title: 'Transaksi Program Donasi',
                   activeMenu: 'dashboard-donation-programs-income',
                 },
               },
@@ -68,7 +62,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 name: 'dashboard-donation-programs-expense',
                 component: () =>
                   import('@/pages/dashboard/expenses/donationProgramExpenses/DonationProgramPage.vue'),
-                meta: { title: 'Pengeluaran Donasi' },
+                meta: { title: 'Pengeluaran Program Donasi' },
               },
               {
                 path: ':id',
@@ -76,7 +70,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/expenses/donationProgramExpenses/IndexPage.vue'),
                 meta: {
-                  title: 'Transaksi Donasi',
+                  title: 'Transaksi Program Donasi',
                   activeMenu: 'dashboard-donation-programs-expense',
                 },
               },
@@ -86,7 +80,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/expenses/donationProgramExpenses/CreatePage.vue'),
                 meta: {
-                  title: 'Tambah Transaksi Donasi',
+                  title: 'Tambah Transaksi Program Donasi',
                   activeMenu: 'dashboard-donation-programs-expense',
                 },
               },

@@ -6,7 +6,6 @@ import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Category, Gender } from '@/types/fosterChildren'
 import { ROLES } from '@/const/roles'
@@ -16,12 +15,9 @@ import { getStatusColor } from '@/utils/statusColor'
 import { formatDate, formatStatus } from '@/utils/format'
 import {
   FosterChildrenCandidateStatus,
-  type FosterChildrenCandidate,
   type FosterChildrenCandidateQueryParams,
 } from '@/types/fosterChildrenCandidate'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
-
-const router = useRouter()
 
 // Unified query parameters
 const queryParams = reactive<FosterChildrenCandidateQueryParams>({
@@ -92,13 +88,6 @@ const hasActiveFilters = computed(
     queryParams.category !== undefined ||
     queryParams.status !== undefined,
 )
-
-const handleView = (child: FosterChildrenCandidate) => {
-  router.push({
-    name: 'dashboard-foster-children-candidates-detail',
-    params: { id: child.id },
-  })
-}
 </script>
 
 <template>
@@ -294,7 +283,14 @@ const handleView = (child: FosterChildrenCandidate) => {
               {{ formatDate(child.createdAt) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
-              <BaseIconButton @click="handleView(child)" title="Lihat detail" variant="info">
+              <BaseIconButton
+                :to="{
+                  name: 'dashboard-foster-children-candidates-detail',
+                  params: { id: child.id },
+                }"
+                title="Lihat detail"
+                variant="info"
+              >
                 <Eye :size="18" />
               </BaseIconButton>
             </td>

@@ -151,5 +151,22 @@ export const useReportDetail = (
     return false
   })
 
-  return { detail, isLoading }
+  const exportExpenses = async (params: { startDate: string; endDate: string }): Promise<Blob> => {
+    const currentType = toValue(type)
+    const currentSlug = toValue(slug)
+
+    if (currentType === 'donation') {
+      return donationProgramExpenseService.exportDonationProgramExpenseCSV(currentSlug, params)
+    }
+    if (currentType === 'social') {
+      return socialProgramExpenseService.exportSocialProgramExpenseCSV(currentSlug, params)
+    }
+    if (currentType === 'foster') {
+      return fosterChildrenExpenseService.exportFosterChildrenExpenseCSV(currentSlug, params)
+    }
+    throw new Error('Unsupported report type')
+  }
+
+  return { detail, isLoading, exportExpenses }
 }
+

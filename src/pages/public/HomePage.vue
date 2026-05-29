@@ -7,30 +7,35 @@ import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import { useDonationProgramList } from '@/composables/donationProgram/useDonationProgramList'
 import { usePublishedNewsList } from '@/composables/news/useNewsList'
 import { usePublishedGalleryList } from '@/composables/gallery/useGalleryList'
+import { useFoundationProfileStore } from '@/stores/foundationProfile'
 
+const foundationProfileStore = useFoundationProfileStore()
 const router = useRouter()
 
 // Hero carousel
 const currentSlide = ref(0)
 const slides = [
   {
-    image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1920&h=800&fit=crop',
+    image: foundationProfileStore.heroImages[0],
     title: 'Selamat Datang di Yayasan Orang Tua Asuh',
-    subtitle: 'Menghadirkan kepedulian yang berkelanjutan bagi masa depan anak-anak kurang mampu di pelosok negeri.',
+    subtitle:
+      'Menghadirkan kepedulian yang berkelanjutan bagi masa depan anak-anak kurang mampu di pelosok negeri.',
     buttonText: 'Tentang Kami',
     buttonLink: '/about',
   },
   {
-    image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1920&h=800&fit=crop',
+    image: foundationProfileStore.heroImages[1],
     title: 'Rekomendasikan Calon Anak Asuh',
-    subtitle: 'Bantu anak kurang mampu di sekitar Anda mendapatkan bantuan pendidikan dengan merekomendasikan mereka sebagai anak asuh.',
+    subtitle:
+      'Bantu anak kurang mampu di sekitar Anda mendapatkan bantuan pendidikan dengan merekomendasikan mereka sebagai anak asuh.',
     buttonText: 'Ajukan Calon Anak Asuh',
     buttonLink: '/foster-children/submission',
   },
   {
-    image: 'https://images.unsplash.com/photo-1587745416684-47953f16f02f?w=1920&h=800&fit=crop',
+    image: foundationProfileStore.heroImages[2],
     title: 'Layanan Ambulans Gratis 24 Jam',
-    subtitle: 'Butuh armada darurat medis? Yayasan Orang Tua Asuh menyediakan peminjaman mobil ambulans gratis bagi masyarakat yang membutuhkan.',
+    subtitle:
+      'Butuh armada darurat medis? Yayasan Orang Tua Asuh menyediakan peminjaman mobil ambulans gratis bagi masyarakat yang membutuhkan.',
     buttonText: 'Ajukan Peminjaman Ambulans',
     buttonLink: '/ambulance/request',
   },
@@ -81,14 +86,20 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
           <div class="absolute inset-0 bg-black opacity-50"></div>
 
           <!-- Slide Content (Centered on Screen) -->
-          <div class="absolute inset-0 flex flex-col justify-center items-center text-center px-6 md:px-12 lg:px-24">
-            <h1 class="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-4 uppercase tracking-wide drop-shadow-md">
+          <div
+            class="absolute inset-0 flex flex-col justify-center items-center text-center px-6 md:px-12 lg:px-24"
+          >
+            <h1
+              class="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-4 uppercase tracking-wide drop-shadow-md"
+            >
               {{ slide.title }}
             </h1>
-            <p class="text-base md:text-xl lg:text-2xl text-white opacity-90 max-w-3xl mb-8 leading-relaxed drop-shadow-sm">
+            <p
+              class="text-base md:text-xl lg:text-2xl text-white opacity-90 max-w-3xl mb-8 leading-relaxed drop-shadow-sm"
+            >
               {{ slide.subtitle }}
             </p>
-            
+
             <div v-if="slide.buttonText">
               <RouterLink
                 :to="slide.buttonLink"
@@ -133,8 +144,14 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
 
           <div class="w-40 h-40 md:w-56 md:h-56 shrink-0">
             <img
-              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop"
-              alt="Welcome"
+              v-if="foundationProfileStore.founderPicture"
+              :src="foundationProfileStore.founderPicture"
+              :alt="foundationProfileStore.founderName"
+              class="w-full h-full object-cover rounded-full shadow-md"
+            />
+            <BaseSkeleton
+              v-else
+              variant="image"
               class="w-full h-full object-cover rounded-full shadow-md"
             />
           </div>
@@ -153,7 +170,11 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
         </p>
         <!-- Loading Skeletons -->
         <div v-if="isDonationLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div v-for="i in 3" :key="i" class="bg-white rounded-xl overflow-hidden flex flex-col p-4 gap-4 border border-gray-100 shadow-sm">
+          <div
+            v-for="i in 3"
+            :key="i"
+            class="bg-white rounded-xl overflow-hidden flex flex-col p-4 gap-4 border border-gray-100 shadow-sm"
+          >
             <BaseSkeleton variant="image" class="h-48 w-full rounded-lg" />
             <BaseSkeleton variant="text-lg" class="w-3/4" />
             <div class="space-y-2 mt-auto">
@@ -178,7 +199,11 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
           >
             <!-- Image: top 50% -->
             <div class="h-48 shrink-0">
-              <img :src="donation.coverImage" :alt="donation.title" class="w-full h-full object-cover" />
+              <img
+                :src="donation.coverImage"
+                :alt="donation.title"
+                class="w-full h-full object-cover"
+              />
             </div>
 
             <!-- Content -->
@@ -224,7 +249,11 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
         </p>
         <!-- Loading Skeletons -->
         <div v-if="isNewsLoading" class="flex flex-col gap-6 ml-15">
-          <div v-for="i in 3" :key="i" class="bg-white rounded-xl overflow-hidden flex gap-4 p-5 border border-gray-100 shadow-sm">
+          <div
+            v-for="i in 3"
+            :key="i"
+            class="bg-white rounded-xl overflow-hidden flex gap-4 p-5 border border-gray-100 shadow-sm"
+          >
             <BaseSkeleton class="w-[40%] h-64 shrink-0 rounded-lg" />
             <div class="flex flex-col justify-center gap-3 flex-1">
               <BaseSkeleton variant="text-xs" class="w-24" />
@@ -257,7 +286,9 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
 
             <!-- Content -->
             <div class="flex flex-col justify-center gap-2 p-5">
-              <p class="text-xs text-gray-400">{{ formatDate(news.publishedAt || news.createdAt) }}</p>
+              <p class="text-xs text-gray-400">
+                {{ formatDate(news.publishedAt || news.createdAt) }}
+              </p>
               <h3 class="font-semibold text-gray-900 text-base leading-snug">{{ news.title }}</h3>
             </div>
           </div>
