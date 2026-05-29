@@ -88,4 +88,18 @@ export const ambulanceServiceService = {
     )
     return response.data
   },
+
+  startService: async (ambulanceId: string, id: string) => {
+    const response = await api.patch(
+      `${API.AMBULANCES_ADMIN}/requests/assigned/${ambulanceId}/start/${id}`,
+    )
+    return response.data
+  },
+
+  completeService: async (ambulanceId: string, id: string) => {
+    const response = await api.patch(
+      `${API.AMBULANCES_ADMIN}/requests/assigned/${ambulanceId}/complete/${id}`,
+    )
+    return response.data
+  },
 }

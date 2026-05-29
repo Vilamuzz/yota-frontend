@@ -1,4 +1,5 @@
 import type { Ambulance } from './ambulance'
+import type { AmbulanceServiceCategory } from './ambulanceHistory'
 import type { Pagination, PaginationParams, Response } from './response'
 
 export enum AmbulanceServiceStatus {
@@ -6,6 +7,8 @@ export enum AmbulanceServiceStatus {
   APPROVED = 'approved',
   REJECTED = 'rejected',
   CANCELED = 'canceled',
+  IN_SERVICE = 'in_service',
+  DONE = 'done',
 }
 
 export interface AmbulanceService {
@@ -19,6 +22,7 @@ export interface AmbulanceService {
   requestDate: string
   requestReason: string
   status: AmbulanceServiceStatus
+  serviceCategory: AmbulanceServiceCategory
   assignedAmbulance?: Ambulance
   rejectionReason?: string
   createdAt: string
@@ -41,6 +45,7 @@ export interface CreateAmbulanceServiceRequest {
   applicantAddress: string
   requestDate: string
   requestReason: string
+  serviceCategory: AmbulanceServiceCategory
 }
 
 export interface AcceptAmbulanceServiceRequestPayload {

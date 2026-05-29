@@ -2,9 +2,10 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Check, X as XIcon, RotateCcw, ClipboardList, AlertCircle, Eye } from 'lucide-vue-next'
+import { Check, X as XIcon, RotateCcw, ClipboardList, AlertCircle, Eye, Play } from 'lucide-vue-next'
 import { useAmbulanceServiceList } from '@/composables/ambulanceService/useAmbulanceServiceList'
 import { useAssignedAmbulanceServiceList } from '@/composables/ambulanceService/useAssignedAmbulanceServiceList'
+import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useToast } from '@/composables/ui/useToast'
 import type { AmbulanceServiceQueryParams, AmbulanceService } from '@/types/ambulanceService'
@@ -45,7 +46,10 @@ const limitOptions = [10, 25, 50, 100]
 const statuses = [
   { label: 'Tertunda', value: 'pending' },
   { label: 'Disetujui', value: 'approved' },
+  { label: 'Dalam Layanan', value: 'in_service' },
+  { label: 'Selesai', value: 'done' },
   { label: 'Ditolak', value: 'rejected' },
+  { label: 'Dibatalkan', value: 'canceled' },
 ]
 const searchQuery = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
@@ -148,6 +152,57 @@ function handleConfirmReject(reason: string) {
       },
       onError: () => {
         showToast('Gagal menolak permintaan', 'error')
+      },
+    },
+  )
+}
+
+// START & COMPLETE (DRIVER)
+const { startMutation, completeMutation } = useAssignedAmbulanceServiceUpdate()
+
+const startModalShow = ref(false)
+const completeModalShow = ref(false)
+const actionServiceId = ref<string | null>(null)
+
+function handleStart(id: string) {
+  actionServiceId.value = id
+  startModalShow.value = true
+}
+
+function handleConfirmStart() {
+  if (!actionServiceId.value) return
+  startMutation.mutate(
+    { ambulanceId, id: actionServiceId.value },
+    {
+      onSuccess: () => {
+        showToast('Layanan ambulans berhasil dimulai', 'success')
+        startModalShow.value = false
+        actionServiceId.value = null
+      },
+      onError: () => {
+        showToast('Gagal memulai layanan ambulans', 'error')
+      },
+    },
+  )
+}
+
+function handleComplete(id: string) {
+  actionServiceId.value = id
+  completeModalShow.value = true
+}
+
+function handleConfirmComplete() {
+  if (!actionServiceId.value) return
+  completeMutation.mutate(
+    { ambulanceId, id: actionServiceId.value },
+    {
+      onSuccess: () => {
+        showToast('Layanan ambulans berhasil diselesaikan', 'success')
+        completeModalShow.value = false
+        actionServiceId.value = null
+      },
+      onError: () => {
+        showToast('Gagal menyelesaikan layanan ambulans', 'error')
       },
     },
   )
@@ -309,6 +364,24 @@ function handleConfirmReject(reason: string) {
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
                 <BaseIconButton
+                  v-if="isDriver && service.status === 'approved'"
+                  @click="handleStart(service.id)"
+                  title="Mulai"
+                  variant="primary"
+                  :disabled="startMutation.isPending.value || completeMutation.isPending.value"
+                >
+                  <Play :size="18" class="fill-current" />
+                </BaseIconButton>
+                <BaseIconButton
+                  v-if="isDriver && service.status === 'in_service'"
+                  @click="handleComplete(service.id)"
+                  title="Selesaikan"
+                  variant="success"
+                  :disabled="startMutation.isPending.value || completeMutation.isPending.value"
+                >
+                  <Check :size="18" />
+                </BaseIconButton>
+                <BaseIconButton
                   v-if="!isDriver && service.status === 'pending'"
                   @click="handleAccept(service.id)"
                   title="Setujui"
@@ -400,5 +473,33 @@ function handleConfirmReject(reason: string) {
         </p>
       </div>
     </ConfirmationModal>
+
+    <!-- Start Service Confirmation Modal -->
+    <ConfirmationModal
+      :show="startModalShow"
+      title="Mulai Layanan Ambulans?"
+      message="Apakah Anda yakin ingin memulai layanan ambulans ini sekarang?"
+      primary-button-text="Mulai"
+      secondary-button-text="Batal"
+      :icon="Play"
+      :primary-button-loading="startMutation.isPending.value"
+      @primary="handleConfirmStart"
+      @secondary="startModalShow = false"
+      @close="startModalShow = false"
+    />
+
+    <!-- Complete Service Confirmation Modal -->
+    <ConfirmationModal
+      :show="completeModalShow"
+      title="Selesaikan Layanan Ambulans?"
+      message="Apakah Anda yakin ingin menyelesaikan layanan ambulans ini? Langkah ini akan merekam riwayat perjalanan."
+      primary-button-text="Selesai"
+      secondary-button-text="Batal"
+      :icon="Check"
+      :primary-button-loading="completeMutation.isPending.value"
+      @primary="handleConfirmComplete"
+      @secondary="completeModalShow = false"
+      @close="completeModalShow = false"
+    />
   </DashboardLayout>
 </template>

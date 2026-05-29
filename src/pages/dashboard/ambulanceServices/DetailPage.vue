@@ -14,12 +14,14 @@ import {
   Clock,
   ShieldCheck,
   UserCircle,
+  Play,
 } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 import { ref, computed } from 'vue'
 import { useAmbulanceServiceDetail } from '@/composables/ambulanceService/useAmbulanceServiceDetail'
 import { useAssignedAmbulanceServiceDetail } from '@/composables/ambulanceService/useAssignedAmbulanceServiceDetail'
 import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
+import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
 import { useToast } from '@/composables/ui/useToast'
 import { getStatusColor } from '@/utils/statusColor'
 import { formatDate, formatStatus } from '@/utils/format'
@@ -54,12 +56,19 @@ const isLoading = computed(() =>
   isDriver.value ? driverDetail.isLoading.value : managerDetail.isLoading.value,
 )
 const { acceptMutation, rejectMutation } = useAmbulanceServiceUpdate()
+const { startMutation, completeMutation } = useAssignedAmbulanceServiceUpdate()
 const { ambulances, isLoading: isLoadingAmbulances } = useAmbulanceList(
   { limit: 100 },
   computed(() => !isDriver.value),
 )
 
-const isUpdating = computed(() => acceptMutation.isPending.value || rejectMutation.isPending.value)
+const isUpdating = computed(
+  () =>
+    acceptMutation.isPending.value ||
+    rejectMutation.isPending.value ||
+    startMutation.isPending.value ||
+    completeMutation.isPending.value,
+)
 
 const confirmAccept = ref(false)
 const confirmReject = ref(false)
@@ -98,6 +107,40 @@ const handleConfirmReject = (reason: string) => {
       },
       onError: () => {
         showToast('Gagal menolak permintaan', 'error')
+      },
+    },
+  )
+}
+
+// START & COMPLETE (DRIVER)
+const confirmStart = ref(false)
+const confirmComplete = ref(false)
+
+const handleConfirmStart = () => {
+  startMutation.mutate(
+    { ambulanceId, id },
+    {
+      onSuccess: () => {
+        showToast('Layanan ambulans berhasil dimulai', 'success')
+        confirmStart.value = false
+      },
+      onError: () => {
+        showToast('Gagal memulai layanan ambulans', 'error')
+      },
+    },
+  )
+}
+
+const handleConfirmComplete = () => {
+  completeMutation.mutate(
+    { ambulanceId, id },
+    {
+      onSuccess: () => {
+        showToast('Layanan ambulans berhasil diselesaikan', 'success')
+        confirmComplete.value = false
+      },
+      onError: () => {
+        showToast('Gagal menyelesaikan layanan ambulans', 'error')
       },
     },
   )
@@ -392,9 +435,43 @@ const handleConfirmReject = (reason: string) => {
           </div>
         </div>
 
+        <!-- Action Footer for Driver -->
+        <div
+          v-if="isDriver && (ambulanceService.status === 'approved' || ambulanceService.status === 'in_service')"
+          class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
+        >
+          <p class="text-xs text-gray-500 dark:text-gray-400 italic">
+            Dikirim pada {{ formatDate(ambulanceService.createdAt) }}
+          </p>
+          <div class="flex items-center gap-3">
+            <BaseButton
+              v-if="ambulanceService.status === 'approved'"
+              variant="primary"
+              size="md"
+              class="px-8"
+              @click="confirmStart = true"
+              :disabled="isUpdating"
+            >
+              <Play :size="16" class="mr-1.5 fill-current" />
+              Mulai Layanan
+            </BaseButton>
+            <BaseButton
+              v-if="ambulanceService.status === 'in_service'"
+              variant="primary"
+              size="md"
+              class="px-8"
+              @click="confirmComplete = true"
+              :disabled="isUpdating"
+            >
+              <Check :size="16" class="mr-1.5" />
+              Selesaikan Layanan
+            </BaseButton>
+          </div>
+        </div>
+
         <!-- Action Footer (only for pending and manager) -->
         <div
-          v-if="!isDriver && ambulanceService.status === 'pending'"
+          v-else-if="!isDriver && ambulanceService.status === 'pending'"
           class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
         >
           <p class="text-xs text-gray-500 dark:text-gray-400 italic">
@@ -485,6 +562,34 @@ const handleConfirmReject = (reason: string) => {
       @primary="handleConfirmReject"
       @secondary="confirmReject = false"
       @close="confirmReject = false"
+    />
+
+    <!-- Start Service Confirmation Modal -->
+    <ConfirmationModal
+      :show="confirmStart"
+      title="Mulai Layanan Ambulans?"
+      message="Apakah Anda yakin ingin memulai layanan ambulans ini sekarang?"
+      primary-button-text="Mulai"
+      secondary-button-text="Batal"
+      :icon="Play"
+      :primary-button-loading="startMutation.isPending.value"
+      @primary="handleConfirmStart"
+      @secondary="confirmStart = false"
+      @close="confirmStart = false"
+    />
+
+    <!-- Complete Service Confirmation Modal -->
+    <ConfirmationModal
+      :show="confirmComplete"
+      title="Selesaikan Layanan Ambulans?"
+      message="Apakah Anda yakin ingin menyelesaikan layanan ambulans ini? Langkah ini akan merekam riwayat perjalanan."
+      primary-button-text="Selesai"
+      secondary-button-text="Batal"
+      :icon="Check"
+      :primary-button-loading="completeMutation.isPending.value"
+      @primary="handleConfirmComplete"
+      @secondary="confirmComplete = false"
+      @close="confirmComplete = false"
     />
   </DashboardLayout>
 </template>

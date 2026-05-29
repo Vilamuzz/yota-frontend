@@ -63,6 +63,8 @@ export const formatStatus = (status: string): string => {
     ambulance_available: 'Tersedia',
     ambulance_unavailable: 'Tidak Tersedia',
     ambulance_in_use: 'Digunakan',
+    in_service: 'Dalam Layanan',
+    done: 'Selesai',
   }
 
   return statusMap[status.toLowerCase()] || status.charAt(0).toUpperCase() + status.slice(1)

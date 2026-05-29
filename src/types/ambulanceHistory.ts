@@ -2,7 +2,7 @@ import type { PaginationParams, Pagination, Response } from './response'
 import type { Driver } from './account'
 
 export interface CategoryCount {
-  category: ServiceCategory
+  category: AmbulanceServiceCategory
   count: number
 }
 
@@ -17,12 +17,12 @@ export interface AmbulanceHistorySummary {
 export interface AmbulanceHistory {
   id: string
   driver: Driver
-  serviceCategory: ServiceCategory
+  serviceCategory: AmbulanceServiceCategory
   note: string
   createdAt: string
 }
 
-export enum ServiceCategory {
+export enum AmbulanceServiceCategory {
   SOCIAL_SERVICE = 'social_service',
   MORTUARY_SERVICE = 'mortuary_service',
   PATIENT_SERVICE = 'patient_service',
@@ -31,11 +31,11 @@ export enum ServiceCategory {
 }
 
 export const serviceCategoryOptions = [
-  { value: ServiceCategory.SOCIAL_SERVICE, label: 'Layanan Sosial' },
-  { value: ServiceCategory.MORTUARY_SERVICE, label: 'Layanan Jenazah' },
-  { value: ServiceCategory.PATIENT_SERVICE, label: 'Layanan Pasien' },
-  { value: ServiceCategory.EMERGENCY_SERVICE, label: 'Layanan Darurat' },
-  { value: ServiceCategory.OTHER_SERVICE, label: 'Layanan Lainnya' },
+  { value: AmbulanceServiceCategory.SOCIAL_SERVICE, label: 'Layanan Sosial' },
+  { value: AmbulanceServiceCategory.MORTUARY_SERVICE, label: 'Layanan Jenazah' },
+  { value: AmbulanceServiceCategory.PATIENT_SERVICE, label: 'Layanan Pasien' },
+  { value: AmbulanceServiceCategory.EMERGENCY_SERVICE, label: 'Layanan Darurat' },
+  { value: AmbulanceServiceCategory.OTHER_SERVICE, label: 'Layanan Lainnya' },
 ]
 
 export interface AmbulanceHistoryList {
@@ -50,17 +50,17 @@ export type AmbulanceHistorySummaryResponse = Response<AmbulanceHistorySummary>
 export interface CreateAmbulanceHistoryRequest {
   ambulanceId: string
   driverId: string
-  serviceCategory: ServiceCategory
+  serviceCategory: AmbulanceServiceCategory
   note: string
 }
 
 export interface UpdateAmbulanceHistoryRequest {
-  serviceCategory: ServiceCategory
+  serviceCategory: AmbulanceServiceCategory
 }
 
 export interface AmbulanceHistoryQueryParams extends PaginationParams {
   ambulanceId?: string | number
-  serviceCategory?: ServiceCategory
+  serviceCategory?: AmbulanceServiceCategory
 }
 
 export interface AmbulanceHistorySummaryQueryParams {

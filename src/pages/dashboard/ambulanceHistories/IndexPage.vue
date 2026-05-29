@@ -13,7 +13,7 @@ import {
   type AmbulanceHistory,
   type CreateAmbulanceHistoryRequest,
   type UpdateAmbulanceHistoryRequest,
-  type ServiceCategory,
+  type AmbulanceServiceCategory,
   serviceCategoryOptions,
 } from '@/types/ambulanceHistory'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
@@ -88,14 +88,14 @@ const isCreateModalOpen = ref(false)
 const createForm = reactive<CreateAmbulanceHistoryRequest>({
   ambulanceId: '',
   driverId: '',
-  serviceCategory: '' as ServiceCategory,
+  serviceCategory: '' as AmbulanceServiceCategory,
   note: '',
 })
 
 function openCreateModal() {
   createForm.ambulanceId = ambulance.value?.id || ''
   createForm.driverId = ambulance.value?.driver?.id || ''
-  createForm.serviceCategory = '' as ServiceCategory
+  createForm.serviceCategory = '' as AmbulanceServiceCategory
   createForm.note = ''
   isCreateModalOpen.value = true
 }
@@ -118,7 +118,7 @@ function handleConfirmCreate() {
 const isEditModalOpen = ref(false)
 const editingHistoryId = ref<string | null>(null)
 const editForm = reactive<UpdateAmbulanceHistoryRequest>({
-  serviceCategory: '' as ServiceCategory,
+  serviceCategory: '' as AmbulanceServiceCategory,
 })
 
 function openEditModal(history: AmbulanceHistory) {

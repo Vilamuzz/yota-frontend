@@ -16,6 +16,7 @@ export const getStatusColor = (status: string) => {
     case SocialProgramSubscriptionStatus.ACTIVE:
     case AmbulanceStatus.Available:
     case AmbulanceServiceStatus.APPROVED:
+    case AmbulanceServiceStatus.DONE:
     case FosterChildrenCandidateStatus.ACCEPTED:
     case FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED:
     case 'active':
@@ -24,6 +25,7 @@ export const getStatusColor = (status: string) => {
     case DonationProgramStatusEnum.COMPLETED:
     case SocialProgramStatusEnum.COMPLETED:
     case AmbulanceStatus.InUse:
+    case AmbulanceServiceStatus.IN_SERVICE:
       return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
     case DonationProgramStatusEnum.DRAFT:
     case TransactionStatus.PENDING:
