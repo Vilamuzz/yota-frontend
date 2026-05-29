@@ -5,6 +5,7 @@ import { SocialProgramStatusEnum } from '@/types/socialProgram'
 import { SocialProgramSubscriptionStatus } from '@/types/socialProgramSubscription'
 import { AmbulanceStatus } from '@/types/ambulance'
 import { FosterChildrenCandidateStatus } from '@/types/fosterChildrenCandidate'
+import { AmbulanceServiceStatus } from '@/types/ambulanceService'
 
 export const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
@@ -14,6 +15,7 @@ export const getStatusColor = (status: string) => {
     case SocialProgramStatusEnum.ACTIVE:
     case SocialProgramSubscriptionStatus.ACTIVE:
     case AmbulanceStatus.Available:
+    case AmbulanceServiceStatus.APPROVED:
     case FosterChildrenCandidateStatus.ACCEPTED:
     case FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED:
     case 'active':
@@ -28,6 +30,7 @@ export const getStatusColor = (status: string) => {
     case MediaStatus.DRAFT:
     case SocialProgramStatusEnum.PENDING:
     case AmbulanceStatus.Maintenance:
+    case AmbulanceServiceStatus.PENDING:
     case FosterChildrenCandidateStatus.PENDING:
       return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
     case DonationProgramStatusEnum.EXPIRED:
@@ -36,6 +39,8 @@ export const getStatusColor = (status: string) => {
     case SocialProgramSubscriptionStatus.INACTIVE:
     case FosterChildrenCandidateStatus.REJECTED:
     case FosterChildrenCandidateStatus.CANCELED:
+    case AmbulanceServiceStatus.REJECTED:
+    case AmbulanceServiceStatus.CANCELED:
     case 'banned':
     case 'overdue':
       return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'

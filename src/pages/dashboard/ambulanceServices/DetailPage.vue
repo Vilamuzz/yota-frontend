@@ -1,12 +1,490 @@
 <script setup lang="ts">
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
+import {
+  Check,
+  X as XIcon,
+  AlertCircle,
+  Loader2,
+  Ambulance,
+  User,
+  CalendarDays,
+  MapPin,
+  Phone,
+  FileText,
+  Clock,
+  ShieldCheck,
+  UserCircle,
+} from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useAmbulanceServiceDetail } from '@/composables/ambulanceService/useAmbulanceServiceDetail'
+import { useAssignedAmbulanceServiceDetail } from '@/composables/ambulanceService/useAssignedAmbulanceServiceDetail'
+import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
+import { useToast } from '@/composables/ui/useToast'
+import { getStatusColor } from '@/utils/statusColor'
+import { formatDate, formatStatus } from '@/utils/format'
+import BaseButton from '@/components/atoms/BaseButton.vue'
+import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
+import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
+import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
+import { useAuthStore } from '@/stores/auth'
+import { ROLES } from '@/const/roles'
+
+const route = useRoute()
+const id = (route.params.serviceId || route.params.id) as string
+const ambulanceId = (route.params.ambulanceId || '') as string
+const { showToast } = useToast()
+const authStore = useAuthStore()
+const isDriver = computed(() => authStore.activeRole === ROLES.AMBULANCE_DRIVER)
+
+const managerDetail = useAmbulanceServiceDetail(
+  id,
+  computed(() => !isDriver.value),
+)
+const driverDetail = useAssignedAmbulanceServiceDetail(
+  ambulanceId,
+  id,
+  computed(() => isDriver.value),
+)
+
+const ambulanceService = computed(() =>
+  isDriver.value ? driverDetail.ambulanceService.value : managerDetail.ambulanceService.value,
+)
+const isLoading = computed(() =>
+  isDriver.value ? driverDetail.isLoading.value : managerDetail.isLoading.value,
+)
+const { acceptMutation, rejectMutation } = useAmbulanceServiceUpdate()
+const { ambulances, isLoading: isLoadingAmbulances } = useAmbulanceList(
+  { limit: 100 },
+  computed(() => !isDriver.value),
+)
+
+const isUpdating = computed(() => acceptMutation.isPending.value || rejectMutation.isPending.value)
+
+const confirmAccept = ref(false)
+const confirmReject = ref(false)
+const selectedAmbulanceId = ref('')
+
+// ACCEPT
+const openAcceptModal = () => {
+  selectedAmbulanceId.value = ''
+  confirmAccept.value = true
+}
+
+const handleConfirmAccept = () => {
+  if (!selectedAmbulanceId.value) return
+  acceptMutation.mutate(
+    { id, payload: { ambulanceId: selectedAmbulanceId.value } },
+    {
+      onSuccess: () => {
+        showToast('Permintaan berhasil disetujui', 'success')
+        confirmAccept.value = false
+      },
+      onError: () => {
+        showToast('Gagal menyetujui permintaan', 'error')
+      },
+    },
+  )
+}
+
+// REJECT
+const handleConfirmReject = (reason: string) => {
+  rejectMutation.mutate(
+    { id, payload: { reason } },
+    {
+      onSuccess: () => {
+        showToast('Permintaan berhasil ditolak', 'success')
+        confirmReject.value = false
+      },
+      onError: () => {
+        showToast('Gagal menolak permintaan', 'error')
+      },
+    },
+  )
+}
 </script>
 
 <template>
   <DashboardLayout>
-    <div class="p-6">
-      <h1 class="text-2xl font-bold">Detail Layanan Ambulans</h1>
-      <p class="text-gray-500 mt-2">Halaman ini sedang dalam pengembangan.</p>
+    <div class="max-w-full mx-auto space-y-6">
+      <!-- Loading State -->
+      <div
+        v-if="isLoading"
+        class="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
+      >
+        <Loader2 class="w-12 h-12 text-primary-500 animate-spin mb-4" />
+        <p class="text-gray-500 font-medium animate-pulse">Memuat detail permintaan ambulans...</p>
+      </div>
+
+      <!-- Not Found State -->
+      <div
+        v-else-if="!ambulanceService"
+        class="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-center px-6"
+      >
+        <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-full mb-4 text-red-500">
+          <AlertCircle :size="48" />
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Data Tidak Ditemukan</h3>
+        <p class="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-8">
+          Maaf, kami tidak dapat menemukan detail permintaan yang Anda cari. Data mungkin telah
+          dihapus atau link tidak valid.
+        </p>
+        <BaseButton
+          variant="outline"
+          :to="
+            ambulanceId
+              ? { name: 'dashboard-ambulance-assigned-service', params: { ambulanceId } }
+              : { name: 'dashboard-ambulance-services' }
+          "
+          >Kembali ke Daftar</BaseButton
+        >
+      </div>
+
+      <!-- Content -->
+      <div
+        v-else
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+      >
+        <!-- Page Header -->
+        <div
+          class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-500">
+              <Ambulance :size="22" />
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+                Detail Permintaan Layanan Ambulans
+              </h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                ID: {{ ambulanceService.id }}
+              </p>
+            </div>
+          </div>
+          <span
+            :class="[
+              'px-3 py-1 text-xs font-bold rounded-full tracking-wider border',
+              getStatusColor(ambulanceService.status),
+            ]"
+          >
+            {{ formatStatus(ambulanceService.status) }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2">
+          <!-- Left: Applicant Information -->
+          <div class="p-8 border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-gray-700">
+            <h3
+              class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
+            >
+              <User :size="18" class="text-blue-500" />
+              Informasi Pemohon
+            </h3>
+            <div class="space-y-5">
+              <!-- Applicant Name -->
+              <div class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <User :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    Nama Pemohon
+                  </p>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ ambulanceService.applicantName }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Phone -->
+              <div class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <Phone :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    Nomor Telepon
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-200">
+                    {{ ambulanceService.applicantPhone }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Address -->
+              <div class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <MapPin :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Alamat</p>
+                  <p class="text-sm text-gray-900 dark:text-gray-200">
+                    {{ ambulanceService.applicantAddress }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Request Date -->
+              <div class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <CalendarDays :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    Tanggal Permintaan
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-200">
+                    {{ formatDate(ambulanceService.requestDate) }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Submission Date -->
+              <div class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <Clock :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    Tanggal Pengajuan
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-200">
+                    {{ formatDate(ambulanceService.createdAt) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Request Details -->
+          <div class="p-8 space-y-6 bg-gray-50/50 dark:bg-gray-800/30">
+            <div>
+              <h3
+                class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
+              >
+                <FileText :size="18" class="text-blue-500" />
+                Detail Permintaan
+              </h3>
+
+              <!-- Reason -->
+              <div class="space-y-2 mb-6">
+                <p
+                  class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Alasan Permintaan
+                </p>
+                <div
+                  class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 leading-relaxed"
+                >
+                  {{ ambulanceService.requestReason || '-' }}
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div v-if="ambulanceService.description" class="space-y-2 mb-6">
+                <p
+                  class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Deskripsi Tambahan
+                </p>
+                <div
+                  class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 leading-relaxed"
+                >
+                  {{ ambulanceService.description }}
+                </div>
+              </div>
+
+              <!-- Assigned Ambulance -->
+              <div
+                v-if="ambulanceService.assignedAmbulance || ambulanceService.ambulanceId"
+                class="space-y-2 mb-6"
+              >
+                <p
+                  class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Ambulans yang Ditugaskan
+                </p>
+
+                <!-- Rich card when full object is available -->
+                <div
+                  v-if="ambulanceService.assignedAmbulance"
+                  class="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl overflow-hidden"
+                >
+                  <!-- Header row -->
+                  <div class="flex items-center gap-3 px-4 py-3 bg-blue-100/60 dark:bg-blue-900/20">
+                    <Ambulance :size="18" class="text-blue-600 dark:text-blue-400 shrink-0" />
+                    <span class="text-sm font-bold text-blue-700 dark:text-blue-300 tracking-wide">
+                      {{ ambulanceService.assignedAmbulance.plateNumber }}
+                    </span>
+                    <span
+                      class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                      :class="
+                        ambulanceService.assignedAmbulance.status === 'in use'
+                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                          : ambulanceService.assignedAmbulance.status === 'maintenance'
+                            ? 'bg-red-50 text-red-700 border-red-200'
+                            : 'bg-green-50 text-green-700 border-green-200'
+                      "
+                    >
+                      <ShieldCheck :size="10" />
+                      {{ ambulanceService.assignedAmbulance.status }}
+                    </span>
+                  </div>
+                  <!-- Driver details -->
+                  <div class="px-4 py-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="flex items-center gap-2">
+                      <UserCircle :size="15" class="text-blue-400 shrink-0" />
+                      <div>
+                        <p
+                          class="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                        >
+                          Pengemudi
+                        </p>
+                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          {{ ambulanceService.assignedAmbulance.driver.username }}
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <Phone :size="15" class="text-blue-400 shrink-0" />
+                      <div>
+                        <p
+                          class="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                        >
+                          Telepon Pengemudi
+                        </p>
+                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          {{ ambulanceService.assignedAmbulance.driver.phone }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Fallback: only ambulanceId available -->
+                <div
+                  v-else
+                  class="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-lg"
+                >
+                  <Ambulance :size="18" class="text-blue-500 shrink-0" />
+                  <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                    {{ ambulanceService.ambulanceId }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Rejection Reason -->
+              <div
+                v-if="ambulanceService.status === 'rejected' && ambulanceService.rejectionReason"
+                class="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl"
+              >
+                <h4
+                  class="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2"
+                >
+                  Alasan Penolakan
+                </h4>
+                <p class="text-sm text-red-700 dark:text-red-300">
+                  {{ ambulanceService.rejectionReason }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Footer (only for pending and manager) -->
+        <div
+          v-if="!isDriver && ambulanceService.status === 'pending'"
+          class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
+        >
+          <p class="text-xs text-gray-500 dark:text-gray-400 italic">
+            Dikirim pada {{ formatDate(ambulanceService.createdAt) }}
+          </p>
+          <div class="flex items-center gap-3">
+            <BaseButton
+              variant="danger"
+              size="md"
+              class="px-8"
+              @click="confirmReject = true"
+              :disabled="isUpdating"
+            >
+              <XIcon :size="16" class="mr-1.5" />
+              Tolak
+            </BaseButton>
+            <BaseButton
+              variant="primary"
+              size="md"
+              class="px-8"
+              @click="openAcceptModal"
+              :disabled="isUpdating"
+            >
+              <Check :size="16" class="mr-1.5" />
+              Setujui
+            </BaseButton>
+          </div>
+        </div>
+
+        <!-- Non-pending footer -->
+        <div
+          v-else
+          class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700"
+        >
+          <p class="text-xs text-gray-500 dark:text-gray-400 italic">
+            Dikirim pada {{ formatDate(ambulanceService.createdAt) }}
+          </p>
+        </div>
+      </div>
     </div>
+
+    <!-- Accept Confirmation Modal -->
+    <ConfirmationModal
+      :show="confirmAccept"
+      title="Setujui Permintaan Ambulans?"
+      message="Pilih ambulans yang akan ditugaskan untuk melayani permintaan ini:"
+      primary-button-text="Setujui"
+      secondary-button-text="Batal"
+      :icon="Check"
+      :primary-button-loading="acceptMutation.isPending.value"
+      @primary="handleConfirmAccept"
+      @secondary="confirmAccept = false"
+      @close="confirmAccept = false"
+    >
+      <div class="mt-4 text-left">
+        <label
+          for="ambulance-select"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Pilih Ambulans
+        </label>
+        <select
+          id="ambulance-select"
+          v-model="selectedAmbulanceId"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm"
+          :disabled="isLoadingAmbulances"
+        >
+          <option value="" disabled>-- Pilih Ambulans --</option>
+          <option v-for="ambulance in ambulances" :key="ambulance.id" :value="ambulance.id">
+            {{ ambulance.plateNumber }} - {{ ambulance.driver.username }}
+          </option>
+        </select>
+        <p v-if="isLoadingAmbulances" class="text-xs text-gray-500 mt-1">
+          Memuat daftar ambulans...
+        </p>
+      </div>
+    </ConfirmationModal>
+
+    <!-- Reject Confirmation Modal -->
+    <RejectConfirmationModal
+      :show="confirmReject"
+      :title="`Tolak permintaan ${ambulanceService?.applicantName || ''}?`"
+      message="Berikan alasan penolakan untuk permintaan ambulans ini."
+      primary-button-text="Tolak"
+      secondary-button-text="Batal"
+      :icon="AlertCircle"
+      :primary-button-loading="rejectMutation.isPending.value"
+      @primary="handleConfirmReject"
+      @secondary="confirmReject = false"
+      @close="confirmReject = false"
+    />
   </DashboardLayout>
 </template>

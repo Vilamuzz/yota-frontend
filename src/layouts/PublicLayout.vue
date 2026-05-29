@@ -1,31 +1,46 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useFoundationProfileStore } from '@/stores/foundationProfile'
 import { Motion } from 'motion-v'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLogout } from '@/composables/auth/useLogout'
+import { useRoleSwitch } from '@/composables/auth/useRoleSwitch'
+import type { Role } from '@/types/auth'
 import {
-  CircleAlert,
   LogOut,
   LayoutDashboard,
   Receipt,
   ChevronDown,
   History,
+  User,
+  CircleAlertIcon,
+  Check,
+  ArrowLeft,
+  Loader2,
 } from 'lucide-vue-next'
 import { ROLES } from '@/const/roles'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const foundationProfileStore = useFoundationProfileStore()
 const { logout } = useLogout()
+const { switchRole, isLoading: isSwitchingRole } = useRoleSwitch()
 const isProfileMenuOpen = ref(false)
 const isServicesMenuOpen = ref(false)
+const isRoleSubmenuOpen = ref(false)
+const switchingToRole = ref<Role | ''>('')
 const profileMenuRef = ref<HTMLElement | null>(null)
 const servicesMenuRef = ref<HTMLElement | null>(null)
 
 const handleClickOutside = (event: MouseEvent) => {
   if (profileMenuRef.value && !profileMenuRef.value.contains(event.target as Node)) {
     isProfileMenuOpen.value = false
+    setTimeout(() => {
+      isRoleSubmenuOpen.value = false
+      switchingToRole.value = ''
+    }, 200)
   }
   if (servicesMenuRef.value && !servicesMenuRef.value.contains(event.target as Node)) {
     isServicesMenuOpen.value = false
@@ -49,17 +64,44 @@ const userInitials = computed(() => {
   return (authStore.user.username[0] ?? 'U').toUpperCase()
 })
 
-const handleRegister = () => {
-  router.push('/register')
-}
-
-const handleLogin = () => {
-  router.push('/login')
-}
-
 const handleLogout = async () => {
   await logout()
   isProfileMenuOpen.value = false
+  isRoleSubmenuOpen.value = false
+  switchingToRole.value = ''
+}
+
+const formatRole = (role: string) => {
+  if (!role) return ''
+  return role
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
+}
+
+const handleSwitchRoleClick = () => {
+  isRoleSubmenuOpen.value = true
+}
+
+const handleBackToMenu = () => {
+  isRoleSubmenuOpen.value = false
+}
+
+const handleSelectRole = (role: string) => {
+  if (authStore.activeRole === role) return
+  switchingToRole.value = role as Role
+  switchRole(role as Role, {
+    onSuccess: () => {
+      isProfileMenuOpen.value = false
+      setTimeout(() => {
+        isRoleSubmenuOpen.value = false
+        switchingToRole.value = ''
+      }, 200)
+    },
+    onError: () => {
+      switchingToRole.value = ''
+    },
+  })
 }
 
 const handleProfileClick = () => {
@@ -70,6 +112,9 @@ const handleProfileClick = () => {
 const handleDashboardClick = () => {
   router.push('/dashboard')
   isProfileMenuOpen.value = false
+  setTimeout(() => {
+    isRoleSubmenuOpen.value = false
+  }, 200)
 }
 
 const handleInvoiceClick = () => {
@@ -78,7 +123,7 @@ const handleInvoiceClick = () => {
 }
 
 const handleHistoryClick = () => {
-  router.push({ name: 'foster-children-candidate-history' })
+  router.push('/submission-history')
   isProfileMenuOpen.value = false
 }
 
@@ -104,7 +149,14 @@ const dropdownLinks = [
       <div class="bg-primary-500 text-white rounded-xl px-6 py-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center">
-            <RouterLink to="/" class="text-2xl font-bold cursor-pointer">Yota</RouterLink>
+            <RouterLink to="/" class="flex items-center gap-2 cursor-pointer">
+              <img
+                v-if="foundationProfileStore.logo"
+                :src="foundationProfileStore.logo"
+                :alt="foundationProfileStore.foundationName"
+                class="h-9 w-auto object-contain"
+              />
+            </RouterLink>
           </div>
 
           <div class="flex items-center gap-8">
@@ -162,8 +214,8 @@ const dropdownLinks = [
 
             <div class="flex items-center gap-3">
               <template v-if="!authStore.isAuthenticated">
-                <BaseButton variant="white" @click="handleLogin"> Login </BaseButton>
-                <BaseButton variant="primary" @click="handleRegister"> Register </BaseButton>
+                <BaseButton variant="white" to="/login"> Login </BaseButton>
+                <BaseButton variant="primary" to="/register"> Register </BaseButton>
               </template>
 
               <template v-else>
@@ -202,56 +254,104 @@ const dropdownLinks = [
                     class="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl overflow-hidden z-50 p-1.5 border border-gray-100"
                     @click.stop
                   >
-                    <!-- User Info Header -->
-                    <div class="px-4 py-3 border-b border-gray-50 mb-1">
-                      <p class="text-sm font-bold text-gray-900 truncate">
-                        {{ authStore.user?.username }}
-                      </p>
-                      <p class="text-xs text-gray-500 truncate">{{ authStore.user?.email }}</p>
+                    <div v-if="!isRoleSubmenuOpen">
+                      <!-- User Info Header -->
+                      <div class="px-4 py-3 border-b border-gray-50 mb-1">
+                        <p class="text-sm font-bold text-gray-900 truncate">
+                          {{ authStore.user?.username }}
+                        </p>
+                        <p class="text-xs text-gray-500 truncate">{{ authStore.user?.email }}</p>
+                      </div>
+
+                      <button
+                        v-if="authStore.activeRole !== ROLES.ORANG_TUA_ASUH"
+                        @click="handleDashboardClick"
+                        class="w-full p-2.5 rounded-lg text-left text-sm text-gray-700 hover:bg-gray-200 hover:text-primary-600 transition flex items-center gap-3 font-medium"
+                      >
+                        <LayoutDashboard class="w-4.5 h-4.5 text-gray-400" />
+                        Dashboard
+                      </button>
+
+                      <button
+                        v-if="authStore.roles.length > 1"
+                        @click="handleSwitchRoleClick"
+                        class="w-full p-2.5 rounded-lg text-left text-sm text-gray-700 hover:bg-gray-200 hover:text-primary-600 transition flex items-center gap-3 font-medium"
+                      >
+                        <CircleAlertIcon class="w-4.5 h-4.5 text-gray-400" />
+                        Ganti Role
+                      </button>
+
+                      <button
+                        @click="handleProfileClick"
+                        class="w-full p-2.5 rounded-lg text-left text-sm text-gray-700 hover:bg-gray-200 transition flex items-center gap-3 font-medium"
+                      >
+                        <User class="w-4.5 h-4.5 text-gray-400" />
+                        Profil Saya
+                      </button>
+
+                      <button
+                        @click="handleInvoiceClick"
+                        class="w-full p-2.5 rounded-lg text-left text-sm text-gray-700 hover:bg-gray-200 transition flex items-center gap-3 font-medium"
+                      >
+                        <Receipt class="w-4.5 h-4.5 text-gray-400" />
+                        Invoice Saya
+                      </button>
+
+                      <button
+                        @click="handleHistoryClick"
+                        class="w-full p-2.5 rounded-lg text-left text-sm text-gray-700 hover:bg-gray-200 transition flex items-center gap-3 font-medium"
+                      >
+                        <History class="w-4.5 h-4.5 text-gray-400" />
+                        Riwayat Pengajuan
+                      </button>
+
+                      <div class="border-t border-gray-100 my-1.5"></div>
+
+                      <button
+                        @click="handleLogout"
+                        class="w-full p-2.5 rounded-lg text-left text-sm text-red-600 hover:bg-red-50 transition flex items-center gap-3 font-medium"
+                      >
+                        <LogOut class="w-4.5 h-4.5 text-red-500" />
+                        Keluar
+                      </button>
                     </div>
 
-                    <button
-                      v-if="authStore.activeRole !== ROLES.ORANG_TUA_ASUH"
-                      @click="handleDashboardClick"
-                      class="w-full p-2.5 rounded-lg text-left text-sm text-gray-700 hover:bg-gray-200 hover:text-primary-600 transition flex items-center gap-3 font-medium"
-                    >
-                      <LayoutDashboard class="w-4.5 h-4.5 text-gray-400" />
-                      Dashboard
-                    </button>
+                    <div v-else>
+                      <div class="px-2 py-2 flex items-center gap-2 border-b border-gray-50 mb-1">
+                        <button
+                          @click="handleBackToMenu"
+                          class="p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-500"
+                        >
+                          <ArrowLeft class="w-4 h-4" />
+                        </button>
+                        <p class="text-sm font-bold text-gray-900">Pilih Role</p>
+                      </div>
 
-                    <button
-                      @click="handleProfileClick"
-                      class="w-full p-2.5 rounded-lg text-left text-sm text-gray-700 hover:bg-gray-200 transition flex items-center gap-3 font-medium"
-                    >
-                      <CircleAlert class="w-4.5 h-4.5 text-gray-400" />
-                      Profil Saya
-                    </button>
-
-                    <button
-                      @click="handleInvoiceClick"
-                      class="w-full p-2.5 rounded-lg text-left text-sm text-gray-700 hover:bg-gray-200 transition flex items-center gap-3 font-medium"
-                    >
-                      <Receipt class="w-4.5 h-4.5 text-gray-400" />
-                      Invoice Saya
-                    </button>
-
-                    <button
-                      @click="handleHistoryClick"
-                      class="w-full p-2.5 rounded-lg text-left text-sm text-gray-700 hover:bg-gray-200 transition flex items-center gap-3 font-medium"
-                    >
-                      <History class="w-4.5 h-4.5 text-gray-400" />
-                      Riwayat Pengajuan
-                    </button>
-
-                    <div class="border-t border-gray-100 my-1.5"></div>
-
-                    <button
-                      @click="handleLogout"
-                      class="w-full p-2.5 rounded-lg text-left text-sm text-red-600 hover:bg-red-50 transition flex items-center gap-3 font-medium"
-                    >
-                      <LogOut class="w-4.5 h-4.5 text-red-500" />
-                      Keluar
-                    </button>
+                      <div class="max-h-60 overflow-y-auto p-1 space-y-1">
+                        <button
+                          v-for="role in authStore.roles"
+                          :key="role"
+                          @click="handleSelectRole(role)"
+                          :disabled="isSwitchingRole"
+                          class="w-full p-2.5 rounded-lg text-left text-sm transition flex items-center justify-between font-medium group"
+                          :class="
+                            authStore.activeRole === role
+                              ? 'bg-primary-300 text-primary-700'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          "
+                        >
+                          <span class="truncate">{{ formatRole(role) }}</span>
+                          <Loader2
+                            v-if="isSwitchingRole && switchingToRole === role"
+                            class="w-4 h-4 animate-spin text-gray-400"
+                          />
+                          <Check
+                            v-else-if="authStore.activeRole === role"
+                            class="w-4 h-4 text-primary-600"
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </Motion>
                 </div>
               </template>
@@ -269,8 +369,15 @@ const dropdownLinks = [
       <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 py-10">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div class="flex-1">
-            <h3 class="text-2xl font-bold text-primary-300">Yota</h3>
-            <p class="text-sm mt-2">123 Startup Lane<br />Sukoharjo, Indonesia 12345</p>
+            <div class="flex items-center gap-3 mb-2">
+              <img
+                v-if="foundationProfileStore.logo"
+                :src="foundationProfileStore.logo"
+                :alt="foundationProfileStore.foundationName"
+                class="h-10 w-auto object-contain brightness-0 invert"
+              />
+            </div>
+            <p class="text-sm mt-2">{{ foundationProfileStore.foundationAddress }}</p>
           </div>
 
           <div class="flex gap-12">
@@ -285,12 +392,35 @@ const dropdownLinks = [
                 </li>
                 <li>
                   Phone:
-                  <a href="tel:+6281234567890" class="hover:text-primary-300">+62 812-3456-7890</a>
+                  <a
+                    v-if="foundationProfileStore.foundationPhone"
+                    :href="`tel:${foundationProfileStore.foundationPhone}`"
+                    class="hover:text-primary-300"
+                    >{{ foundationProfileStore.foundationPhone }}</a
+                  >
                 </li>
                 <li class="flex items-center gap-3 mt-2">
-                  <a href="#" class="hover:text-primary-300">Twitter</a>
-                  <a href="#" class="hover:text-primary-300">LinkedIn</a>
-                  <a href="#" class="hover:text-primary-300">Instagram</a>
+                  <a
+                    v-if="foundationProfileStore.foundationFacebook"
+                    :href="foundationProfileStore.foundationFacebook"
+                    target="_blank"
+                    class="hover:text-primary-300"
+                    >Facebook</a
+                  >
+                  <a
+                    v-if="foundationProfileStore.foundationInstagram"
+                    :href="foundationProfileStore.foundationInstagram"
+                    target="_blank"
+                    class="hover:text-primary-300"
+                    >Instagram</a
+                  >
+                  <a
+                    v-if="foundationProfileStore.foundationTwitter"
+                    :href="foundationProfileStore.foundationTwitter"
+                    target="_blank"
+                    class="hover:text-primary-300"
+                    >Twitter</a
+                  >
                 </li>
               </ul>
             </div>

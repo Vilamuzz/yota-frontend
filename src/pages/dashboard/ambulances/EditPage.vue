@@ -12,7 +12,14 @@ import { AmbulanceStatus } from '@/types/ambulance'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
-import { Ambulance as AmbulanceIcon, Loader2, Upload, Camera, ShieldCheck, Settings } from 'lucide-vue-next'
+import {
+  Ambulance as AmbulanceIcon,
+  Loader2,
+  Upload,
+  Camera,
+  ShieldCheck,
+  Settings,
+} from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -54,7 +61,7 @@ watch(
     if (!response?.data) return
     const data = response.data
     form.plateNumber = data.plateNumber
-    form.driverId = data.driverId || ''
+    form.driverId = data.driver.id
     form.status = data.status
     if (data.image) {
       form.imagePreview = data.image
@@ -91,7 +98,7 @@ const handleSubmit = () => {
     plateNumber: form.plateNumber.trim(),
     driverId: form.driverId,
     status: form.status,
-    image: form.image,
+    image: form.image || undefined,
   })
 
   const zodErrors = getZodErrors(result)

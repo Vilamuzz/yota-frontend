@@ -10,6 +10,7 @@ import {
   HandHeart,
   ShieldAlert,
   Settings,
+  Building2,
 } from 'lucide-vue-next'
 import type { NavItem } from '@/types/navigation'
 import { ROLES } from './roles'
@@ -24,6 +25,12 @@ export const dashboardNavigation: NavItem[] = [
     icon: Users,
     label: 'Pengguna',
     route: '/dashboard/accounts',
+    roles: [ROLES.SUPERADMIN],
+  },
+  {
+    icon: Building2,
+    label: 'Profil Yayasan',
+    route: '/dashboard/foundation-profile',
     roles: [ROLES.SUPERADMIN],
   },
   {
@@ -42,7 +49,7 @@ export const dashboardNavigation: NavItem[] = [
     icon: CirclePoundSterling,
     label: 'Riwayat Donasi',
     roles: [ROLES.FINANCE],
-    route: '/dashboard/income/donation-programs',
+    route: '/dashboard/donation-programs/income',
   },
   {
     icon: CirclePoundSterling,
@@ -131,14 +138,26 @@ export const dashboardNavigation: NavItem[] = [
   {
     icon: Ambulance,
     label: 'Kelola Ambulans',
-    route: '/dashboard/ambulance',
+    route: '/dashboard/ambulances',
     roles: [ROLES.AMBULANCE_MANAGER],
   },
   {
     icon: Ambulance,
     label: 'Layanan Ambulans',
-    route: '/dashboard/ambulance-services',
+    route: '/dashboard/ambulances/services',
     roles: [ROLES.AMBULANCE_MANAGER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Layanan Ambulans',
+    route: '/dashboard/ambulances/assigned',
+    roles: [ROLES.AMBULANCE_DRIVER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Riwayat Ambulans',
+    route: '/dashboard/ambulances/histories',
+    roles: [ROLES.AMBULANCE_MANAGER, ROLES.AMBULANCE_DRIVER],
   },
   {
     icon: NotepadText,

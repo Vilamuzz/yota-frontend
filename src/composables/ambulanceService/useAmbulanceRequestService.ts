@@ -14,7 +14,7 @@ export const useAmbulanceRequestService = () => {
     CreateAmbulanceServiceRequest
   >({
     mutationFn: (data: CreateAmbulanceServiceRequest) =>
-      ambulanceServiceService.createAmbulanceService(data),
+      ambulanceServiceService.createAmbulanceServiceRequest(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ambulanceServices'] })
     },

@@ -10,7 +10,6 @@ import {
   ChevronRight,
   Receipt,
   Wallet,
-  ArrowUpRight,
   Heart,
   Users,
   HandHeart,
@@ -367,36 +366,6 @@ const getStatusLabel = (status: string) => {
             <span class="font-bold text-primary-400">{{ getStatusLabel(activeStatus) }}</span
             >.
           </p>
-        </div>
-
-        <!-- Footer CTA -->
-        <div
-          class="mt-16 bg-gray-900 rounded-[3rem] p-10 md:p-14 text-white flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl relative overflow-hidden group"
-        >
-          <div
-            class="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(52,211,153,0.1),transparent)]"
-          ></div>
-          <Receipt
-            class="absolute -right-10 -bottom-10 w-64 h-64 text-white/5 transform -rotate-12 group-hover:rotate-0 transition-transform duration-1000"
-          />
-
-          <div class="relative z-10 text-center md:text-left max-w-lg">
-            <h2 class="text-3xl font-black mb-4 leading-tight">Bantuan Pembayaran & Konfirmasi</h2>
-            <p class="text-gray-400 text-lg font-medium leading-relaxed">
-              Tim kami tersedia 24/7 untuk membantu proses verifikasi invoice atau kendala teknis
-              lainnya.
-            </p>
-          </div>
-
-          <button
-            class="relative z-10 bg-primary-400 text-white px-10 py-5 rounded-2xl font-black text-sm shadow-xl shadow-primary-400/30 hover:bg-primary-500 transition-all duration-500 flex items-center gap-3 active:scale-95 group/btn"
-          >
-            KONTAK LAYANAN
-            <ArrowUpRight
-              :size="20"
-              class="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform"
-            />
-          </button>
         </div>
       </div>
     </div>

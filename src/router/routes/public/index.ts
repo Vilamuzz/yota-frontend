@@ -39,8 +39,24 @@ export const publicRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/ambulance',
-    name: 'ambulance',
-    component: () => import('@/pages/public/ambulances/IndexPage.vue'),
+    children: [
+      {
+        path: '',
+        name: 'ambulance',
+        component: () => import('@/pages/public/ambulances/IndexPage.vue'),
+      },
+      {
+        path: ':id',
+        name: 'ambulance-detail',
+        component: () => import('@/pages/public/ambulances/DetailPage.vue'),
+      },
+      {
+        path: 'submission',
+        name: 'ambulance-submission',
+        meta: { requiresAuth: true },
+        component: () => import('@/pages/public/ambulances/FormSubmission.vue'),
+      },
+    ],
   },
   {
     path: '/foster-children',
@@ -51,12 +67,12 @@ export const publicRoutes: RouteRecordRaw[] = [
         component: () => import('@/pages/public/fosterChildren/IndexPage.vue'),
       },
       {
-        path: ':slug',
+        path: ':id',
         name: 'foster-children-detail',
         component: () => import('@/pages/public/fosterChildren/DetailPage.vue'),
       },
       {
-        path: ':slug/form',
+        path: ':id/form',
         name: 'foster-children-donation',
         component: () => import('@/pages/public/fosterChildren/FormPage.vue'),
       },
@@ -64,17 +80,6 @@ export const publicRoutes: RouteRecordRaw[] = [
         path: 'submission',
         name: 'foster-children-candidate-submission',
         meta: { requiresAuth: true },
-        component: () => import('@/pages/public/fosterChildren/FormSubmission.vue'),
-      },
-      {
-        path: 'history',
-        name: 'foster-children-candidate-history',
-        meta: { requiresAuth: true },
-        component: () => import('@/pages/public/fosterChildren/HistorySubmissionPage.vue'),
-      },
-      {
-        path: ':slug/form',
-        name: 'foster-children-submission',
         component: () => import('@/pages/public/fosterChildren/FormSubmission.vue'),
       },
     ],
@@ -153,8 +158,14 @@ export const publicRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/invoices',
-    name: 'public-invoices',
+    name: 'invoices',
     meta: { requiresAuth: true },
     component: () => import('@/pages/public/InvoicePage.vue'),
+  },
+  {
+    path: '/submission-history',
+    name: 'submission-history',
+    meta: { requiresAuth: true },
+    component: () => import('@/pages/public/SubmissionHistoryPage.vue'),
   },
 ]

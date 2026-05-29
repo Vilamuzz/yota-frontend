@@ -1,4 +1,4 @@
-import type { CreateFosterChildrenExpenseRequest, FosterChildrenExpenseListResponse, FosterChildrenExpenseResponse } from '@/types/fosterChildrenExpense'
+import type { CreateFosterChildrenExpenseRequest, FosterChildrenExpenseListResponse, FosterChildrenExpenseResponse, FosterChildrenExpenseExportRequest } from '@/types/fosterChildrenExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
 import type { PaginationParams } from '@/types/response'
@@ -34,6 +34,23 @@ export const fosterChildrenExpenseService = {
 
   deleteFosterChildrenExpense: async (id: string) => {
     const response = await api.delete(`${API.FOSTER_CHILDREN_ADMIN}/expenses/${id}`)
+    return response.data
+  },
+
+  exportFosterChildrenExpenseCSV: async (
+    slug: string,
+    params: FosterChildrenExpenseExportRequest,
+  ): Promise<Blob> => {
+    const response = await api.get<Blob>(
+      `${API.FOSTER_CHILDREN}/${slug}/expenses/export`,
+      {
+        params: {
+          start_date: params.startDate,
+          end_date: params.endDate,
+        },
+        responseType: 'blob',
+      },
+    )
     return response.data
   },
 }

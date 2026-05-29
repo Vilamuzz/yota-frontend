@@ -13,6 +13,7 @@ import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const { showToast } = useToast()
 const { deleteMutation } = useAmbulanceDelete()
@@ -182,12 +183,8 @@ function getStatusLabel(status: string) {
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
             Plat Nomor
           </th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Sopir
-          </th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Telepon
-          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Sopir</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Telepon</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
             Aksi
@@ -209,10 +206,10 @@ function getStatusLabel(status: string) {
               {{ ambulance.plateNumber }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ ambulance.driverName }}
+              {{ ambulance.driver.username }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ ambulance.driverPhone }}
+              {{ ambulance.driver.phone }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
@@ -226,20 +223,20 @@ function getStatusLabel(status: string) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <RouterLink
+                <BaseIconButton
                   :to="{ name: 'dashboard-ambulance-edit', params: { id: ambulance.id } }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
-                  title="Edit ambulans"
+                  variant="primary"
+                  title="Edit Ambulans"
                 >
                   <Edit :size="18" />
-                </RouterLink>
-                <button
-                  class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 dark:hover:bg-red-900/20"
-                  title="Hapus ambulans"
+                </BaseIconButton>
+                <BaseIconButton
+                  title="Hapus Ambulans"
+                  variant="danger"
                   @click="openDeleteModal(ambulance.id)"
                 >
                   <Trash2 :size="18" />
-                </button>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

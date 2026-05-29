@@ -10,6 +10,12 @@ export interface Account {
   createdAt: string
 }
 
+export interface Driver {
+  id: string
+  username: string
+  phone: string
+}
+
 export interface AccountRole {
   roleId: number
   roleName: string

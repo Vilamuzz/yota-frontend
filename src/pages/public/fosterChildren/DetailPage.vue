@@ -18,7 +18,7 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-const childId = computed(() => route.params.slug as string)
+const childId = computed(() => route.params.id as string)
 
 const { detailQuery } = useFosterChildrenDetail(childId)
 const child = computed(() => detailQuery.data.value?.data)

@@ -33,7 +33,7 @@ export const fosterChildrenCandidateService = {
     params: FosterChildrenCandidateQueryParams,
   ): Promise<FosterChildrenCandidateListResponse> => {
     const response = await api.get<FosterChildrenCandidateListResponse>(
-      `${API.FOSTER_CHILDREN}/candidates/me`,
+      `${API.FOSTER_CHILDREN}/candidates`,
       {
         params,
       },
@@ -45,7 +45,7 @@ export const fosterChildrenCandidateService = {
     id: string,
   ): Promise<FosterChildrenCandidateResponse> => {
     const response = await api.get<FosterChildrenCandidateResponse>(
-      `${API.FOSTER_CHILDREN}/candidates/me/${id}`,
+      `${API.FOSTER_CHILDREN}/candidates/${id}`,
     )
     return response.data
   },
@@ -71,7 +71,7 @@ export const fosterChildrenCandidateService = {
   },
 
   cancelMyFosterChildrenCandidate: async (id: string) => {
-    const response = await api.delete(`${API.FOSTER_CHILDREN}/candidates/me/${id}`)
+    const response = await api.delete(`${API.FOSTER_CHILDREN}/candidates/${id}`)
     return response.data
   },
 }

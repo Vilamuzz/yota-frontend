@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useFoundationProfileStore } from '@/stores/foundationProfile'
+
+const foundationProfileStore = useFoundationProfileStore()
+
 defineProps<{
   title: string
   subtitle?: string
@@ -15,8 +19,15 @@ defineEmits<{
     <!-- Left Section - Logo -->
     <div class="w-2/4 flex items-center justify-center bg-primary-500">
       <div class="text-center">
-        <h1 class="text-6xl font-bold text-white mb-4">YOTA</h1>
-        <p class="text-white text-xl opacity-80">Your Online Travel Assistant</p>
+        <img
+          v-if="foundationProfileStore.logo"
+          :src="foundationProfileStore.logo"
+          :alt="foundationProfileStore.foundationName"
+          class="h-24 w-auto object-contain brightness-0 invert"
+        />
+        <h3 class="text-2xl font-bold text-white mt-4">
+          {{ foundationProfileStore.foundationName }}
+        </h3>
       </div>
     </div>
 

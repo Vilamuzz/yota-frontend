@@ -1,11 +1,10 @@
+import type { Driver } from './account'
 import type { Pagination, PaginationParams, Response } from './response'
 
 export interface Ambulance {
   id: string
   plateNumber: string
-  driverId: string
-  driverName: string
-  driverPhone: string
+  driver: Driver
   status: AmbulanceStatus
   image?: string
 }

@@ -262,6 +262,7 @@ function handleConfirmCancel() {
                   "
                   variant="danger"
                   @click="openCancelModal(transaction.id)"
+                  title="Batalkan"
                 >
                   <XCircle :size="18" />
                 </BaseIconButton>

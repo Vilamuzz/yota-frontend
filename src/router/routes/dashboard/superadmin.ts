@@ -15,7 +15,7 @@ export const superadminRoutes: RouteRecordRaw[] = [
       {
         path: 'foundation-profile',
         name: 'dashboard-foundation-profile',
-        component: () => import('@/pages/dashboard/foundationProfile/IndexPage.vue'),
+        component: () => import('@/pages/dashboard/foundationProfile/DetailPage.vue'),
         meta: { title: 'Profil Yayasan' },
       },
       {
