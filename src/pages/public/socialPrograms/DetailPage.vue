@@ -154,7 +154,9 @@ const handleLogin = () => {
         </BaseButton>
       </div>
 
-      <p class="text-xs text-gray-400 mb-8">*Tagihan akan muncul setiap tanggal 5</p>
+      <p class="text-xs text-gray-400 mb-8">
+        *Tagihan akan muncul setiap tanggal {{ program.billingDay }}
+      </p>
 
       <!-- Deskripsi -->
       <div class="border-t pt-6">

@@ -12,10 +12,10 @@ export const useFosterChildrenTransactionCreate = () => {
   const createMutation = useMutation<
     FosterChildrenTransactionResponse,
     ApiError,
-    { slug: string; data: CreateFosterChildrenTransactionRequest }
+    { id: string; data: CreateFosterChildrenTransactionRequest }
   >({
-    mutationFn: ({ slug, data }) =>
-      fosterChildrenTransactionService.createFosterChildrenTransaction(slug, data),
+    mutationFn: ({ id, data }) =>
+      fosterChildrenTransactionService.createFosterChildrenTransaction(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fosterChildrenTransactions'] })
     },

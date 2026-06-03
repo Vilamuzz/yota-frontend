@@ -11,10 +11,10 @@ import { extractError } from '@/utils/error'
 
 const route = useRoute()
 const router = useRouter()
-const slug = computed(() => route.params.slug as string)
+const id = computed(() => route.params.id as string)
 
 // Composables
-const { detailQuery } = useFosterChildrenDetail(slug)
+const { detailQuery } = useFosterChildrenDetail(id)
 const { createMutation } = useFosterChildrenTransactionCreate()
 const { showToast } = useToast()
 
@@ -63,7 +63,7 @@ const handleSubmit = () => {
 
   createMutation.mutate(
     {
-      slug: slug.value,
+      id: id.value,
       data: {
         grossAmount: selectedAmount.value,
         donorName: donorName.value || undefined,
@@ -76,7 +76,7 @@ const handleSubmit = () => {
         if (snapToken) {
           router.push({
             path: '/invoices',
-            query: { pay: snapToken }
+            query: { pay: snapToken },
           })
         } else {
           showToast('Berhasil membuat transaksi bantuan', 'success')

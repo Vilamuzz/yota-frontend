@@ -6,6 +6,7 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
 import { useAmbulanceRequestService } from '@/composables/ambulanceService/useAmbulanceRequestService'
+import { AmbulanceServiceCategory, serviceCategoryOptions } from '@/types/ambulanceHistory'
 
 const router = useRouter()
 const { showToast } = useToast()
@@ -16,11 +17,12 @@ const form = reactive({
   applicantAddress: '',
   requestDate: '',
   requestReason: '',
+  serviceCategory: '' as unknown as AmbulanceServiceCategory,
 })
 
 const errors = ref<Record<string, string>>({})
 
-const { createMutation, validationErrors } = useAmbulanceRequestService()
+const { createMutation } = useAmbulanceRequestService()
 
 const isLoading = computed(() => createMutation.isPending.value)
 
@@ -53,6 +55,7 @@ const validate = (): boolean => {
   if (!form.applicantAddress.trim()) newErrors.applicantAddress = 'Alamat wajib diisi'
   if (!form.requestDate) newErrors.requestDate = 'Tanggal permintaan wajib diisi'
   if (!form.requestReason.trim()) newErrors.requestReason = 'Alasan permintaan wajib diisi'
+  if (!form.serviceCategory) newErrors.serviceCategory = 'Kategori layanan wajib diisi'
 
   errors.value = newErrors
   return Object.keys(newErrors).length === 0
@@ -183,7 +186,7 @@ const handleSubmit = () => {
             <p class="text-sm text-slate-500 mt-1">Informasi mengenai kebutuhan ambulans</p>
           </div>
 
-          <!-- Request Date -->
+          <!-- Request Date & Category -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label for="requestDate" class="block text-sm font-medium text-slate-700 mb-2"
@@ -200,6 +203,28 @@ const handleSubmit = () => {
               />
               <p v-if="errors.requestDate" class="mt-1 text-xs text-red-600">
                 {{ errors.requestDate }}
+              </p>
+            </div>
+
+            <div>
+              <label for="serviceCategory" class="block text-sm font-medium text-slate-700 mb-2"
+                >Kategori Layanan <span class="text-red-500">*</span></label
+              >
+              <select
+                id="serviceCategory"
+                v-model="form.serviceCategory"
+                class="w-full px-4 py-3 text-sm border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                :class="
+                  errors.serviceCategory ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white'
+                "
+              >
+                <option value="" disabled>Pilih kategori layanan</option>
+                <option v-for="cat in serviceCategoryOptions" :key="cat.value" :value="cat.value">
+                  {{ cat.label }}
+                </option>
+              </select>
+              <p v-if="errors.serviceCategory" class="mt-1 text-xs text-red-600">
+                {{ errors.serviceCategory }}
               </p>
             </div>
           </div>

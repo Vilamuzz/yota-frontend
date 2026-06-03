@@ -2,7 +2,15 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Check, X as XIcon, RotateCcw, ClipboardList, AlertCircle, Eye, Play } from 'lucide-vue-next'
+import {
+  Check,
+  X as XIcon,
+  RotateCcw,
+  ClipboardList,
+  AlertCircle,
+  Eye,
+  Play,
+} from 'lucide-vue-next'
 import { useAmbulanceServiceList } from '@/composables/ambulanceService/useAmbulanceServiceList'
 import { useAssignedAmbulanceServiceList } from '@/composables/ambulanceService/useAssignedAmbulanceServiceList'
 import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
@@ -15,7 +23,8 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatStatus } from '@/utils/format'
+import { formatStatus, getCategoryLabel } from '@/utils/format'
+import { serviceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
@@ -49,7 +58,7 @@ const statuses = [
   { label: 'Dalam Layanan', value: 'in_service' },
   { label: 'Selesai', value: 'done' },
   { label: 'Ditolak', value: 'rejected' },
-  { label: 'Dibatalkan', value: 'canceled' },
+  { label: 'Dibatalkan', value: 'cancelled' },
 ]
 const searchQuery = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
@@ -140,10 +149,10 @@ function handleReject(service: AmbulanceService) {
   rejectModalShow.value = true
 }
 
-function handleConfirmReject(reason: string) {
+function handleConfirmReject(rejectReason: string) {
   if (!rejectService.value) return
   rejectMutation.mutate(
-    { id: rejectService.value.id, payload: { reason } },
+    { id: rejectService.value.id, payload: { rejectionReason: rejectReason } },
     {
       onSuccess: () => {
         showToast('Permintaan berhasil ditolak', 'success')
@@ -322,6 +331,7 @@ function handleConfirmComplete() {
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Pemohon</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Telepon</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Kategori</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
             Tgl Permintaan
           </th>
@@ -347,6 +357,13 @@ function handleConfirmComplete() {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
               {{ service.applicantPhone }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <span
+                class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30"
+              >
+                {{ getCategoryLabel(service.serviceCategory, serviceCategoryOptions) }}
+              </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
               {{ new Date(service.requestDate).toLocaleDateString('id-ID') }}

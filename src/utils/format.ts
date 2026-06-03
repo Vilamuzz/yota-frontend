@@ -44,7 +44,7 @@ export const formatStatus = (status: string): string => {
     pending: 'Tertunda',
     settlement: 'Berhasil',
     cancel: 'Dibatalkan',
-    canceled: 'Dibatalkan',
+    cancelled: 'Dibatalkan',
     published: 'Dipublikasi',
     rejected: 'Ditolak',
     accepted: 'Diterima',

@@ -12,19 +12,21 @@ import { ChevronDown, LogOut } from 'lucide-vue-next'
 import { Motion, AnimatePresence } from 'motion-v'
 import { useLogout } from '@/composables/auth/useLogout'
 import { useNavigation } from '@/composables/navigation/useNavigation'
+import { useFoundationProfileStore } from '@/stores/foundationProfile'
 
 const route = useRoute()
 const router = useRouter()
 const { logout } = useLogout()
 const { visibleMenu } = useNavigation()
+const foundationProfileStore = useFoundationProfileStore()
 
 const isMenuActive = (menuRoute: string | undefined) => {
   if (!menuRoute) return false
   if (route.path === menuRoute) return true
-  
+
   let currentActiveMenu = route.meta.activeMenu as string | undefined
   const visited = new Set<string>()
-  
+
   while (currentActiveMenu && !visited.has(currentActiveMenu)) {
     visited.add(currentActiveMenu)
     try {
@@ -70,9 +72,17 @@ const initiallyOpen = new Set(openDropdowns.value)
     class="bg-primary-500 dark:bg-primary-300 text-white transition-all duration-300 flex flex-col w-64 font-poppins"
   >
     <!-- Logo Section -->
-    <div class="p-4 flex items-center justify-between border-b border-white/10">
+    <div class="p-4 flex items-center justify-center border-b border-white/10">
       <div class="flex items-center gap-3">
-        <div class="text-2xl font-bold">YOTA</div>
+        <img
+          :src="foundationProfileStore.logo!"
+          class="max-w-24"
+          alt="Logo"
+          v-if="foundationProfileStore.foundationName"
+        />
+        <div class="text-2xl font-bold" v-else>
+          {{ foundationProfileStore.foundationName }}
+        </div>
       </div>
     </div>
 

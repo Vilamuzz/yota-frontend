@@ -24,7 +24,8 @@ import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmb
 import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
 import { useToast } from '@/composables/ui/useToast'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatDate, formatStatus } from '@/utils/format'
+import { formatDate, formatStatus, getCategoryLabel } from '@/utils/format'
+import { serviceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
@@ -99,7 +100,7 @@ const handleConfirmAccept = () => {
 // REJECT
 const handleConfirmReject = (reason: string) => {
   rejectMutation.mutate(
-    { id, payload: { reason } },
+    { id, payload: { rejectionReason: reason } },
     {
       onSuccess: () => {
         showToast('Permintaan berhasil ditolak', 'success')
@@ -309,6 +310,22 @@ const handleConfirmComplete = () => {
                 <FileText :size="18" class="text-blue-500" />
                 Detail Permintaan
               </h3>
+
+               <!-- Category -->
+              <div class="space-y-2 mb-6">
+                <p
+                  class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Kategori Layanan
+                </p>
+                <div class="flex">
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"
+                  >
+                    {{ getCategoryLabel(ambulanceService.serviceCategory, serviceCategoryOptions) }}
+                  </span>
+                </div>
+              </div>
 
               <!-- Reason -->
               <div class="space-y-2 mb-6">

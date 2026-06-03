@@ -53,7 +53,7 @@ export interface AcceptAmbulanceServiceRequestPayload {
 }
 
 export interface RejectAmbulanceServiceRequest {
-  reason: string
+  rejectionReason: string
 }
 
 export type AmbulanceServiceResponse = Response<AmbulanceService>
