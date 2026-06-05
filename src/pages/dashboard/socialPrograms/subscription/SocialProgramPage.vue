@@ -3,7 +3,7 @@ import { ref, computed, watch, reactive } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Eye, Heart } from 'lucide-vue-next'
 import { useSocialProgramList } from '@/composables/socialProgram/useSocialProgramList'
-import { useCursorPagination } from '@/composables/ui/usePagination'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
@@ -17,10 +17,10 @@ const statuses = Object.values(SocialProgramStatusEnum)
 
 const queryParams = reactive<SocialProgramQueryParams>({
   limit: 10,
+  page: 1,
   search: undefined,
   status: undefined,
-  nextCursor: undefined,
-  prevCursor: undefined,
+  sortBy: undefined,
 })
 
 const limitOptions = [10, 25, 50, 100]
@@ -37,19 +37,22 @@ watch(searchQuery, (val) => {
 
 const { socialPrograms, pagination, isLoading } = useSocialProgramList(queryParams)
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-  useCursorPagination(queryParams)
+  useOffsetPagination(queryParams, pagination)
 
 watch(
-  () => [queryParams.status, queryParams.limit],
+  () => [queryParams.status, queryParams.sortBy, queryParams.limit],
   () => resetPagination(),
 )
 
-const hasActiveFilters = computed(() => queryParams.status !== undefined)
+const hasActiveFilters = computed(
+  () => queryParams.status !== undefined || queryParams.sortBy !== undefined,
+)
 
 const clearFilters = () => {
   searchQuery.value = ''
   queryParams.search = undefined
   queryParams.status = undefined
+  queryParams.sortBy = undefined
   resetPagination()
 }
 </script>
@@ -79,6 +82,25 @@ const clearFilters = () => {
                   </select>
                 </div>
 
+                <div>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Urutkan</label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at desc">Terbaru</option>
+                    <option value="created_at asc">Terlama</option>
+                    <option value="title asc">Nama (A-Z)</option>
+                    <option value="title desc">Nama (Z-A)</option>
+                    <option value="total_subscribers desc">Pelanggan Terbanyak</option>
+                    <option value="total_subscribers asc">Pelanggan Paling Sedikit</option>
+                    <option value="minimum_amount asc">Donasi Terendah</option>
+                    <option value="minimum_amount desc">Donasi Tertinggi</option>
+                    <option value="billing_day asc">Hari Tagihan Terawal</option>
+                  </select>
+                </div>
+
                 <div class="flex gap-2 pt-2">
                   <button
                     @click="clearFilters"
@@ -105,12 +127,12 @@ const clearFilters = () => {
         loading-message="Memuat data program..."
         :is-empty="socialPrograms.length === 0"
         empty-message="Tidak ada data program"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
       >
         <template #empty-icon>
           <Heart :size="96" class="mx-auto mb-2 text-gray-300" />

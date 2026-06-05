@@ -1,41 +1,42 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
-import { Eye, Baby, RotateCcw } from 'lucide-vue-next'
+import { Eye, Baby } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
-import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useAuthStore } from '@/stores/auth'
 import { Category, Gender } from '@/types/fosterChildren'
 import { ROLES } from '@/const/roles'
 import { useFosterChildrenCandidateList } from '@/composables/fosterChildrenCandidate/useFosterChildrenCandidateList'
-import { useCursorPagination } from '@/composables/ui/usePagination'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import { getStatusColor } from '@/utils/statusColor'
 import { formatDate, formatStatus } from '@/utils/format'
 import {
   FosterChildrenCandidateStatus,
-  type FosterChildrenCandidateQueryParams,
+  type FosterChildrenCandidateAdminQueryParams,
 } from '@/types/fosterChildrenCandidate'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 // Unified query parameters
-const queryParams = reactive<FosterChildrenCandidateQueryParams>({
+const queryParams = reactive<FosterChildrenCandidateAdminQueryParams>({
   limit: 10,
+  page: 1,
   search: undefined,
   gender: undefined,
   category: undefined,
   status: undefined,
-  nextCursor: undefined,
-  prevCursor: undefined,
+  sortBy: undefined,
 })
 
 const searchInput = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
 
 const { candidates, pagination, isLoading } = useFosterChildrenCandidateList(queryParams)
-const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-  useCursorPagination(queryParams)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
+  queryParams,
+  pagination,
+)
 
 watch(searchInput, (val) => {
   clearTimeout(searchTimeout)
@@ -46,7 +47,13 @@ watch(searchInput, (val) => {
 })
 
 watch(
-  () => [queryParams.gender, queryParams.category, queryParams.status, queryParams.limit],
+  () => [
+    queryParams.gender,
+    queryParams.category,
+    queryParams.status,
+    queryParams.sortBy,
+    queryParams.limit,
+  ],
   () => resetPagination(),
 )
 
@@ -56,6 +63,7 @@ const clearFilters = () => {
   queryParams.gender = undefined
   queryParams.category = undefined
   queryParams.status = undefined
+  queryParams.sortBy = undefined
   resetPagination()
 }
 
@@ -86,7 +94,8 @@ const hasActiveFilters = computed(
   () =>
     queryParams.gender !== undefined ||
     queryParams.category !== undefined ||
-    queryParams.status !== undefined,
+    queryParams.status !== undefined ||
+    queryParams.sortBy !== undefined,
 )
 </script>
 
@@ -157,16 +166,33 @@ const hasActiveFilters = computed(
                   </select>
                 </div>
 
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    >Urutkan</label
+                  >
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Default</option>
+                    <option value="created_at desc">Terbaru</option>
+                    <option value="created_at asc">Terlama</option>
+                    <option value="name asc">Nama (A-Z)</option>
+                    <option value="name desc">Nama (Z-A)</option>
+                  </select>
+                </div>
+
                 <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                   <button
                     @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   >
                     RESET
                   </button>
                   <button
                     @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
                   >
                     APPLY
                   </button>
@@ -174,17 +200,6 @@ const hasActiveFilters = computed(
               </div>
             </template>
           </BaseFilter>
-
-          <BaseButton
-            v-if="hasActiveFilters"
-            variant="outline"
-            size="md"
-            @click="clearFilters"
-            class="hidden sm:flex"
-          >
-            <RotateCcw :size="16" class="mr-2" />
-            Reset
-          </BaseButton>
         </div>
       </div>
 
@@ -194,12 +209,12 @@ const hasActiveFilters = computed(
         loading-message="Memuat data ajuan..."
         :is-empty="candidates.length === 0"
         empty-message="Tidak ada data ajuan"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
         v-model:limit="queryParams.limit"
         :limit-options="[10, 25, 50]"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
       >
         <template #empty-icon>
           <Baby :size="96" class="mx-auto mb-2 text-gray-300" />

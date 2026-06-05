@@ -102,10 +102,10 @@ const canSubmit = computed(() => {
       >
         <div
           v-if="show"
-          class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden relative font-poppins"
+          class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-lg w-full relative font-poppins"
         >
           <!-- Header -->
-          <div class="bg-primary-500 p-6 text-white relative">
+          <div class="bg-primary-500 p-6 text-white relative rounded-t-3xl">
             <BaseIconButton @click="emit('close')" variant="danger" class="absolute top-4 right-4">
               <X :size="20" />
             </BaseIconButton>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import {
@@ -35,17 +35,20 @@ const { detailQuery, isAmbulanceLoading } = useAmbulanceDetail(id)
 const ambulance = computed(() => detailQuery.data.value?.data)
 
 // History List
-const historyPage = ref(1)
-const historyParams = computed(() => ({
-  ambulanceId: id,
-  page: historyPage.value,
+import { useCursorPagination } from '@/composables/ui/usePagination'
+import type { AmbulanceHistoryQueryParams } from '@/types/ambulanceHistory'
+
+const queryParams = reactive<AmbulanceHistoryQueryParams>({
   limit: 8,
-}))
+  nextCursor: undefined,
+  prevCursor: undefined,
+})
 const {
   histories,
   pagination,
   isLoading: isHistoryLoading,
-} = useAmbulanceHistoryList(id, historyParams)
+} = useAmbulanceHistoryList(id, queryParams)
+const { resetPagination, handleNextPage, handlePrevPage } = useCursorPagination(queryParams)
 
 // Summary
 const PERIOD_OPTIONS = [
@@ -135,7 +138,6 @@ const categoryBadgeClass = (value: string) => {
   }
 }
 
-const totalPages = computed(() => pagination.value?.totalPages ?? 1)
 
 const categoryBarClass = (value: string) => {
   switch (value) {
@@ -588,21 +590,20 @@ const categoryBarClass = (value: string) => {
 
               <!-- Pagination -->
               <div
-                v-if="totalPages > 1"
-                class="px-6 py-4 border-t border-gray-100 flex items-center justify-between"
+                v-if="pagination?.nextCursor || pagination?.prevCursor"
+                class="px-6 py-4 border-t border-gray-100 flex items-center justify-end"
               >
-                <p class="text-xs text-gray-500">Halaman {{ historyPage }} dari {{ totalPages }}</p>
                 <div class="flex items-center gap-2">
                   <button
-                    :disabled="historyPage <= 1"
-                    @click="historyPage--"
+                    :disabled="!pagination?.prevCursor"
+                    @click="handlePrevPage(pagination)"
                     class="p-2 rounded-lg border border-gray-200 text-gray-500 hover:border-primary-300 hover:text-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft :size="16" />
                   </button>
                   <button
-                    :disabled="historyPage >= totalPages"
-                    @click="historyPage++"
+                    :disabled="!pagination?.nextCursor"
+                    @click="handleNextPage(pagination)"
                     class="p-2 rounded-lg border border-gray-200 text-gray-500 hover:border-primary-300 hover:text-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronRight :size="16" />

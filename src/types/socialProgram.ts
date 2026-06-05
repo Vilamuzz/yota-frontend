@@ -1,4 +1,4 @@
-import type { Pagination, PaginationParams, Response } from './response'
+import type { PaginationParams, Response } from './response'
 
 export enum SocialProgramStatusEnum {
   PENDING = 'pending',
@@ -26,11 +26,20 @@ export interface SocialProgram {
 
 export interface SocialProgramList {
   socialPrograms: SocialProgram[]
-  pagination: Pagination
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
 export interface SocialProgramQueryParams extends PaginationParams {
   status?: string
+  sortBy?: string
+  startDate?: string
+  endDate?: string
+  page?: number
 }
 
 export interface CreateSocialProgramRequest {

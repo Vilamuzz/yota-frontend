@@ -60,9 +60,17 @@ function calculateAge(birthDate: string): number {
   <component
     :is="to ? 'router-link' : 'button'"
     :to="to"
-    class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-37.5 w-full text-left cursor-pointer hover:shadow-md hover:border-primary-300 transition-all duration-200 group block"
+    class="relative bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-37.5 w-full text-left cursor-pointer hover:shadow-md hover:border-primary-300 transition-all duration-200 group block overflow-hidden"
     @click="!to && handleView(fosterChildren)"
   >
+    <!-- Graduated Badge -->
+    <div
+      v-if="fosterChildren.isGraduated"
+      class="absolute top-2 right-2 bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-lg z-10"
+    >
+      Lulus
+    </div>
+
     <div
       class="flex flex-col items-center text-center space-y-1 group-hover:scale-105 transition-transform duration-200"
     >
@@ -70,8 +78,12 @@ function calculateAge(birthDate: string): number {
         :src="fosterChildren.profilePicture"
         :alt="fosterChildren.name"
         class="w-20 h-20 rounded-full object-cover border-2 border-green-600"
+        :class="{ 'border-blue-500': fosterChildren.isGraduated }"
       />
-      <span class="bg-primary-300 text-white text-md px-3 py-1 rounded-full font-medium">
+      <span
+        class="bg-primary-300 text-white text-md px-3 py-1 rounded-full font-medium"
+        :class="{ '!bg-blue-500': fosterChildren.isGraduated }"
+      >
         {{ fosterChildren.name }}
       </span>
 

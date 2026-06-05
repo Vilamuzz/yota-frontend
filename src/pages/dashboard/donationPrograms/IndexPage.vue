@@ -178,12 +178,12 @@ function handleConfirmArchive() {
         loading-message="Loading donations..."
         :is-empty="donationPrograms.length === 0 && !isLoading"
         empty-message="No donations available"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
       >
         <template #empty-icon>
           <HandHeart :size="96" class="mx-auto mb-2" />

@@ -1,30 +1,27 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useSocialProgramList } from './useSocialProgramList'
-import type { SocialProgramQueryParams } from '@/types/socialProgram'
-import { useCursorPagination } from '../ui/usePagination'
+import { type SocialProgramQueryParams, SocialProgramStatusEnum } from '@/types/socialProgram'
+import { useOffsetPagination } from '../ui/useOffsetPagination'
 
 export function useSocialProgramFilters() {
   const queryParams = reactive<SocialProgramQueryParams>({
     limit: 10,
+    page: 1,
     search: undefined,
     status: undefined,
-    nextCursor: undefined,
-    prevCursor: undefined,
+    sortBy: undefined,
   })
 
   const limitOptions = [10, 25, 50, 100]
 
-  const statuses = [
-    { label: 'Aktif', value: 'active' },
-    { label: 'Tidak Aktif', value: 'inactive' },
-  ]
+  const statuses = Object.values(SocialProgramStatusEnum)
 
   const searchQuery = ref('')
   let searchTimeout: ReturnType<typeof setTimeout>
 
   const { socialPrograms, pagination, isLoading, listQuery } = useSocialProgramList(queryParams)
   const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-    useCursorPagination(queryParams)
+    useOffsetPagination(queryParams, pagination)
 
   watch(searchQuery, (val) => {
     clearTimeout(searchTimeout)
@@ -35,15 +32,19 @@ export function useSocialProgramFilters() {
   })
 
   watch(
-    () => [queryParams.status, queryParams.limit],
+    () => [queryParams.status, queryParams.sortBy, queryParams.limit],
     () => resetPagination(),
   )
 
-  const hasActiveFilters = computed(() => queryParams.status !== undefined)
+  const hasActiveFilters = computed(
+    () => queryParams.status !== undefined || queryParams.sortBy !== undefined,
+  )
 
   function clearFilters() {
     searchQuery.value = ''
+    queryParams.search = undefined
     queryParams.status = undefined
+    queryParams.sortBy = undefined
     resetPagination()
   }
 

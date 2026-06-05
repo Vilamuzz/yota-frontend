@@ -118,31 +118,39 @@ function handleConfirmDelete() {
     <template #title>Manajemen Pengeluaran Program Sosial</template>
 
     <div class="space-y-6">
-      <div
-        v-if="socialProgram"
-        class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm mb-6"
-      >
-        <div class="flex flex-col">
-          <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Program Donasi</span>
-          <span
-            class="text-lg font-semibold text-gray-900 dark:text-white truncate"
-            :title="socialProgram.title"
-            >{{ socialProgram.title }}</span
-          >
+      <!-- Stats Grid -->
+      <div v-if="!detailQuery.isPending.value" class="grid grid-cols-1 md:grid-cols-12 gap-5">
+        <div
+          class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ socialProgram?.title }}
+          </h1>
+          <p class="text-sm text-gray-400 mt-1">Nama Program Donasi</p>
         </div>
-        <div class="flex flex-col">
-          <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Dana Terkumpul</span>
-          <span class="text-lg font-semibold text-green-600 dark:text-green-400">{{
-            formatCurrency(socialProgram.collectedFund!)
-          }}</span>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
+            {{ formatCurrency(socialProgram?.collectedFund || 0) }}
+          </h3>
+          <p class="text-sm text-gray-400 mt-1">Total Dana Terkumpul</p>
         </div>
-        <div class="flex flex-col">
-          <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Dana Tersisa</span>
-          <span class="text-lg font-semibold text-red-600 dark:text-red-400">{{
-            formatCurrency(socialProgram.collectedFund! - (socialProgram.totalExpense || 0))
-          }}</span>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h3 class="text-3xl font-bold text-red-700 dark:text-red-500">
+            {{ formatCurrency(socialProgram?.totalExpense || 0) }}
+          </h3>
+          <p class="text-sm text-gray-400 mt-1">Total Pengeluaran</p>
         </div>
       </div>
+      <div v-else-if="detailQuery.isPending.value" class="animate-pulse flex gap-5">
+        <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl w-full"></div>
+      </div>
+
       <!-- Header Section -->
       <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <BaseButton

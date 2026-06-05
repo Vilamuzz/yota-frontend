@@ -4,14 +4,16 @@ import type {
   FosterChildrenCandidateListResponse,
   FosterChildrenCandidateResponse,
   FosterChildrenCandidateQueryParams,
+  FosterChildrenCandidateAdminQueryParams,
+  FosterChildrenCandidateAdminListResponse,
 } from '@/types/fosterChildrenCandidate'
 import { api } from '@/utils/api'
 
 export const fosterChildrenCandidateService = {
   getFosterChildrenCandidate: async (
-    params: FosterChildrenCandidateQueryParams,
-  ): Promise<FosterChildrenCandidateListResponse> => {
-    const response = await api.get<FosterChildrenCandidateListResponse>(
+    params: FosterChildrenCandidateAdminQueryParams,
+  ): Promise<FosterChildrenCandidateAdminListResponse> => {
+    const response = await api.get<FosterChildrenCandidateAdminListResponse>(
       `${API.FOSTER_CHILDREN_ADMIN}/candidates`,
       {
         params,

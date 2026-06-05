@@ -2,17 +2,17 @@ import { ref, reactive, computed, watch } from 'vue'
 import { useFosterChildrenList } from './useFosterChildrenList'
 import { Gender, Category } from '@/types/fosterChildren'
 import type { FosterChildrenQueryParams } from '@/types/fosterChildren'
-import { useCursorPagination } from '../ui/usePagination'
+import { useOffsetPagination } from '../ui/useOffsetPagination'
 
 export function useFosterChildrenFilters(isAdmin: boolean = false) {
   const queryParams = reactive<FosterChildrenQueryParams>({
     limit: 10,
+    page: 1,
     search: undefined,
     gender: undefined,
     category: undefined,
     isGraduated: undefined,
-    nextCursor: undefined,
-    prevCursor: undefined,
+    sortBy: undefined,
   })
 
   const limitOptions = [10, 25, 50, 100]
@@ -35,19 +35,20 @@ export function useFosterChildrenFilters(isAdmin: boolean = false) {
   })
 
   watch(
-    () => [queryParams.gender, queryParams.category, queryParams.isGraduated, queryParams.limit],
+    () => [queryParams.gender, queryParams.category, queryParams.isGraduated, queryParams.sortBy, queryParams.limit],
     () => resetPagination(),
   )
 
   const { fosterChildren, pagination, isLoading, listQuery } = useFosterChildrenList(queryParams, isAdmin)
-  const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-    useCursorPagination(queryParams)
+  const { pageOffset, resetPagination, handleNextPage, handlePrevPage, goToPage } =
+    useOffsetPagination(queryParams, pagination)
 
   const hasActiveFilters = computed(() => {
     return (
       queryParams.gender !== undefined ||
       queryParams.category !== undefined ||
-      queryParams.isGraduated !== undefined
+      queryParams.isGraduated !== undefined ||
+      queryParams.sortBy !== undefined
     )
   })
 
@@ -56,6 +57,7 @@ export function useFosterChildrenFilters(isAdmin: boolean = false) {
     queryParams.gender = undefined
     queryParams.category = undefined
     queryParams.isGraduated = undefined
+    queryParams.sortBy = undefined
     resetPagination()
   }
 
@@ -74,6 +76,7 @@ export function useFosterChildrenFilters(isAdmin: boolean = false) {
     hasActiveFilters,
     handleNextPage,
     handlePrevPage,
+    goToPage,
     clearFilters,
     resetPagination,
   }

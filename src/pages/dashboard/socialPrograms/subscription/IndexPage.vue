@@ -33,6 +33,7 @@ const queryParams = reactive<SocialProgramSubscriptionQueryParams>({
   limit: 10,
   search: undefined,
   status: undefined,
+  sortBy: undefined,
 })
 
 const { subscriptions, pagination, isLoading } = useSocialProgramSubscriptionList(
@@ -53,6 +54,23 @@ watch(searchQuery, (val) => {
     resetPagination()
   }, 400)
 })
+
+watch(
+  () => [queryParams.status, queryParams.sortBy, queryParams.limit],
+  () => resetPagination(),
+)
+
+const hasActiveFilters = computed(
+  () => queryParams.status !== undefined || queryParams.sortBy !== undefined,
+)
+
+const clearFilters = () => {
+  searchQuery.value = ''
+  queryParams.search = undefined
+  queryParams.status = undefined
+  queryParams.sortBy = undefined
+  resetPagination()
+}
 
 // Add Subscription Modal
 const { showToast } = useToast()
@@ -87,32 +105,42 @@ const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRe
     <template #title>Daftar Subscriber Program</template>
 
     <div class="space-y-6">
-      <!-- Program Info Card -->
+      <!-- Stats Grid -->
       <div
-        v-if="program"
-        class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm"
+        v-if="!programDetailQuery.isPending.value && program"
+        class="grid grid-cols-1 md:grid-cols-12 gap-5"
       >
-        <div class="flex items-center gap-4">
-          <div
-            class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shrink-0"
-          >
-            <img
-              v-if="program.coverImage"
-              :src="program.coverImage"
-              class="w-full h-full object-cover"
-            />
-            <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-              <Users :size="24" />
-            </div>
-          </div>
-          <div>
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ program.title }}</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
-              <Users :size="14" />
-              {{ program.totalSubscribers }} Subscriber Aktif
-            </p>
-          </div>
+        <div
+          class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ program.title }}
+          </h1>
+          <p class="text-sm text-gray-400 mt-1">Nama Program</p>
         </div>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
+            {{ formatCurrency(program.minimumAmount) }}
+          </h3>
+          <p class="text-sm text-gray-400 mt-1">Minimum Donasi</p>
+        </div>
+
+        <div
+          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+        >
+          <div class="flex items-baseline gap-2">
+            <h3 class="text-4xl font-bold text-gray-900 dark:text-white">
+              {{ program.totalSubscribers }}
+            </h3>
+          </div>
+          <p class="text-sm text-gray-400 mt-1">Total Pelanggan Aktif</p>
+        </div>
+      </div>
+      <div v-else-if="programDetailQuery.isPending.value" class="animate-pulse flex gap-5">
+        <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl w-full"></div>
       </div>
 
       <!-- Header Section -->
@@ -132,8 +160,8 @@ const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRe
             placeholder="Cari Subscriber..."
             class="w-full sm:w-64"
           />
-          <BaseFilter>
-            <template #default>
+          <BaseFilter :has-active-filters="hasActiveFilters">
+            <template #default="{ closeDropdown }">
               <div class="space-y-4">
                 <div>
                   <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
@@ -145,6 +173,35 @@ const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRe
                     <option :value="SocialProgramSubscriptionStatus.ACTIVE">Aktif</option>
                     <option :value="SocialProgramSubscriptionStatus.INACTIVE">Berhenti</option>
                   </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Urutkan</label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="total_donation desc">Donasi Tertinggi</option>
+                    <option value="total_donation asc">Donasi Terendah</option>
+                    <option value="total_paid_periods desc">Periode Bayar Terbanyak</option>
+                    <option value="total_paid_periods asc">Periode Bayar Tersedikit</option>
+                  </select>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 dark:border-gray-600 dark:hover:bg-gray-700"
+                  >
+                    Hapus
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-150"
+                  >
+                    Terapkan
+                  </button>
                 </div>
               </div>
             </template>

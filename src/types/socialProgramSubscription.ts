@@ -47,7 +47,9 @@ export interface SubscriberSubscriptionList {
 }
 
 export interface SocialProgramSubscriptionQueryParams extends PaginationParams {
+  search?: string
   status?: string
+  sortBy?: string
 }
 
 export interface CreateOfflineSocialProgramSubscriptionRequest {

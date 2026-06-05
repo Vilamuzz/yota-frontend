@@ -67,12 +67,12 @@ export const publicRoutes: RouteRecordRaw[] = [
         component: () => import('@/pages/public/fosterChildren/IndexPage.vue'),
       },
       {
-        path: ':id',
+        path: ':slug',
         name: 'foster-children-detail',
         component: () => import('@/pages/public/fosterChildren/DetailPage.vue'),
       },
       {
-        path: ':id/form',
+        path: ':slug/form',
         name: 'foster-children-donation',
         component: () => import('@/pages/public/fosterChildren/FormPage.vue'),
       },

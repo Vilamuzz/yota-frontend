@@ -1,7 +1,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useDonationProgramAdminList } from './useDonationProgramAdminList'
 import type { DonationProgramQueryParams } from '@/types/donationProgram'
-import { useCursorPagination } from '../ui/usePagination'
+import { useOffsetPagination } from '../ui/useOffsetPagination'
 
 export function useDonationProgramFilters() {
   const queryParams = reactive<DonationProgramQueryParams>({
@@ -9,8 +9,7 @@ export function useDonationProgramFilters() {
     search: undefined,
     category: undefined,
     status: undefined,
-    nextCursor: undefined,
-    prevCursor: undefined,
+    page: 1,
   })
 
   const limitOptions = [10, 25, 50, 100]
@@ -32,8 +31,8 @@ export function useDonationProgramFilters() {
 
   const { donationPrograms, pagination, isLoading, listQuery } =
     useDonationProgramAdminList(queryParams)
-  const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-    useCursorPagination(queryParams)
+  const { pageOffset, resetPagination, handleNextPage, handlePrevPage, goToPage } =
+    useOffsetPagination(queryParams, pagination)
 
   const hasActiveFilters = computed(
     () => queryParams.category !== undefined || queryParams.status !== undefined,
@@ -58,6 +57,7 @@ export function useDonationProgramFilters() {
     hasActiveFilters,
     handleNextPage,
     handlePrevPage,
+    goToPage,
     clearFilters,
     resetPagination,
   }

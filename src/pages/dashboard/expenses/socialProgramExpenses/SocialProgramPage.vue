@@ -13,7 +13,6 @@ import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 const {
   queryParams,
   limitOptions,
-  statuses,
   searchQuery,
   pageOffset,
   socialPrograms,
@@ -39,18 +38,24 @@ const {
             class="w-full sm:w-64"
           />
           <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default>
+            <template #default="{ closeDropdown }">
               <div class="space-y-4">
                 <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Urutkan</label>
                   <select
-                    v-model="queryParams.status"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
                   >
-                    <option :value="undefined">Semua</option>
-                    <option v-for="status in statuses" :key="status.value" :value="status.value">
-                      {{ status.label }}
-                    </option>
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at desc">Terbaru</option>
+                    <option value="created_at asc">Terlama</option>
+                    <option value="title asc">Nama (A-Z)</option>
+                    <option value="title desc">Nama (Z-A)</option>
+                    <option value="total_subscribers desc">Pelanggan Terbanyak</option>
+                    <option value="total_subscribers asc">Pelanggan Paling Sedikit</option>
+                    <option value="minimum_amount asc">Donasi Terendah</option>
+                    <option value="minimum_amount desc">Donasi Tertinggi</option>
+                    <option value="billing_day asc">Hari Tagihan Terawal</option>
                   </select>
                 </div>
 
@@ -60,6 +65,12 @@ const {
                     class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 dark:border-gray-600 dark:hover:bg-gray-700"
                   >
                     Hapus
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 dark:border-gray-600 dark:hover:bg-gray-700"
+                  >
+                    Terapkan
                   </button>
                 </div>
               </div>
@@ -73,12 +84,12 @@ const {
         loading-message="Memuat data program sosial..."
         :is-empty="socialPrograms.length === 0"
         empty-message="Tidak ada data program sosial"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
       >
         <template #empty-icon>
           <Heart :size="96" class="mx-auto mb-2 text-gray-300" />

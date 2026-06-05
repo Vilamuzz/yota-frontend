@@ -18,9 +18,9 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-const childId = computed(() => route.params.id as string)
+const childSlug = computed(() => route.params.slug as string)
 
-const { detailQuery } = useFosterChildrenDetail(childId)
+const { detailQuery } = useFosterChildrenDetail(childSlug)
 const child = computed(() => detailQuery.data.value?.data)
 
 function calculateAge(birthDate: string): number {
@@ -57,7 +57,7 @@ const handleBack = () => {
 }
 
 const handleDonasi = () => {
-  router.push({ name: 'foster-children-donation', params: { slug: childId.value } })
+  router.push({ name: 'foster-children-donation', params: { slug: childSlug.value } })
 }
 
 const formatCategory = (cat: string) => {

@@ -36,12 +36,19 @@ export enum DonationProgramCategoryEnum {
 
 export interface DonationProgramList {
   donationPrograms: DonationProgram[]
-  pagination: Pagination
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
 export interface DonationProgramQueryParams extends PaginationParams {
   category?: DonationProgramCategoryEnum
   status?: DonationProgramStatusEnum
+  page?: number
+  sortBy?: string
 }
 
 export interface CreateDonationProgramRequest {

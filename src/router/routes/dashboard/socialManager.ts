@@ -74,7 +74,7 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
             },
           },
           {
-            path: 'subscriptions/:slug',
+            path: 'subscriptions/:id',
             name: 'dashboard-social-program-detail-subscriptions',
             component: () => import('@/pages/dashboard/socialPrograms/subscription/IndexPage.vue'),
             meta: {
@@ -83,7 +83,7 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
             },
           },
           {
-            path: 'subscriptions/:slug/invoices/:subscriptionId',
+            path: 'subscriptions/:id/invoices/:subscriptionId',
             name: 'dashboard-social-program-subscription-invoices',
             component: () =>
               import('@/pages/dashboard/socialPrograms/subscription/InvoiceListPage.vue'),

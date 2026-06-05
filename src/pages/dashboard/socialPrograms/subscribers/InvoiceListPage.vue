@@ -3,7 +3,6 @@ import { computed, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { FileText, Calendar, CreditCard, Clock } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { useSocialProgramInvoiceList } from '@/composables/socialProgramInvoice/useSocialProgramInvoiceList'
 import { useCursorPagination } from '@/composables/ui/usePagination'
@@ -22,7 +21,8 @@ import { useSubscriberSubscriptionDetail } from '@/composables/socialProgramSubs
 
 const route = useRoute()
 const subscriptionId = route.params.programId as string
-const { detailQuery, isLoading: isSubscriptionLoading } = useSubscriberSubscriptionDetail(subscriptionId)
+const { detailQuery, isLoading: isSubscriptionLoading } =
+  useSubscriberSubscriptionDetail(subscriptionId)
 const subscription = computed(() => detailQuery.data.value?.data)
 
 const queryParams = reactive<SocialProgramInvoiceQueryParams>({
@@ -106,30 +106,6 @@ const handlePayOffline = (payload: CreateSocialProgramTransactionRequest) => {
       </div>
       <div v-else-if="isSubscriptionLoading" class="animate-pulse flex gap-5">
         <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl w-full"></div>
-      </div>
-
-      <!-- Action Bar -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <BaseFilter>
-            <template #default>
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
-                  <select
-                    v-model="queryParams.status"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
-                  >
-                    <option :value="undefined">Semua</option>
-                    <option :value="InvoiceStatus.PAID">Sudah Dibayar</option>
-                    <option :value="InvoiceStatus.PENDING">Menunggu Pembayaran</option>
-                    <option :value="InvoiceStatus.OVERDUE">Jatuh Tempo</option>
-                  </select>
-                </div>
-              </div>
-            </template>
-          </BaseFilter>
-        </div>
       </div>
 
       <!-- Table Section -->

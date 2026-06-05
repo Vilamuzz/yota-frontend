@@ -8,26 +8,28 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 import { Category, Gender, type FosterChildrenQueryParams } from '@/types/fosterChildren'
 import { useFosterChildrenList } from '@/composables/fosterChildren/useFosterChildrenList'
-import { useCursorPagination } from '@/composables/ui/usePagination'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import { formatDate, formatStatus } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
 
 const queryParams = reactive<FosterChildrenQueryParams>({
   limit: 10,
+  page: 1,
   search: undefined,
   gender: undefined,
   category: undefined,
   isGraduated: undefined,
-  nextCursor: undefined,
-  prevCursor: undefined,
+  sortBy: undefined,
 })
 
 const searchInput = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
 
 const { fosterChildren, pagination, isLoading } = useFosterChildrenList(queryParams, true)
-const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-  useCursorPagination(queryParams)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
+  queryParams,
+  pagination,
+)
 
 watch(searchInput, (val) => {
   clearTimeout(searchTimeout)
@@ -37,13 +39,18 @@ watch(searchInput, (val) => {
   }, 500)
 })
 
+watch(
+  () => [
+    queryParams.gender,
+    queryParams.category,
+    queryParams.isGraduated,
+    queryParams.sortBy,
+    queryParams.limit,
+  ],
+  () => resetPagination(),
+)
+
 const limitOptions = [10, 25, 50, 100]
-const genders = Object.values(Gender)
-const categories = Object.values(Category)
-const statuses = [
-  { label: 'Aktif', value: false },
-  { label: 'Lulus', value: true },
-]
 
 const clearFilters = () => {
   searchInput.value = ''
@@ -51,6 +58,7 @@ const clearFilters = () => {
   queryParams.gender = undefined
   queryParams.category = undefined
   queryParams.isGraduated = undefined
+  queryParams.sortBy = undefined
   resetPagination()
 }
 
@@ -58,7 +66,8 @@ const hasActiveFilters = computed(() => {
   return (
     queryParams.gender !== undefined ||
     queryParams.category !== undefined ||
-    queryParams.isGraduated !== undefined
+    queryParams.isGraduated !== undefined ||
+    queryParams.sortBy !== undefined
   )
 })
 </script>
@@ -76,61 +85,88 @@ const hasActiveFilters = computed(() => {
 
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default>
-              <div class="space-y-4">
+            <template #default="{ closeDropdown }">
+              <div class="space-y-4 w-64">
                 <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
-                    >Jenis Kelamin</label
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
                   >
+                    Jenis Kelamin
+                  </label>
                   <select
                     v-model="queryParams.gender"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
                   >
-                    <option :value="undefined">Semua</option>
-                    <option v-for="gender in genders" :key="gender" :value="gender">
-                      {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
-                    </option>
+                    <option :value="undefined">Semua Gender</option>
+                    <option :value="Gender.male">Laki-laki</option>
+                    <option :value="Gender.female">Perempuan</option>
                   </select>
                 </div>
 
                 <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
-                    >Kategori</label
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
                   >
+                    Kategori
+                  </label>
                   <select
                     v-model="queryParams.category"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
                   >
-                    <option :value="undefined">Semua</option>
-                    <option v-for="category in categories" :key="category" :value="category">
-                      {{ category.charAt(0).toUpperCase() + category.slice(1) }}
-                    </option>
+                    <option :value="undefined">Semua Kategori</option>
+                    <option :value="Category.yatim">Yatim</option>
+                    <option :value="Category.piatu">Piatu</option>
+                    <option :value="Category.yatimPiatu">Yatim Piatu</option>
                   </select>
                 </div>
 
                 <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  >
+                    Status Kelulusan
+                  </label>
                   <select
                     v-model="queryParams.isGraduated"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
                   >
-                    <option :value="undefined">Semua</option>
-                    <option
-                      v-for="status in statuses"
-                      :key="String(status.value)"
-                      :value="status.value"
-                    >
-                      {{ status.label }}
-                    </option>
+                    <option :value="undefined">Semua Status</option>
+                    <option :value="true">Sudah Lulus</option>
+                    <option :value="false">Belum Lulus</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  >
+                    Urutkan
+                  </label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at asc">Terlama Terdaftar</option>
+                    <option value="name asc">Nama (A-Z)</option>
+                    <option value="name desc">Nama (Z-A)</option>
+                    <option value="birth_date asc">Umur Tertua</option>
+                    <option value="birth_date desc">Umur Termuda</option>
                   </select>
                 </div>
 
                 <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                   <button
                     @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 text-gray-600 dark:text-gray-300"
+                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   >
-                    Reset
+                    RESET
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
+                  >
+                    APPLY
                   </button>
                 </div>
               </div>
@@ -144,12 +180,12 @@ const hasActiveFilters = computed(() => {
         loading-message="Memuat data anak asuh..."
         :is-empty="fosterChildren.length === 0"
         empty-message="Tidak ada data anak asuh"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
       >
         <template #empty-icon>
           <Baby :size="96" class="mx-auto mb-2 text-gray-300" />

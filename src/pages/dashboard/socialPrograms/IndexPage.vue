@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, reactive } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Plus, Heart, Check, X, AlertCircle } from 'lucide-vue-next'
+import { Eye, SquarePen, Trash2, Plus, Heart, Check, X, AlertCircle, CheckCircle } from 'lucide-vue-next'
 import { useSocialProgramStatus } from '@/composables/socialProgram/useSocialProgramStatus'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
 import { useToast } from '@/composables/ui/useToast'
 
 import { useSocialProgramList } from '@/composables/socialProgram/useSocialProgramList'
-import { useCursorPagination } from '@/composables/ui/usePagination'
-import { useQueryClient } from '@tanstack/vue-query'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -21,18 +19,22 @@ import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
+import { useSocialProgramDelete } from '@/composables/socialProgram/useSocialProgramDelete'
+import { extractError } from '@/utils/error'
 
 const authStore = useAuthStore()
+const { deleteMutation } = useSocialProgramDelete()
 
 const statuses = Object.values(SocialProgramStatusEnum)
 const isChairman = computed(() => authStore.activeRole === ROLES.CHAIRMAN)
 
 const queryParams = reactive<SocialProgramQueryParams>({
   limit: 10,
+  page: 1,
   search: undefined,
   status: undefined,
-  nextCursor: undefined,
-  prevCursor: undefined,
+  sortBy: undefined,
 })
 
 const limitOptions = [10, 25, 50, 100]
@@ -48,24 +50,27 @@ watch(searchQuery, (val) => {
 })
 
 const { socialPrograms, pagination, isLoading } = useSocialProgramList(queryParams)
-const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-  useCursorPagination(queryParams)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
+  queryParams,
+  pagination,
+)
 
 watch(
-  () => [queryParams.status, queryParams.limit],
+  () => [queryParams.status, queryParams.sortBy, queryParams.limit],
   () => resetPagination(),
 )
 
-const hasActiveFilters = computed(() => queryParams.status !== undefined)
+const hasActiveFilters = computed(
+  () => queryParams.status !== undefined || queryParams.sortBy !== undefined,
+)
 
 const clearFilters = () => {
   searchQuery.value = ''
   queryParams.search = undefined
   queryParams.status = undefined
+  queryParams.sortBy = undefined
   resetPagination()
 }
-
-const queryClient = useQueryClient()
 
 // DELETE
 const confirmShow = ref(false)
@@ -78,14 +83,42 @@ const deleteProgram = (program: SocialProgram) => {
 
 const handleConfirmDelete = async () => {
   if (!confirmProgram.value) return
-  // TODO: delete API
-  queryClient.invalidateQueries({ queryKey: ['socialprograms'] })
-  confirmShow.value = false
-  confirmProgram.value = null
+  deleteMutation.mutate(confirmProgram.value.id, {
+    onSuccess: () => {
+      showToast('Data program berhasil dihapus', 'success')
+      confirmShow.value = false
+      confirmProgram.value = null
+    },
+    onError: (error) => {
+      showToast(extractError(error) || 'Gagal menghapus data program', 'error')
+    },
+  })
 }
 
 const { showToast } = useToast()
-const { approveMutation, rejectMutation } = useSocialProgramStatus()
+const { approveMutation, rejectMutation, completeMutation } = useSocialProgramStatus()
+
+// COMPLETE
+const completeConfirmShow = ref(false)
+const completeProgram = ref<SocialProgram | null>(null)
+
+const handleComplete = (program: SocialProgram) => {
+  completeProgram.value = program
+  completeConfirmShow.value = true
+}
+
+const handleConfirmComplete = async () => {
+  if (!completeProgram.value) return
+  completeMutation.mutate(completeProgram.value.id, {
+    onSuccess: () => {
+      showToast('Program berhasil diselesaikan!', 'success')
+      completeConfirmShow.value = false
+    },
+    onError: (err) => {
+      showToast(err.response?.data?.message || 'Gagal menyelesaikan program', 'error')
+    },
+  })
+}
 
 // APPROVE
 const approveConfirmShow = ref(false)
@@ -167,8 +200,27 @@ const handleConfirmReject = async (reason: string) => {
                   >
                     <option :value="undefined">Semua</option>
                     <option v-for="status in statuses" :key="status" :value="status">
-                      {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                      {{ formatStatus(status) }}
                     </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Urutkan</label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at desc">Terbaru</option>
+                    <option value="created_at asc">Terlama</option>
+                    <option value="title asc">Nama (A-Z)</option>
+                    <option value="title desc">Nama (Z-A)</option>
+                    <option value="total_subscribers desc">Pelanggan Terbanyak</option>
+                    <option value="total_subscribers asc">Pelanggan Paling Sedikit</option>
+                    <option value="minimum_amount asc">Donasi Terendah</option>
+                    <option value="minimum_amount desc">Donasi Tertinggi</option>
+                    <option value="billing_day asc">Hari Tagihan Terawal</option>
                   </select>
                 </div>
 
@@ -181,7 +233,7 @@ const handleConfirmReject = async (reason: string) => {
                   </button>
                   <button
                     @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-150"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 dark:border-gray-600 dark:hover:bg-gray-700"
                   >
                     Terapkan
                   </button>
@@ -198,12 +250,12 @@ const handleConfirmReject = async (reason: string) => {
         loading-message="Memuat data program..."
         :is-empty="socialPrograms.length === 0"
         empty-message="Tidak ada data program"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
       >
         <template #empty-icon>
           <Heart :size="96" class="mx-auto mb-2 text-gray-300" />
@@ -262,7 +314,7 @@ const handleConfirmReject = async (reason: string) => {
               {{ formatDate(program.createdAt) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center justify-center gap-2">
+              <div class="flex items-center justify-start gap-2">
                 <BaseIconButton
                   :to="{
                     name: 'dashboard-social-programs-detail',
@@ -307,6 +359,15 @@ const handleConfirmReject = async (reason: string) => {
                     variant="primary"
                   >
                     <SquarePen :size="18" />
+                  </BaseIconButton>
+
+                  <BaseIconButton
+                    v-if="program.status === SocialProgramStatusEnum.ACTIVE"
+                    @click="handleComplete(program)"
+                    title="Selesaikan program"
+                    variant="success"
+                  >
+                    <CheckCircle :size="18" />
                   </BaseIconButton>
 
                   <BaseIconButton
@@ -364,5 +425,19 @@ const handleConfirmReject = async (reason: string) => {
     @primary="handleConfirmDelete"
     @secondary="confirmShow = false"
     @close="confirmShow = false"
+  />
+
+  <!-- COMPLETE CONFIRMATION MODAL -->
+  <ConfirmationModal
+    :show="completeConfirmShow"
+    :title="`Selesaikan ${completeProgram?.title}?`"
+    message="Program ini akan ditandai sebagai Selesai. Tindakan ini tidak dapat dibatalkan."
+    primary-button-text="Selesaikan"
+    secondary-button-text="Batal"
+    :icon="CheckCircle"
+    :primary-button-loading="completeMutation.isPending.value"
+    @primary="handleConfirmComplete"
+    @secondary="completeConfirmShow = false"
+    @close="completeConfirmShow = false"
   />
 </template>

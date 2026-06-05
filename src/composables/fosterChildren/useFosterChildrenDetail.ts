@@ -4,11 +4,11 @@ import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import type { FosterChildrenResponse } from '@/types/fosterChildren'
 import type { ApiError } from '@/types/response'
 
-export const useFosterChildrenDetail = (id: MaybeRefOrGetter<string>) => {
+export const useFosterChildrenDetail = (slug: MaybeRefOrGetter<string>) => {
   const detailQuery = useQuery<FosterChildrenResponse, ApiError>({
-    queryKey: ['fosterChildrenDetail', id],
-    queryFn: () => fosterChildrenService.getFosterChildrenDetail(toValue(id)),
-    enabled: computed(() => !!toValue(id)),
+    queryKey: ['fosterChildrenDetail', slug],
+    queryFn: () => fosterChildrenService.getFosterChildrenDetail(toValue(slug)),
+    enabled: computed(() => !!toValue(slug)),
     retry: 1,
   })
 

@@ -156,7 +156,7 @@ function handleConfirmDelete() {
           class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
         >
           <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
-            {{ formatCurrency(child.collectedFund) }}
+            {{ formatCurrency(child.collectedFund || 0) }}
           </h3>
           <p class="text-sm text-gray-400 mt-1">Total Donasi</p>
         </div>
@@ -183,7 +183,10 @@ function handleConfirmDelete() {
       </div>
 
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-start">
+      <div
+        v-if="!child?.isGraduated"
+        class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-start"
+      >
         <BaseButton variant="primary" @click="handleCreate">
           <Plus :size="20" class="mr-1" />
           Tambah Transaksi Offline

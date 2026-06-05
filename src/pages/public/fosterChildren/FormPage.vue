@@ -11,10 +11,10 @@ import { extractError } from '@/utils/error'
 
 const route = useRoute()
 const router = useRouter()
-const id = computed(() => route.params.id as string)
+const slug = computed(() => route.params.slug as string)
 
 // Composables
-const { detailQuery } = useFosterChildrenDetail(id)
+const { detailQuery } = useFosterChildrenDetail(slug)
 const { createMutation } = useFosterChildrenTransactionCreate()
 const { showToast } = useToast()
 
@@ -63,7 +63,7 @@ const handleSubmit = () => {
 
   createMutation.mutate(
     {
-      id: id.value,
+      slug: slug.value,
       data: {
         grossAmount: selectedAmount.value,
         donorName: donorName.value || undefined,

@@ -1,7 +1,8 @@
-import type { Pagination, PaginationParams, Response } from './response'
+import type { Response } from './response'
 
 export interface FosterChildren {
   id: string
+  slug?: string
   name: string
   profilePicture: string
   gender: Gender
@@ -40,13 +41,22 @@ export interface Achievement {
 
 export interface FosterChildrenList {
   fosterChildren: FosterChildren[]
-  pagination: Pagination
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
-export interface FosterChildrenQueryParams extends PaginationParams {
+export interface FosterChildrenQueryParams {
+  limit?: number
+  page?: number
+  search?: string
   gender?: Gender
   category?: Category
   isGraduated?: boolean
+  sortBy?: string
 }
 
 export interface AchievementRequest {

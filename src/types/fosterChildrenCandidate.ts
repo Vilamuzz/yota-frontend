@@ -68,3 +68,25 @@ export enum FosterChildrenCandidateStatus {
 export type FosterChildrenCandidateResponse = Response<FosterChildrenCandidate>
 export type FosterChildrenCandidateListResponse = Response<FosterChildrenCandidateList>
 export type FosterChildrenCandidateDetailResponse = Response<FosterChildrenCandidate>
+
+export interface FosterChildrenCandidateAdminList {
+  fosterChildrenCandidates: FosterChildrenCandidate[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
+
+export interface FosterChildrenCandidateAdminQueryParams {
+  page?: number
+  limit?: number
+  search?: string
+  gender?: Gender
+  category?: Category
+  status?: string
+  sortBy?: string
+}
+
+export type FosterChildrenCandidateAdminListResponse = Response<FosterChildrenCandidateAdminList>

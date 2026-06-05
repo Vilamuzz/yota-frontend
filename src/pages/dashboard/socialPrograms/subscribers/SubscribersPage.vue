@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Eye, Users } from 'lucide-vue-next'
 
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
+import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { useSocialProgramSubscriberList } from '@/composables/socialProgramSubscription/useSocialProgramSubscriberList'
 import { useCursorPagination } from '@/composables/ui/usePagination'
@@ -14,6 +15,7 @@ import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 const queryParams = reactive<SocialProgramSubscriptionQueryParams>({
   limit: 10,
   search: undefined,
+  sortBy: undefined,
 })
 
 const { subscribers, pagination, isLoading } = useSocialProgramSubscriberList(queryParams)
@@ -31,6 +33,20 @@ watch(searchQuery, (val) => {
     resetPagination()
   }, 400)
 })
+
+watch(
+  () => [queryParams.sortBy, queryParams.limit],
+  () => resetPagination(),
+)
+
+const hasActiveFilters = computed(() => queryParams.sortBy !== undefined)
+
+const clearFilters = () => {
+  searchQuery.value = ''
+  queryParams.search = undefined
+  queryParams.sortBy = undefined
+  resetPagination()
+}
 </script>
 
 <template>
@@ -46,6 +62,40 @@ watch(searchQuery, (val) => {
             placeholder="Cari Pelanggan..."
             class="w-full sm:w-64"
           />
+          <BaseFilter :has-active-filters="hasActiveFilters">
+            <template #default="{ closeDropdown }">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Urutkan</label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="total_donation desc">Total Donasi Tertinggi</option>
+                    <option value="total_donation asc">Total Donasi Terendah</option>
+                    <option value="total_subscription desc">Program Diikuti Terbanyak</option>
+                    <option value="total_subscription asc">Program Diikuti Tersedikit</option>
+                  </select>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-white"
+                  >
+                    Hapus
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-150"
+                  >
+                    Terapkan
+                  </button>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
         </div>
       </div>
 

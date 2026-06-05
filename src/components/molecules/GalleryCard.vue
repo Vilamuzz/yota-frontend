@@ -57,7 +57,7 @@ function formatCategory(category: string) {
         </div>
         <div class="flex items-center gap-1.5">
           <Layers :size="14" />
-          <span>{{ gallery.medias?.length || 0 }} Media</span>
+          <span>{{ gallery.media?.length || 0 }} Media</span>
         </div>
       </div>
     </div>

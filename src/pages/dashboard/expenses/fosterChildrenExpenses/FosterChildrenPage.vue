@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Baby, RotateCcw, GraduationCap, User, Eye } from 'lucide-vue-next'
+import { Baby, GraduationCap, User, Eye } from 'lucide-vue-next'
 import { useFosterChildrenFilters } from '@/composables/fosterChildren/useFosterChildrenFilters'
 import { formatDate } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { Category, Gender } from '@/types/fosterChildren'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
@@ -91,16 +90,35 @@ const {
                   </select>
                 </div>
 
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  >
+                    Urutkan
+                  </label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at asc">Terlama Terdaftar</option>
+                    <option value="name asc">Nama (A-Z)</option>
+                    <option value="name desc">Nama (Z-A)</option>
+                    <option value="birth_date asc">Umur Tertua</option>
+                    <option value="birth_date desc">Umur Termuda</option>
+                  </select>
+                </div>
+
                 <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                   <button
                     @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   >
                     RESET
                   </button>
                   <button
                     @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
                   >
                     APPLY
                   </button>
@@ -108,16 +126,6 @@ const {
               </div>
             </template>
           </BaseFilter>
-          <BaseButton
-            v-if="hasActiveFilters"
-            variant="outline"
-            size="md"
-            @click="clearFilters"
-            class="hidden sm:flex"
-          >
-            <RotateCcw :size="16" class="mr-2" />
-            Reset
-          </BaseButton>
         </div>
       </div>
 
@@ -126,12 +134,12 @@ const {
         loading-message="Memuat data anak asuh..."
         :is-empty="fosterChildren.length === 0"
         empty-message="Tidak ada data anak asuh"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
       >
         <template #empty-icon>
           <Baby :size="96" class="mx-auto mb-2 text-gray-300" />

@@ -241,7 +241,10 @@ const handleSubmit = () => {
     </div>
 
     <div v-else class="max-w-5xl space-y-6">
-      <form @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <form
+        @submit.prevent="handleSubmit"
+        class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
+      >
         <!-- Left: Main Info -->
         <div class="lg:col-span-2 space-y-6">
           <!-- Informasi Yayasan -->
@@ -385,12 +388,19 @@ const handleSubmit = () => {
 
             <div class="grid grid-cols-2 gap-4">
               <template
-                v-for="(fieldKey, index) in (['heroImageOne', 'heroImageTwo', 'heroImageThree', 'heroImageFour'] as const)"
+                v-for="{ key: fieldKey, label } in [
+                  { key: 'heroImageOne', label: 'Bagian Selamat Datang' },
+                  { key: 'heroImageTwo', label: 'Bagian Anak Asuh' },
+                  { key: 'heroImageThree', label: 'Bagian Ambulans' },
+                  { key: 'heroImageFour', label: 'Bagian Tentang Kita' },
+                ] as const"
                 :key="fieldKey"
               >
                 <div class="space-y-2">
-                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 tracking-wider">
-                    Hero Image {{ index + 1 }}
+                  <label
+                    class="block text-xs font-medium text-gray-700 dark:text-gray-300 tracking-wider"
+                  >
+                    {{ label }}
                     <span v-if="!profileId" class="text-red-500">*</span>
                   </label>
                   <div
