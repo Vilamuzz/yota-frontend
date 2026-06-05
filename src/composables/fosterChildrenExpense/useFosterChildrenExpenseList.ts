@@ -9,15 +9,13 @@ export const useFosterChildrenExpenseList = (
   params: MaybeRefOrGetter<PaginationParams>,
 ) => {
   const listQuery = useQuery<FosterChildrenExpenseListResponse, ApiError>({
-    queryKey: ['fosterChildrenExpenses', id, params],
+    queryKey: ['adminFosterChildrenExpenses', id, params],
     queryFn: () =>
-      fosterChildrenExpenseService.getFosterChildrenExpenses(toValue(id), toValue(params)),
+      fosterChildrenExpenseService.getAdminFosterChildrenExpenses(toValue(id), toValue(params)),
     retry: 1,
   })
 
-  const fosterChildrenExpenses = computed(
-    () => listQuery.data.value?.data?.expenses || [],
-  )
+  const fosterChildrenExpenses = computed(() => listQuery.data.value?.data?.expenses || [])
   const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {

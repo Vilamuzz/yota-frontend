@@ -16,7 +16,7 @@ export const donationProgramExpenseService = {
     return response.data
   },
 
-  getDonationProgramExpenses: async (
+  getAdminDonationProgramExpenses: async (
     id: string,
     params: PaginationParams,
   ): Promise<DonationProgramExpenseListResponse> => {
@@ -29,7 +29,9 @@ export const donationProgramExpenseService = {
     return response.data
   },
 
-  getDonationProgramExpenseDetail: async (id: string): Promise<DonationProgramExpenseResponse> => {
+  getAdminDonationProgramExpenseDetail: async (
+    id: string,
+  ): Promise<DonationProgramExpenseResponse> => {
     const response = await api.get<DonationProgramExpenseResponse>(
       `${API.DONATION_PROGRAMS_ADMIN}/expenses/${id}`,
     )
@@ -41,7 +43,7 @@ export const donationProgramExpenseService = {
     return response.data
   },
 
-  getPublicDonationProgramExpenses: async (
+  getDonationProgramExpenses: async (
     slug: string,
     params: PaginationParams,
   ): Promise<DonationProgramExpenseListResponse> => {
@@ -58,16 +60,13 @@ export const donationProgramExpenseService = {
     slug: string,
     params: DonationProgramExpenseExportRequest,
   ): Promise<Blob> => {
-    const response = await api.get<Blob>(
-      `${API.DONATION_PROGRAMS}/${slug}/expenses/export`,
-      {
-        params: {
-          start_date: params.startDate,
-          end_date: params.endDate,
-        },
-        responseType: 'blob',
+    const response = await api.get<Blob>(`${API.DONATION_PROGRAMS}/${slug}/expenses/export`, {
+      params: {
+        start_date: params.startDate,
+        end_date: params.endDate,
       },
-    )
+      responseType: 'blob',
+    })
     return response.data
   },
 }

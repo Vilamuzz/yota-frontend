@@ -9,7 +9,7 @@ import type {
 import { api } from '@/utils/api'
 
 export const donationProgramService = {
-  getPublishedDonationProgramList: async (
+  getDonationProgramList: async (
     params: DonationProgramQueryParams,
   ): Promise<DonationProgramListResponse> => {
     const response = await api.get<DonationProgramListResponse>(API.DONATION_PROGRAMS, {
@@ -18,7 +18,7 @@ export const donationProgramService = {
     return response.data
   },
 
-  getPublishedDonationProgramDetail: async (
+  getDonationProgramDetail: async (
     donationProgramSlug: string,
   ): Promise<DonationProgramResponse> => {
     const response = await api.get<DonationProgramResponse>(
@@ -27,7 +27,7 @@ export const donationProgramService = {
     return response.data
   },
 
-  getDonationProgramList: async (
+  getAdminDonationProgramList: async (
     params: DonationProgramQueryParams,
   ): Promise<DonationProgramListResponse> => {
     const response = await api.get<DonationProgramListResponse>(API.DONATION_PROGRAMS_ADMIN, {
@@ -36,7 +36,7 @@ export const donationProgramService = {
     return response.data
   },
 
-  getDonationProgramDetail: async (id: string): Promise<DonationProgramResponse> => {
+  getAdminDonationProgramDetail: async (id: string): Promise<DonationProgramResponse> => {
     const response = await api.get<DonationProgramResponse>(`${API.DONATION_PROGRAMS_ADMIN}/${id}`)
     return response.data
   },

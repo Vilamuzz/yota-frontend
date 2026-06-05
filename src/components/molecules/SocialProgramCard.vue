@@ -5,7 +5,7 @@ import { useSocialProgramUnsubscribe } from '@/composables/socialProgramSubscrip
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
-import type { SocialProgram } from '@/types/socialProgram'
+import { type SocialProgram, SocialProgramStatusEnum } from '@/types/socialProgram'
 
 const props = defineProps<{
   program: SocialProgram
@@ -79,6 +79,13 @@ const handleUnsubscribe = () => {
       <div
         class="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
       />
+      <!-- Status Badge -->
+      <div
+        v-if="program.status === SocialProgramStatusEnum.COMPLETED"
+        class="absolute top-3 left-3 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm"
+      >
+        Selesai
+      </div>
     </div>
 
     <!-- Content -->
@@ -97,6 +104,14 @@ const handleUnsubscribe = () => {
 
       <!-- Button -->
       <button
+        v-if="program.status === SocialProgramStatusEnum.COMPLETED"
+        class="bg-gray-100 border border-gray-200 text-gray-400 text-sm font-medium py-2 rounded-md w-full cursor-not-allowed"
+        disabled
+      >
+        Program Selesai
+      </button>
+      <button
+        v-else
         class="transition text-sm font-medium py-2 rounded-md w-full disabled:opacity-70 disabled:cursor-not-allowed"
         :class="[
           program.isSubscribed

@@ -12,7 +12,7 @@ export const useDonationProgramAdminList = (
 ) => {
   const listQuery = useQuery<DonationProgramListResponse, ApiError>({
     queryKey: ['donationPrograms', params],
-    queryFn: () => donationProgramService.getDonationProgramList(toValue(params)),
+    queryFn: () => donationProgramService.getAdminDonationProgramList(toValue(params)),
     retry: 1,
   })
 

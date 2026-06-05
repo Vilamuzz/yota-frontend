@@ -10,7 +10,7 @@ import type { ApiError } from '@/types/response'
 export const useDonationProgramList = (params: MaybeRefOrGetter<DonationProgramQueryParams>) => {
   const listQuery = useQuery<DonationProgramListResponse, ApiError>({
     queryKey: ['publishedDonationPrograms', params],
-    queryFn: () => donationProgramService.getPublishedDonationProgramList(toValue(params)),
+    queryFn: () => donationProgramService.getDonationProgramList(toValue(params)),
     retry: 1,
   })
 

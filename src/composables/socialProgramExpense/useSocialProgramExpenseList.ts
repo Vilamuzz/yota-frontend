@@ -9,9 +9,9 @@ export const useSocialProgramExpenseList = (
   params: MaybeRefOrGetter<PaginationParams>,
 ) => {
   const listQuery = useQuery<SocialProgramExpenseListResponse, ApiError>({
-    queryKey: ['socialProgramExpenses', slug, params],
+    queryKey: ['adminSocialProgramExpenses', slug, params],
     queryFn: () =>
-      socialProgramExpenseService.getSocialProgramExpenses(toValue(slug), toValue(params)),
+      socialProgramExpenseService.getAdminSocialProgramExpenses(toValue(slug), toValue(params)),
     retry: 1,
   })
 

@@ -9,6 +9,7 @@ export function useDonationProgramFilters() {
     search: undefined,
     category: undefined,
     status: undefined,
+    sortBy: undefined,
     page: 1,
   })
 
@@ -25,7 +26,7 @@ export function useDonationProgramFilters() {
   })
 
   watch(
-    () => [queryParams.category, queryParams.status, queryParams.limit],
+    () => [queryParams.category, queryParams.status, queryParams.sortBy, queryParams.limit],
     () => resetPagination(),
   )
 
@@ -35,13 +36,17 @@ export function useDonationProgramFilters() {
     useOffsetPagination(queryParams, pagination)
 
   const hasActiveFilters = computed(
-    () => queryParams.category !== undefined || queryParams.status !== undefined,
+    () =>
+      queryParams.category !== undefined ||
+      queryParams.status !== undefined ||
+      queryParams.sortBy !== undefined,
   )
 
   function clearFilters() {
     searchQuery.value = ''
     queryParams.category = undefined
     queryParams.status = undefined
+    queryParams.sortBy = undefined
     resetPagination()
   }
 

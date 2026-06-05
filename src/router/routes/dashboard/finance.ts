@@ -28,6 +28,12 @@ export const financeRoutes: RouteRecordRaw[] = [
             meta: { title: 'Edit Program Donasi', activeMenu: 'dashboard-donation-programs' },
           },
           {
+            path: ':id/detail',
+            name: 'dashboard-donation-programs-detail',
+            component: () => import('@/pages/dashboard/donationPrograms/DetailPage.vue'),
+            meta: { title: 'Detail Program Donasi', activeMenu: 'dashboard-donation-programs' },
+          },
+          {
             path: 'income',
             children: [
               {
@@ -43,7 +49,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/income/donationProgramTransactions/IndexPage.vue'),
                 meta: {
-                  title: 'Transaksi Program Donasi',
+                  title: 'Transaksi Pengeluaran Program Donasi',
                   activeMenu: 'dashboard-donation-programs-income',
                 },
               },
@@ -70,7 +76,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/expenses/donationProgramExpenses/IndexPage.vue'),
                 meta: {
-                  title: 'Transaksi Program Donasi',
+                  title: 'Transaksi Pengeluaran Program Donasi',
                   activeMenu: 'dashboard-donation-programs-expense',
                 },
               },
@@ -80,7 +86,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/expenses/donationProgramExpenses/CreatePage.vue'),
                 meta: {
-                  title: 'Tambah Transaksi Program Donasi',
+                  title: 'Tambah Transaksi Pengeluaran Program Donasi',
                   activeMenu: 'dashboard-donation-programs-expense',
                 },
               },
@@ -102,7 +108,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/expenses/socialProgramExpenses/IndexPage.vue'),
                 meta: {
-                  title: 'Transaksi Program Sosial',
+                  title: 'Transaksi Pengeluaran Program Sosial',
                   activeMenu: 'dashboard-social-programs-expense',
                 },
               },
@@ -112,7 +118,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/expenses/socialProgramExpenses/CreatePage.vue'),
                 meta: {
-                  title: 'Tambah Transaksi Program Sosial',
+                  title: 'Tambah Transaksi Pengeluaran Program Sosial',
                   activeMenu: 'dashboard-social-programs-expense',
                 },
               },
@@ -134,7 +140,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/expenses/fosterChildrenExpenses/IndexPage.vue'),
                 meta: {
-                  title: 'Transaksi Anak Asuh',
+                  title: 'Transaksi Pengeluaran Anak Asuh',
                   activeMenu: 'dashboard-foster-children-expense',
                 },
               },
@@ -144,7 +150,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/expenses/fosterChildrenExpenses/CreatePage.vue'),
                 meta: {
-                  title: 'Tambah Transaksi Anak Asuh',
+                  title: 'Tambah Transaksi Pengeluaran Anak Asuh',
                   activeMenu: 'dashboard-foster-children-expense',
                 },
               },

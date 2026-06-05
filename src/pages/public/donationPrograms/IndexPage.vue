@@ -7,7 +7,7 @@ import { useDonationProgramList } from '@/composables/donationProgram/useDonatio
 import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import BasePagination from '@/components/atoms/BasePagination.vue'
 import { Search, Loader2, Check } from 'lucide-vue-next'
-import { type DonationProgramQueryParams, DonationProgramCategoryEnum } from '@/types/donationProgram'
+import { type DonationProgramQueryParams, DonationProgramCategoryEnum, DonationProgramStatusEnum } from '@/types/donationProgram'
 
 const searchQuery = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
@@ -18,6 +18,7 @@ const queryParams = reactive<DonationProgramQueryParams>({
   search: undefined,
   category: undefined,
   sortBy: undefined,
+  status: undefined,
 })
 
 const { listQuery, donationPrograms, pagination } = useDonationProgramList(queryParams)
@@ -64,6 +65,7 @@ const toggleFilter = () => {
 
   // Sync local temp state when opening filter dropdown
   tempCategory.value = queryParams.category || null
+  tempStatus.value = queryParams.status || null
 }
 
 const selectSort = (val: string) => {
@@ -73,9 +75,19 @@ const selectSort = (val: string) => {
 }
 
 const tempCategory = ref<DonationProgramCategoryEnum | null>(null)
+const tempStatus = ref<DonationProgramStatusEnum | null>(null)
+
+const selectStatus = (statusValue: DonationProgramStatusEnum) => {
+  if (tempStatus.value === statusValue) {
+    tempStatus.value = null
+  } else {
+    tempStatus.value = statusValue
+  }
+}
 
 const applyFilters = () => {
   queryParams.category = tempCategory.value || undefined
+  queryParams.status = tempStatus.value || undefined
   resetPagination()
   showFilterDropdown.value = false
 }
@@ -83,11 +95,25 @@ const applyFilters = () => {
 const resetFilters = () => {
   tempCategory.value = null
   queryParams.category = undefined
+  tempStatus.value = null
+  queryParams.status = undefined
   resetPagination()
   showFilterDropdown.value = false
 }
 
-const hasActiveFilters = computed(() => !!queryParams.category)
+const clearCategoryFilter = () => {
+  tempCategory.value = null
+  queryParams.category = undefined
+  resetPagination()
+}
+
+const clearStatusFilter = () => {
+  tempStatus.value = null
+  queryParams.status = undefined
+  resetPagination()
+}
+
+const hasActiveFilters = computed(() => !!queryParams.category || !!queryParams.status)
 
 const formatCategory = (cat: DonationProgramCategoryEnum) => {
   if (cat === DonationProgramCategoryEnum.EDUCATION) return 'Pendidikan'
@@ -182,8 +208,32 @@ onUnmounted(() => {
               <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
                 Saring Berdasarkan
               </h4>
-
+ 
               <div class="space-y-4">
+                <!-- Status Filter -->
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 mb-2">Status</label>
+                  <div class="flex gap-2">
+                    <button
+                      v-for="statusOpt in [
+                        { label: 'Aktif', value: DonationProgramStatusEnum.ACTIVE },
+                        { label: 'Selesai', value: DonationProgramStatusEnum.COMPLETED },
+                        { label: 'Kedaluwarsa', value: DonationProgramStatusEnum.EXPIRED },
+                      ]"
+                      :key="statusOpt.value"
+                      @click="selectStatus(statusOpt.value)"
+                      class="flex-1 text-center py-2.5 rounded-xl text-xs transition-colors border"
+                      :class="
+                        tempStatus === statusOpt.value
+                          ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                      "
+                    >
+                      {{ statusOpt.label }}
+                    </button>
+                  </div>
+                </div>
+
                 <!-- Category Filter -->
                 <div>
                   <label class="block text-xs font-bold text-gray-500 mb-2">Kategori</label>
@@ -203,7 +253,7 @@ onUnmounted(() => {
                     </button>
                   </div>
                 </div>
-
+ 
                 <!-- Action Buttons -->
                 <div class="flex gap-3 pt-4 border-t border-gray-100">
                   <button
@@ -223,7 +273,7 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
-
+ 
         <!-- ACTIVE FILTER CHIPS -->
         <div v-if="hasActiveFilters" class="flex flex-wrap justify-center gap-2 mb-6 -mt-4">
           <div
@@ -232,7 +282,19 @@ onUnmounted(() => {
           >
             <span>Kategori: {{ formatCategory(queryParams.category) }}</span>
             <button
-              @click="((queryParams.category = undefined), resetPagination())"
+              @click="clearCategoryFilter"
+              class="hover:text-primary-800 focus:outline-none"
+            >
+              &times;
+            </button>
+          </div>
+          <div
+            v-if="queryParams.status"
+            class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-200 text-primary-600 text-xs font-semibold rounded-full"
+          >
+            <span>Status: {{ queryParams.status === 'active' ? 'Aktif' : queryParams.status === 'completed' ? 'Selesai' : 'Kedaluwarsa' }}</span>
+            <button
+              @click="clearStatusFilter"
               class="hover:text-primary-800 focus:outline-none"
             >
               &times;

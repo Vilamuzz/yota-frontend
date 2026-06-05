@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { SquarePen, Trash2, HandHeart, Plus, Archive, Play } from 'lucide-vue-next'
+import { SquarePen, Trash2, HandHeart, Plus, Archive, Play, Eye } from 'lucide-vue-next'
 import { useDonationProgramFilters } from '@/composables/donationProgram/useDonationProgramFilters'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
@@ -39,6 +39,17 @@ const { showToast } = useToast()
 
 const categories = Object.values(DonationProgramCategoryEnum)
 const statuses = Object.values(DonationProgramStatusEnum)
+
+const formatCategory = (cat: DonationProgramCategoryEnum) => {
+  if (cat === DonationProgramCategoryEnum.EDUCATION) return 'Pendidikan'
+  if (cat === DonationProgramCategoryEnum.HEALTH) return 'Kesehatan'
+  if (cat === DonationProgramCategoryEnum.ENVIRONMENT) return 'Lingkungan'
+  if (cat === DonationProgramCategoryEnum.SOCIAL) return 'Sosial'
+  if (cat === DonationProgramCategoryEnum.DISASTER) return 'Bencana'
+  if (cat === DonationProgramCategoryEnum.HUMANITY) return 'Kemanusiaan'
+  if (cat === DonationProgramCategoryEnum.OTHER) return 'Lainnya'
+  return cat
+}
 
 const confirmShow = ref(false)
 const confirmDonationProgram = ref<DonationProgram | null>(null)
@@ -116,59 +127,96 @@ function handleConfirmArchive() {
 
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-        <BaseSearch v-model="searchQuery" placeholder="Search donations..." />
+      <div class="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+        <BaseButton variant="primary" :to="{ name: 'dashboard-donation-programs-create' }">
+          <Plus :size="20" class="mr-1" />
+          Create Donation
+        </BaseButton>
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchQuery" placeholder="Search donations..." />
 
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-          <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default>
-              <div class="space-y-4">
-                <!-- Category filter -->
-                <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
-                    >Category</label
-                  >
-                  <select
-                    v-model="queryParams.category"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option :value="undefined">All</option>
-                    <option v-for="category in categories" :key="category" :value="category">
-                      {{ category.charAt(0).toUpperCase() + category.slice(1) }}
-                    </option>
-                  </select>
+          <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <BaseFilter :has-active-filters="hasActiveFilters">
+              <template #default="{ closeDropdown }">
+                <div class="space-y-4 w-64">
+                  <!-- Category filter -->
+                  <div>
+                    <label
+                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    >
+                      Kategori
+                    </label>
+                    <select
+                      v-model="queryParams.category"
+                      class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option :value="undefined">Semua Kategori</option>
+                      <option v-for="category in categories" :key="category" :value="category">
+                        {{ formatCategory(category) }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Status filter -->
+                  <div>
+                    <label
+                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    >
+                      Status
+                    </label>
+                    <select
+                      v-model="queryParams.status"
+                      class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option :value="undefined">Semua Status</option>
+                      <option v-for="status in statuses" :key="status" :value="status">
+                        {{ formatStatus(status) }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Sort filter -->
+                  <div>
+                    <label
+                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    >
+                      Urutkan
+                    </label>
+                    <select
+                      v-model="queryParams.sortBy"
+                      class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option :value="undefined">Bawaan (Terbaru)</option>
+                      <option value="created_at asc">Terlama</option>
+                      <option value="title asc">Judul (A-Z)</option>
+                      <option value="title desc">Judul (Z-A)</option>
+                      <option value="fund_target desc">Target Dana Tertinggi</option>
+                      <option value="fund_target asc">Target Dana Terendah</option>
+                      <option value="start_date desc">Tanggal Mulai (Terbaru)</option>
+                      <option value="start_date asc">Tanggal Mulai (Terlama)</option>
+                      <option value="end_date asc">Tanggal Selesai (Terdekat)</option>
+                      <option value="end_date desc">Tanggal Selesai (Terlama)</option>
+                    </select>
+                  </div>
+
+                  <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <button
+                      @click="clearFilters"
+                      class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                    >
+                      RESET
+                    </button>
+                    <button
+                      @click="closeDropdown"
+                      class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
+                    >
+                      APPLY
+                    </button>
+                  </div>
                 </div>
-
-                <!-- Status filter -->
-                <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
-                  <select
-                    v-model="queryParams.status"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option :value="undefined">Semua</option>
-                    <option v-for="status in statuses" :key="status" :value="status">
-                      {{ status.charAt(0).toUpperCase() + status.slice(1) }}
-                    </option>
-                  </select>
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                  <button
-                    @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            </template>
-          </BaseFilter>
-
-          <BaseButton variant="primary" :to="{ name: 'dashboard-donation-programs-create' }">
-            <Plus :size="20" class="mr-1" />
-            Create Donation
-          </BaseButton>
+              </template>
+            </BaseFilter>
+          </div>
         </div>
       </div>
 
@@ -218,7 +266,7 @@ function handleConfirmArchive() {
                   {{ donation.title }}
                 </span>
                 <span class="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                  {{ donation.category }}
+                  {{ formatCategory(donation.category) }}
                 </span>
               </div>
             </td>
@@ -266,6 +314,21 @@ function handleConfirmArchive() {
                   :disabled="archiveMutation.isPending.value"
                 >
                   <Archive :size="18" />
+                </BaseIconButton>
+                <BaseIconButton
+                  v-if="
+                    donation.status === DonationProgramStatusEnum.COMPLETED ||
+                    donation.status === DonationProgramStatusEnum.EXPIRED ||
+                    donation.status === DonationProgramStatusEnum.ARCHIVED
+                  "
+                  :to="{
+                    name: 'dashboard-donation-programs-detail',
+                    params: { id: donation.id },
+                  }"
+                  title="Lihat detail program donasi"
+                  variant="info"
+                >
+                  <Eye :size="18" />
                 </BaseIconButton>
                 <BaseIconButton
                   v-if="

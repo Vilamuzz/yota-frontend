@@ -3,7 +3,7 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { HandHeart, Plus, XCircle } from 'lucide-vue-next'
-import { formatCurrency, formatDate } from '@/utils/format'
+import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { useDonationProgramTransactionList } from '@/composables/donationProgramTransaction/useDonationProgramTransactionList'
 import { useDonationProgramTransactionCancel } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCancel'
 import { useCursorPagination } from '@/composables/ui/usePagination'
@@ -166,10 +166,15 @@ function handleConfirmCancel() {
         <div
           class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
         >
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
-            {{ formatCurrency(donation.collectedFund - (donation.totalExpense || 0)) }}
-          </h3>
-          <p class="text-sm text-gray-400 mt-1">Sisa Saldo</p>
+          <span
+            :class="[
+              'inline-flex items-center gap-1 px-3.5 py-0.5 rounded-full text-xl font-medium border',
+              getStatusColor(donation.status),
+            ]"
+          >
+            {{ formatStatus(donation.status) }}
+          </span>
+          <p class="text-sm text-gray-400 mt-1">Status Program Donasi</p>
         </div>
       </div>
       <div v-else-if="isDonationLoading" class="animate-pulse flex gap-5">

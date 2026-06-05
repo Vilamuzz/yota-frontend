@@ -32,39 +32,39 @@ export const useReportDetail = (
   slug: MaybeRefOrGetter<string>,
 ) => {
   const donationDetailQuery = useQuery({
-    queryKey: ['publicDonationDetail', slug],
-    queryFn: () => donationProgramService.getPublishedDonationProgramDetail(toValue(slug)),
+    queryKey: ['donationDetail', slug],
+    queryFn: () => donationProgramService.getDonationProgramDetail(toValue(slug)),
     enabled: computed(() => toValue(type) === 'donation'),
   })
 
   const donationExpenseQuery = useQuery({
-    queryKey: ['publicDonationExpenses', slug],
+    queryKey: ['donationExpenses', slug],
     queryFn: () =>
-      donationProgramExpenseService.getPublicDonationProgramExpenses(toValue(slug), { limit: 100 }),
+      donationProgramExpenseService.getDonationProgramExpenses(toValue(slug), { limit: 100 }),
     enabled: computed(() => toValue(type) === 'donation'),
   })
 
   const socialDetailQuery = useQuery({
-    queryKey: ['publicSocialDetail', slug],
+    queryKey: ['socialDetail', slug],
     queryFn: () => socialProgramService.getPublishedSocialProgramDetail(toValue(slug)),
     enabled: computed(() => toValue(type) === 'social'),
   })
 
   const socialExpenseQuery = useQuery({
-    queryKey: ['publicSocialExpenses', slug],
+    queryKey: ['socialExpenses', slug],
     queryFn: () =>
-      socialProgramExpenseService.getPublicSocialProgramExpenses(toValue(slug), { limit: 100 }),
+      socialProgramExpenseService.getSocialProgramExpenses(toValue(slug), { limit: 100 }),
     enabled: computed(() => toValue(type) === 'social'),
   })
 
   const fosterDetailQuery = useQuery({
-    queryKey: ['publicFosterDetail', slug],
+    queryKey: ['fosterDetail', slug],
     queryFn: () => fosterChildrenService.getFosterChildrenDetail(toValue(slug)),
     enabled: computed(() => toValue(type) === 'foster'),
   })
 
   const fosterExpenseQuery = useQuery({
-    queryKey: ['publicFosterExpenses', slug],
+    queryKey: ['fosterExpenses', slug],
     queryFn: () =>
       fosterChildrenExpenseService.getFosterChildrenExpenses(toValue(slug), { limit: 100 }),
     enabled: computed(() => toValue(type) === 'foster'),
@@ -145,9 +145,12 @@ export const useReportDetail = (
 
   const isLoading = computed(() => {
     const currentType = toValue(type)
-    if (currentType === 'donation') return donationDetailQuery.isPending.value || donationExpenseQuery.isPending.value
-    if (currentType === 'social') return socialDetailQuery.isPending.value || socialExpenseQuery.isPending.value
-    if (currentType === 'foster') return fosterDetailQuery.isPending.value || fosterExpenseQuery.isPending.value
+    if (currentType === 'donation')
+      return donationDetailQuery.isPending.value || donationExpenseQuery.isPending.value
+    if (currentType === 'social')
+      return socialDetailQuery.isPending.value || socialExpenseQuery.isPending.value
+    if (currentType === 'foster')
+      return fosterDetailQuery.isPending.value || fosterExpenseQuery.isPending.value
     return false
   })
 
@@ -169,4 +172,3 @@ export const useReportDetail = (
 
   return { detail, isLoading, exportExpenses }
 }
-

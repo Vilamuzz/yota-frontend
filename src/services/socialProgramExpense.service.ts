@@ -18,7 +18,7 @@ export const socialProgramExpenseService = {
     return response.data
   },
 
-  getSocialProgramExpenses: async (
+  getAdminSocialProgramExpenses: async (
     id: string,
     params: PaginationParams,
   ): Promise<SocialProgramExpenseListResponse> => {
@@ -31,14 +31,14 @@ export const socialProgramExpenseService = {
     return response.data
   },
 
-  getSocialProgramExpenseDetail: async (id: string): Promise<SocialProgramExpenseResponse> => {
+  getAdminSocialProgramExpenseDetail: async (id: string): Promise<SocialProgramExpenseResponse> => {
     const response = await api.get<SocialProgramExpenseResponse>(
       `${API.SOCIAL_PROGRAMS_ADMIN}/expenses/${id}`,
     )
     return response.data
   },
 
-  getPublicSocialProgramExpenses: async (
+  getSocialProgramExpenses: async (
     slug: string,
     params: PaginationParams,
   ): Promise<SocialProgramExpenseListResponse> => {
@@ -60,16 +60,13 @@ export const socialProgramExpenseService = {
     slug: string,
     params: SocialProgramExpenseExportRequest,
   ): Promise<Blob> => {
-    const response = await api.get<Blob>(
-      `${API.SOCIAL_PROGRAMS}/${slug}/expenses/export`,
-      {
-        params: {
-          start_date: params.startDate,
-          end_date: params.endDate,
-        },
-        responseType: 'blob',
+    const response = await api.get<Blob>(`${API.SOCIAL_PROGRAMS}/${slug}/expenses/export`, {
+      params: {
+        start_date: params.startDate,
+        end_date: params.endDate,
       },
-    )
+      responseType: 'blob',
+    })
     return response.data
   },
 }

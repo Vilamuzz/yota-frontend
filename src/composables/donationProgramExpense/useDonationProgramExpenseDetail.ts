@@ -7,7 +7,7 @@ import type { ApiError } from '@/types/response'
 export const useDonationProgramExpenseDetail = (id: MaybeRefOrGetter<string>) => {
   const detailQuery = useQuery<DonationProgramExpenseResponse, ApiError>({
     queryKey: ['donationExpenseDetail', id],
-    queryFn: () => donationProgramExpenseService.getDonationProgramExpenseDetail(toValue(id)),
+    queryFn: () => donationProgramExpenseService.getAdminDonationProgramExpenseDetail(toValue(id)),
     enabled: computed(() => !!toValue(id)),
     retry: 1,
   })

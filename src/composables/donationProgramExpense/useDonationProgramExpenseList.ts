@@ -9,9 +9,9 @@ export const useDonationProgramExpenseList = (
   params: MaybeRefOrGetter<PaginationParams>,
 ) => {
   const listQuery = useQuery<DonationProgramExpenseListResponse, ApiError>({
-    queryKey: ['donationProgramExpenses', slug, params],
+    queryKey: ['adminDonationProgramExpenses', slug, params],
     queryFn: () =>
-      donationProgramExpenseService.getDonationProgramExpenses(toValue(slug), toValue(params)),
+      donationProgramExpenseService.getAdminDonationProgramExpenses(toValue(slug), toValue(params)),
     retry: 1,
   })
 

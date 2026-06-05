@@ -247,7 +247,7 @@ const filteredFoster = computed(() =>
               v-for="child in filteredFoster"
               :key="child.id"
               class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:border-primary-100 transition-all duration-200 cursor-pointer"
-              @click="goToDetail('foster', child.id)"
+              @click="goToDetail('foster', child.slug || '')"
             >
               <div class="flex items-center gap-5 p-5">
                 <img

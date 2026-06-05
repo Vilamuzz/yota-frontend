@@ -7,7 +7,7 @@ import type { ApiError } from '@/types/response'
 export const useFosterChildrenExpenseDetail = (id: MaybeRefOrGetter<string>) => {
   const detailQuery = useQuery<FosterChildrenExpenseResponse, ApiError>({
     queryKey: ['fosterChildrenExpenseDetail', id],
-    queryFn: () => fosterChildrenExpenseService.getFosterChildrenExpenseDetail(toValue(id)),
+    queryFn: () => fosterChildrenExpenseService.getAdminFosterChildrenExpenseDetail(toValue(id)),
     enabled: computed(() => !!toValue(id)),
     retry: 1,
   })

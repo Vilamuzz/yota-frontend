@@ -17,6 +17,7 @@ const queryParams = reactive<SocialProgramQueryParams>({
   page: 1,
   search: undefined,
   sortBy: undefined,
+  status: undefined,
   startDate: undefined,
   endDate: undefined,
 })
@@ -70,6 +71,8 @@ const toggleFilter = () => {
   } else {
     tempBillingRange.value = null
   }
+
+  tempStatus.value = queryParams.status || null
 }
 
 const selectSort = (val: string) => {
@@ -102,6 +105,16 @@ const selectBillingRange = (range: BillingRange) => {
   }
 }
 
+const tempStatus = ref<string | null>(null)
+
+const selectStatus = (statusValue: string) => {
+  if (tempStatus.value === statusValue) {
+    tempStatus.value = null
+  } else {
+    tempStatus.value = statusValue
+  }
+}
+
 const applyFilters = () => {
   if (tempBillingRange.value) {
     queryParams.startDate = tempBillingRange.value.startDate
@@ -112,6 +125,9 @@ const applyFilters = () => {
     queryParams.endDate = undefined
     selectedBillingRangeLabel.value = ''
   }
+
+  queryParams.status = tempStatus.value || undefined
+
   resetPagination()
   showFilterDropdown.value = false
 }
@@ -121,11 +137,31 @@ const resetFilters = () => {
   queryParams.startDate = undefined
   queryParams.endDate = undefined
   selectedBillingRangeLabel.value = ''
+
+  tempStatus.value = null
+  queryParams.status = undefined
+
   resetPagination()
   showFilterDropdown.value = false
 }
 
-const hasActiveFilters = computed(() => !!queryParams.startDate || !!queryParams.endDate)
+const clearBillingRangeFilter = () => {
+  tempBillingRange.value = null
+  queryParams.startDate = undefined
+  queryParams.endDate = undefined
+  selectedBillingRangeLabel.value = ''
+  resetPagination()
+}
+
+const clearStatusFilter = () => {
+  tempStatus.value = null
+  queryParams.status = undefined
+  resetPagination()
+}
+
+const hasActiveFilters = computed(
+  () => !!queryParams.startDate || !!queryParams.endDate || !!queryParams.status,
+)
 
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
@@ -210,6 +246,29 @@ onUnmounted(() => {
               </h4>
 
               <div class="space-y-4">
+                <!-- Status Filter -->
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 mb-2">Status</label>
+                  <div class="flex gap-2">
+                    <button
+                      v-for="statusOpt in [
+                        { label: 'Aktif', value: 'active' },
+                        { label: 'Selesai', value: 'completed' },
+                      ]"
+                      :key="statusOpt.value"
+                      @click="selectStatus(statusOpt.value)"
+                      class="flex-1 text-center py-2.5 rounded-xl text-xs transition-colors border"
+                      :class="
+                        tempStatus === statusOpt.value
+                          ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                      "
+                    >
+                      {{ statusOpt.label }}
+                    </button>
+                  </div>
+                </div>
+
                 <!-- Billing Day Range Filter -->
                 <div>
                   <label class="block text-xs font-bold text-gray-500 mb-2">Tanggal Tagihan</label>
@@ -253,10 +312,20 @@ onUnmounted(() => {
         <!-- ACTIVE FILTER CHIPS -->
         <div v-if="hasActiveFilters" class="flex justify-center gap-2 mb-6 -mt-4">
           <div
+            v-if="queryParams.startDate && queryParams.endDate"
             class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-200 text-primary-600 text-xs font-semibold rounded-full"
           >
             <span>Tagihan: {{ selectedBillingRangeLabel }}</span>
-            <button @click="resetFilters" class="hover:text-primary-800 focus:outline-none">
+            <button @click="clearBillingRangeFilter" class="hover:text-primary-800 focus:outline-none">
+              &times;
+            </button>
+          </div>
+          <div
+            v-if="queryParams.status"
+            class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-200 text-primary-600 text-xs font-semibold rounded-full"
+          >
+            <span>Status: {{ queryParams.status === 'active' ? 'Aktif' : 'Selesai' }}</span>
+            <button @click="clearStatusFilter" class="hover:text-primary-800 focus:outline-none">
               &times;
             </button>
           </div>

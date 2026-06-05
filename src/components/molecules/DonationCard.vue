@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatCurrency } from '@/utils/format'
-import type { DonationProgram } from '@/types/donationProgram'
+import { type DonationProgram, DonationProgramStatusEnum } from '@/types/donationProgram'
 
 const props = defineProps<{
   donation: DonationProgram
@@ -37,9 +37,24 @@ const remainingDays = computed(() =>
       />
       <!-- Days remaining badge -->
       <div
+        v-if="donation.status === DonationProgramStatusEnum.ACTIVE"
         class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-xs font-semibold text-gray-700 px-2.5 py-1 rounded-full shadow-sm"
       >
         {{ remainingDays }} hari lagi
+      </div>
+
+      <!-- Status Badges -->
+      <div
+        v-if="donation.status === DonationProgramStatusEnum.COMPLETED"
+        class="absolute top-3 left-3 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm"
+      >
+        Selesai
+      </div>
+      <div
+        v-else-if="donation.status === DonationProgramStatusEnum.EXPIRED"
+        class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm"
+      >
+        Kadaluarsa
       </div>
     </div>
 
