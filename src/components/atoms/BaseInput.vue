@@ -18,6 +18,7 @@ interface Props {
   showPasswordStrength?: boolean
   min?: string | number
   max?: string | number
+  inputClass?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -27,6 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   showPasswordToggle: false,
   showPasswordStrength: false,
+  inputClass: '',
 })
 
 const emit = defineEmits<{
@@ -140,8 +142,9 @@ const togglePasswordVisibility = () => {
         :max="max"
         :class="[
           inputClasses,
-          $slots.prefix ? 'pl-10' : '',
+          $slots.prefix ? (props.inputClass.includes('pl-') ? '' : 'pl-10') : '',
           $slots.suffix || (showPasswordToggle && type === 'password') ? 'pr-10' : '',
+          props.inputClass,
         ]"
         @input="handleInput"
         @focus="$emit('focus', $event)"

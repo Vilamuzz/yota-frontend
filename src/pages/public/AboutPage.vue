@@ -34,6 +34,19 @@ const mapSrc = computed(() => {
           <!-- Overlay -->
           <div class="absolute inset-0 bg-black opacity-40"></div>
         </div>
+
+        <!-- Text Content -->
+        <div
+          class="absolute inset-0 flex flex-col items-center justify-center text-white px-4 z-10"
+        >
+          <h1 class="text-5xl md:text-6xl font-bold mb-6 text-center drop-shadow-lg">
+            Tentang Kami
+          </h1>
+          <p class="text-xl md:text-2xl text-center max-w-3xl drop-shadow-md">
+            Mengenal lebih dekat visi, misi, dan perjalanan
+            {{ foundationProfileStore.foundationName }}.
+          </p>
+        </div>
       </div>
     </div>
 
@@ -106,7 +119,7 @@ const mapSrc = computed(() => {
     </section>
 
     <!-- Location Section -->
-    <section class="w-full">
+    <section class="w-full mb-20">
       <div class="max-w-7xl mx-auto mt-36 px-6 md:px-12 lg:px-24">
         <div class="mb-8 space-y-4">
           <h2 class="text-xl font-bold text-gray-900">

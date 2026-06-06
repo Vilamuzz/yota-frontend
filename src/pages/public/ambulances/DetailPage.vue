@@ -37,6 +37,7 @@ const ambulance = computed(() => detailQuery.data.value?.data)
 // History List
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import type { AmbulanceHistoryQueryParams } from '@/types/ambulanceHistory'
+import { formatPhoneWithDashes } from '@/utils/phone'
 
 const queryParams = reactive<AmbulanceHistoryQueryParams>({
   limit: 8,
@@ -48,7 +49,7 @@ const {
   pagination,
   isLoading: isHistoryLoading,
 } = useAmbulanceHistoryList(id, queryParams)
-const { resetPagination, handleNextPage, handlePrevPage } = useCursorPagination(queryParams)
+const { handleNextPage, handlePrevPage } = useCursorPagination(queryParams)
 
 // Summary
 const PERIOD_OPTIONS = [
@@ -137,7 +138,6 @@ const categoryBadgeClass = (value: string) => {
       return 'bg-gray-100 text-gray-700 border-gray-200'
   }
 }
-
 
 const categoryBarClass = (value: string) => {
   switch (value) {
@@ -272,10 +272,11 @@ const categoryBarClass = (value: string) => {
                       Kontak Sopir
                     </p>
                     <a
-                      :href="`tel:${ambulance.driver.phone}`"
+                      :href="`https://wa.me/+62${ambulance.driver.phone}`"
+                      target="_blank"
                       class="font-semibold text-primary-600 hover:underline"
                     >
-                      {{ ambulance.driver.phone }}
+                      {{ formatPhoneWithDashes(ambulance.driver.phone) }}
                     </a>
                   </div>
                 </div>

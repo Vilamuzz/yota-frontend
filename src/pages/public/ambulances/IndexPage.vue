@@ -2,7 +2,6 @@
 import { ref, reactive, watch } from 'vue'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import BasePublicSearch from '@/components/atoms/BasePublicSearch.vue'
-import BaseButton from '@/components/atoms/BaseButton.vue'
 import {
   Ambulance as AmbulanceIcon,
   Phone,
@@ -11,31 +10,49 @@ import {
   Loader2,
   ArrowUpRight,
   Eye,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-vue-next'
 import { usePublicAmbulanceList } from '@/composables/ambulance/usePublicAmbulanceList'
-import { AmbulanceStatus } from '@/types/ambulance'
+import { useCursorPagination } from '@/composables/ui/usePagination'
+import { type AmbulanceQueryParams, AmbulanceStatus } from '@/types/ambulance'
+import { formatPhoneWithDashes } from '@/utils/phone'
 
 const searchQuery = ref('')
 const selectedStatus = ref<AmbulanceStatus | undefined>(undefined)
 
-const queryParams = reactive({
-  limit: 12,
-  search: undefined as string | undefined,
-  status: undefined as AmbulanceStatus | undefined,
+const queryParams = reactive<AmbulanceQueryParams>({
+  limit: 6,
+  search: undefined,
+  status: undefined,
+  nextCursor: undefined,
+  prevCursor: undefined,
 })
 
-const { ambulances, isLoading } = usePublicAmbulanceList(queryParams)
+const { ambulances, pagination, isLoading } = usePublicAmbulanceList(queryParams)
+const { resetPagination, handleNextPage, handlePrevPage } = useCursorPagination(queryParams)
 
+const onPrevPage = (pageInfo: any) => {
+  handlePrevPage(pageInfo)
+  window.scrollTo({ top: 0 })
+}
+
+const onNextPage = (pageInfo: any) => {
+  handleNextPage(pageInfo)
+  window.scrollTo({ top: 0 })
+}
 let searchTimeout: ReturnType<typeof setTimeout>
 watch(searchQuery, (val) => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     queryParams.search = val || undefined
+    resetPagination()
   }, 400)
 })
 
 watch(selectedStatus, (val) => {
   queryParams.status = val
+  resetPagination()
 })
 
 const statusLabel = (status: AmbulanceStatus) => {
@@ -96,6 +113,8 @@ const statusDotClass = (status: AmbulanceStatus) => {
           <BasePublicSearch
             v-model="searchQuery"
             placeholder="Cari berdasarkan nomor plat atau sopir..."
+            :show-sort="false"
+            :show-filter="false"
           />
           <!-- Status Filter Pills -->
           <div class="flex flex-wrap justify-center gap-2">
@@ -199,10 +218,11 @@ const statusDotClass = (status: AmbulanceStatus) => {
                   <div>
                     <p class="text-xs text-gray-400 leading-none mb-0.5">Kontak</p>
                     <a
-                      :href="`tel:${ambulance.driver.phone}`"
+                      :href="`https://wa.me/+62${ambulance.driver.phone}`"
+                      target="_blank"
                       class="font-medium text-primary-600 hover:underline"
                     >
-                      {{ ambulance.driver.phone }}
+                      {{ formatPhoneWithDashes(ambulance.driver.phone) }}
                     </a>
                   </div>
                 </div>
@@ -217,7 +237,8 @@ const statusDotClass = (status: AmbulanceStatus) => {
                     Lihat Detail
                   </RouterLink>
                   <a
-                    :href="`tel:${ambulance.driver.phone}`"
+                    :href="`https://wa.me/+62${ambulance.driver.phone}`"
+                    target="_blank"
                     @click.stop
                     class="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200"
                     :class="
@@ -228,9 +249,7 @@ const statusDotClass = (status: AmbulanceStatus) => {
                   >
                     <Phone :size="15" />
                     {{
-                      ambulance.status === AmbulanceStatus.Available
-                        ? 'Hubungi'
-                        : 'Tidak Tersedia'
+                      ambulance.status === AmbulanceStatus.Available ? 'Hubungi' : 'Tidak Tersedia'
                     }}
                   </a>
                 </div>
@@ -249,9 +268,6 @@ const statusDotClass = (status: AmbulanceStatus) => {
             <p class="text-gray-500 max-w-sm mx-auto mb-8">
               Maaf, kami tidak dapat menemukan ambulans dengan kata kunci "{{ searchQuery }}".
             </p>
-            <BaseButton variant="outline" @click="searchQuery = ''">
-              Bersihkan Pencarian
-            </BaseButton>
           </div>
 
           <!-- General Empty State -->
@@ -265,6 +281,29 @@ const statusDotClass = (status: AmbulanceStatus) => {
             <p class="text-gray-500 max-w-sm mx-auto">
               Saat ini belum ada data ambulans yang dapat ditampilkan. Silakan kembali lagi nanti.
             </p>
+          </div>
+
+          <!-- Pagination -->
+          <div
+            v-if="pagination?.nextCursor || pagination?.prevCursor"
+            class="mt-16 flex items-center justify-center gap-4"
+          >
+            <button
+              v-if="pagination?.prevCursor"
+              class="w-10 h-10 flex items-center justify-center border border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-primary-500 hover:border-primary-500 transition-all duration-200"
+              @click="onPrevPage(pagination)"
+              title="Halaman Sebelumnya"
+            >
+              <ChevronLeft :size="18" />
+            </button>
+            <button
+              v-if="pagination?.nextCursor"
+              class="w-10 h-10 flex items-center justify-center border border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-primary-500 hover:border-primary-500 transition-all duration-200"
+              @click="onNextPage(pagination)"
+              title="Halaman Selanjutnya"
+            >
+              <ChevronRight :size="18" />
+            </button>
           </div>
 
           <!-- PERSUASIVE CTA CARD — Request Ambulance Service -->
@@ -296,7 +335,6 @@ const statusDotClass = (status: AmbulanceStatus) => {
                 class="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform"
               />
             </RouterLink>
-
           </div>
         </template>
       </div>

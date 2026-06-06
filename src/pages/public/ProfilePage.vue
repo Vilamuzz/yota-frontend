@@ -17,6 +17,7 @@ import {
   KeyRound,
   ShieldCheck,
 } from 'lucide-vue-next'
+import { formatPhoneWithDashes } from '@/utils/phone'
 
 const {
   user,
@@ -54,15 +55,11 @@ const userInitials = computed(() => {
 })
 
 // Errors
-const usernameError = computed(
-  () => profileValidationErrors.value?.username || '',
-)
+const usernameError = computed(() => profileValidationErrors.value?.username || '')
 const emailError = computed(() => profileValidationErrors.value?.email || '')
 const phoneError = computed(() => profileValidationErrors.value?.phone || '')
 const addressError = computed(() => profileValidationErrors.value?.address || '')
-const currentPasswordError = computed(
-  () => passwordValidationErrors.value?.currentPassword || '',
-)
+const currentPasswordError = computed(() => passwordValidationErrors.value?.currentPassword || '')
 const newPasswordError = computed(() => passwordValidationErrors.value?.newPassword || '')
 const confirmPasswordError = computed(() => {
   if (passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -97,7 +94,11 @@ const onFileChange = (event: Event) => {
 
 const updateProfile = () => {
   updateCurrentUserProfileMutation.mutate(
-    { ...profileForm, profilePicture: profilePictureFile.value as File },
+    {
+      ...profileForm,
+      phone: profileForm.phone || '',
+      profilePicture: profilePictureFile.value as File,
+    },
     {
       onSuccess: () => {
         showToast('Profil berhasil diperbarui!', 'success')
@@ -142,7 +143,9 @@ const updatePassword = () => {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <!-- Sidebar: Avatar + Summary -->
           <div class="lg:col-span-4 space-y-6">
-            <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 text-center relative group">
+            <div
+              class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 text-center relative group"
+            >
               <!-- Avatar -->
               <div class="relative w-28 h-28 mx-auto mb-5">
                 <div
@@ -175,7 +178,9 @@ const updatePassword = () => {
               <h2 class="text-xl font-black text-gray-900">{{ user?.username || 'Pengguna' }}</h2>
               <p class="text-sm text-gray-500 mt-1">{{ user?.email }}</p>
 
-              <div class="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-primary-50 text-primary-400 rounded-full text-xs font-bold uppercase tracking-wider">
+              <div
+                class="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-primary-50 text-primary-400 rounded-full text-xs font-bold uppercase tracking-wider"
+              >
                 <ShieldCheck :size="12" />
                 Orang Tua Asuh
               </div>
@@ -187,10 +192,12 @@ const updatePassword = () => {
 
             <!-- Quick Info -->
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
-              <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Info Singkat</h3>
+              <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Info Singkat
+              </h3>
               <div v-if="user?.phone" class="flex items-center gap-3 text-sm text-gray-700">
                 <Phone :size="15" class="text-gray-400 shrink-0" />
-                <span>{{ user.phone }}</span>
+                <span>{{ formatPhoneWithDashes(user.phone) }}</span>
               </div>
               <div v-if="user?.address" class="flex items-start gap-3 text-sm text-gray-700">
                 <MapPin :size="15" class="text-gray-400 shrink-0 mt-0.5" />
@@ -248,10 +255,19 @@ const updatePassword = () => {
                     id="phone"
                     v-model="profileForm.phone"
                     label="Nomor Telepon"
-                    placeholder="+62..."
+                    placeholder="Masukkan nomor telepon (contoh: 08123456789)..."
+                    input-class="pl-20"
                     :error="phoneError"
                   >
-                    <template #prefix><Phone :size="16" /></template>
+                    <template #prefix>
+                      <div class="flex items-center gap-1.5 text-gray-500 select-none">
+                        <Phone :size="16" />
+                        <span
+                          class="text-sm font-medium border-r border-gray-300 dark:border-gray-700 pr-1.5"
+                          >+62</span
+                        >
+                      </div>
+                    </template>
                   </BasePublicInput>
 
                   <div class="md:col-span-2">

@@ -246,8 +246,8 @@ const formatCategory = (cat: string) => {
               <BaseInput
                 id="schoolName"
                 v-model="form.schoolName"
-                label="Nama Sekolah / Universitas"
-                placeholder="Masukkan nama sekolah atau universitas"
+                label="Nama Sekolah"
+                placeholder="Masukkan nama sekolah"
                 :error="errors.schoolName || validationErrors?.schoolName"
                 required
               />

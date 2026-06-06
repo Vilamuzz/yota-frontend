@@ -21,6 +21,7 @@ import {
   Loader2,
 } from 'lucide-vue-next'
 import { ROLES } from '@/const/roles'
+import { formatPhoneWithDashes } from '@/utils/phone'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -394,9 +395,10 @@ const dropdownLinks = [
                   Phone:
                   <a
                     v-if="foundationProfileStore.foundationPhone"
-                    :href="`tel:${foundationProfileStore.foundationPhone}`"
+                    :href="`https://wa.me/+62${foundationProfileStore.foundationPhone}`"
+                    target="_blank"
                     class="hover:text-primary-300"
-                    >{{ foundationProfileStore.foundationPhone }}</a
+                    >{{ formatPhoneWithDashes(foundationProfileStore.foundationPhone) }}</a
                   >
                 </li>
                 <li class="flex items-center gap-3 mt-2">

@@ -146,7 +146,7 @@ const handleSubmit = () => {
           foundationName: form.foundationName,
           founderName: form.founderName,
           foundationAddress: form.foundationAddress,
-          foundationPhone: form.foundationPhone,
+          foundationPhone: form.foundationPhone || '',
           foundationEmail: form.foundationEmail,
           foundationInstagram: form.foundationInstagram || undefined,
           foundationFacebook: form.foundationFacebook || undefined,
@@ -199,7 +199,7 @@ const handleSubmit = () => {
         foundationName: form.foundationName,
         founderName: form.founderName,
         foundationAddress: form.foundationAddress,
-        foundationPhone: form.foundationPhone,
+        foundationPhone: form.foundationPhone ? `+62${form.foundationPhone}` : '',
         foundationEmail: form.foundationEmail,
         foundationInstagram: form.foundationInstagram || undefined,
         foundationFacebook: form.foundationFacebook || undefined,
@@ -275,10 +275,19 @@ const handleSubmit = () => {
                 id="foundationPhone"
                 v-model="form.foundationPhone"
                 label="Nomor Telepon"
-                placeholder="Masukkan nomor telepon yayasan..."
+                placeholder="Masukkan nomor telepon (contoh: 08123456789)..."
+                input-class="pl-20"
                 required
               >
-                <template #prefix><Phone :size="16" /></template>
+                <template #prefix>
+                  <div class="flex items-center gap-1.5 text-gray-500 select-none">
+                    <Phone :size="16" />
+                    <span
+                      class="text-sm font-medium border-r border-gray-300 dark:border-gray-700 pr-1.5"
+                      >+62</span
+                    >
+                  </div>
+                </template>
               </BaseInput>
 
               <BaseInput

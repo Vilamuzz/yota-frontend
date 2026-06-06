@@ -25,7 +25,7 @@ const { showToast } = useToast()
 
 const filteredRoles = computed(() => {
   return roles.value.filter((role) =>
-    authStore.roles.some((userRole) => userRole.toLowerCase() === role.name.toLowerCase())
+    authStore.roles.some((userRole) => userRole.toLowerCase() === role.name.toLowerCase()),
   )
 })
 
@@ -104,6 +104,7 @@ const updateProfile = () => {
   updateCurrentUserProfileMutation.mutate(
     {
       ...profileForm,
+      phone: profileForm.phone || '',
       profilePicture: profilePictureFile.value as File,
     },
     {
@@ -228,10 +229,19 @@ const updatePassword = () => {
               id="phone"
               v-model="profileForm.phone"
               label="Phone Number"
-              placeholder="+62..."
+              placeholder="Masukkan nomor telepon (contoh: 08123456789)..."
+              input-class="pl-20"
               :error="phoneError"
             >
-              <template #prefix><Phone :size="16" /></template>
+              <template #prefix>
+                <div class="flex items-center gap-1.5 text-gray-500 select-none">
+                  <Phone :size="16" />
+                  <span
+                    class="text-sm font-medium border-r border-gray-300 dark:border-gray-700 pr-1.5"
+                    >+62</span
+                  >
+                </div>
+              </template>
             </BaseInput>
 
             <div>

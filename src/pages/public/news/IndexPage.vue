@@ -51,7 +51,12 @@ const isError = computed(() => listQuery.isError.value)
 
         <!-- SEARCH + BUTTON -->
         <div class="flex justify-center mb-12">
-          <BasePublicSearch v-model="searchQuery" placeholder="Cari berita atau cerita..." />
+          <BasePublicSearch
+            v-model="searchQuery"
+            placeholder="Cari berita atau cerita..."
+            :show-sort="false"
+            :show-filter="false"
+          />
         </div>
 
         <!-- Loading State -->
