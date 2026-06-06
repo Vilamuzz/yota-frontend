@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onUnmounted, onMounted } from 'vue'
 import PublicLayout from '@/layouts/PublicLayout.vue'
-import BaseButton from '@/components/atoms/BaseButton.vue'
 import BasePublicSearch from '@/components/atoms/BasePublicSearch.vue'
 import { extractError } from '@/utils/error'
 import type { ApiError } from '@/types/response'
@@ -12,7 +10,6 @@ import { useMyAmbulanceServiceCandidateList } from '@/composables/ambulanceServi
 import { useMyAmbulanceServiceCandidateCancel } from '@/composables/ambulanceService/useMyAmbulanceServiceCancel'
 import { useToast } from '@/composables/ui/useToast'
 import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
-import { useCursorPagination } from '@/composables/ui/usePagination'
 import {
   Loader2,
   X,
@@ -25,14 +22,16 @@ import {
   Baby,
   Ambulance,
 } from 'lucide-vue-next'
+import { Gender, Category } from '@/types/fosterChildren'
 import { formatDate } from '@/utils/format'
-import type { FosterChildrenCandidateQueryParams } from '@/types/fosterChildrenCandidate'
-import type { AmbulanceServiceQueryParams } from '@/types/ambulanceService'
+import type {
+  FosterChildrenCandidate,
+  FosterChildrenCandidateQueryParams,
+} from '@/types/fosterChildrenCandidate'
+import type { AmbulanceService, AmbulanceServiceQueryParams } from '@/types/ambulanceService'
 
-const router = useRouter()
 const { showToast } = useToast()
 
-// ─── Active Tab ───────────────────────────────────────────────
 const activeTab = ref<'foster' | 'ambulance'>('foster')
 
 const tabs = [
@@ -40,72 +39,290 @@ const tabs = [
   { key: 'ambulance' as const, label: 'Layanan Ambulans', icon: Ambulance },
 ]
 
-// ─── Foster Children ──────────────────────────────────────────
 const fosterSearchQuery = ref('')
-const fosterQueryParams = reactive<FosterChildrenCandidateQueryParams>({
-  limit: 10,
-  search: undefined,
+const debouncedFosterSearchQuery = ref('')
+const fosterCursor = ref<string | undefined>(undefined)
+
+// Sort & Filter State
+const showSortDropdown = ref(false)
+const showFilterDropdown = ref(false)
+const searchContainerRef = ref<HTMLElement | null>(null)
+
+const sortBy = ref<string | undefined>(undefined)
+
+const sortOptions = [
+  { label: 'Terbaru', value: 'created_at desc' },
+  { label: 'Terlama', value: 'created_at asc' },
+  { label: 'Nama (A-Z)', value: 'name asc' },
+  { label: 'Nama (Z-A)', value: 'name desc' },
+]
+
+const toggleSort = () => {
+  showSortDropdown.value = !showSortDropdown.value
+  showFilterDropdown.value = false
+}
+
+const selectSort = (val: string) => {
+  const newVal = sortBy.value === val ? undefined : val
+  if (sortBy.value !== newVal) {
+    sortBy.value = newVal
+    fosterCursor.value = undefined
+    ambulanceCursor.value = undefined
+    accumulatedFoster.value = []
+    accumulatedAmbulance.value = []
+  }
+  showSortDropdown.value = false
+}
+
+const filterGender = ref<Gender | undefined>(undefined)
+const filterCategory = ref<Category | undefined>(undefined)
+const filterStatus = ref<string | undefined>(undefined)
+
+const tempGender = ref<Gender | null>(null)
+const tempCategory = ref<Category | null>(null)
+const tempStatus = ref<string | null>(null)
+
+const toggleFilter = () => {
+  showFilterDropdown.value = !showFilterDropdown.value
+  showSortDropdown.value = false
+  tempGender.value = filterGender.value || null
+  tempCategory.value = filterCategory.value || null
+  tempStatus.value = filterStatus.value || null
+}
+
+const applyFilters = () => {
+  const hasChanged =
+    filterGender.value !== (tempGender.value || undefined) ||
+    filterCategory.value !== (tempCategory.value || undefined) ||
+    filterStatus.value !== (tempStatus.value || undefined)
+
+  if (hasChanged) {
+    filterGender.value = tempGender.value || undefined
+    filterCategory.value = tempCategory.value || undefined
+    filterStatus.value = tempStatus.value || undefined
+    fosterCursor.value = undefined
+    ambulanceCursor.value = undefined
+    accumulatedFoster.value = []
+    accumulatedAmbulance.value = []
+  }
+  showFilterDropdown.value = false
+}
+
+const resetFilters = () => {
+  tempGender.value = null
+  tempCategory.value = null
+  tempStatus.value = null
+
+  const hasChanged =
+    filterGender.value !== undefined ||
+    filterCategory.value !== undefined ||
+    filterStatus.value !== undefined ||
+    sortBy.value !== undefined
+
+  if (hasChanged) {
+    filterGender.value = undefined
+    filterCategory.value = undefined
+    filterStatus.value = undefined
+    sortBy.value = undefined
+    fosterCursor.value = undefined
+    ambulanceCursor.value = undefined
+    accumulatedFoster.value = []
+    accumulatedAmbulance.value = []
+  }
+  showFilterDropdown.value = false
+  showSortDropdown.value = false
+}
+
+const hasActiveFilters = computed(
+  () => !!filterGender.value || !!filterCategory.value || !!filterStatus.value,
+)
+
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as Node
+  if (searchContainerRef.value && !searchContainerRef.value.contains(target)) {
+    showFilterDropdown.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('mousedown', handleClickOutside)
 })
 
-const {
-  listQuery: fosterListQuery,
-  fosterChildrenCandidate,
-  pagination: fosterPagination,
-  isLoading: isFosterLoading,
-} = useMyFosterChildrenCandidateList(fosterQueryParams)
+onUnmounted(() => {
+  window.removeEventListener('mousedown', handleClickOutside)
+  if (observer) {
+    observer.disconnect()
+  }
+})
 
-const {
-  resetPagination: fosterResetPagination,
-  handleNextPage: fosterNextPage,
-  handlePrevPage: fosterPrevPage,
-} = useCursorPagination(fosterQueryParams)
+const fosterQueryParams = computed<FosterChildrenCandidateQueryParams>(() => ({
+  limit: 10,
+  search: debouncedFosterSearchQuery.value || undefined,
+  nextCursor: fosterCursor.value,
+  gender: filterGender.value,
+  category: filterCategory.value,
+  status: filterStatus.value,
+  sortBy: sortBy.value,
+}))
+
+const { listQuery: fosterListQuery, isLoading: isFosterLoading } = useMyFosterChildrenCandidateList(
+  fosterQueryParams,
+  { enabled: computed(() => activeTab.value === 'foster') },
+)
 
 const { cancelMutation: fosterCancelMutation } = useMyFosterChildrenCandidateCancel()
+
+const accumulatedFoster = ref<FosterChildrenCandidate[]>([])
 
 let fosterSearchTimeout: ReturnType<typeof setTimeout>
 watch(fosterSearchQuery, (val) => {
   clearTimeout(fosterSearchTimeout)
   fosterSearchTimeout = setTimeout(() => {
-    fosterQueryParams.search = val || undefined
-    fosterResetPagination()
+    if (debouncedFosterSearchQuery.value !== val) {
+      fosterCursor.value = undefined
+      accumulatedFoster.value = []
+      debouncedFosterSearchQuery.value = val
+    }
   }, 400)
 })
 
-// ─── Ambulance ────────────────────────────────────────────────
 const ambulanceSearchQuery = ref('')
-const ambulanceQueryParams = reactive<AmbulanceServiceQueryParams>({
-  limit: 10,
-  search: undefined,
+const debouncedAmbulanceSearchQuery = ref('')
+const ambulanceCursor = ref<string | undefined>(undefined)
+
+const ambulanceQueryParams = computed<AmbulanceServiceQueryParams>(() => {
+  let sortVal = sortBy.value
+  if (sortVal) {
+    if (sortVal.startsWith('name ')) {
+      sortVal = sortVal.replace('name ', 'applicant_name ')
+    }
+  }
+  return {
+    limit: 10,
+    search: debouncedAmbulanceSearchQuery.value || undefined,
+    nextCursor: ambulanceCursor.value,
+    status: filterStatus.value,
+    sortBy: sortVal,
+  }
 })
 
-const {
-  listQuery: ambulanceListQuery,
-  ambulanceServices,
-  pagination: ambulancePagination,
-  isLoading: isAmbulanceLoading,
-} = useMyAmbulanceServiceCandidateList(ambulanceQueryParams)
-
-const {
-  resetPagination: ambulanceResetPagination,
-  handleNextPage: ambulanceNextPage,
-  handlePrevPage: ambulancePrevPage,
-} = useCursorPagination(ambulanceQueryParams)
+const { listQuery: ambulanceListQuery, isLoading: isAmbulanceLoading } =
+  useMyAmbulanceServiceCandidateList(ambulanceQueryParams, {
+    enabled: computed(() => activeTab.value === 'ambulance'),
+  })
 
 const { cancelMutation: ambulanceCancelMutation } = useMyAmbulanceServiceCandidateCancel()
+
+const accumulatedAmbulance = ref<AmbulanceService[]>([])
 
 let ambulanceSearchTimeout: ReturnType<typeof setTimeout>
 watch(ambulanceSearchQuery, (val) => {
   clearTimeout(ambulanceSearchTimeout)
   ambulanceSearchTimeout = setTimeout(() => {
-    ambulanceQueryParams.search = val || undefined
-    ambulanceResetPagination()
+    if (debouncedAmbulanceSearchQuery.value !== val) {
+      ambulanceCursor.value = undefined
+      accumulatedAmbulance.value = []
+      debouncedAmbulanceSearchQuery.value = val
+    }
   }, 400)
 })
 
-// ─── Computed helpers ─────────────────────────────────────────
+const setActiveTab = (tab: 'foster' | 'ambulance') => {
+  if (activeTab.value !== tab) {
+    fosterCursor.value = undefined
+    ambulanceCursor.value = undefined
+    accumulatedFoster.value = []
+    accumulatedAmbulance.value = []
+    activeTab.value = tab
+  }
+}
+
+watch(
+  [() => fosterListQuery.data.value, activeTab, fosterCursor],
+  ([newData, tab, cursor]) => {
+    if (tab === 'foster' && newData?.data?.fosterChildrenCandidates) {
+      if (cursor) {
+        const existingIds = new Set(accumulatedFoster.value.map((c) => c.id))
+        const newItems = newData.data.fosterChildrenCandidates.filter((c) => !existingIds.has(c.id))
+        accumulatedFoster.value.push(...newItems)
+      } else {
+        accumulatedFoster.value = [...newData.data.fosterChildrenCandidates]
+      }
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  [() => ambulanceListQuery.data.value, activeTab, ambulanceCursor],
+  ([newData, tab, cursor]) => {
+    if (tab === 'ambulance' && newData?.data?.requests) {
+      if (cursor) {
+        const existingIds = new Set(accumulatedAmbulance.value.map((s) => s.id))
+        const newItems = newData.data.requests.filter((s) => !existingIds.has(s.id))
+        accumulatedAmbulance.value.push(...newItems)
+      } else {
+        accumulatedAmbulance.value = [...newData.data.requests]
+      }
+    }
+  },
+  { immediate: true },
+)
+
 const isLoading = computed(() =>
   activeTab.value === 'foster' ? isFosterLoading.value : isAmbulanceLoading.value,
 )
+
+const isAnyFetching = computed(() =>
+  activeTab.value === 'foster'
+    ? fosterListQuery.isFetching.value
+    : ambulanceListQuery.isFetching.value,
+)
+
+const hasNextPage = computed(() => {
+  if (activeTab.value === 'foster') {
+    return !!fosterListQuery.data.value?.data?.pagination?.nextCursor
+  }
+  return !!ambulanceListQuery.data.value?.data?.pagination?.nextCursor
+})
+
+const loadNextPage = () => {
+  if (isAnyFetching.value) return
+
+  if (activeTab.value === 'foster') {
+    const next = fosterListQuery.data.value?.data?.pagination?.nextCursor
+    if (next && next !== fosterCursor.value) {
+      fosterCursor.value = next
+    }
+  } else {
+    const next = ambulanceListQuery.data.value?.data?.pagination?.nextCursor
+    if (next && next !== ambulanceCursor.value) {
+      ambulanceCursor.value = next
+    }
+  }
+}
+
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+watch(loadMoreTrigger, (el) => {
+  if (observer) {
+    observer.disconnect()
+  }
+  if (el) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadNextPage()
+        }
+      },
+      {
+        rootMargin: '100px',
+      },
+    )
+    observer.observe(el)
+  }
+})
 
 const isError = computed(() =>
   activeTab.value === 'foster' ? fosterListQuery.isError.value : ambulanceListQuery.isError.value,
@@ -123,7 +340,6 @@ const searchQuery = computed({
   },
 })
 
-// ─── Cancel modals ────────────────────────────────────────────
 const showCancelModal = ref(false)
 const itemToCancel = ref<{ id: string; name: string; type: 'foster' | 'ambulance' } | null>(null)
 
@@ -146,6 +362,13 @@ const confirmCancel = () => {
     showToast('Pengajuan berhasil dibatalkan.', 'success')
     showCancelModal.value = false
     itemToCancel.value = null
+    if (type === 'foster') {
+      fosterCursor.value = undefined
+      accumulatedFoster.value = []
+    } else {
+      ambulanceCursor.value = undefined
+      accumulatedAmbulance.value = []
+    }
   }
   const onError = (err: ApiError) => {
     showToast(extractError(err, 'Gagal membatalkan pengajuan.'), 'error')
@@ -160,11 +383,9 @@ const confirmCancel = () => {
   }
 }
 
-// ─── Status config ────────────────────────────────────────────
 const getStatusConfig = (status: string) => {
   switch (status.toLowerCase()) {
     case 'accepted':
-    case 'approved':
       return {
         icon: CheckCircle2,
         class: 'bg-green-50 text-green-700 border-green-200',
@@ -212,7 +433,7 @@ const getStatusConfig = (status: string) => {
           <button
             v-for="tab in tabs"
             :key="tab.key"
-            @click="activeTab = tab.key"
+            @click="setActiveTab(tab.key)"
             class="flex items-center gap-3 px-6 py-4 rounded-xl text-sm font-black transition-all duration-500 border-2"
             :class="
               activeTab === tab.key
@@ -245,13 +466,147 @@ const getStatusConfig = (status: string) => {
             </div>
           </div>
 
-          <div class="w-full md:w-72">
+          <div class="relative w-full md:w-80" ref="searchContainerRef">
             <BasePublicSearch
               v-model="searchQuery"
-              :placeholder="
-                activeTab === 'foster' ? 'Cari nama calon...' : 'Cari nama pemohon...'
-              "
+              :placeholder="activeTab === 'foster' ? 'Cari nama calon...' : 'Cari nama pemohon...'"
+              @on-sort="toggleSort"
+              @on-filter="toggleFilter"
             />
+
+            <!-- SORT DROPDOWN -->
+            <div
+              v-if="showSortDropdown"
+              class="absolute right-[3.5rem] top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50"
+            >
+              <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                Urutkan Berdasarkan
+              </h4>
+              <div class="space-y-1">
+                <button
+                  v-for="option in sortOptions"
+                  :key="option.value"
+                  @click="selectSort(option.value)"
+                  class="w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors flex items-center justify-between"
+                  :class="
+                    sortBy === option.value || (!sortBy && option.value === 'created_at desc')
+                      ? 'bg-primary-50 text-primary-600 font-semibold'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  "
+                >
+                  {{ option.label }}
+                  <Check
+                    v-if="
+                      sortBy === option.value || (!sortBy && option.value === 'created_at desc')
+                    "
+                    :size="16"
+                  />
+                </button>
+              </div>
+            </div>
+
+            <!-- FILTER DROPDOWN -->
+            <div
+              v-if="showFilterDropdown"
+              class="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+            >
+              <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+                Saring Berdasarkan
+              </h4>
+
+              <div class="space-y-4">
+                <!-- Status Filter -->
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 mb-2">Status Pengajuan</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      v-for="status in ['pending', 'accepted', 'rejected', 'cancelled']"
+                      :key="status"
+                      @click="tempStatus = tempStatus === status ? null : status"
+                      class="w-full text-center px-2 py-2 rounded-xl text-[10px] sm:text-xs transition-colors border"
+                      :class="
+                        tempStatus === status
+                          ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                      "
+                    >
+                      {{
+                        status === 'pending'
+                          ? 'Menunggu'
+                          : status === 'accepted'
+                            ? 'Diterima'
+                            : status === 'rejected'
+                              ? 'Ditolak'
+                              : 'Dibatalkan'
+                      }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    @click="resetFilters"
+                    class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-100 transition-colors"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    @click="applyFilters"
+                    class="flex-1 px-4 py-2.5 bg-primary-300 text-white rounded-xl text-xs font-semibold hover:bg-primary-500 transition-colors shadow-sm shadow-primary-500/20"
+                  >
+                    Terapkan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVE FILTER CHIPS -->
+        <div
+          v-if="hasActiveFilters"
+          class="flex flex-wrap justify-center md:justify-start gap-2 mb-6 -mt-4"
+        >
+          <div
+            v-if="activeTab === 'foster' ? fosterQueryParams.status : ambulanceQueryParams.status"
+            class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-200 text-primary-600 text-xs font-semibold rounded-full"
+          >
+            <span
+              >Status:
+              {{
+                (activeTab === 'foster'
+                  ? fosterQueryParams.status
+                  : ambulanceQueryParams.status) === 'pending'
+                  ? 'Menunggu'
+                  : (activeTab === 'foster'
+                        ? fosterQueryParams.status
+                        : ambulanceQueryParams.status) === 'accepted' ||
+                      (activeTab === 'foster'
+                        ? fosterQueryParams.status
+                        : ambulanceQueryParams.status) === 'approved'
+                    ? 'Diterima'
+                    : (activeTab === 'foster'
+                          ? fosterQueryParams.status
+                          : ambulanceQueryParams.status) === 'rejected'
+                      ? 'Ditolak'
+                      : 'Dibatalkan'
+              }}</span
+            >
+            <button
+              @click="
+                activeTab === 'foster'
+                  ? ((filterStatus = undefined),
+                    (fosterCursor = undefined),
+                    (accumulatedFoster = []))
+                  : ((filterStatus = undefined),
+                    (ambulanceCursor = undefined),
+                    (accumulatedAmbulance = []))
+              "
+              class="hover:text-primary-800 focus:outline-none"
+            >
+              &times;
+            </button>
           </div>
         </div>
 
@@ -264,15 +619,15 @@ const getStatusConfig = (status: string) => {
         <!-- Error -->
         <div
           v-else-if="isError"
-          class="bg-red-50 border border-red-100 rounded-2xl p-8 text-center"
+          class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
         >
           <div
-            class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500"
+            class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8 text-red-500 animate-pulse"
           >
-            <X :size="32" />
+            <X :size="48" />
           </div>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Gagal Memuat Data</h3>
-          <p class="text-gray-600 max-w-md mx-auto">
+          <h3 class="text-2xl font-black text-gray-900 mb-3">Gagal Memuat Data</h3>
+          <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
             {{
               errorValue
                 ? extractError(
@@ -284,11 +639,10 @@ const getStatusConfig = (status: string) => {
           </p>
         </div>
 
-        <!-- ─── FOSTER CHILDREN SECTION ──────────────────────────── -->
         <template v-else-if="activeTab === 'foster'">
-          <div v-if="fosterChildrenCandidate.length > 0" class="grid grid-cols-1 gap-6">
+          <div v-if="accumulatedFoster.length > 0" class="grid grid-cols-1 gap-6">
             <div
-              v-for="candidate in fosterChildrenCandidate"
+              v-for="candidate in accumulatedFoster"
               :key="candidate.id"
               class="group bg-white rounded-4xl border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8"
             >
@@ -368,9 +722,7 @@ const getStatusConfig = (status: string) => {
                   <X :size="22" />
                 </button>
                 <div
-                  v-else-if="
-                    candidate.status === 'accepted' || candidate.status === 'approved'
-                  "
+                  v-else-if="candidate.status === 'accepted' || candidate.status === 'approved'"
                   class="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-sm"
                 >
                   <CheckCircle2 :size="24" />
@@ -413,42 +765,22 @@ const getStatusConfig = (status: string) => {
             <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
               Anda belum pernah mengajukan calon anak asuh. Ajukan sekarang untuk membantu mereka.
             </p>
-            <BaseButton
-              variant="primary"
-              class="mt-8"
-              @click="router.push({ name: 'foster-children-candidate-submission' })"
-            >
-              Ajukan Calon Anak Asuh
-            </BaseButton>
           </div>
 
           <!-- Foster pagination -->
           <div
-            v-if="fosterPagination?.nextCursor || fosterPagination?.prevCursor"
-            class="mt-10 flex items-center justify-center gap-4"
+            v-if="hasNextPage"
+            ref="loadMoreTrigger"
+            class="h-20 w-full flex items-center justify-center mt-6"
           >
-            <BaseButton
-              variant="outline"
-              :disabled="!fosterPagination?.prevCursor"
-              @click="fosterPrevPage(fosterPagination)"
-            >
-              Sebelumnya
-            </BaseButton>
-            <BaseButton
-              variant="outline"
-              :disabled="!fosterPagination?.nextCursor"
-              @click="fosterNextPage(fosterPagination)"
-            >
-              Berikutnya
-            </BaseButton>
+            <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
           </div>
         </template>
 
-        <!-- ─── AMBULANCE SECTION ──────────────────────────────────── -->
         <template v-else>
-          <div v-if="ambulanceServices.length > 0" class="grid grid-cols-1 gap-6">
+          <div v-if="accumulatedAmbulance.length > 0" class="grid grid-cols-1 gap-6">
             <div
-              v-for="service in ambulanceServices"
+              v-for="service in accumulatedAmbulance"
               :key="service.id"
               class="group bg-white rounded-4xl border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8"
             >
@@ -456,7 +788,7 @@ const getStatusConfig = (status: string) => {
               <div
                 class="absolute top-0 left-0 w-2 h-full transition-all duration-500"
                 :class="
-                  service.status === 'approved'
+                  service.status === 'accepted'
                     ? 'bg-green-500'
                     : service.status === 'rejected'
                       ? 'bg-red-500'
@@ -468,7 +800,7 @@ const getStatusConfig = (status: string) => {
                 <div
                   class="w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6"
                   :class="
-                    service.status === 'approved'
+                    service.status === 'accepted'
                       ? 'bg-green-50 text-green-600'
                       : service.status === 'rejected'
                         ? 'bg-red-50 text-red-500'
@@ -531,7 +863,7 @@ const getStatusConfig = (status: string) => {
                   <X :size="22" />
                 </button>
                 <div
-                  v-else-if="service.status === 'approved'"
+                  v-else-if="service.status === 'accepted'"
                   class="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-sm"
                 >
                   <CheckCircle2 :size="24" />
@@ -574,34 +906,15 @@ const getStatusConfig = (status: string) => {
             <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
               Anda belum pernah mengajukan permintaan layanan ambulans.
             </p>
-            <BaseButton
-              variant="primary"
-              class="mt-8"
-              @click="router.push({ name: 'ambulance-service-submission' })"
-            >
-              Ajukan Permintaan Ambulans
-            </BaseButton>
           </div>
 
           <!-- Ambulance pagination -->
           <div
-            v-if="ambulancePagination?.nextCursor || ambulancePagination?.prevCursor"
-            class="mt-10 flex items-center justify-center gap-4"
+            v-if="hasNextPage"
+            ref="loadMoreTrigger"
+            class="h-20 w-full flex items-center justify-center mt-6"
           >
-            <BaseButton
-              variant="outline"
-              :disabled="!ambulancePagination?.prevCursor"
-              @click="ambulancePrevPage(ambulancePagination)"
-            >
-              Sebelumnya
-            </BaseButton>
-            <BaseButton
-              variant="outline"
-              :disabled="!ambulancePagination?.nextCursor"
-              @click="ambulanceNextPage(ambulancePagination)"
-            >
-              Berikutnya
-            </BaseButton>
+            <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
           </div>
         </template>
       </div>
@@ -611,7 +924,9 @@ const getStatusConfig = (status: string) => {
     <PublicConfirmationModal
       :show="showCancelModal"
       :title="
-        itemToCancel?.type === 'foster' ? 'Batalkan Pengajuan Anak Asuh' : 'Batalkan Permintaan Ambulans'
+        itemToCancel?.type === 'foster'
+          ? 'Batalkan Pengajuan Anak Asuh'
+          : 'Batalkan Permintaan Ambulans'
       "
       :message="`Apakah Anda yakin ingin membatalkan ${itemToCancel?.type === 'foster' ? 'pengajuan' : 'permintaan'} untuk ${itemToCancel?.name}? Tindakan ini tidak dapat dibatalkan.`"
       :icon="AlertTriangle"

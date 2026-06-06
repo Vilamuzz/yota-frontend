@@ -32,6 +32,7 @@ import RejectConfirmationModal from '@/components/organisms/RejectConfirmationMo
 import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
+import { AmbulanceServiceStatus } from '@/types/ambulanceService'
 
 const route = useRoute()
 const id = (route.params.serviceId || route.params.id) as string
@@ -311,7 +312,7 @@ const handleConfirmComplete = () => {
                 Detail Permintaan
               </h3>
 
-               <!-- Category -->
+              <!-- Category -->
               <div class="space-y-2 mb-6">
                 <p
                   class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
@@ -454,7 +455,11 @@ const handleConfirmComplete = () => {
 
         <!-- Action Footer for Driver -->
         <div
-          v-if="isDriver && (ambulanceService.status === 'approved' || ambulanceService.status === 'in_service')"
+          v-if="
+            isDriver &&
+            (ambulanceService.status === AmbulanceServiceStatus.ACCEPTED ||
+              ambulanceService.status === AmbulanceServiceStatus.IN_SERVICE)
+          "
           class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
         >
           <p class="text-xs text-gray-500 dark:text-gray-400 italic">
@@ -462,7 +467,7 @@ const handleConfirmComplete = () => {
           </p>
           <div class="flex items-center gap-3">
             <BaseButton
-              v-if="ambulanceService.status === 'approved'"
+              v-if="ambulanceService.status === AmbulanceServiceStatus.ACCEPTED"
               variant="primary"
               size="md"
               class="px-8"
@@ -473,7 +478,7 @@ const handleConfirmComplete = () => {
               Mulai Layanan
             </BaseButton>
             <BaseButton
-              v-if="ambulanceService.status === 'in_service'"
+              v-if="ambulanceService.status === AmbulanceServiceStatus.IN_SERVICE"
               variant="primary"
               size="md"
               class="px-8"

@@ -6,7 +6,9 @@ import SocialProgramCard from '@/components/molecules/SocialProgramCard.vue'
 import { usePublishedSocialProgramList } from '@/composables/socialProgram/usePublishedSocialProgramList'
 import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import BasePagination from '@/components/atoms/BasePagination.vue'
-import { Search, Loader2, Check } from 'lucide-vue-next'
+import { Search, Loader2, Check, LogIn } from 'lucide-vue-next'
+import { useRouter, useRoute } from 'vue-router'
+import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
 import type { SocialProgramQueryParams } from '@/types/socialProgram'
 
 const searchQuery = ref('')
@@ -38,6 +40,18 @@ const isError = computed(() => listQuery.isError.value)
 
 // Sort & Filter Dropdowns
 const showSortDropdown = ref(false)
+const showLoginModal = ref(false)
+
+const router = useRouter()
+const route = useRoute()
+
+const handleLogin = () => {
+  showLoginModal.value = false
+  router.push({
+    path: '/login',
+    query: { redirect: route.fullPath },
+  })
+}
 const showFilterDropdown = ref(false)
 const searchContainerRef = ref<HTMLElement | null>(null)
 
@@ -372,6 +386,7 @@ onUnmounted(() => {
               v-for="program in socialPrograms"
               :key="program.id"
               :program="program"
+              @require-login="showLoginModal = true"
             />
           </div>
 
@@ -405,5 +420,18 @@ onUnmounted(() => {
         </template>
       </div>
     </div>
+
+    <!-- Login Reminder Modal -->
+    <PublicConfirmationModal
+      :show="showLoginModal"
+      title="Yuk, Masuk Dulu!"
+      message="Untuk bisa berlangganan program sosial ini, kamu perlu masuk ke akunmu terlebih dahulu."
+      primaryButtonText="Masuk Sekarang"
+      secondaryButtonText="Nanti Saja"
+      :icon="LogIn"
+      @close="showLoginModal = false"
+      @secondary="showLoginModal = false"
+      @primary="handleLogin"
+    />
   </PublicLayout>
 </template>

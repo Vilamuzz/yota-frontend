@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Plus, Trash2, Edit, Ambulance as AmbulanceIcon, RotateCcw } from 'lucide-vue-next'
+import { Plus, Trash2, Edit, Ambulance as AmbulanceIcon } from 'lucide-vue-next'
 import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAmbulanceDelete } from '@/composables/ambulance/useAmbulanceDelete'
 import { useCursorPagination } from '@/composables/ui/usePagination'
@@ -147,16 +147,6 @@ function getStatusLabel(status: string) {
               </div>
             </template>
           </BaseFilter>
-          <BaseButton
-            v-if="hasActiveFilters"
-            variant="outline"
-            size="md"
-            @click="clearFilters"
-            class="hidden sm:flex"
-          >
-            <RotateCcw :size="16" class="mr-2" />
-            Reset
-          </BaseButton>
         </div>
       </div>
 

@@ -10,7 +10,7 @@ import { usePrayerList } from '@/composables/prayer/usePrayerList'
 import { usePrayerAmen } from '@/composables/prayer/usePrayerAmen'
 import { usePrayerReport } from '@/composables/prayer/usePrayerReport'
 import { formatCurrency, formatDate } from '@/utils/format'
-
+import { DonationProgramStatusEnum } from '@/types/donationProgram'
 const route = useRoute()
 const donationSlug = computed(() => route.params.slug as string)
 
@@ -340,22 +340,6 @@ const handleShare = () => {
                   {{ Math.round(progressPercent) }}% Tercapai
                 </p>
               </div>
-
-              <!-- Desktop Actions -->
-              <div class="hidden md:flex gap-4 pt-4">
-                <BaseButton variant="secondary" size="lg" class="flex-1" @click="handleShare">
-                  <Share2 :size="18" class="mr-2" />
-                  Bagikan
-                </BaseButton>
-                <BaseButton
-                  variant="primary"
-                  size="lg"
-                  class="flex-2 shadow-lg shadow-primary-200"
-                  @click="$router.push(`/donation-programs/${program.slug}/form`)"
-                >
-                  Donasi Sekarang
-                </BaseButton>
-              </div>
             </div>
 
             <!-- Description -->
@@ -461,6 +445,7 @@ const handleShare = () => {
                 </p>
                 <div class="space-y-3">
                   <BaseButton
+                    v-if="program.status === DonationProgramStatusEnum.ACTIVE"
                     variant="primary"
                     size="lg"
                     full-width
@@ -496,6 +481,7 @@ const handleShare = () => {
           <Share2 :size="24" />
         </button>
         <BaseButton
+          v-if="program.status === DonationProgramStatusEnum.ACTIVE"
           variant="primary"
           size="lg"
           class="flex-1 h-14 font-bold shadow-lg shadow-primary-200"

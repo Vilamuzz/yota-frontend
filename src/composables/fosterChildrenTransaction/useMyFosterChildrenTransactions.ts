@@ -1,13 +1,20 @@
-import { computed } from 'vue'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fosterChildrenTransactionService } from '@/services/fosterChildrenTransaction.service'
-import type { FosterChildrenTransactionListResponse } from '@/types/fosterChildrenTransaction'
+import type {
+  FosterChildrenTransactionQueryParams,
+  FosterChildrenTransactionListResponse,
+} from '@/types/fosterChildrenTransaction'
 import type { ApiError } from '@/types/response'
 
-export const useMyFosterChildrenTransactions = () => {
+export const useMyFosterChildrenTransactions = (
+  params?: MaybeRefOrGetter<FosterChildrenTransactionQueryParams>,
+  options?: { enabled?: MaybeRefOrGetter<boolean> },
+) => {
   const query = useQuery<FosterChildrenTransactionListResponse, ApiError>({
-    queryKey: ['my-foster-children-transactions'],
-    queryFn: () => fosterChildrenTransactionService.getMyFosterChildrenTransactions(),
+    queryKey: ['my-foster-children-transactions', params],
+    queryFn: () => fosterChildrenTransactionService.getMyFosterChildrenTransactions(toValue(params)),
+    ...options,
   })
 
   const transactions = computed(() => query.data.value?.data?.transactions || [])

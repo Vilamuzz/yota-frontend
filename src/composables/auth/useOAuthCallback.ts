@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
 import { extractError } from '@/utils/error'
 import type { ApiError } from '@/types/response'
+import { ROLES } from '@/const/roles'
 
 export const useOAuthCallback = () => {
   const authStore = useAuthStore()
@@ -23,7 +24,11 @@ export const useOAuthCallback = () => {
       }
     },
     onSuccess: () => {
-      router.push('/dashboard')
+      if (authStore.activeRole === ROLES.ORANG_TUA_ASUH) {
+        router.push('/')
+      } else {
+        router.push('/dashboard')
+      }
     },
     onError: () => {
       setTimeout(() => router.push('/login'), 3000)

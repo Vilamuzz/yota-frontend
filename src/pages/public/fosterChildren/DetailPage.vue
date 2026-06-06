@@ -163,6 +163,7 @@ const formatCategory = (cat: string) => {
 
             <!-- Donation Action -->
             <div
+              v-if="!child.isGraduated"
               class="bg-primary-300 rounded-3xl p-8 text-white shadow-xl shadow-primary-300/20 relative overflow-hidden group"
             >
               <Heart

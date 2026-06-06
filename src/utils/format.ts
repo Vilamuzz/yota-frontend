@@ -48,7 +48,6 @@ export const formatStatus = (status: string): string => {
     published: 'Dipublikasi',
     rejected: 'Ditolak',
     accepted: 'Diterima',
-    approved: 'Diterima',
     social_manager_accepted: 'Diterima Koordinator Sosial',
     available: 'Tersedia',
     inuse: 'Digunakan',

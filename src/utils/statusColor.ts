@@ -15,7 +15,7 @@ export const getStatusColor = (status: string) => {
     case SocialProgramStatusEnum.ACTIVE:
     case SocialProgramSubscriptionStatus.ACTIVE:
     case AmbulanceStatus.Available:
-    case AmbulanceServiceStatus.APPROVED:
+    case AmbulanceServiceStatus.ACCEPTED:
     case AmbulanceServiceStatus.DONE:
     case FosterChildrenCandidateStatus.ACCEPTED:
     case FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED:

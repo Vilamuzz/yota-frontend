@@ -9,11 +9,13 @@ import type { ApiError } from '@/types/response'
 
 export const useMyFosterChildrenCandidateList = (
   params: MaybeRefOrGetter<FosterChildrenCandidateQueryParams>,
+  options?: { enabled?: MaybeRefOrGetter<boolean> },
 ) => {
   const listQuery = useQuery<FosterChildrenCandidateListResponse, ApiError>({
     queryKey: ['myFosterChildrenCandidates', params],
     queryFn: () => fosterChildrenCandidateService.getMyFosterChildrenCandidateList(toValue(params)),
     retry: 1,
+    ...options,
   })
 
   const fosterChildrenCandidate = computed(

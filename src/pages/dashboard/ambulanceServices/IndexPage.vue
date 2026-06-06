@@ -5,7 +5,6 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import {
   Check,
   X as XIcon,
-  RotateCcw,
   ClipboardList,
   AlertCircle,
   Eye,
@@ -16,10 +15,13 @@ import { useAssignedAmbulanceServiceList } from '@/composables/ambulanceService/
 import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useToast } from '@/composables/ui/useToast'
-import type { AmbulanceServiceQueryParams, AmbulanceService } from '@/types/ambulanceService'
+import {
+  type AmbulanceServiceQueryParams,
+  type AmbulanceService,
+  AmbulanceServiceStatus,
+} from '@/types/ambulanceService'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
 import { getStatusColor } from '@/utils/statusColor'
@@ -47,6 +49,7 @@ const queryParams = reactive<AmbulanceServiceQueryParams>({
   limit: 10,
   search: undefined,
   status: undefined,
+  serviceCategory: undefined,
   nextCursor: undefined,
   prevCursor: undefined,
 })
@@ -86,7 +89,12 @@ const isLoading = computed(() =>
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
   useCursorPagination(queryParams)
 
-const hasActiveFilters = computed(() => queryParams.status !== undefined || !!searchQuery.value)
+const hasActiveFilters = computed(
+  () =>
+    queryParams.status !== undefined ||
+    queryParams.serviceCategory !== undefined ||
+    !!searchQuery.value,
+)
 
 watch(searchQuery, (val) => {
   clearTimeout(searchTimeout)
@@ -97,13 +105,14 @@ watch(searchQuery, (val) => {
 })
 
 watch(
-  () => [queryParams.status, queryParams.limit],
+  () => [queryParams.status, queryParams.serviceCategory, queryParams.limit],
   () => resetPagination(),
 )
 
 function clearFilters() {
   searchQuery.value = ''
   queryParams.status = undefined
+  queryParams.serviceCategory = undefined
   resetPagination()
 }
 
@@ -280,6 +289,27 @@ function handleConfirmComplete() {
                   </select>
                 </div>
 
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                  >
+                    Kategori Layanan
+                  </label>
+                  <select
+                    v-model="queryParams.serviceCategory"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Kategori</option>
+                    <option
+                      v-for="option in serviceCategoryOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+
                 <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                   <button
                     @click="clearFilters"
@@ -297,16 +327,6 @@ function handleConfirmComplete() {
               </div>
             </template>
           </BaseFilter>
-          <BaseButton
-            v-if="hasActiveFilters"
-            variant="outline"
-            size="md"
-            @click="clearFilters"
-            class="hidden sm:flex"
-          >
-            <RotateCcw :size="16" class="mr-2" />
-            Reset
-          </BaseButton>
         </div>
       </div>
 
@@ -381,7 +401,7 @@ function handleConfirmComplete() {
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
                 <BaseIconButton
-                  v-if="isDriver && service.status === 'approved'"
+                  v-if="isDriver && service.status === AmbulanceServiceStatus.ACCEPTED"
                   @click="handleStart(service.id)"
                   title="Mulai"
                   variant="primary"
@@ -390,7 +410,7 @@ function handleConfirmComplete() {
                   <Play :size="18" class="fill-current" />
                 </BaseIconButton>
                 <BaseIconButton
-                  v-if="isDriver && service.status === 'in_service'"
+                  v-if="isDriver && service.status === AmbulanceServiceStatus.IN_SERVICE"
                   @click="handleComplete(service.id)"
                   title="Selesaikan"
                   variant="success"
@@ -399,7 +419,7 @@ function handleConfirmComplete() {
                   <Check :size="18" />
                 </BaseIconButton>
                 <BaseIconButton
-                  v-if="!isDriver && service.status === 'pending'"
+                  v-if="!isDriver && service.status === AmbulanceServiceStatus.PENDING"
                   @click="handleAccept(service.id)"
                   title="Setujui"
                   variant="primary"

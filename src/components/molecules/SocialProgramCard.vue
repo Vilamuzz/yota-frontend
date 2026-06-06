@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter, RouterLink } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { useSocialProgramSubscribe } from '@/composables/socialProgramSubscription/useSocialProgramSubscribe'
 import { useSocialProgramUnsubscribe } from '@/composables/socialProgramSubscription/useSocialProgramUnsubscribe'
 import { useAuthStore } from '@/stores/auth'
@@ -11,7 +11,10 @@ const props = defineProps<{
   program: SocialProgram
 }>()
 
-const router = useRouter()
+const emit = defineEmits<{
+  'require-login': []
+}>()
+
 const authStore = useAuthStore()
 const { showToast } = useToast()
 const { subscribeMutation } = useSocialProgramSubscribe()
@@ -23,8 +26,7 @@ function formatRupiah(value: number) {
 
 const handleSubscribeClick = () => {
   if (!authStore.isAuthenticated) {
-    showToast('Silakan login terlebih dahulu untuk berlangganan.', 'info')
-    router.push({ path: '/login', query: { redirect: router.currentRoute.value.fullPath } })
+    emit('require-login')
     return
   }
 

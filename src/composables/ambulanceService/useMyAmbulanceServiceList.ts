@@ -9,11 +9,13 @@ import type { ApiError } from '@/types/response'
 
 export const useMyAmbulanceServiceCandidateList = (
   params: MaybeRefOrGetter<AmbulanceServiceQueryParams>,
+  options?: { enabled?: MaybeRefOrGetter<boolean> },
 ) => {
   const listQuery = useQuery<AmbulanceServiceListResponse, ApiError>({
     queryKey: ['myAmbulanceServices', params],
     queryFn: () => ambulanceServiceService.listMyAmbulanceServiceRequests(toValue(params)),
     retry: 1,
+    ...options,
   })
 
   const ambulanceServices = computed(

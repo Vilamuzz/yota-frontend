@@ -12,6 +12,7 @@ import { useSocialProgramUnsubscribe } from '@/composables/socialProgramSubscrip
 import { useToast } from '@/composables/ui/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { extractError } from '@/utils/error'
+import { SocialProgramStatusEnum } from '@/types/socialProgram'
 
 const route = useRoute()
 const router = useRouter()
@@ -144,6 +145,7 @@ const handleLogin = () => {
         </BaseButton>
 
         <BaseButton
+          v-if="program.status !== SocialProgramStatusEnum.COMPLETED"
           :variant="program.isSubscribed ? 'outline' : 'primary'"
           size="lg"
           class="flex-1"

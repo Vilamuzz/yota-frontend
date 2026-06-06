@@ -84,6 +84,14 @@ const handleSubmit = () => {
         }
       },
       onError: (err) => {
+        const apiValidation = err.response?.data?.validation
+        if (apiValidation) {
+          const messages = Object.values(apiValidation).join(', ')
+          if (messages) {
+            showToast(messages, 'error')
+            return
+          }
+        }
         showToast(extractError(err, 'Gagal membuat transaksi bantuan'), 'error')
       },
     },
@@ -187,9 +195,6 @@ const handleSubmit = () => {
     <!-- Bottom button (non-scrollable) -->
     <div class="bg-gray-100 px-6">
       <div class="max-w-md mx-auto bg-white border-t border-gray-100 px-6 py-4">
-        <p v-if="createMutation.error.value" class="text-xs text-red-500 text-center mb-2">
-          {{ createMutation.error.value.message }}
-        </p>
         <BaseButton
           variant="primary"
           size="lg"

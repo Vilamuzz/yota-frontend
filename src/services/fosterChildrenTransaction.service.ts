@@ -32,8 +32,8 @@ export const fosterChildrenTransactionService = {
     return response.data
   },
 
-  getMyFosterChildrenTransactions: async () => {
-    const response = await api.get(`${API.FOSTER_CHILDREN}/transactions/me`)
+  getMyFosterChildrenTransactions: async (params?: FosterChildrenTransactionQueryParams) => {
+    const response = await api.get(`${API.FOSTER_CHILDREN}/transactions/me`, { params })
     return response.data
   },
 

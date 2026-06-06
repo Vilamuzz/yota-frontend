@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/ui/useToast'
 import PublicLayout from '@/layouts/PublicLayout.vue'
@@ -13,61 +13,248 @@ import {
   Heart,
   Users,
   HandHeart,
+  X,
 } from 'lucide-vue-next'
 
 import { useMyDonationProgramTransactions } from '@/composables/donationProgramTransaction/useMyDonationProgramTransactions'
 import { useMyFosterChildrenTransactions } from '@/composables/fosterChildrenTransaction/useMyFosterChildrenTransactions'
 import { useMySocialProgramInvoices } from '@/composables/socialProgramInvoice/useMySocialProgramInvoices'
-import { TransactionStatus } from '@/types/donationProgramTransaction'
-import { InvoiceStatus } from '@/types/socialProgramInvoice'
+import { TransactionStatus, type DonationProgramTransaction } from '@/types/donationProgramTransaction'
+import { InvoiceStatus, type SocialProgramInvoice } from '@/types/socialProgramInvoice'
+import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
 import { Loader2 } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 const { showToast } = useToast()
 
+const activeCategory = ref('Program Donasi')
+const activeStatus = ref('WAITING')
+
+const hasLoadedDonations = ref(false)
+const hasLoadedFoster = ref(false)
+const hasLoadedSocial = ref(false)
+
+watch(
+  activeCategory,
+  (newVal) => {
+    if (newVal === 'Program Donasi') hasLoadedDonations.value = true
+    if (newVal === 'Donasi Anak Asuh') hasLoadedFoster.value = true
+    if (newVal === 'Program Sosial') hasLoadedSocial.value = true
+  },
+  { immediate: true },
+)
+
+const donationCursor = ref<string | undefined>(undefined)
+const fosterCursor = ref<string | undefined>(undefined)
+const socialCursor = ref<string | undefined>(undefined)
+
+const donationParams = computed(() => ({
+  status: activeStatus.value === 'WAITING' ? 'pending' : 'settlement',
+  nextCursor: donationCursor.value,
+  limit: 10,
+}))
+
+const fosterParams = computed(() => ({
+  status: activeStatus.value === 'WAITING' ? 'pending' : 'settlement',
+  nextCursor: fosterCursor.value,
+  limit: 10,
+}))
+
+const socialParams = computed(() => ({
+  status: activeStatus.value === 'WAITING' ? 'pending' : 'paid',
+  nextCursor: socialCursor.value,
+  limit: 10,
+}))
+
 const {
-  transactions: donationTransactions,
   isLoading: isLoadingDonations,
   query: donationQuery,
-} = useMyDonationProgramTransactions()
+} = useMyDonationProgramTransactions(donationParams, { enabled: hasLoadedDonations })
 const {
-  transactions: fosterTransactions,
   isLoading: isLoadingFoster,
   query: fosterQuery,
-} = useMyFosterChildrenTransactions()
+} = useMyFosterChildrenTransactions(fosterParams, { enabled: hasLoadedFoster })
 const {
-  invoices: socialInvoices,
   isLoading: isLoadingSocial,
   query: socialQuery,
-} = useMySocialProgramInvoices()
+} = useMySocialProgramInvoices(socialParams, { enabled: hasLoadedSocial })
 
-const isAnyLoading = computed(
-  () => isLoadingDonations.value || isLoadingFoster.value || isLoadingSocial.value,
+const accumulatedDonations = ref<DonationProgramTransaction[]>([])
+const accumulatedFoster = ref<FosterChildrenTransaction[]>([])
+const accumulatedSocial = ref<SocialProgramInvoice[]>([])
+
+watch([activeCategory, activeStatus], () => {
+  donationCursor.value = undefined
+  fosterCursor.value = undefined
+  socialCursor.value = undefined
+  accumulatedDonations.value = []
+  accumulatedFoster.value = []
+  accumulatedSocial.value = []
+})
+
+watch(
+  () => donationQuery.data.value,
+  (newData) => {
+    if (newData?.data?.transactions) {
+      if (donationCursor.value) {
+        const existingIds = new Set(accumulatedDonations.value.map((t) => t.id || t.orderId))
+        const newItems = newData.data.transactions.filter((t) => !existingIds.has(t.id || t.orderId))
+        accumulatedDonations.value.push(...newItems)
+      } else {
+        accumulatedDonations.value = [...newData.data.transactions]
+      }
+    }
+  },
+  { immediate: true },
 )
+
+watch(
+  () => fosterQuery.data.value,
+  (newData) => {
+    if (newData?.data?.transactions) {
+      if (fosterCursor.value) {
+        const existingIds = new Set(accumulatedFoster.value.map((t) => t.id || t.orderId))
+        const newItems = newData.data.transactions.filter((t) => !existingIds.has(t.id || t.orderId))
+        accumulatedFoster.value.push(...newItems)
+      } else {
+        accumulatedFoster.value = [...newData.data.transactions]
+      }
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => socialQuery.data.value,
+  (newData) => {
+    if (newData?.data?.invoices) {
+      if (socialCursor.value) {
+        const existingIds = new Set(accumulatedSocial.value.map((i) => i.id))
+        const newItems = newData.data.invoices.filter((i) => !existingIds.has(i.id))
+        accumulatedSocial.value.push(...newItems)
+      } else {
+        accumulatedSocial.value = [...newData.data.invoices]
+      }
+    }
+  },
+  { immediate: true },
+)
+
+const isAnyLoading = computed(() => {
+  if (activeCategory.value === 'Program Donasi') return isLoadingDonations.value
+  if (activeCategory.value === 'Donasi Anak Asuh') return isLoadingFoster.value
+  if (activeCategory.value === 'Program Sosial') return isLoadingSocial.value
+  return false
+})
+
+const isAnyFetching = computed(() => {
+  if (activeCategory.value === 'Program Donasi') return donationQuery.isFetching.value
+  if (activeCategory.value === 'Donasi Anak Asuh') return fosterQuery.isFetching.value
+  if (activeCategory.value === 'Program Sosial') return socialQuery.isFetching.value
+  return false
+})
+
+const hasNextPage = computed(() => {
+  if (activeCategory.value === 'Program Donasi') {
+    return !!donationQuery.data.value?.data?.pagination?.nextCursor
+  }
+  if (activeCategory.value === 'Donasi Anak Asuh') {
+    return !!fosterQuery.data.value?.data?.pagination?.nextCursor
+  }
+  if (activeCategory.value === 'Program Sosial') {
+    return !!socialQuery.data.value?.data?.pagination?.nextCursor
+  }
+  return false
+})
+
+const loadNextPage = () => {
+  if (isAnyFetching.value) return
+
+  if (activeCategory.value === 'Program Donasi') {
+    const next = donationQuery.data.value?.data?.pagination?.nextCursor
+    if (next && next !== donationCursor.value) {
+      donationCursor.value = next
+    }
+  } else if (activeCategory.value === 'Donasi Anak Asuh') {
+    const next = fosterQuery.data.value?.data?.pagination?.nextCursor
+    if (next && next !== fosterCursor.value) {
+      fosterCursor.value = next
+    }
+  } else if (activeCategory.value === 'Program Sosial') {
+    const next = socialQuery.data.value?.data?.pagination?.nextCursor
+    if (next && next !== socialCursor.value) {
+      socialCursor.value = next
+    }
+  }
+}
+
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+watch(loadMoreTrigger, (el) => {
+  if (observer) {
+    observer.disconnect()
+  }
+  if (el) {
+    observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        loadNextPage()
+      }
+    }, {
+      rootMargin: '100px',
+    })
+    observer.observe(el)
+  }
+})
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+  }
+})
+
+const isError = computed(() => {
+  if (activeCategory.value === 'Program Donasi') return donationQuery.isError.value
+  if (activeCategory.value === 'Donasi Anak Asuh') return fosterQuery.isError.value
+  if (activeCategory.value === 'Program Sosial') return socialQuery.isError.value
+  return false
+})
+
+const errorValue = computed(() => {
+  if (activeCategory.value === 'Program Donasi') return donationQuery.error.value
+  if (activeCategory.value === 'Donasi Anak Asuh') return fosterQuery.error.value
+  if (activeCategory.value === 'Program Sosial') return socialQuery.error.value
+  return null
+})
+
+const is403 = computed(() => {
+  const err = errorValue.value as any
+  return err?.response?.status === 403 || err?.status === 403
+})
 
 const handleSnapPayment = (token: string) => {
   if (window.snap) {
     window.snap.pay(token, {
       onSuccess: function () {
         showToast('Pembayaran berhasil', 'success')
-        donationQuery.refetch()
-        fosterQuery.refetch()
-        socialQuery.refetch()
+        if (hasLoadedDonations.value) donationQuery.refetch()
+        if (hasLoadedFoster.value) fosterQuery.refetch()
+        if (hasLoadedSocial.value) socialQuery.refetch()
         router.replace({ path: '/invoices' })
       },
       onPending: function () {
         showToast('Menunggu pembayaran', 'warning')
-        donationQuery.refetch()
-        fosterQuery.refetch()
-        socialQuery.refetch()
+        if (hasLoadedDonations.value) donationQuery.refetch()
+        if (hasLoadedFoster.value) fosterQuery.refetch()
+        if (hasLoadedSocial.value) socialQuery.refetch()
         router.replace({ path: '/invoices' })
       },
       onError: function () {
         showToast('Pembayaran gagal', 'error')
-        donationQuery.refetch()
-        fosterQuery.refetch()
-        socialQuery.refetch()
+        if (hasLoadedDonations.value) donationQuery.refetch()
+        if (hasLoadedFoster.value) fosterQuery.refetch()
+        if (hasLoadedSocial.value) socialQuery.refetch()
         router.replace({ path: '/invoices' })
       },
       onClose: function () {
@@ -104,9 +291,6 @@ const handlePay = (invoice: any) => {
   }
 }
 
-const activeCategory = ref('Program Donasi')
-const activeStatus = ref('WAITING')
-
 const categories = [
   { name: 'Program Donasi', icon: Heart },
   { name: 'Program Sosial', icon: HandHeart },
@@ -114,7 +298,7 @@ const categories = [
 ]
 
 const invoices = computed(() => {
-  const mappedDonations = donationTransactions.value.map((t) => ({
+  const mappedDonations = accumulatedDonations.value.map((t) => ({
     id: t.orderId || t.id,
     programName: t.donationProgramTitle || 'Program Donasi',
     amount: t.grossAmount,
@@ -125,7 +309,7 @@ const invoices = computed(() => {
     snapToken: t.snapToken,
   }))
 
-  const mappedFoster = fosterTransactions.value.map((t) => ({
+  const mappedFoster = accumulatedFoster.value.map((t) => ({
     id: t.orderId || t.id,
     programName: t.fosterChildrenName || 'Donasi Anak Asuh',
     amount: t.grossAmount,
@@ -136,7 +320,7 @@ const invoices = computed(() => {
     snapToken: t.snapToken,
   }))
 
-  const mappedSocial = socialInvoices.value.map((i) => ({
+  const mappedSocial = accumulatedSocial.value.map((i) => ({
     id: i.id,
     programName: i.socialProgramTitle || 'Program Sosial',
     amount: i.minimumAmount,
@@ -271,6 +455,28 @@ const getStatusLabel = (status: string) => {
           <p class="text-gray-500 font-medium animate-pulse">Memuat data invoice...</p>
         </div>
 
+        <!-- Error State -->
+        <div
+          v-else-if="isError"
+          class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
+        >
+          <div
+            class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8 text-red-500 animate-pulse"
+          >
+            <X :size="48" />
+          </div>
+          <h3 class="text-2xl font-black text-gray-900 mb-3">
+            {{ is403 ? 'Akses Terbatas' : 'Gagal Memuat Data' }}
+          </h3>
+          <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
+            {{
+              is403
+                ? 'Kategori ini hanya dapat diakses oleh Orang Tua Asuh. Silakan ganti peran Anda terlebih dahulu.'
+                : 'Terjadi kesalahan saat memuat invoice. Silakan coba lagi.'
+            }}
+          </p>
+        </div>
+
         <div v-else-if="filteredInvoices.length > 0" class="grid grid-cols-1 gap-6">
           <div
             v-for="invoice in filteredInvoices"
@@ -346,6 +552,15 @@ const getStatusLabel = (status: string) => {
                 <CheckCircle2 :size="24" />
               </div>
             </div>
+          </div>
+
+          <!-- Infinite Scroll Trigger -->
+          <div
+            v-if="hasNextPage"
+            ref="loadMoreTrigger"
+            class="h-20 w-full flex items-center justify-center mt-6"
+          >
+            <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
           </div>
         </div>
 

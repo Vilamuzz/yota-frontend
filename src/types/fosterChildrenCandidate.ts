@@ -35,6 +35,7 @@ export interface FosterChildrenCandidateQueryParams extends PaginationParams {
   gender?: Gender
   category?: Category
   status?: string
+  sortBy?: string
 }
 
 export interface FosterChildrenCandidateCreateRequest {

@@ -4,7 +4,7 @@ import type { Pagination, PaginationParams, Response } from './response'
 
 export enum AmbulanceServiceStatus {
   PENDING = 'pending',
-  APPROVED = 'approved',
+  ACCEPTED = 'accepted',
   REJECTED = 'rejected',
   CANCELED = 'canceled',
   IN_SERVICE = 'in_service',
@@ -36,6 +36,9 @@ export interface AmbulanceServiceList {
 
 export interface AmbulanceServiceQueryParams extends PaginationParams {
   status?: string
+  search?: string
+  sortBy?: string
+  serviceCategory?: string
 }
 
 export interface CreateAmbulanceServiceRequest {
