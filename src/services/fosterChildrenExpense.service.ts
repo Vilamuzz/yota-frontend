@@ -3,10 +3,10 @@ import type {
   FosterChildrenExpenseListResponse,
   FosterChildrenExpenseResponse,
   FosterChildrenExpenseExportRequest,
+  FosterChildrenExpenseQueryParams,
 } from '@/types/fosterChildrenExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
-import type { PaginationParams } from '@/types/response'
 
 export const fosterChildrenExpenseService = {
   createFosterChildrenExpense: async (id: string, data: CreateFosterChildrenExpenseRequest) => {
@@ -27,7 +27,7 @@ export const fosterChildrenExpenseService = {
 
   getAdminFosterChildrenExpenses: async (
     id: string,
-    params: PaginationParams,
+    params: FosterChildrenExpenseQueryParams,
   ): Promise<FosterChildrenExpenseListResponse> => {
     const response = await api.get<FosterChildrenExpenseListResponse>(
       `${API.FOSTER_CHILDREN_ADMIN}/${id}/expenses`,
@@ -49,7 +49,7 @@ export const fosterChildrenExpenseService = {
 
   getFosterChildrenExpenses: async (
     slug: string,
-    params: PaginationParams,
+    params: FosterChildrenExpenseQueryParams,
   ): Promise<FosterChildrenExpenseListResponse> => {
     const response = await api.get<FosterChildrenExpenseListResponse>(
       `${API.FOSTER_CHILDREN}/${slug}/expenses`,

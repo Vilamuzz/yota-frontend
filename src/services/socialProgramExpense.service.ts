@@ -3,10 +3,10 @@ import type {
   SocialProgramExpenseListResponse,
   SocialProgramExpenseResponse,
   SocialProgramExpenseExportRequest,
+  SocialProgramExpenseQueryParams,
 } from '@/types/socialProgramExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
-import type { PaginationParams } from '@/types/response'
 
 export const socialProgramExpenseService = {
   createSocialProgramExpense: async (id: string, data: CreateSocialProgramExpenseRequest) => {
@@ -20,7 +20,7 @@ export const socialProgramExpenseService = {
 
   getAdminSocialProgramExpenses: async (
     id: string,
-    params: PaginationParams,
+    params: SocialProgramExpenseQueryParams,
   ): Promise<SocialProgramExpenseListResponse> => {
     const response = await api.get<SocialProgramExpenseListResponse>(
       `${API.SOCIAL_PROGRAMS_ADMIN}/${id}/expenses`,
@@ -40,7 +40,7 @@ export const socialProgramExpenseService = {
 
   getSocialProgramExpenses: async (
     slug: string,
-    params: PaginationParams,
+    params: SocialProgramExpenseQueryParams,
   ): Promise<SocialProgramExpenseListResponse> => {
     const response = await api.get<SocialProgramExpenseListResponse>(
       `${API.SOCIAL_PROGRAMS}/${slug}/expenses`,

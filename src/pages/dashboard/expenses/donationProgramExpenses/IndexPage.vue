@@ -2,7 +2,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Trash2, Receipt, Plus, RotateCcw, File, Eye } from 'lucide-vue-next'
+import { Trash2, Receipt, Plus, File, Eye } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useDonationProgramExpenseList } from '@/composables/donationProgramExpense/useDonationProgramExpenseList'
 import { useDonationProgramExpenseDelete } from '@/composables/donationProgramExpense/useDonationProgramExpenseDelete'
@@ -11,13 +11,16 @@ import { useDonationProgramAdminDetail } from '@/composables/donationProgram/use
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useToast } from '@/composables/ui/useToast'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
+import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import ExpenseDetailModal from '@/components/molecules/ExpenseDetailModal.vue'
 import FilePreviewModal from '@/components/molecules/FilePreviewModal.vue'
-import type { PaginationParams } from '@/types/response'
-import type { DonationProgramExpense } from '@/types/donationProgramExpense'
+import type {
+  DonationProgramExpense,
+  DonationProgramExpenseQueryParams,
+} from '@/types/donationProgramExpense'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const route = useRoute()
@@ -28,11 +31,12 @@ const { deleteMutation } = useDonationProgramExpenseDelete(donationId)
 const { detailQuery, isDonationLoading } = useDonationProgramAdminDetail(donationId)
 const donation = computed(() => detailQuery.data.value?.data)
 
-const queryParams = reactive<PaginationParams>({
+const queryParams = reactive<DonationProgramExpenseQueryParams>({
   limit: 10,
   search: undefined,
   nextCursor: undefined,
   prevCursor: undefined,
+  sortBy: undefined,
 })
 
 const limitOptions = [10, 25, 50, 100]
@@ -60,7 +64,9 @@ const { donationExpenses, pagination, isLoading } = useDonationProgramExpenseLis
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
   useCursorPagination(queryParams)
 
-const hasActiveFilters = computed(() => queryParams.search !== undefined)
+const hasActiveFilters = computed(
+  () => queryParams.search !== undefined || queryParams.sortBy !== undefined,
+)
 
 watch(searchInput, (val) => {
   clearTimeout(searchTimeout)
@@ -71,13 +77,14 @@ watch(searchInput, (val) => {
 })
 
 watch(
-  () => queryParams.limit,
+  () => [queryParams.limit, queryParams.sortBy],
   () => resetPagination(),
 )
 
 function clearFilters() {
   searchInput.value = ''
   queryParams.search = undefined
+  queryParams.sortBy = undefined
   resetPagination()
 }
 
@@ -170,15 +177,48 @@ function handleConfirmDelete() {
             placeholder="Cari pengeluaran..."
             class="w-full sm:w-64"
           />
-          <BaseButton
-            v-if="hasActiveFilters"
-            variant="outline"
-            class="whitespace-nowrap"
-            @click="clearFilters"
-          >
-            <RotateCcw :size="16" class="mr-2" />
-            Reset
-          </BaseButton>
+          <BaseFilter :has-active-filters="hasActiveFilters">
+            <template #default="{ closeDropdown }">
+              <div class="space-y-4 w-64">
+                <!-- Sort filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider text-left"
+                  >
+                    Urutkan
+                  </label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at asc">Terlama Dibuat</option>
+                    <option value="title asc">Judul (A-Z)</option>
+                    <option value="title desc">Judul (Z-A)</option>
+                    <option value="amount asc">Nominal Terendah</option>
+                    <option value="amount desc">Nominal Tertinggi</option>
+                    <option value="expense_date desc">Tanggal Pengeluaran (Terbaru)</option>
+                    <option value="expense_date asc">Tanggal Pengeluaran (Terlama)</option>
+                  </select>
+                </div>
+
+                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    @click="clearFilters"
+                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                  >
+                    RESET
+                  </button>
+                  <button
+                    @click="closeDropdown"
+                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
+                  >
+                    TERAPKAN
+                  </button>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
         </div>
       </div>
 

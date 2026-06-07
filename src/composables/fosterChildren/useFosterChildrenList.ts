@@ -4,11 +4,16 @@ import { fosterChildrenService } from '@/services/fosterChildren.service'
 import type { FosterChildrenQueryParams, FosterChildrenListResponse } from '@/types/fosterChildren'
 import type { ApiError } from '@/types/response'
 
-export const useFosterChildrenList = (params: MaybeRefOrGetter<FosterChildrenQueryParams>, isAdmin: boolean = false) => {
+export const useFosterChildrenList = (
+  params: MaybeRefOrGetter<FosterChildrenQueryParams>,
+  isAdmin: boolean = false,
+  options?: { enabled?: MaybeRefOrGetter<boolean> },
+) => {
   const listQuery = useQuery<FosterChildrenListResponse, ApiError>({
     queryKey: isAdmin ? ['adminFosterChildren', params] : ['fosterChildren', params],
     queryFn: () => isAdmin ? fosterChildrenService.getAdminFosterChildren(toValue(params)) : fosterChildrenService.getFosterChildrenList(toValue(params)),
     retry: 1,
+    ...options,
   })
 
   const fosterChildren = computed(

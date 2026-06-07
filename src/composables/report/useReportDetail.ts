@@ -30,6 +30,7 @@ export interface ReportDetail {
 export const useReportDetail = (
   type: MaybeRefOrGetter<'donation' | 'social' | 'foster'>,
   slug: MaybeRefOrGetter<string>,
+  expenseParams: MaybeRefOrGetter<any> = { limit: 100 },
 ) => {
   const donationDetailQuery = useQuery({
     queryKey: ['donationDetail', slug],
@@ -38,9 +39,9 @@ export const useReportDetail = (
   })
 
   const donationExpenseQuery = useQuery({
-    queryKey: ['donationExpenses', slug],
+    queryKey: ['donationExpenses', slug, expenseParams],
     queryFn: () =>
-      donationProgramExpenseService.getDonationProgramExpenses(toValue(slug), { limit: 100 }),
+      donationProgramExpenseService.getDonationProgramExpenses(toValue(slug), toValue(expenseParams)),
     enabled: computed(() => toValue(type) === 'donation'),
   })
 
@@ -51,9 +52,9 @@ export const useReportDetail = (
   })
 
   const socialExpenseQuery = useQuery({
-    queryKey: ['socialExpenses', slug],
+    queryKey: ['socialExpenses', slug, expenseParams],
     queryFn: () =>
-      socialProgramExpenseService.getSocialProgramExpenses(toValue(slug), { limit: 100 }),
+      socialProgramExpenseService.getSocialProgramExpenses(toValue(slug), toValue(expenseParams)),
     enabled: computed(() => toValue(type) === 'social'),
   })
 
@@ -64,9 +65,9 @@ export const useReportDetail = (
   })
 
   const fosterExpenseQuery = useQuery({
-    queryKey: ['fosterExpenses', slug],
+    queryKey: ['fosterExpenses', slug, expenseParams],
     queryFn: () =>
-      fosterChildrenExpenseService.getFosterChildrenExpenses(toValue(slug), { limit: 100 }),
+      fosterChildrenExpenseService.getFosterChildrenExpenses(toValue(slug), toValue(expenseParams)),
     enabled: computed(() => toValue(type) === 'foster'),
   })
 
@@ -145,13 +146,31 @@ export const useReportDetail = (
 
   const isLoading = computed(() => {
     const currentType = toValue(type)
-    if (currentType === 'donation')
-      return donationDetailQuery.isPending.value || donationExpenseQuery.isPending.value
-    if (currentType === 'social')
-      return socialDetailQuery.isPending.value || socialExpenseQuery.isPending.value
-    if (currentType === 'foster')
-      return fosterDetailQuery.isPending.value || fosterExpenseQuery.isPending.value
+    if (currentType === 'donation') return donationDetailQuery.isPending.value
+    if (currentType === 'social') return socialDetailQuery.isPending.value
+    if (currentType === 'foster') return fosterDetailQuery.isPending.value
     return false
+  })
+
+  const expensePagination = computed(() => {
+    const currentType = toValue(type)
+    if (currentType === 'donation') return donationExpenseQuery.data.value?.data?.pagination
+    if (currentType === 'social') return socialExpenseQuery.data.value?.data?.pagination
+    return fosterExpenseQuery.data.value?.data?.pagination
+  })
+
+  const isExpenseFetching = computed(() => {
+    const currentType = toValue(type)
+    if (currentType === 'donation') return donationExpenseQuery.isFetching.value
+    if (currentType === 'social') return socialExpenseQuery.isFetching.value
+    return fosterExpenseQuery.isFetching.value
+  })
+
+  const expenseData = computed(() => {
+    const currentType = toValue(type)
+    if (currentType === 'donation') return donationExpenseQuery.data.value?.data?.expenses || []
+    if (currentType === 'social') return socialExpenseQuery.data.value?.data?.expenses || []
+    return fosterExpenseQuery.data.value?.data?.expenses || []
   })
 
   const exportExpenses = async (params: { startDate: string; endDate: string }): Promise<Blob> => {
@@ -170,5 +189,12 @@ export const useReportDetail = (
     throw new Error('Unsupported report type')
   }
 
-  return { detail, isLoading, exportExpenses }
+  return {
+    detail,
+    isLoading,
+    exportExpenses,
+    expensePagination,
+    isExpenseFetching,
+    expenseData,
+  }
 }

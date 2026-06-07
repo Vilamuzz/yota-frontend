@@ -1,4 +1,4 @@
-import type { Pagination, Response } from './response'
+import type { Pagination, PaginationParams, Response } from './response'
 
 export interface FosterChildrenExpense {
   id: string
@@ -14,6 +14,10 @@ export interface FosterChildrenExpense {
 export interface FosterChildrenExpenseList {
   expenses: FosterChildrenExpense[]
   pagination: Pagination
+}
+
+export interface FosterChildrenExpenseQueryParams extends PaginationParams {
+  sortBy?: string
 }
 
 export interface CreateFosterChildrenExpenseRequest {

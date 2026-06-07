@@ -1,12 +1,12 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fosterChildrenExpenseService } from '@/services/fosterChildrenExpense.service'
-import type { FosterChildrenExpenseListResponse } from '@/types/fosterChildrenExpense'
-import type { ApiError, PaginationParams } from '@/types/response'
+import type { FosterChildrenExpenseListResponse, FosterChildrenExpenseQueryParams } from '@/types/fosterChildrenExpense'
+import type { ApiError } from '@/types/response'
 
 export const useFosterChildrenExpenseList = (
   id: MaybeRefOrGetter<string>,
-  params: MaybeRefOrGetter<PaginationParams>,
+  params: MaybeRefOrGetter<FosterChildrenExpenseQueryParams>,
 ) => {
   const listQuery = useQuery<FosterChildrenExpenseListResponse, ApiError>({
     queryKey: ['adminFosterChildrenExpenses', id, params],

@@ -3,10 +3,10 @@ import type {
   DonationProgramExpenseListResponse,
   DonationProgramExpenseResponse,
   DonationProgramExpenseExportRequest,
+  DonationProgramExpenseQueryParams,
 } from '@/types/donationProgramExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
-import type { PaginationParams } from '@/types/response'
 
 export const donationProgramExpenseService = {
   createDonationProgramExpense: async (id: string, data: CreateDonationProgramExpenseRequest) => {
@@ -18,7 +18,7 @@ export const donationProgramExpenseService = {
 
   getAdminDonationProgramExpenses: async (
     id: string,
-    params: PaginationParams,
+    params: DonationProgramExpenseQueryParams,
   ): Promise<DonationProgramExpenseListResponse> => {
     const response = await api.get<DonationProgramExpenseListResponse>(
       `${API.DONATION_PROGRAMS_ADMIN}/${id}/expenses`,
@@ -45,7 +45,7 @@ export const donationProgramExpenseService = {
 
   getDonationProgramExpenses: async (
     slug: string,
-    params: PaginationParams,
+    params: DonationProgramExpenseQueryParams,
   ): Promise<DonationProgramExpenseListResponse> => {
     const response = await api.get<DonationProgramExpenseListResponse>(
       `${API.DONATION_PROGRAMS}/${slug}/expenses`,

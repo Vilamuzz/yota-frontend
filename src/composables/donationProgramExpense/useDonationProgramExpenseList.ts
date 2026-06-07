@@ -1,12 +1,12 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { donationProgramExpenseService } from '@/services/donationProgramExpense.service'
-import type { DonationProgramExpenseListResponse } from '@/types/donationProgramExpense'
-import type { ApiError, PaginationParams } from '@/types/response'
+import type { DonationProgramExpenseListResponse, DonationProgramExpenseQueryParams } from '@/types/donationProgramExpense'
+import type { ApiError } from '@/types/response'
 
 export const useDonationProgramExpenseList = (
   slug: MaybeRefOrGetter<string>,
-  params: MaybeRefOrGetter<PaginationParams>,
+  params: MaybeRefOrGetter<DonationProgramExpenseQueryParams>,
 ) => {
   const listQuery = useQuery<DonationProgramExpenseListResponse, ApiError>({
     queryKey: ['adminDonationProgramExpenses', slug, params],

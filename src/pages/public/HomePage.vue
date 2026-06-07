@@ -103,7 +103,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
             <div v-if="slide.buttonText">
               <RouterLink
                 :to="slide.buttonLink"
-                class="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-bold text-sm md:text-base px-6 py-3 md:px-8 md:py-4 rounded-full shadow-lg hover:shadow-primary-200 transition-all duration-300"
+                class="inline-flex items-center gap-2 bg-primary-500 text-white font-bold text-sm md:text-base px-6 py-3 md:px-8 md:py-4 rounded-full shadow-lg transition-all duration-300"
               >
                 {{ slide.buttonText }}
               </RouterLink>
@@ -163,10 +163,10 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
     <section class="w-full py-16">
       <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">
-          Donasi Berjalan
+          Program Donasi Berjalan
         </h2>
         <p class="text-gray-600 leading-relaxed mb-6">
-          Donasi yang sedang berlangsung pada Yayasan Orang Tua Asuh.
+          Program Donasi yang sedang berlangsung pada Yayasan Orang Tua Asuh.
         </p>
         <!-- Loading Skeletons -->
         <div v-if="isDonationLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6">

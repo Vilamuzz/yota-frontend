@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import { formatCurrency, formatDate } from '@/utils/format'
@@ -9,10 +9,10 @@ import {
   Calendar,
   X,
   Receipt,
-  TrendingDown,
   Heart,
   Users,
   Baby,
+  Loader2,
 } from 'lucide-vue-next'
 import { useReportDetail } from '@/composables/report/useReportDetail'
 import { useToast } from '@/composables/ui/useToast'
@@ -27,10 +27,167 @@ const showExportModal = ref(false)
 const exportDateFrom = ref('')
 const exportDateTo = ref('')
 const isExporting = ref(false)
+const exportFilterType = ref<'this_month' | 'last_month' | 'custom'>('custom')
+
+const setExportFilter = (type: 'this_month' | 'last_month' | 'custom') => {
+  exportFilterType.value = type
+  const now = new Date()
+  if (type === 'this_month') {
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    exportDateFrom.value = `${year}-${month}-01`
+
+    const lastDayVal = new Date(year, now.getMonth() + 1, 0).getDate()
+    exportDateTo.value = `${year}-${month}-${String(lastDayVal).padStart(2, '0')}`
+  } else if (type === 'last_month') {
+    const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    const monthVal = now.getMonth() === 0 ? 12 : now.getMonth()
+    const month = String(monthVal).padStart(2, '0')
+    exportDateFrom.value = `${year}-${month}-01`
+
+    const lastDayVal = new Date(year, monthVal, 0).getDate()
+    exportDateTo.value = `${year}-${month}-${String(lastDayVal).padStart(2, '0')}`
+  } else if (type === 'custom') {
+    exportDateFrom.value = ''
+    exportDateTo.value = ''
+  }
+}
+
+watch(showExportModal, (val) => {
+  if (val) {
+    exportFilterType.value = 'custom'
+    exportDateFrom.value = ''
+    exportDateTo.value = ''
+  }
+})
 
 const { showToast } = useToast()
 
-const { detail, isLoading, exportExpenses } = useReportDetail(type, slug)
+const nextCursor = ref<string | undefined>(undefined)
+const filterType = ref<'all' | 'this_month' | 'last_month' | 'custom'>('all')
+const filterStartDate = ref<string>('')
+const filterEndDate = ref<string>('')
+
+const expenseParams = computed(() => {
+  const params: any = {
+    limit: 10,
+    nextCursor: nextCursor.value,
+  }
+  if (filterStartDate.value) {
+    params.startDate = filterStartDate.value
+  }
+  if (filterEndDate.value) {
+    params.endDate = filterEndDate.value
+  }
+  return params
+})
+
+const setFilter = (type: 'all' | 'this_month' | 'last_month' | 'custom') => {
+  if (filterType.value === type && type !== 'custom') {
+    filterType.value = 'all'
+    filterStartDate.value = ''
+    filterEndDate.value = ''
+    return
+  }
+
+  filterType.value = type
+
+  const now = new Date()
+  if (type === 'all') {
+    filterStartDate.value = ''
+    filterEndDate.value = ''
+  } else if (type === 'this_month') {
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    filterStartDate.value = `${year}-${month}-01`
+
+    const lastDayVal = new Date(year, now.getMonth() + 1, 0).getDate()
+    filterEndDate.value = `${year}-${month}-${String(lastDayVal).padStart(2, '0')}`
+  } else if (type === 'last_month') {
+    const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    const monthVal = now.getMonth() === 0 ? 12 : now.getMonth()
+    const month = String(monthVal).padStart(2, '0')
+    filterStartDate.value = `${year}-${month}-01`
+
+    const lastDayVal = new Date(year, monthVal, 0).getDate()
+    filterEndDate.value = `${year}-${month}-${String(lastDayVal).padStart(2, '0')}`
+  }
+}
+
+watch(
+  () => [filterStartDate.value, filterEndDate.value],
+  () => {
+    nextCursor.value = undefined
+    accumulatedExpenses.value = []
+  },
+)
+
+const { detail, isLoading, exportExpenses, expensePagination, isExpenseFetching, expenseData } =
+  useReportDetail(type, slug, expenseParams)
+
+const accumulatedExpenses = ref<any[]>([])
+
+watch(
+  expenseData,
+  (newExpenses) => {
+    if (newExpenses) {
+      if (!nextCursor.value) {
+        accumulatedExpenses.value = [...newExpenses]
+      } else {
+        const existingIds = new Set(accumulatedExpenses.value.map((e) => e.id))
+        const newItems = newExpenses.filter((e) => !existingIds.has(e.id))
+        accumulatedExpenses.value.push(...newItems)
+      }
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => [type, slug],
+  () => {
+    nextCursor.value = undefined
+    accumulatedExpenses.value = []
+    filterType.value = 'all'
+    filterStartDate.value = ''
+    filterEndDate.value = ''
+  },
+)
+
+const hasNextPage = computed(() => !!expensePagination.value?.nextCursor)
+
+const loadNextPage = () => {
+  if (isExpenseFetching.value || !hasNextPage.value) return
+  nextCursor.value = expensePagination.value?.nextCursor
+}
+
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+watch(loadMoreTrigger, (el) => {
+  if (observer) {
+    observer.disconnect()
+  }
+  if (el) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadNextPage()
+        }
+      },
+      {
+        rootMargin: '100px',
+      },
+    )
+    observer.observe(el)
+  }
+})
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+  }
+})
 
 const handleExport = async () => {
   if (!exportDateFrom.value || !exportDateTo.value) return
@@ -87,9 +244,9 @@ const typeIcon = computed(() => {
 })
 
 const totalByMonth = computed(() => {
-  if (!detail.value?.expenses) return []
+  if (!accumulatedExpenses.value) return []
   const map: Record<string, number> = {}
-  for (const exp of detail.value.expenses) {
+  for (const exp of accumulatedExpenses.value) {
     const month = exp.expenseDate.slice(0, 7)
     map[month] = (map[month] ?? 0) + exp.amount
   }
@@ -200,39 +357,94 @@ const totalByMonth = computed(() => {
             </div>
           </div>
 
-          <!-- Monthly Summary -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-            <h2
-              class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2"
-            >
-              <TrendingDown :size="14" class="text-gray-400" />
-              Ringkasan per Bulan
-            </h2>
-            <div class="flex gap-3 flex-wrap">
-              <div
-                v-for="item in totalByMonth"
-                :key="item.month"
-                :class="[accentClasses.bg, accentClasses.border, 'rounded-xl px-4 py-3 border']"
-              >
-                <p class="text-xs text-gray-400 mb-0.5">{{ item.month }}</p>
-                <p :class="['text-base font-bold', accentClasses.textDark]">
-                  {{ formatCurrency(item.total) }}
-                </p>
-              </div>
-            </div>
-          </div>
-
           <!-- Expense List -->
           <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h2
-              class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2"
-            >
-              <Receipt :size="14" class="text-gray-400" />
-              Rincian Pengeluaran ({{ detail.expenses.length }} item)
-            </h2>
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2
+                  class="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2"
+                >
+                  <Receipt :size="14" class="text-gray-400" />
+                  Rincian Pengeluaran ({{ accumulatedExpenses.length }} item)
+                </h2>
+
+                <!-- Filter Buttons -->
+                <div class="flex flex-wrap gap-2 text-xs font-semibold">
+                  <button
+                    @click="setFilter('this_month')"
+                    :class="[
+                      filterType === 'this_month'
+                        ? `${accentClasses.bg} ${accentClasses.textDark} border-current`
+                        : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100',
+                      'px-3 py-1.5 rounded-lg border transition font-medium',
+                    ]"
+                  >
+                    Bulan Ini
+                  </button>
+                  <button
+                    @click="setFilter('last_month')"
+                    :class="[
+                      filterType === 'last_month'
+                        ? `${accentClasses.bg} ${accentClasses.textDark} border-current`
+                        : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100',
+                      'px-3 py-1.5 rounded-lg border transition font-medium',
+                    ]"
+                  >
+                    Bulan Lalu
+                  </button>
+                  <button
+                    @click="setFilter('custom')"
+                    :class="[
+                      filterType === 'custom'
+                        ? `${accentClasses.bg} ${accentClasses.textDark} border-current`
+                        : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100',
+                      'px-3 py-1.5 rounded-lg border transition font-medium',
+                    ]"
+                  >
+                    Pilih Tanggal
+                  </button>
+                  <button
+                    v-if="filterType !== 'all'"
+                    @click="setFilter('all')"
+                    class="px-2 py-1.5 text-gray-400 hover:text-gray-600 transition flex items-center gap-1"
+                  >
+                    <X :size="12" />
+                    Reset
+                  </button>
+                </div>
+              </div>
+
+              <!-- Custom Date Inputs -->
+              <div
+                v-if="filterType === 'custom'"
+                class="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    >Mulai:</span
+                  >
+                  <input
+                    v-model="filterStartDate"
+                    type="date"
+                    class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary-400"
+                  />
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    >Sampai:</span
+                  >
+                  <input
+                    v-model="filterEndDate"
+                    type="date"
+                    :min="filterStartDate"
+                    class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary-400"
+                  />
+                </div>
+              </div>
+            </div>
             <div class="space-y-3">
               <div
-                v-for="(exp, idx) in detail.expenses"
+                v-for="(exp, idx) in accumulatedExpenses"
                 :key="exp.id"
                 class="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50/70 transition"
               >
@@ -265,6 +477,11 @@ const totalByMonth = computed(() => {
               <p :class="['text-lg font-black', accentClasses.text]">
                 {{ formatCurrency(detail.totalExpense) }}
               </p>
+            </div>
+
+            <!-- Scroll Loading Trigger -->
+            <div ref="loadMoreTrigger" class="h-10 flex items-center justify-center mt-6">
+              <Loader2 v-if="isExpenseFetching" class="animate-spin text-primary-500" />
             </div>
           </div>
         </template>
@@ -312,6 +529,46 @@ const totalByMonth = computed(() => {
               </button>
             </div>
 
+            <!-- Filter Type Buttons for Export -->
+            <div class="flex gap-2 text-xs font-semibold mb-4">
+              <button
+                type="button"
+                @click="setExportFilter('this_month')"
+                :class="[
+                  exportFilterType === 'this_month'
+                    ? `${accentClasses.bg} ${accentClasses.textDark} border-current`
+                    : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100',
+                  'px-3 py-1.5 rounded-lg border transition font-medium flex-1 text-center',
+                ]"
+              >
+                Bulan Ini
+              </button>
+              <button
+                type="button"
+                @click="setExportFilter('last_month')"
+                :class="[
+                  exportFilterType === 'last_month'
+                    ? `${accentClasses.bg} ${accentClasses.textDark} border-current`
+                    : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100',
+                  'px-3 py-1.5 rounded-lg border transition font-medium flex-1 text-center',
+                ]"
+              >
+                Bulan Lalu
+              </button>
+              <button
+                type="button"
+                @click="setExportFilter('custom')"
+                :class="[
+                  exportFilterType === 'custom'
+                    ? `${accentClasses.bg} ${accentClasses.textDark} border-current`
+                    : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100',
+                  'px-3 py-1.5 rounded-lg border transition font-medium flex-1 text-center',
+                ]"
+              >
+                Pilih Tanggal
+              </button>
+            </div>
+
             <div class="grid grid-cols-2 gap-3 mb-5">
               <div>
                 <label
@@ -326,6 +583,7 @@ const totalByMonth = computed(() => {
                   <input
                     v-model="exportDateFrom"
                     type="date"
+                    @input="exportFilterType = 'custom'"
                     class="w-full pl-8 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent"
                   />
                 </div>
@@ -344,6 +602,7 @@ const totalByMonth = computed(() => {
                     v-model="exportDateTo"
                     type="date"
                     :min="exportDateFrom"
+                    @input="exportFilterType = 'custom'"
                     class="w-full pl-8 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent"
                   />
                 </div>

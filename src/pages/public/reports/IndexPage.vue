@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import { formatCurrency, formatStatus } from '@/utils/format'
-import { Heart, Users, Baby, ChevronRight, Search } from 'lucide-vue-next'
+import { Heart, Users, Baby, ChevronRight, Search, Loader2 } from 'lucide-vue-next'
 import { useFinanceRecordSummary } from '@/composables/financeRecord/useFinanceRecordSummary'
 import { useDonationProgramList } from '@/composables/donationProgram/useDonationProgramList'
 import { usePublishedSocialProgramList } from '@/composables/socialProgram/usePublishedSocialProgramList'
@@ -18,9 +18,91 @@ const goToDetail = (type: 'donation' | 'social' | 'foster', slug: string) => {
   router.push({ name: 'report-detail', params: { type, slug } })
 }
 
-const { donationPrograms } = useDonationProgramList({ limit: 100 })
-const { socialPrograms } = usePublishedSocialProgramList({ limit: 100 })
-const { fosterChildren } = useFosterChildrenList({ limit: 100 })
+const hasLoadedDonation = ref(false)
+const hasLoadedSocial = ref(false)
+const hasLoadedFoster = ref(false)
+
+watch(
+  activeTab,
+  (newVal) => {
+    if (newVal === 'donation') hasLoadedDonation.value = true
+    if (newVal === 'social') hasLoadedSocial.value = true
+    if (newVal === 'foster') hasLoadedFoster.value = true
+  },
+  { immediate: true },
+)
+
+const donationPage = ref(1)
+const socialPage = ref(1)
+const fosterPage = ref(1)
+
+const accumulatedDonation = ref<any[]>([])
+const accumulatedSocial = ref<any[]>([])
+const accumulatedFoster = ref<any[]>([])
+
+const debouncedSearchQuery = ref('')
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+watch(searchQuery, (newVal) => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    debouncedSearchQuery.value = newVal
+  }, 500)
+})
+
+watch(debouncedSearchQuery, () => {
+  donationPage.value = 1
+  socialPage.value = 1
+  fosterPage.value = 1
+  
+  accumulatedDonation.value = []
+  accumulatedSocial.value = []
+  accumulatedFoster.value = []
+})
+
+const donationParams = computed(() => ({ limit: 10, page: donationPage.value, search: debouncedSearchQuery.value }))
+const socialParams = computed(() => ({ limit: 10, page: socialPage.value, search: debouncedSearchQuery.value }))
+const fosterParams = computed(() => ({ limit: 10, page: fosterPage.value, search: debouncedSearchQuery.value }))
+
+const { listQuery: donationQuery } = useDonationProgramList(donationParams, { enabled: hasLoadedDonation })
+const { listQuery: socialQuery } = usePublishedSocialProgramList(socialParams, { enabled: hasLoadedSocial })
+const { listQuery: fosterQuery } = useFosterChildrenList(fosterParams, false, { enabled: hasLoadedFoster })
+
+watch(() => donationQuery.data.value, (newData) => {
+  if (newData?.data?.donationPrograms) {
+    if (donationPage.value === 1) {
+      accumulatedDonation.value = [...newData.data.donationPrograms]
+    } else {
+      const existingIds = new Set(accumulatedDonation.value.map((i: any) => i.id))
+      const newItems = newData.data.donationPrograms.filter((i: any) => !existingIds.has(i.id))
+      accumulatedDonation.value.push(...newItems)
+    }
+  }
+}, { immediate: true })
+
+watch(() => socialQuery.data.value, (newData) => {
+  if (newData?.data?.socialPrograms) {
+    if (socialPage.value === 1) {
+      accumulatedSocial.value = [...newData.data.socialPrograms]
+    } else {
+      const existingIds = new Set(accumulatedSocial.value.map((i: any) => i.id))
+      const newItems = newData.data.socialPrograms.filter((i: any) => !existingIds.has(i.id))
+      accumulatedSocial.value.push(...newItems)
+    }
+  }
+}, { immediate: true })
+
+watch(() => fosterQuery.data.value, (newData) => {
+  if (newData?.data?.fosterChildren) {
+    if (fosterPage.value === 1) {
+      accumulatedFoster.value = [...newData.data.fosterChildren]
+    } else {
+      const existingIds = new Set(accumulatedFoster.value.map((i: any) => i.id))
+      const newItems = newData.data.fosterChildren.filter((i: any) => !existingIds.has(i.id))
+      accumulatedFoster.value.push(...newItems)
+    }
+  }
+}, { immediate: true })
 
 const { summaryQuery } = useFinanceRecordSummary()
 const summary = computed(() => summaryQuery.data.value?.data)
@@ -36,21 +118,69 @@ const totalDonationProgramsCount = computed(() => summary.value?.totalDonationPr
 const totalSocialProgramsCount = computed(() => summary.value?.totalSocialProgram || 0)
 const totalFosterChildrenCount = computed(() => summary.value?.totalFosterChildren || 0)
 
-const filteredDonation = computed(() =>
-  donationPrograms.value.filter((p) =>
-    p.title?.toLowerCase().includes(searchQuery.value.toLowerCase()),
-  ),
-)
-const filteredSocial = computed(() =>
-  socialPrograms.value.filter((p) =>
-    p.title?.toLowerCase().includes(searchQuery.value.toLowerCase()),
-  ),
-)
-const filteredFoster = computed(() =>
-  fosterChildren.value.filter((p) =>
-    p.name?.toLowerCase().includes(searchQuery.value.toLowerCase()),
-  ),
-)
+const filteredDonation = computed(() => accumulatedDonation.value)
+const filteredSocial = computed(() => accumulatedSocial.value)
+const filteredFoster = computed(() => accumulatedFoster.value)
+
+const isAnyFetching = computed(() => {
+  if (activeTab.value === 'donation') return donationQuery.isFetching.value
+  if (activeTab.value === 'social') return socialQuery.isFetching.value
+  if (activeTab.value === 'foster') return fosterQuery.isFetching.value
+  return false
+})
+
+const hasNextPage = computed(() => {
+  if (activeTab.value === 'donation') {
+    const pag = donationQuery.data.value?.data?.pagination
+    return pag ? pag.page < pag.totalPages : false
+  }
+  if (activeTab.value === 'social') {
+    const pag = socialQuery.data.value?.data?.pagination
+    return pag ? pag.page < pag.totalPages : false
+  }
+  if (activeTab.value === 'foster') {
+    const pag = fosterQuery.data.value?.data?.pagination
+    return pag ? pag.page < pag.totalPages : false
+  }
+  return false
+})
+
+const loadNextPage = () => {
+  if (isAnyFetching.value) return
+
+  if (activeTab.value === 'donation' && hasNextPage.value) {
+    donationPage.value++
+  } else if (activeTab.value === 'social' && hasNextPage.value) {
+    socialPage.value++
+  } else if (activeTab.value === 'foster' && hasNextPage.value) {
+    fosterPage.value++
+  }
+}
+
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+watch(loadMoreTrigger, (el) => {
+  if (observer) {
+    observer.disconnect()
+  }
+  if (el) {
+    observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        loadNextPage()
+      }
+    }, {
+      rootMargin: '100px',
+    })
+    observer.observe(el)
+  }
+})
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+  }
+})
 </script>
 
 <template>
@@ -280,6 +410,15 @@ const filteredFoster = computed(() =>
             <p>Tidak ada anak asuh yang cocok.</p>
           </div>
         </template>
+
+        <!-- Infinite Scroll Trigger -->
+        <div
+          v-if="hasNextPage"
+          ref="loadMoreTrigger"
+          class="h-20 w-full flex items-center justify-center mt-6"
+        >
+          <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
+        </div>
       </div>
     </div>
   </PublicLayout>
