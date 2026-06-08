@@ -35,6 +35,16 @@ export const publicRoutes: RouteRecordRaw[] = [
         name: 'donation-program-form',
         component: () => import('@/pages/public/donationPrograms/FormPage.vue'),
       },
+      {
+        path: ':slug/prayers',
+        name: 'donation-program-prayers',
+        component: () => import('@/pages/public/donationPrograms/PrayersPage.vue'),
+      },
+      {
+        path: ':slug/donations',
+        name: 'donation-program-donations',
+        component: () => import('@/pages/public/donationPrograms/DonationsPage.vue'),
+      },
     ],
   },
   {

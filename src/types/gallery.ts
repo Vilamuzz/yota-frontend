@@ -17,12 +17,21 @@ export interface Gallery {
 
 export interface GalleryList {
   galleries: Gallery[]
-  pagination: Pagination
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
-export interface GalleryQueryParams extends PaginationParams {
+export interface GalleryQueryParams {
+  limit?: number
+  page?: number
+  search?: string
   category?: MediaCategory
   status?: MediaStatus
+  sortBy?: string
 }
 
 export interface CreateGalleryRequest {

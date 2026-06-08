@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Trash2, CheckCircle, Eye, MessageSquare, X } from 'lucide-vue-next'
 import BaseTable from '@/components/organisms/BaseTable.vue'
+import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { useAdminNewsCommentList } from '@/composables/newsComment/useAdminNewsCommentList'
 import { useNewsCommentDelete } from '@/composables/newsComment/useNewsCommentDelete'
@@ -10,37 +11,33 @@ import { useNewsCommentAllow } from '@/composables/newsComment/useNewsCommentAll
 import type { NewsComment } from '@/types/news'
 import { formatDate } from '@/utils/format'
 import { useToast } from '@/composables/ui/useToast'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const { showToast } = useToast()
 
-const commentCursors = reactive({
-  nextCursor: undefined as string | undefined,
-  prevCursor: undefined as string | undefined,
+const queryParams = reactive({
+  page: 1,
+  limit: 10,
+  sortBy: 'reportCount',
 })
-const commentPageOffset = ref(0)
-const commentLimit = ref(10)
-const commentLimitOptions = [10, 25, 50]
+const limitOptions = [10, 25, 50]
 
 const {
   newsComments,
   pagination: commentPagination,
   isLoading: commentsLoading,
-} = useAdminNewsCommentList()
+} = useAdminNewsCommentList(queryParams)
 
-function handleCommentNext() {
-  if (commentPagination.value?.nextCursor) {
-    commentCursors.nextCursor = commentPagination.value.nextCursor
-    commentCursors.prevCursor = undefined
-    commentPageOffset.value += 1
-  }
-}
-function handleCommentPrev() {
-  if (commentPagination.value?.prevCursor) {
-    commentCursors.prevCursor = commentPagination.value.prevCursor
-    commentCursors.nextCursor = undefined
-    commentPageOffset.value -= 1
-  }
-}
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
+  queryParams,
+  commentPagination,
+)
+
+watch(
+  () => [queryParams.limit, queryParams.sortBy],
+  () => resetPagination(),
+)
 
 const { deleteMutation } = useNewsCommentDelete()
 const confirmDeleteShow = ref(false)
@@ -90,6 +87,47 @@ function truncate(text: string, max = 80) {
     <template #title>Moderasi Komentar</template>
 
     <div class="space-y-6">
+      <!-- Filters Section -->
+      <div class="flex justify-end">
+        <BaseFilter :has-active-filters="queryParams.sortBy !== 'reportCount'">
+          <template #default="{ closeDropdown }">
+            <div class="space-y-4 w-64">
+              <!-- Sort filter -->
+              <div>
+                <label
+                  class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                >
+                  Urutkan
+                </label>
+                <select
+                  v-model="queryParams.sortBy"
+                  class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="reportCount">Jumlah Laporan (Tertinggi)</option>
+                  <option value="createdAt desc">Terbaru</option>
+                  <option value="createdAt asc">Terlama</option>
+                </select>
+              </div>
+
+              <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <button
+                  @click="queryParams.sortBy = 'reportCount'"
+                  class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                >
+                  RESET
+                </button>
+                <button
+                  @click="closeDropdown"
+                  class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
+                >
+                  APPLY
+                </button>
+              </div>
+            </div>
+          </template>
+        </BaseFilter>
+      </div>
+
       <!-- Comments table -->
       <div class="overflow-hidden">
         <BaseTable
@@ -97,12 +135,14 @@ function truncate(text: string, max = 80) {
           loading-message="Memuat komentar..."
           :is-empty="!commentsLoading && newsComments.length === 0"
           empty-message="Tidak ada komentar yang ditemukan."
-          :has-prev="!!commentPagination?.prevCursor"
-          :has-next="!!commentPagination?.nextCursor"
-          v-model:limit="commentLimit"
-          :limit-options="commentLimitOptions"
-          @prev="handleCommentPrev"
-          @next="handleCommentNext"
+          :has-prev="(queryParams.page ?? 1) > 1"
+          :has-next="
+            commentPagination ? (queryParams.page ?? 1) < commentPagination.totalPages : false
+          "
+          v-model:limit="queryParams.limit"
+          :limit-options="limitOptions"
+          @prev="handlePrevPage"
+          @next="handleNextPage"
         >
           <template #empty-icon>
             <MessageSquare :size="56" class="mb-2 text-gray-300" />
@@ -133,7 +173,7 @@ function truncate(text: string, max = 80) {
             >
               <!-- No -->
               <td class="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">
-                {{ commentPageOffset * commentLimit + index + 1 }}
+                {{ pageOffset * queryParams.limit + index + 1 }}
               </td>
 
               <!-- Username -->
@@ -168,29 +208,29 @@ function truncate(text: string, max = 80) {
               <!-- Actions -->
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-1">
-                  <button
+                  <BaseIconButton
                     @click="openDetailModal(comment)"
-                    class="rounded p-1.5 text-blue-500 transition-colors duration-150 hover:bg-blue-50 dark:hover:bg-blue-950/40"
                     title="Lihat detail"
+                    variant="info"
                   >
                     <Eye :size="16" />
-                  </button>
-                  <button
+                  </BaseIconButton>
+                  <BaseIconButton
                     @click="allowComment(comment)"
                     :disabled="allowMutation.isPending.value"
-                    class="rounded p-1.5 text-emerald-500 transition-colors duration-150 hover:bg-emerald-50 disabled:opacity-50 dark:hover:bg-emerald-950/40"
                     title="Tandai aman"
+                    variant="success"
                   >
                     <CheckCircle :size="16" />
-                  </button>
-                  <button
+                  </BaseIconButton>
+                  <BaseIconButton
                     @click="openDeleteConfirm(comment)"
                     :disabled="deleteMutation.isPending.value"
-                    class="rounded p-1.5 text-red-500 transition-colors duration-150 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-950/40"
                     title="Hapus komentar"
+                    variant="danger"
                   >
                     <Trash2 :size="16" />
-                  </button>
+                  </BaseIconButton>
                 </div>
               </td>
             </tr>
@@ -316,12 +356,6 @@ function truncate(text: string, max = 80) {
             <div
               class="mt-6 flex flex-wrap gap-3 border-t border-gray-100 dark:border-gray-700 pt-5"
             >
-              <button
-                @click="detailShow = false"
-                class="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
-              >
-                Tutup
-              </button>
               <button
                 @click="(openDeleteConfirm(detailComment), (detailShow = false))"
                 :disabled="deleteMutation.isPending.value"

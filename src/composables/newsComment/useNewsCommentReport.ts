@@ -9,10 +9,10 @@ export const useNewsCommentReport = () => {
   const createMutation = useMutation<
     NewsCommentResponse,
     ApiError,
-    { newsCommentID: string; reason: string }
+    { newsCommentID: string }
   >({
     mutationFn: (report) =>
-      newsCommentService.reportNewsComment(report.newsCommentID, report.reason),
+      newsCommentService.reportNewsComment(report.newsCommentID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newsComments'] })
     },

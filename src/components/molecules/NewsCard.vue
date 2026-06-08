@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { News } from '@/types/news'
 import { formatDate } from '@/utils/format'
-import { Calendar, ArrowRight, User } from 'lucide-vue-next'
+import { Calendar, ArrowRight, Eye } from 'lucide-vue-next'
 
 defineProps<{
   news: News
@@ -58,8 +58,8 @@ function stripHtml(html: string) {
           <span>{{ formatDate(news.publishedAt || news.createdAt) }}</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <User :size="14" />
-          <span>Admin</span>
+          <Eye :size="14" />
+          <span>{{ news.views }}</span>
         </div>
       </div>
 

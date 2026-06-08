@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { usePublishedGalleryDetail } from '@/composables/gallery/useGalleryDetail'
+import { usePublishedGalleryList } from '@/composables/gallery/useGalleryList'
+import GalleryCard from '@/components/molecules/GalleryCard.vue'
+import type { GalleryQueryParams } from '@/types/gallery'
 import { formatDate } from '@/utils/format'
-import { ArrowLeft, Calendar, Image as ImageIcon, Share2 } from 'lucide-vue-next'
+import { ArrowLeft, Calendar, Image as ImageIcon, Share2, Loader2 } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,15 +29,41 @@ const handleShare = () => {
     navigator.clipboard.writeText(window.location.href)
   }
 }
+
+// --- Related Galleries ---
+const relatedGalleryParams = reactive<GalleryQueryParams>({
+  limit: 4, // Fetch 4 so we can filter out the current one and have 3 left
+  page: 1,
+  sortBy: 'views desc',
+  category: undefined,
+})
+
+const { galleries: relatedGalleryData, listQuery: relatedQuery } =
+  usePublishedGalleryList(relatedGalleryParams)
+
+watch(
+  gallery,
+  (newGallery) => {
+    if (newGallery?.category) {
+      relatedGalleryParams.category = newGallery.category as any
+    }
+  },
+  { immediate: true },
+)
+
+const filteredRelatedGalleries = computed(() => {
+  if (!relatedGalleryData.value) return []
+  return relatedGalleryData.value.filter((g) => g.id !== gallery.value?.id).slice(0, 3)
+})
 </script>
 
 <template>
   <PublicLayout>
-    <div class="max-w-6xl mx-auto px-6 py-12">
+    <div class="max-w-6xl mx-auto px-6 pt-28 pb-12">
       <!-- Back Button -->
       <button
         @click="router.back()"
-        class="flex items-center gap-2 text-gray-500 hover:text-primary-600 transition-colors mb-8 group"
+        class="flex items-center gap-2 text-gray-500 hover:text-primary-600 transition-colors mb-4 group"
       >
         <ArrowLeft :size="20" class="transition-transform group-hover:-translate-x-1" />
         <span class="font-medium">Kembali ke Galeri</span>
@@ -133,22 +162,29 @@ const handleShare = () => {
           </div>
         </section>
 
-        <!-- Footer Call to Action -->
-        <footer
-          class="pt-12 border-t border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-8"
-        >
-          <div class="max-w-md">
-            <h3 class="text-lg font-bold text-gray-900 mb-1">Terima Kasih Atas Dukungan Anda</h3>
-            <p class="text-gray-500 text-sm">
-              Momen-momen ini adalah bukti nyata dari kebaikan yang Anda berikan. Bersama kita bisa
-              bantu lebih banyak lagi.
-            </p>
+        <!-- Related Galleries -->
+        <section class="pt-12 border-t border-gray-100">
+          <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-black text-gray-900">Galeri Terkait</h2>
+            <BaseButton variant="outline" :to="{ name: 'gallery' }">Lihat Semua</BaseButton>
           </div>
 
-          <div class="flex flex-wrap gap-4">
-            <BaseButton variant="outline" :to="{ name: 'gallery' }"> Lihat Galeri Lain </BaseButton>
+          <div v-if="relatedQuery.isPending.value" class="flex justify-center py-12">
+            <Loader2 class="w-8 h-8 text-primary-500 animate-spin" />
           </div>
-        </footer>
+
+          <div
+            v-else-if="filteredRelatedGalleries.length > 0"
+            class="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            <GalleryCard v-for="item in filteredRelatedGalleries" :key="item.id" :gallery="item" />
+          </div>
+
+          <div v-else class="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100">
+            <ImageIcon class="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p class="text-gray-500 text-sm">Belum ada galeri terkait.</p>
+          </div>
+        </section>
       </article>
     </div>
   </PublicLayout>

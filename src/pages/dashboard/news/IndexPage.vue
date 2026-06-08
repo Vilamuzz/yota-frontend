@@ -1,21 +1,12 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import {
-  Plus,
-  Trash2,
-  Edit,
-  Newspaper,
-  RotateCcw,
-  Image as ImageIcon,
-  Play,
-  Archive,
-} from 'lucide-vue-next'
+import { Plus, Trash2, Edit, Newspaper, Image as ImageIcon, Play, Archive } from 'lucide-vue-next'
 import { useNewsAdminList } from '@/composables/news/useNewsAdminList'
 import { useNewsUpdate } from '@/composables/news/useNewsUpdate'
-import { useCursorPagination } from '@/composables/ui/usePagination'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import { useToast } from '@/composables/ui/useToast'
-import { formatDate } from '@/utils/format'
+import { formatDate, formatStatus } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
 import { MediaCategory, MediaStatus } from '@/types/media'
 import type { NewsQueryParams } from '@/types/news'
@@ -24,17 +15,18 @@ import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const { showToast } = useToast()
 const { deleteMutation, publishMutation, archiveMutation } = useNewsUpdate()
 
 const queryParams = reactive<NewsQueryParams>({
   limit: 10,
+  page: 1,
   search: undefined,
   category: undefined,
   status: undefined,
-  nextCursor: undefined,
-  prevCursor: undefined,
+  sortBy: undefined,
 })
 
 const limitOptions = [10, 25, 50, 100]
@@ -45,8 +37,10 @@ const categories = Object.values(MediaCategory)
 const statuses = Object.values(MediaStatus)
 
 const { news, pagination, isLoading } = useNewsAdminList(queryParams)
-const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-  useCursorPagination(queryParams)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
+  queryParams,
+  pagination,
+)
 
 const isDeleteModalOpen = ref(false)
 const isPublishModalOpen = ref(false)
@@ -54,7 +48,10 @@ const isArchiveModalOpen = ref(false)
 const selectedNews = ref<any>(null)
 
 const hasActiveFilters = computed(
-  () => queryParams.category !== undefined || queryParams.status !== undefined,
+  () =>
+    queryParams.category !== undefined ||
+    queryParams.status !== undefined ||
+    queryParams.sortBy !== undefined,
 )
 
 watch(searchQuery, (val) => {
@@ -66,7 +63,7 @@ watch(searchQuery, (val) => {
 })
 
 watch(
-  () => [queryParams.category, queryParams.status, queryParams.limit],
+  () => [queryParams.category, queryParams.status, queryParams.sortBy, queryParams.limit],
   () => resetPagination(),
 )
 
@@ -74,6 +71,7 @@ function clearFilters() {
   searchQuery.value = ''
   queryParams.category = undefined
   queryParams.status = undefined
+  queryParams.sortBy = undefined
   resetPagination()
 }
 
@@ -198,8 +196,28 @@ function formatCategory(category: string) {
                   >
                     <option :value="undefined">Semua Status</option>
                     <option v-for="status in statuses" :key="status" :value="status">
-                      {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                      {{ formatStatus(status) }}
                     </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Urutkan
+                  </label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at desc">Terbaru</option>
+                    <option value="created_at asc">Terlama</option>
+                    <option value="views desc">Viewer Terbanyak</option>
+                    <option value="views asc">Viewer Terendah</option>
+                    <option value="title asc">Judul (A-Z)</option>
+                    <option value="title desc">Judul (Z-A)</option>
                   </select>
                 </div>
 
@@ -220,16 +238,6 @@ function formatCategory(category: string) {
               </div>
             </template>
           </BaseFilter>
-          <BaseButton
-            v-if="hasActiveFilters"
-            variant="outline"
-            size="md"
-            @click="clearFilters"
-            class="hidden sm:flex"
-          >
-            <RotateCcw :size="16" class="mr-2" />
-            Reset
-          </BaseButton>
         </div>
       </div>
 
@@ -239,12 +247,12 @@ function formatCategory(category: string) {
         loading-message="Memuat data berita..."
         :is-empty="news.length === 0"
         empty-message="Tidak ada data berita"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
       >
         <template #empty-icon>
           <Newspaper :size="96" class="mx-auto mb-2 text-gray-300" />
@@ -301,45 +309,45 @@ function formatCategory(category: string) {
                   getStatusColor(item.status),
                 ]"
               >
-                {{ item.status.charAt(0).toUpperCase() + item.status.slice(1) }}
+                {{ formatStatus(item.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
               {{ formatDate(item.createdAt) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center justify-center gap-2">
-                <button
+              <div class="flex items-center justify-left gap-2">
+                <BaseIconButton
                   v-if="item.status === MediaStatus.DRAFT || item.status === MediaStatus.ARCHIVED"
-                  class="p-1 hover:bg-green-50 text-green-600 rounded transition-colors duration-150 dark:hover:bg-green-900/20"
                   title="Terbitkan berita"
                   @click="openPublishModal(item)"
+                  variant="success"
                 >
                   <Play :size="18" />
-                </button>
-                <button
+                </BaseIconButton>
+                <BaseIconButton
                   v-if="item.status === MediaStatus.PUBLISHED"
-                  class="p-1 hover:bg-orange-50 text-orange-600 rounded transition-colors duration-150 dark:hover:bg-orange-900/20"
                   title="Arsipkan berita"
                   @click="openArchiveModal(item)"
+                  variant="warning"
                 >
                   <Archive :size="18" />
-                </button>
-                <RouterLink
+                </BaseIconButton>
+                <BaseIconButton
                   :to="{ name: 'dashboard-news-edit', params: { id: item.id } }"
-                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
                   title="Edit berita"
+                  variant="info"
                 >
                   <Edit :size="18" />
-                </RouterLink>
-                <button
+                </BaseIconButton>
+                <BaseIconButton
                   v-if="item.status === MediaStatus.DRAFT"
-                  class="p-1 hover:bg-red-50 text-red-500 rounded transition-colors duration-150 dark:hover:bg-red-900/20"
                   title="Hapus berita"
                   @click="openDeleteModal(item)"
+                  variant="danger"
                 >
                   <Trash2 :size="18" />
-                </button>
+                </BaseIconButton>
               </div>
             </td>
           </tr>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, reactive } from 'vue'
+import { computed, ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import {
@@ -60,27 +60,65 @@ const PERIOD_OPTIONS = [
   { value: 'custom', label: 'Kustom' },
 ] as const
 
-const selectedPeriod = ref<string>('all_time')
-const customStart = ref('')
-const customEnd = ref('')
+const filterType = ref<'all_time' | 'this_week' | 'this_month' | 'this_year' | 'custom'>('all_time')
+const filterStartDate = ref<string>('')
+const filterEndDate = ref<string>('')
 
-// Only send start/end when period === 'custom' AND both dates are filled
-const summaryParams = computed(() => ({
-  period: selectedPeriod.value,
-  ...(selectedPeriod.value === 'custom' && customStart.value && customEnd.value
-    ? { startDate: customStart.value, endDate: customEnd.value }
-    : {}),
-}))
+const setFilter = (type: 'all_time' | 'this_week' | 'this_month' | 'this_year' | 'custom') => {
+  filterType.value = type
+
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  const date = now.getDate()
+
+  const formatD = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+  if (type === 'all_time') {
+    filterStartDate.value = ''
+    filterEndDate.value = ''
+  } else if (type === 'this_week') {
+    const currentDay = now.getDay()
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay
+    const monday = new Date(year, month, date + distanceToMonday)
+    const sunday = new Date(year, month, date + distanceToMonday + 6)
+
+    filterStartDate.value = formatD(monday)
+    filterEndDate.value = formatD(sunday)
+  } else if (type === 'this_month') {
+    filterStartDate.value = formatD(new Date(year, month, 1))
+    filterEndDate.value = formatD(new Date(year, month + 1, 0))
+  } else if (type === 'this_year') {
+    filterStartDate.value = formatD(new Date(year, 0, 1))
+    filterEndDate.value = formatD(new Date(year, 11, 31))
+  } else if (type === 'custom') {
+    filterStartDate.value = ''
+    filterEndDate.value = ''
+  }
+}
+
+// Initialize the default dates
+setFilter(filterType.value)
+
+const summaryParams = computed(() => {
+  const params: Record<string, string> = {}
+
+  if (filterType.value === 'custom') {
+    if (filterStartDate.value && filterEndDate.value) {
+      params.startDate = filterStartDate.value
+      params.endDate = filterEndDate.value
+    }
+    return params
+  }
+
+  if (filterStartDate.value) params.startDate = filterStartDate.value
+  if (filterEndDate.value) params.endDate = filterEndDate.value
+
+  return params
+})
 
 const { summary, isLoading: isSummaryLoading } = useAmbulanceHistorySummary(id, summaryParams)
-
-// reset custom dates when switching away
-watch(selectedPeriod, (val) => {
-  if (val !== 'custom') {
-    customStart.value = ''
-    customEnd.value = ''
-  }
-})
 
 const statusLabel = (status: AmbulanceStatus) => {
   switch (status) {
@@ -358,10 +396,10 @@ const categoryBarClass = (value: string) => {
                 <button
                   v-for="opt in PERIOD_OPTIONS"
                   :key="opt.value"
-                  @click="selectedPeriod = opt.value"
+                  @click="setFilter(opt.value)"
                   class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 whitespace-nowrap"
                   :class="
-                    selectedPeriod === opt.value
+                    filterType === opt.value
                       ? 'bg-primary-500 text-white border-primary-500 shadow-sm'
                       : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
                   "
@@ -373,7 +411,7 @@ const categoryBarClass = (value: string) => {
 
             <!-- Custom date range -->
             <div
-              v-if="selectedPeriod === 'custom'"
+              v-if="filterType === 'custom'"
               class="px-6 sm:px-8 py-4 bg-gray-50/70 border-b border-gray-100 flex flex-wrap items-center gap-3"
             >
               <div class="flex items-center gap-2 text-gray-500">
@@ -383,24 +421,24 @@ const categoryBarClass = (value: string) => {
               <div class="flex items-center gap-2">
                 <input
                   id="summary-start-date"
-                  v-model="customStart"
+                  v-model="filterStartDate"
                   type="date"
                   class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 bg-white text-gray-700"
                 />
                 <span class="text-gray-400 text-xs">s/d</span>
                 <input
                   id="summary-end-date"
-                  v-model="customEnd"
+                  v-model="filterEndDate"
                   type="date"
-                  :min="customStart"
+                  :min="filterStartDate"
                   class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 bg-white text-gray-700"
                 />
               </div>
               <p
-                v-if="selectedPeriod === 'custom' && (!customStart || !customEnd)"
-                class="text-xs text-amber-600"
+                v-if="filterType === 'custom' && (!filterStartDate || !filterEndDate)"
+                class="text-xs text-orange-500 font-medium"
               >
-                Pilih tanggal mulai dan akhir untuk melihat ringkasan.
+                * Pilih rentang tanggal untuk melihat ringkasan
               </p>
             </div>
 
@@ -471,7 +509,7 @@ const categoryBarClass = (value: string) => {
             </div>
           </div>
 
-          <!-- =================== HISTORY LIST =================== -->
+          <!-- History List -->
           <div class="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden">
             <div class="px-6 sm:px-8 py-5 border-b border-gray-100 flex items-center gap-3">
               <div class="p-2 bg-primary-50 rounded-xl text-primary-500">

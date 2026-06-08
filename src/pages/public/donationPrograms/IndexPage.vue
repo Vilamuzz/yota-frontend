@@ -7,7 +7,11 @@ import { useDonationProgramList } from '@/composables/donationProgram/useDonatio
 import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import BasePagination from '@/components/atoms/BasePagination.vue'
 import { Search, Loader2, Check } from 'lucide-vue-next'
-import { type DonationProgramQueryParams, DonationProgramCategoryEnum, DonationProgramStatusEnum } from '@/types/donationProgram'
+import {
+  type DonationProgramQueryParams,
+  DonationProgramCategoryEnum,
+  DonationProgramStatusEnum,
+} from '@/types/donationProgram'
 
 const searchQuery = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
@@ -44,8 +48,6 @@ const searchContainerRef = ref<HTMLElement | null>(null)
 const sortOptions = [
   { label: 'Terbaru', value: 'created_at desc' },
   { label: 'Terlama', value: 'created_at asc' },
-  { label: 'Nama (A-Z)', value: 'title asc' },
-  { label: 'Nama (Z-A)', value: 'title desc' },
   { label: 'Target Dana Tertinggi', value: 'fund_target desc' },
   { label: 'Target Dana Terendah', value: 'fund_target asc' },
   { label: 'Tanggal Mulai (Terbaru)', value: 'start_date desc' },
@@ -147,7 +149,7 @@ onUnmounted(() => {
   <PublicLayout>
     <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-18 font-poppins">
       <div class="max-w-7xl mx-auto">
-        <!-- TITLE -->
+        <!-- Title -->
         <div class="text-center mb-8">
           <h1 class="text-3xl font-bold text-primary-500 mb-3 uppercase">Program Donasi</h1>
 
@@ -157,7 +159,7 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <!-- SEARCH + SORT + FILTER -->
+        <!-- Search + Sort + Filter -->
         <div class="flex justify-center mb-10">
           <div class="relative w-full max-w-xl" ref="searchContainerRef">
             <BasePublicSearch
@@ -167,7 +169,7 @@ onUnmounted(() => {
               @on-filter="toggleFilter"
             />
 
-            <!-- SORT DROPDOWN -->
+            <!-- Sort Dropdown -->
             <div
               v-if="showSortDropdown"
               class="absolute right-[3.5rem] top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
@@ -200,7 +202,7 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <!-- FILTER DROPDOWN -->
+            <!-- Filter Dropdown -->
             <div
               v-if="showFilterDropdown"
               class="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
@@ -208,7 +210,7 @@ onUnmounted(() => {
               <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
                 Saring Berdasarkan
               </h4>
- 
+
               <div class="space-y-4">
                 <!-- Status Filter -->
                 <div>
@@ -253,7 +255,7 @@ onUnmounted(() => {
                     </button>
                   </div>
                 </div>
- 
+
                 <!-- Action Buttons -->
                 <div class="flex gap-3 pt-4 border-t border-gray-100">
                   <button
@@ -273,18 +275,15 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
- 
-        <!-- ACTIVE FILTER CHIPS -->
+
+        <!-- Active Filter Chips -->
         <div v-if="hasActiveFilters" class="flex flex-wrap justify-center gap-2 mb-6 -mt-4">
           <div
             v-if="queryParams.category"
             class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-200 text-primary-600 text-xs font-semibold rounded-full"
           >
             <span>Kategori: {{ formatCategory(queryParams.category) }}</span>
-            <button
-              @click="clearCategoryFilter"
-              class="hover:text-primary-800 focus:outline-none"
-            >
+            <button @click="clearCategoryFilter" class="hover:text-primary-800 focus:outline-none">
               &times;
             </button>
           </div>
@@ -292,11 +291,17 @@ onUnmounted(() => {
             v-if="queryParams.status"
             class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-200 text-primary-600 text-xs font-semibold rounded-full"
           >
-            <span>Status: {{ queryParams.status === 'active' ? 'Aktif' : queryParams.status === 'completed' ? 'Selesai' : 'Kedaluwarsa' }}</span>
-            <button
-              @click="clearStatusFilter"
-              class="hover:text-primary-800 focus:outline-none"
+            <span
+              >Status:
+              {{
+                queryParams.status === 'active'
+                  ? 'Aktif'
+                  : queryParams.status === 'completed'
+                    ? 'Selesai'
+                    : 'Kedaluwarsa'
+              }}</span
             >
+            <button @click="clearStatusFilter" class="hover:text-primary-800 focus:outline-none">
               &times;
             </button>
           </div>

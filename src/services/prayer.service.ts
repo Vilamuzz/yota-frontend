@@ -1,11 +1,12 @@
 import { api } from '@/utils/api'
 import { API } from '@/const/api'
-import type { PrayerListResponse, PrayerResponse } from '@/types/prayer'
-import type { PaginationParams } from '@/types/response'
+import type { PrayerListResponse, PrayerResponse, PrayerQueryParams } from '@/types/prayer'
 
 export const prayerService = {
-  getListPrayer: async (slug: string): Promise<PrayerListResponse> => {
-    const response = await api.get<PrayerListResponse>(`${API.DONATION_PROGRAMS}/${slug}/prayers`)
+  getListPrayer: async (slug: string, params?: PrayerQueryParams): Promise<PrayerListResponse> => {
+    const response = await api.get<PrayerListResponse>(`${API.DONATION_PROGRAMS}/${slug}/prayers`, {
+      params,
+    })
     return response.data
   },
 
@@ -14,10 +15,8 @@ export const prayerService = {
     return response.data
   },
 
-  reportPrayer: async (slug: string, reason: string) => {
-    const response = await api.post(`${API.DONATION_PROGRAMS}/prayers/${slug}/report`, {
-      reason,
-    })
+  reportPrayer: async (slug: string) => {
+    const response = await api.post(`${API.DONATION_PROGRAMS}/prayers/${slug}/report`)
     return response.data
   },
 
@@ -26,8 +25,8 @@ export const prayerService = {
     return response.data
   },
 
-  getAdminPrayers: async (params?: PaginationParams): Promise<PrayerListResponse> => {
-    const response = await api.get<PrayerListResponse>(`${API.DONATION_PROGRAMS}/prayers`, {
+  getAdminPrayers: async (params?: PrayerQueryParams): Promise<PrayerListResponse> => {
+    const response = await api.get<PrayerListResponse>(`${API.DONATION_PROGRAMS_ADMIN}/prayers`, {
       params,
     })
     return response.data

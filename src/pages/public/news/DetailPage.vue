@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { usePublishedNewsDetail } from '@/composables/news/useNewsDetail'
+import { usePublishedNewsList } from '@/composables/news/useNewsList'
+import type { NewsQueryParams } from '@/types/news'
 import { formatDate } from '@/utils/format'
 import {
   ArrowLeft,
@@ -17,6 +19,7 @@ import {
   Send,
   User,
   Flag,
+  Loader2,
 } from 'lucide-vue-next'
 import { useToast } from '@/composables/ui/useToast'
 import { useNewsCommentCreate } from '@/composables/newsComment/useNewsCommentCreate'
@@ -41,27 +44,23 @@ const commentInputRef = ref<HTMLTextAreaElement | null>(null)
 
 const isReportModalOpen = ref(false)
 const reportingCommentId = ref<string>('')
-const reportReason = ref('')
 
 const openReportModal = (id: string) => {
   reportingCommentId.value = id
-  reportReason.value = ''
   isReportModalOpen.value = true
 }
 
 const closeReportModal = () => {
   isReportModalOpen.value = false
   reportingCommentId.value = ''
-  reportReason.value = ''
 }
 
 const submitReport = () => {
-  if (!reportReason.value.trim() || reportMutation.isPending.value) return
+  if (reportMutation.isPending.value) return
 
   reportMutation.mutate(
     {
       newsCommentID: reportingCommentId.value,
-      reason: reportReason.value,
     },
     {
       onSuccess: () => {
@@ -159,10 +158,35 @@ const handleCopyLink = async () => {
 
 const formatCategory = (cat: string) => {
   return cat
-    .split(/[-\s]/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 }
+
+// --- Related News ---
+const relatedNewsParams = reactive<NewsQueryParams>({
+  limit: 6, // Fetch 6 so we can filter out the current one and still have 5
+  page: 1,
+  sortBy: 'views desc',
+  category: undefined,
+})
+
+const { news: relatedNewsData, listQuery: relatedQuery } = usePublishedNewsList(relatedNewsParams)
+
+watch(
+  news,
+  (newNews) => {
+    if (newNews?.category) {
+      relatedNewsParams.category = newNews.category as any
+    }
+  },
+  { immediate: true },
+)
+
+const filteredRelatedNews = computed(() => {
+  if (!relatedNewsData.value) return []
+  return relatedNewsData.value.filter((n) => n.id !== news.value?.id).slice(0, 5)
+})
 </script>
 
 <template>
@@ -228,7 +252,7 @@ const formatCategory = (cat: string) => {
         <!-- Back button on hero -->
         <button
           @click="router.back()"
-          class="absolute top-8 left-6 md:left-12 flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md text-white rounded-full text-sm font-semibold hover:bg-white/30 transition-all group"
+          class="absolute top-28 left-6 md:left-12 flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md text-white rounded-full text-sm font-semibold hover:bg-white/30 transition-all group"
         >
           <ArrowLeft :size="16" class="transition-transform group-hover:-translate-x-1" />
           Kembali
@@ -344,7 +368,7 @@ const formatCategory = (cat: string) => {
               <!-- Comment Form -->
               <div class="flex gap-4">
                 <div
-                  class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 shrink-0"
+                  class="w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 shrink-0"
                 >
                   <User :size="20" />
                 </div>
@@ -354,6 +378,7 @@ const formatCategory = (cat: string) => {
                     v-model="commentContent"
                     rows="1"
                     @input="autoResize"
+                    @keydown.enter.exact.prevent="submitComment"
                     placeholder="Tulis komentar Anda di sini..."
                     class="w-full bg-white border-b border-gray-200 text-sm focus:outline-none focus:border-primary-400 transition-colors resize-none overflow-hidden"
                     :disabled="createMutation.isPending.value"
@@ -440,6 +465,7 @@ const formatCategory = (cat: string) => {
                           <textarea
                             v-model="replyContent"
                             @input="autoResize"
+                            @keydown.enter.exact.prevent="submitReply"
                             rows="1"
                             placeholder="Tulis balasan Anda..."
                             class="w-full bg-transparent border-b border-gray-200 text-sm focus:outline-none focus:border-primary-400 transition-colors resize-none overflow-hidden"
@@ -526,6 +552,7 @@ const formatCategory = (cat: string) => {
                             <textarea
                               v-model="replyContent"
                               @input="autoResize"
+                              @keydown.enter.exact.prevent="submitReply"
                               rows="1"
                               placeholder="Tulis balasan Anda..."
                               class="w-full bg-transparent border-b border-gray-200 text-sm focus:outline-none focus:border-primary-400 transition-colors resize-none overflow-hidden"
@@ -568,71 +595,48 @@ const formatCategory = (cat: string) => {
           <!-- Sidebar - Right -->
           <aside class="hidden lg:block w-64 xl:w-72 shrink-0">
             <div class="sticky top-28 space-y-6">
-              <!-- About Author -->
+              <!-- Related News -->
               <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">
-                  Diterbitkan Oleh
+                  Berita Terkait
                 </p>
-                <div class="flex items-center gap-3 mb-3">
-                  <div
-                    class="w-10 h-10 rounded-full bg-primary-400 flex items-center justify-center text-white font-black text-sm shrink-0"
+
+                <div v-if="relatedQuery.isPending.value" class="flex justify-center py-4">
+                  <Loader2 class="w-6 h-6 text-primary-500 animate-spin" />
+                </div>
+
+                <div v-else-if="filteredRelatedNews.length > 0" class="space-y-4">
+                  <RouterLink
+                    v-for="item in filteredRelatedNews"
+                    :key="item.id"
+                    :to="{ name: 'news-detail', params: { slug: item.slug } }"
+                    class="group flex gap-3 items-start"
                   >
-                    Y
-                  </div>
-                  <div>
-                    <p class="font-bold text-gray-900 text-sm">Yayasan Orang Tua Asuh</p>
-                    <p class="text-xs text-gray-500">Admin Resmi YOTA</p>
-                  </div>
+                    <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-200">
+                      <img
+                        :src="item.coverImage"
+                        :alt="item.title"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                    <div class="flex-1">
+                      <h4
+                        class="text-xs font-bold text-gray-900 line-clamp-2 group-hover:text-primary-500 transition-colors leading-tight mb-1"
+                      >
+                        {{ item.title }}
+                      </h4>
+                      <p class="text-[10px] text-gray-500 flex items-center gap-1">
+                        <Calendar :size="10" />
+                        {{ formatDate(item.publishedAt || item.createdAt) }}
+                      </p>
+                    </div>
+                  </RouterLink>
                 </div>
-                <p class="text-xs text-gray-500 leading-relaxed">
-                  Mendampingi anak-anak yatim dan piatu menuju masa depan yang lebih cerah.
-                </p>
-              </div>
 
-              <!-- Article Info -->
-              <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100 space-y-3">
-                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  Informasi Artikel
-                </p>
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                  <Tag :size="14" class="text-primary-400 shrink-0" />
-                  <span>{{ formatCategory(news.category) }}</span>
-                </div>
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar :size="14" class="text-primary-400 shrink-0" />
-                  <span>{{ formatDate(news.publishedAt || news.createdAt) }}</span>
-                </div>
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                  <Clock :size="14" class="text-primary-400 shrink-0" />
-                  <span>{{ estimatedReadingTime }} menit baca</span>
+                <div v-else class="text-xs text-gray-500 text-center py-4">
+                  Belum ada berita terkait.
                 </div>
               </div>
-
-              <!-- Share -->
-              <div class="space-y-2">
-                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  Bagikan Artikel
-                </p>
-                <button
-                  @click="handleShare"
-                  class="w-full flex items-center justify-center gap-2 py-2.5 bg-primary-400 hover:bg-primary-500 text-white rounded-xl transition-colors text-sm font-bold"
-                >
-                  <Share2 :size="14" />
-                  Bagikan
-                </button>
-                <button
-                  @click="handleCopyLink"
-                  class="w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 text-gray-600 hover:border-primary-400 hover:text-primary-500 rounded-xl transition-all text-sm font-semibold"
-                >
-                  <Link2 :size="14" />
-                  Salin Tautan
-                </button>
-              </div>
-
-              <!-- Back to List -->
-              <BaseButton variant="outline" class="w-full" :to="{ name: 'news' }">
-                Lihat Berita Lainnya
-              </BaseButton>
             </div>
           </aside>
         </div>
@@ -657,20 +661,11 @@ const formatCategory = (cat: string) => {
     <PublicConfirmationModal
       :show="isReportModalOpen"
       title="Laporkan Komentar"
-      message="Beritahu kami alasan Anda melaporkan komentar ini."
+      message="Apakah Anda yakin ingin melaporkan komentar ini?"
       primary-button-text="Kirim Laporan"
       :primary-button-loading="reportMutation.isPending.value"
       @primary="submitReport"
       @close="closeReportModal"
-    >
-      <div class="mt-4">
-        <textarea
-          v-model="reportReason"
-          rows="3"
-          placeholder="Tulis alasan laporan Anda di sini..."
-          class="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"
-        ></textarea>
-      </div>
-    </PublicConfirmationModal>
+    />
   </PublicLayout>
 </template>

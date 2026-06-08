@@ -1,5 +1,5 @@
 import type { Media, MediaCategory, MediaStatus } from './media'
-import type { Pagination, Response, PaginationParams } from './response'
+import type { Pagination, OffsetPagination, Response } from './response'
 
 export interface News {
   id: string
@@ -26,7 +26,12 @@ export interface NewsComment {
 
 export interface NewsList {
   news: News[]
-  pagination: Pagination
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
 export interface NewsCommentList {
@@ -34,9 +39,18 @@ export interface NewsCommentList {
   pagination: Pagination
 }
 
-export interface NewsQueryParams extends PaginationParams {
+export interface AdminNewsCommentList {
+  comments: NewsComment[]
+  pagination: OffsetPagination
+}
+
+export interface NewsQueryParams {
+  limit?: number
+  page?: number
+  search?: string
   category?: MediaCategory
   status?: MediaStatus
+  sortBy?: string
 }
 
 export interface CreateNewsRequest {
@@ -72,3 +86,4 @@ export type NewsResponse = Response<News>
 export type NewsListResponse = Response<NewsList>
 export type NewsCommentResponse = Response<NewsComment>
 export type NewsCommentListResponse = Response<NewsCommentList>
+export type AdminNewsCommentListResponse = Response<AdminNewsCommentList>

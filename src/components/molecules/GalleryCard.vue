@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Gallery } from '@/types/gallery'
 import { formatDate } from '@/utils/format'
-import { Image as ImageIcon, Calendar, Layers } from 'lucide-vue-next'
+import { Image as ImageIcon, Calendar, Eye } from 'lucide-vue-next'
 
 defineProps<{
   gallery: Gallery
@@ -56,11 +56,10 @@ function formatCategory(category: string) {
           <span>{{ formatDate(gallery.publishedAt || gallery.createdAt) }}</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <Layers :size="14" />
-          <span>{{ gallery.media?.length || 0 }} Media</span>
+          <Eye :size="14" />
+          <span>{{ gallery.views }}</span>
         </div>
       </div>
     </div>
   </RouterLink>
 </template>
-

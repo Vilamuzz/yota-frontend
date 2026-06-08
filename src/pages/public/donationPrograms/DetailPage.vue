@@ -16,14 +16,13 @@ const donationSlug = computed(() => route.params.slug as string)
 
 const { detailQuery } = useDonationProgramDetail(donationSlug)
 
-const { listQuery, prayers } = usePrayerList(donationSlug.value)
+const { listQuery, prayers } = usePrayerList(donationSlug, { limit: 6 })
 
 const { createMutation: amenMutation } = usePrayerAmen()
 const { createMutation: reportMutation } = usePrayerReport()
 
 const showReportModal = ref(false)
 const reportPrayerId = ref<string>('')
-const reportReason = ref('')
 
 const program = computed(() => {
   const d = detailQuery.data.value?.data
@@ -122,24 +121,17 @@ const handleAmenPrayer = async (pray: PrayerView) => {
 
 const openReportModal = (prayerId: string) => {
   reportPrayerId.value = prayerId
-  reportReason.value = ''
   showReportModal.value = true
 }
 
 const closeReportModal = () => {
   showReportModal.value = false
   reportPrayerId.value = ''
-  reportReason.value = ''
 }
 
 const handleReportPrayer = async () => {
-  if (!reportReason.value.trim()) {
-    return
-  }
-
   await reportMutation.mutateAsync({
     prayerID: reportPrayerId.value,
-    reason: reportReason.value,
   })
   closeReportModal()
 }
@@ -244,12 +236,12 @@ const handleShare = () => {
       class="sticky top-0 z-40 bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4 font-poppins"
     >
       <!-- Back Button -->
-      <button
+      <RouterLink
+        to="/donation-programs"
         class="flex items-center justify-center shrink-0 text-gray-700 hover:text-gray-900 transition"
-        @click="$router.back()"
       >
         <ArrowLeft :size="28" />
-      </button>
+      </RouterLink>
 
       <!-- Title -->
       <h1 class="text-lg md:text-xl font-bold text-primary-500 line-clamp-1">
@@ -336,9 +328,15 @@ const handleShare = () => {
                     />
                   </div>
                 </div>
-                <p class="text-right text-sm font-bold text-primary-600">
-                  {{ Math.round(progressPercent) }}% Tercapai
-                </p>
+                <div class="flex justify-between items-center text-sm font-bold">
+                  <button
+                    @click="$router.push(`/donation-programs/${program?.slug}/donations`)"
+                    class="text-primary-600 hover:text-primary-700 font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    Lihat Donatur
+                  </button>
+                  <p class="text-primary-600">{{ Math.round(progressPercent) }}% Tercapai</p>
+                </div>
               </div>
             </div>
 
@@ -366,9 +364,19 @@ const handleShare = () => {
                   <div class="h-6 w-1.5 bg-primary-400 rounded-full"></div>
                   <h2 class="text-xl font-bold text-gray-800">Doa-doa Orang Baik</h2>
                 </div>
-                <span class="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
-                  {{ prays.length }} Doa
-                </span>
+                <div
+                  v-if="(listQuery.data.value?.data?.pagination.total ?? 0) < 6"
+                  class="flex justify-center pt-2"
+                >
+                  <BaseButton
+                    variant="outline"
+                    size="md"
+                    :to="`/donation-programs/${program?.slug}/prayers`"
+                    class="font-semibold"
+                  >
+                    Lihat Semua Doa
+                  </BaseButton>
+                </div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -502,7 +510,7 @@ const handleShare = () => {
   <PublicConfirmationModal
     :show="showReportModal"
     title="Laporkan Doa"
-    message="Silakan jelaskan mengapa Anda ingin melaporkan doa ini"
+    message="Apakah Anda yakin ingin melaporkan doa ini?"
     :icon="Flag"
     primary-button-text="Kirim Laporan"
     secondary-button-text="Batal"
@@ -511,14 +519,8 @@ const handleShare = () => {
     @secondary="closeReportModal"
     @close="closeReportModal"
   >
-    <div class="space-y-3">
-      <textarea
-        v-model="reportReason"
-        placeholder="Jelaskan alasan laporan Anda..."
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
-        rows="4"
-      />
-      <p v-if="reportMutation.isError.value" class="text-red-500 text-sm">Gagal mengirim laporan</p>
+    <div v-if="reportMutation.isError.value" class="mt-4">
+      <p class="text-red-500 text-sm">Gagal mengirim laporan</p>
     </div>
   </PublicConfirmationModal>
 </template>

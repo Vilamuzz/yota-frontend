@@ -6,8 +6,8 @@ import type { ApiError } from '@/types/response'
 export const usePrayerReport = () => {
   const queryClient = useQueryClient()
 
-  const createMutation = useMutation<PrayerResponse, ApiError, { prayerID: string; reason: string }>({
-    mutationFn: (report) => prayerService.reportPrayer(report.prayerID, report.reason),
+  const createMutation = useMutation<PrayerResponse, ApiError, { prayerID: string }>({
+    mutationFn: (report) => prayerService.reportPrayer(report.prayerID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prayers'] })
     },

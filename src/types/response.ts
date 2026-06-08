@@ -19,4 +19,11 @@ export interface PaginationParams extends Pagination {
   search?: string
 }
 
+export interface OffsetPagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
 export type ApiError = AxiosError<Response<null>>

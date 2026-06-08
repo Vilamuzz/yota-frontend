@@ -4,8 +4,8 @@ import type {
   CreateNewsCommentRequest,
   NewsCommentListResponse,
   NewsCommentResponse,
+  AdminNewsCommentListResponse,
 } from '@/types/news'
-import type { PaginationParams } from '@/types/response'
 
 export const newsCommentService = {
   getListNewsComment: async (slug: string): Promise<NewsCommentListResponse> => {
@@ -13,10 +13,8 @@ export const newsCommentService = {
     return response.data
   },
 
-  reportNewsComment: async (id: string, reason: string) => {
-    const response = await api.post(`${API.NEWS}/comments/${id}/report`, {
-      reason,
-    })
+  reportNewsComment: async (id: string) => {
+    const response = await api.post(`${API.NEWS}/comments/${id}/report`)
     return response.data
   },
 
@@ -28,8 +26,8 @@ export const newsCommentService = {
     return response.data
   },
 
-  getAdminNewsComments: async (params?: PaginationParams): Promise<NewsCommentListResponse> => {
-    const response = await api.get<NewsCommentListResponse>(`${API.NEWS_ADMIN}/comments`, {
+  getAdminNewsComments: async (params?: any): Promise<AdminNewsCommentListResponse> => {
+    const response = await api.get<AdminNewsCommentListResponse>(`${API.NEWS_ADMIN}/comments`, {
       params,
     })
     return response.data

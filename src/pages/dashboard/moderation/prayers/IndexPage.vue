@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { MessageCircleHeart, Trash2, CheckCircle, Eye, X } from 'lucide-vue-next'
 import BaseTable from '@/components/organisms/BaseTable.vue'
@@ -10,34 +10,29 @@ import { usePrayerAllow } from '@/composables/prayer/usePrayerAllow'
 import type { Prayer } from '@/types/prayer'
 import { formatDate } from '@/utils/format'
 import { useToast } from '@/composables/ui/useToast'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
+import BaseFilter from '@/components/atoms/BaseFilter.vue'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 
 const { showToast } = useToast()
 
-const prayerCursors = reactive({
-  nextCursor: undefined as string | undefined,
-  prevCursor: undefined as string | undefined,
+const queryParams = reactive({
+  page: 1,
+  limit: 10,
+  sortBy: 'reportCount',
 })
-const prayerPageOffset = ref(0)
-const prayerLimit = ref(10)
-const prayerLimitOptions = [10, 25, 50]
+const limitOptions = [10, 25, 50]
 
-const { prayers, pagination: prayerPagination, isLoading: prayersLoading } = useAdminPrayerList()
+const { prayers, pagination: prayerPagination, isLoading: prayersLoading } = useAdminPrayerList(queryParams)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
+  queryParams,
+  prayerPagination,
+)
 
-function handlePrayerNext() {
-  if (prayerPagination.value?.nextCursor) {
-    prayerCursors.nextCursor = prayerPagination.value.nextCursor
-    prayerCursors.prevCursor = undefined
-    prayerPageOffset.value += 1
-  }
-}
-
-function handlePrayerPrev() {
-  if (prayerPagination.value?.prevCursor) {
-    prayerCursors.prevCursor = prayerPagination.value.prevCursor
-    prayerCursors.nextCursor = undefined
-    prayerPageOffset.value -= 1
-  }
-}
+watch(
+  () => [queryParams.limit, queryParams.sortBy],
+  () => resetPagination(),
+)
 
 const { deleteMutation } = useAdminPrayerDelete()
 const confirmDeleteShow = ref(false)
@@ -95,6 +90,47 @@ function truncate(text: string, max = 80) {
     <template #title>Moderasi Doa</template>
 
     <div class="space-y-6">
+      <!-- Filters Section -->
+      <div class="flex justify-end">
+        <BaseFilter :has-active-filters="queryParams.sortBy !== 'reportCount'">
+          <template #default="{ closeDropdown }">
+            <div class="space-y-4 w-64">
+              <!-- Sort filter -->
+              <div>
+                <label
+                  class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                >
+                  Urutkan
+                </label>
+                <select
+                  v-model="queryParams.sortBy"
+                  class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="reportCount">Jumlah Laporan (Tertinggi)</option>
+                  <option value="createdAt desc">Terbaru</option>
+                  <option value="createdAt asc">Terlama</option>
+                </select>
+              </div>
+
+              <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <button
+                  @click="queryParams.sortBy = 'reportCount'"
+                  class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                >
+                  RESET
+                </button>
+                <button
+                  @click="closeDropdown"
+                  class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
+                >
+                  APPLY
+                </button>
+              </div>
+            </div>
+          </template>
+        </BaseFilter>
+      </div>
+
       <!-- Prayers table -->
       <div class="overflow-hidden">
         <BaseTable
@@ -102,12 +138,12 @@ function truncate(text: string, max = 80) {
           loading-message="Memuat data doa..."
           :is-empty="!prayersLoading && prayers.length === 0"
           empty-message="Tidak ada doa yang ditemukan."
-          :has-prev="!!prayerPagination?.prevCursor"
-          :has-next="!!prayerPagination?.nextCursor"
-          v-model:limit="prayerLimit"
-          :limit-options="prayerLimitOptions"
-          @prev="handlePrayerPrev"
-          @next="handlePrayerNext"
+          :has-prev="(queryParams.page ?? 1) > 1"
+          :has-next="prayerPagination ? (queryParams.page ?? 1) < prayerPagination.totalPages : false"
+          v-model:limit="queryParams.limit"
+          :limit-options="limitOptions"
+          @prev="handlePrevPage"
+          @next="handleNextPage"
         >
           <template #empty-icon>
             <MessageCircleHeart :size="56" class="mb-2 text-gray-300" />
@@ -138,7 +174,7 @@ function truncate(text: string, max = 80) {
             >
               <!-- No -->
               <td class="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">
-                {{ prayerPageOffset * prayerLimit + index + 1 }}
+                {{ pageOffset * queryParams.limit + index + 1 }}
               </td>
 
               <!-- Username -->
@@ -173,29 +209,29 @@ function truncate(text: string, max = 80) {
               <!-- Actions -->
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-1">
-                  <button
+                  <BaseIconButton
                     @click="openDetailModal(prayer)"
-                    class="rounded p-1.5 text-blue-500 transition-colors duration-150 hover:bg-blue-50 dark:hover:bg-blue-950/40"
                     title="Lihat detail"
+                    variant="info"
                   >
                     <Eye :size="16" />
-                  </button>
-                  <button
+                  </BaseIconButton>
+                  <BaseIconButton
                     @click="allowPrayer(prayer)"
                     :disabled="allowMutation.isPending.value"
-                    class="rounded p-1.5 text-emerald-500 transition-colors duration-150 hover:bg-emerald-50 disabled:opacity-50 dark:hover:bg-emerald-950/40"
                     title="Tandai aman"
+                    variant="success"
                   >
                     <CheckCircle :size="16" />
-                  </button>
-                  <button
+                  </BaseIconButton>
+                  <BaseIconButton
                     @click="openDeleteConfirm(prayer)"
                     :disabled="deleteMutation.isPending.value"
-                    class="rounded p-1.5 text-red-500 transition-colors duration-150 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-950/40"
                     title="Hapus doa"
+                    variant="danger"
                   >
                     <Trash2 :size="16" />
-                  </button>
+                  </BaseIconButton>
                 </div>
               </td>
             </tr>
