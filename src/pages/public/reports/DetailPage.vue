@@ -215,7 +215,7 @@ const handleExport = async () => {
     exportDateFrom.value = ''
     exportDateTo.value = ''
     showToast('Laporan berhasil diunduh', 'success')
-  } catch (error) {
+  } catch {
     showToast('Gagal mengunduh laporan', 'error')
   } finally {
     isExporting.value = false
@@ -232,27 +232,10 @@ const accentClasses = computed(() => {
   }
 })
 
-// Force Tailwind to keep dynamic classes by referencing them literally in a comment:
-// text-rose-500 text-rose-600 bg-rose-50 border-rose-100
-// text-blue-500 text-blue-600 bg-blue-50 border-blue-100
-// text-emerald-500 text-emerald-600 bg-emerald-50 border-emerald-100
-
 const typeIcon = computed(() => {
   if (type === 'donation') return Heart
   if (type === 'social') return Users
   return Baby
-})
-
-const totalByMonth = computed(() => {
-  if (!accumulatedExpenses.value) return []
-  const map: Record<string, number> = {}
-  for (const exp of accumulatedExpenses.value) {
-    const month = exp.expenseDate.slice(0, 7)
-    map[month] = (map[month] ?? 0) + exp.amount
-  }
-  return Object.entries(map)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([month, total]) => ({ month, total }))
 })
 </script>
 

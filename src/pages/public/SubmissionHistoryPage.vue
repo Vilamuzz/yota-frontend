@@ -10,6 +10,8 @@ import { useMyAmbulanceServiceCandidateList } from '@/composables/ambulanceServi
 import { useMyAmbulanceServiceCandidateCancel } from '@/composables/ambulanceService/useMyAmbulanceServiceCancel'
 import { useToast } from '@/composables/ui/useToast'
 import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
+import AmbulanceRequestDetailModal from '@/components/molecules/AmbulanceRequestDetailModal.vue'
+import FosterChildrenCandidateDetailModal from '@/components/molecules/FosterChildrenCandidateDetailModal.vue'
 import {
   Loader2,
   X,
@@ -342,6 +344,8 @@ const searchQuery = computed({
 
 const showCancelModal = ref(false)
 const itemToCancel = ref<{ id: string; name: string; type: 'foster' | 'ambulance' } | null>(null)
+const selectedAmbulanceId = ref<string | null>(null)
+const selectedFosterId = ref<string | null>(null)
 
 const isCancelLoading = computed(() =>
   itemToCancel.value?.type === 'foster'
@@ -644,7 +648,8 @@ const getStatusConfig = (status: string) => {
             <div
               v-for="candidate in accumulatedFoster"
               :key="candidate.id"
-              class="group bg-white rounded-4xl border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8"
+              @click="selectedFosterId = candidate.id"
+              class="group bg-white rounded-4xl border border-gray-100 p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
             >
               <!-- Status left stripe -->
               <div
@@ -694,17 +699,6 @@ const getStatusConfig = (status: string) => {
                       <span class="capitalize">{{ candidate.category }}</span>
                     </div>
                   </div>
-                  <div
-                    v-if="
-                      candidate.status.toLowerCase() === 'rejected' && candidate.rejectionReason
-                    "
-                    class="mt-3 p-3 bg-red-50/70 rounded-xl border border-red-100"
-                  >
-                    <p class="text-xs text-red-800">
-                      <span class="font-bold">Alasan Penolakan:</span>
-                      {{ candidate.rejectionReason }}
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -714,7 +708,7 @@ const getStatusConfig = (status: string) => {
               >
                 <button
                   v-if="candidate.status.toLowerCase() === 'pending'"
-                  @click="openCancelModal(candidate.id, candidate.name, 'foster')"
+                  @click.stop="openCancelModal(candidate.id, candidate.name, 'foster')"
                   :disabled="fosterCancelMutation.isPending.value"
                   class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-600 hover:text-white transition-all duration-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   title="Batalkan Pengajuan"
@@ -782,7 +776,8 @@ const getStatusConfig = (status: string) => {
             <div
               v-for="service in accumulatedAmbulance"
               :key="service.id"
-              class="group bg-white rounded-4xl border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8"
+              @click="selectedAmbulanceId = service.id"
+              class="group bg-white rounded-4xl border border-gray-100 p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
             >
               <!-- Status left stripe -->
               <div
@@ -837,15 +832,6 @@ const getStatusConfig = (status: string) => {
                       Diajukan: {{ formatDate(service.createdAt) }}
                     </div>
                   </div>
-                  <div
-                    v-if="service.status === 'rejected' && service.rejectionReason"
-                    class="mt-3 p-3 bg-red-50/70 rounded-xl border border-red-100"
-                  >
-                    <p class="text-xs text-red-800">
-                      <span class="font-bold">Alasan Penolakan:</span>
-                      {{ service.rejectionReason }}
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -855,7 +841,7 @@ const getStatusConfig = (status: string) => {
               >
                 <button
                   v-if="service.status === 'pending'"
-                  @click="openCancelModal(service.id, service.applicantName, 'ambulance')"
+                  @click.stop="openCancelModal(service.id, service.applicantName, 'ambulance')"
                   :disabled="ambulanceCancelMutation.isPending.value"
                   class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-600 hover:text-white transition-all duration-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   title="Batalkan Permintaan"
@@ -936,6 +922,20 @@ const getStatusConfig = (status: string) => {
       @secondary="showCancelModal = false"
       @danger="confirmCancel"
       @close="showCancelModal = false"
+    />
+
+    <!-- Ambulance Request Detail Modal -->
+    <AmbulanceRequestDetailModal
+      :show="!!selectedAmbulanceId"
+      :id="selectedAmbulanceId || ''"
+      @close="selectedAmbulanceId = null"
+    />
+
+    <!-- Foster Child Candidate Detail Modal -->
+    <FosterChildrenCandidateDetailModal
+      :show="!!selectedFosterId"
+      :id="selectedFosterId || ''"
+      @close="selectedFosterId = null"
     />
   </PublicLayout>
 </template>
