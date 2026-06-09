@@ -19,10 +19,14 @@ import {
 import { useMyDonationProgramTransactions } from '@/composables/donationProgramTransaction/useMyDonationProgramTransactions'
 import { useMyFosterChildrenTransactions } from '@/composables/fosterChildrenTransaction/useMyFosterChildrenTransactions'
 import { useMySocialProgramInvoices } from '@/composables/socialProgramInvoice/useMySocialProgramInvoices'
-import { TransactionStatus, type DonationProgramTransaction } from '@/types/donationProgramTransaction'
+import {
+  TransactionStatus,
+  type DonationProgramTransaction,
+} from '@/types/donationProgramTransaction'
 import { InvoiceStatus, type SocialProgramInvoice } from '@/types/socialProgramInvoice'
 import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
 import { Loader2 } from 'lucide-vue-next'
+import { formatCurrency, formatDate } from '@/utils/format'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,20 +34,6 @@ const { showToast } = useToast()
 
 const activeCategory = ref('Program Donasi')
 const activeStatus = ref('WAITING')
-
-const hasLoadedDonations = ref(false)
-const hasLoadedFoster = ref(false)
-const hasLoadedSocial = ref(false)
-
-watch(
-  activeCategory,
-  (newVal) => {
-    if (newVal === 'Program Donasi') hasLoadedDonations.value = true
-    if (newVal === 'Donasi Anak Asuh') hasLoadedFoster.value = true
-    if (newVal === 'Program Sosial') hasLoadedSocial.value = true
-  },
-  { immediate: true },
-)
 
 const donationCursor = ref<string | undefined>(undefined)
 const fosterCursor = ref<string | undefined>(undefined)
@@ -67,24 +57,24 @@ const socialParams = computed(() => ({
   limit: 10,
 }))
 
-const {
-  isLoading: isLoadingDonations,
-  query: donationQuery,
-} = useMyDonationProgramTransactions(donationParams, { enabled: hasLoadedDonations })
-const {
-  isLoading: isLoadingFoster,
-  query: fosterQuery,
-} = useMyFosterChildrenTransactions(fosterParams, { enabled: hasLoadedFoster })
-const {
-  isLoading: isLoadingSocial,
-  query: socialQuery,
-} = useMySocialProgramInvoices(socialParams, { enabled: hasLoadedSocial })
+const { isLoading: isLoadingDonations, query: donationQuery } = useMyDonationProgramTransactions(
+  donationParams,
+  { enabled: computed(() => activeCategory.value === 'Program Donasi') },
+)
+const { isLoading: isLoadingFoster, query: fosterQuery } = useMyFosterChildrenTransactions(
+  fosterParams,
+  { enabled: computed(() => activeCategory.value === 'Donasi Anak Asuh') },
+)
+const { isLoading: isLoadingSocial, query: socialQuery } = useMySocialProgramInvoices(
+  socialParams,
+  { enabled: computed(() => activeCategory.value === 'Program Sosial') },
+)
 
 const accumulatedDonations = ref<DonationProgramTransaction[]>([])
 const accumulatedFoster = ref<FosterChildrenTransaction[]>([])
 const accumulatedSocial = ref<SocialProgramInvoice[]>([])
 
-watch([activeCategory, activeStatus], () => {
+watch(activeStatus, () => {
   donationCursor.value = undefined
   fosterCursor.value = undefined
   socialCursor.value = undefined
@@ -99,7 +89,9 @@ watch(
     if (newData?.data?.transactions) {
       if (donationCursor.value) {
         const existingIds = new Set(accumulatedDonations.value.map((t) => t.id || t.orderId))
-        const newItems = newData.data.transactions.filter((t) => !existingIds.has(t.id || t.orderId))
+        const newItems = newData.data.transactions.filter(
+          (t) => !existingIds.has(t.id || t.orderId),
+        )
         accumulatedDonations.value.push(...newItems)
       } else {
         accumulatedDonations.value = [...newData.data.transactions]
@@ -115,7 +107,9 @@ watch(
     if (newData?.data?.transactions) {
       if (fosterCursor.value) {
         const existingIds = new Set(accumulatedFoster.value.map((t) => t.id || t.orderId))
-        const newItems = newData.data.transactions.filter((t) => !existingIds.has(t.id || t.orderId))
+        const newItems = newData.data.transactions.filter(
+          (t) => !existingIds.has(t.id || t.orderId),
+        )
         accumulatedFoster.value.push(...newItems)
       } else {
         accumulatedFoster.value = [...newData.data.transactions]
@@ -197,13 +191,16 @@ watch(loadMoreTrigger, (el) => {
     observer.disconnect()
   }
   if (el) {
-    observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) {
-        loadNextPage()
-      }
-    }, {
-      rootMargin: '100px',
-    })
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadNextPage()
+        }
+      },
+      {
+        rootMargin: '100px',
+      },
+    )
     observer.observe(el)
   }
 })
@@ -238,23 +235,23 @@ const handleSnapPayment = (token: string) => {
     window.snap.pay(token, {
       onSuccess: function () {
         showToast('Pembayaran berhasil', 'success')
-        if (hasLoadedDonations.value) donationQuery.refetch()
-        if (hasLoadedFoster.value) fosterQuery.refetch()
-        if (hasLoadedSocial.value) socialQuery.refetch()
+        if (activeCategory.value === 'Program Donasi') donationQuery.refetch()
+        if (activeCategory.value === 'Donasi Anak Asuh') fosterQuery.refetch()
+        if (activeCategory.value === 'Program Sosial') socialQuery.refetch()
         router.replace({ path: '/invoices' })
       },
       onPending: function () {
         showToast('Menunggu pembayaran', 'warning')
-        if (hasLoadedDonations.value) donationQuery.refetch()
-        if (hasLoadedFoster.value) fosterQuery.refetch()
-        if (hasLoadedSocial.value) socialQuery.refetch()
+        if (activeCategory.value === 'Program Donasi') donationQuery.refetch()
+        if (activeCategory.value === 'Donasi Anak Asuh') fosterQuery.refetch()
+        if (activeCategory.value === 'Program Sosial') socialQuery.refetch()
         router.replace({ path: '/invoices' })
       },
       onError: function () {
         showToast('Pembayaran gagal', 'error')
-        if (hasLoadedDonations.value) donationQuery.refetch()
-        if (hasLoadedFoster.value) fosterQuery.refetch()
-        if (hasLoadedSocial.value) socialQuery.refetch()
+        if (activeCategory.value === 'Program Donasi') donationQuery.refetch()
+        if (activeCategory.value === 'Donasi Anak Asuh') fosterQuery.refetch()
+        if (activeCategory.value === 'Program Sosial') socialQuery.refetch()
         router.replace({ path: '/invoices' })
       },
       onClose: function () {
@@ -339,22 +336,6 @@ const filteredInvoices = computed(() => {
     (invoice) => invoice.type === activeCategory.value && invoice.status === activeStatus.value,
   )
 })
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(amount)
-}
-
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
 
 const getStatusLabel = (status: string) => {
   return status === 'PAID' ? 'Sudah Dibayar' : 'Menunggu Pembayaran'

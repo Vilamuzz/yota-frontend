@@ -373,10 +373,10 @@ function handleConfirmComplete() {
               {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white">
-              {{ service.applicantName }}
+              {{ service.submitterName }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ service.applicantPhone }}
+              {{ service.submitterPhone }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm">
               <span
@@ -386,7 +386,7 @@ function handleConfirmComplete() {
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ new Date(service.requestDate).toLocaleDateString('id-ID') }}
+              {{ new Date(service.pickupDate).toLocaleDateString('id-ID') }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
@@ -463,7 +463,7 @@ function handleConfirmComplete() {
     <!-- REJECT MODAL -->
     <RejectConfirmationModal
       :show="rejectModalShow"
-      :title="`Tolak permintaan ${rejectService?.applicantName || ''}?`"
+      :title="`Tolak permintaan ${rejectService?.submitterName || ''}?`"
       message="Berikan alasan penolakan untuk permintaan ambulans ini."
       primary-button-text="Tolak"
       secondary-button-text="Batal"
