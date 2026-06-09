@@ -25,10 +25,11 @@ import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceServic
 import { useToast } from '@/composables/ui/useToast'
 import { getStatusColor } from '@/utils/statusColor'
 import { formatDate, formatStatus, getCategoryLabel } from '@/utils/format'
-import { serviceCategoryOptions } from '@/types/ambulanceHistory'
+import { AmbulanceServiceCategory, serviceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
+import FilePreviewModal from '@/components/molecules/FilePreviewModal.vue'
 import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
@@ -117,6 +118,7 @@ const handleConfirmReject = (reason: string) => {
 // START & COMPLETE (DRIVER)
 const confirmStart = ref(false)
 const confirmComplete = ref(false)
+const showKtpModal = ref(false)
 
 const handleConfirmStart = () => {
   startMutation.mutate(
@@ -218,26 +220,27 @@ const handleConfirmComplete = () => {
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2">
-          <!-- Left: Applicant Information -->
+          <!-- Left: Submitter & Patient Information -->
           <div class="p-8 border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-gray-700">
+            <!-- Submitter Information -->
             <h3
               class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
             >
               <User :size="18" class="text-blue-500" />
-              Informasi Pemohon
+              Informasi Pengaju
             </h3>
-            <div class="space-y-5">
-              <!-- Applicant Name -->
+            <div class="space-y-5 mb-8">
+              <!-- Submitter Name -->
               <div class="flex gap-3">
                 <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
                   <User :size="16" />
                 </div>
                 <div>
                   <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
-                    Nama Pemohon
+                    Nama Pengaju
                   </p>
                   <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                    {{ ambulanceService.applicantName }}
+                    {{ ambulanceService.submitterName }}
                   </p>
                 </div>
               </div>
@@ -252,7 +255,54 @@ const handleConfirmComplete = () => {
                     Nomor Telepon
                   </p>
                   <p class="text-sm text-gray-900 dark:text-gray-200">
-                    {{ ambulanceService.applicantPhone }}
+                    {{ ambulanceService.submitterPhone }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- ID Card -->
+              <div class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <FileText :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    KTP Pengaju
+                  </p>
+                  <button
+                    v-if="ambulanceService.submitterIdCard"
+                    @click="showKtpModal = true"
+                    class="text-sm text-blue-500 hover:underline cursor-pointer"
+                  >
+                    Lihat KTP
+                  </button>
+                  <p v-else class="text-sm text-gray-900 dark:text-gray-200">-</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Patient Information -->
+            <h3
+              class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
+            >
+              <UserCircle :size="18" class="text-blue-500" />
+              {{ ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE ? 'Informasi Almarhum' : 'Informasi Pasien' }}
+            </h3>
+            <div class="space-y-5 mb-8">
+              <!-- Patient Name & Age -->
+              <div class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <User :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    {{ ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE ? 'Nama & Usia Almarhum' : 'Nama & Usia Pasien' }}
+                  </p>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ ambulanceService.patientName }}
+                    <span v-if="ambulanceService.patientAge"
+                      >({{ ambulanceService.patientAge }} tahun)</span
+                    >
                   </p>
                 </div>
               </div>
@@ -263,28 +313,64 @@ const handleConfirmComplete = () => {
                   <MapPin :size="16" />
                 </div>
                 <div>
-                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Alamat</p>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    {{ ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE ? 'Alamat Almarhum' : 'Alamat Pasien' }}
+                  </p>
                   <p class="text-sm text-gray-900 dark:text-gray-200">
-                    {{ ambulanceService.applicantAddress }}
+                    {{ ambulanceService.patientAddress || '-' }}
                   </p>
                 </div>
               </div>
 
-              <!-- Request Date -->
+              <!-- Disease -->
               <div class="flex gap-3">
                 <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
-                  <CalendarDays :size="16" />
+                  <AlertCircle :size="16" />
                 </div>
                 <div>
                   <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
-                    Tanggal Permintaan
+                    Penyakit / Kondisi
                   </p>
                   <p class="text-sm text-gray-900 dark:text-gray-200">
-                    {{ formatDate(ambulanceService.requestDate) }}
+                    {{ ambulanceService.disease || '-' }}
                   </p>
                 </div>
               </div>
 
+              <!-- Patient Conditions -->
+              <div class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <ShieldCheck :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    Kondisi Tambahan
+                  </p>
+                  <div class="flex flex-wrap gap-2 mt-1">
+                    <span
+                      v-if="ambulanceService.isInfectious"
+                      class="px-2 py-0.5 text-xs font-medium bg-red-50 text-red-600 rounded border border-red-200"
+                    >
+                      Penyakit Menular
+                    </span>
+                    <span
+                      v-if="ambulanceService.isAbleToSit"
+                      class="px-2 py-0.5 text-xs font-medium bg-green-50 text-green-600 rounded border border-green-200"
+                    >
+                      Bisa Duduk
+                    </span>
+                    <span
+                      v-if="!ambulanceService.isInfectious && !ambulanceService.isAbleToSit"
+                      class="text-sm text-gray-500"
+                      >-</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timestamps -->
+            <div class="space-y-5 pt-6 border-t border-gray-100 dark:border-gray-700">
               <!-- Submission Date -->
               <div class="flex gap-3">
                 <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
@@ -292,7 +378,7 @@ const handleConfirmComplete = () => {
                 </div>
                 <div>
                   <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
-                    Tanggal Pengajuan
+                    Dibuat Pada
                   </p>
                   <p class="text-sm text-gray-900 dark:text-gray-200">
                     {{ formatDate(ambulanceService.createdAt) }}
@@ -309,7 +395,7 @@ const handleConfirmComplete = () => {
                 class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
               >
                 <FileText :size="18" class="text-blue-500" />
-                Detail Permintaan
+                Detail Penjemputan
               </h3>
 
               <!-- Category -->
@@ -328,31 +414,61 @@ const handleConfirmComplete = () => {
                 </div>
               </div>
 
-              <!-- Reason -->
+              <!-- Date and Time -->
+              <div class="space-y-2 mb-6 grid grid-cols-2 gap-4">
+                <div>
+                  <p
+                    class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
+                    Tanggal Penjemputan
+                  </p>
+                  <div
+                    class="mt-1 flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
+                  >
+                    <CalendarDays :size="16" class="text-gray-400" />
+                    {{ formatDate(ambulanceService.pickupDate) }}
+                  </div>
+                </div>
+                <div>
+                  <p
+                    class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
+                    Waktu Penjemputan
+                  </p>
+                  <div
+                    class="mt-1 flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
+                  >
+                    <Clock :size="16" class="text-gray-400" />
+                    {{ ambulanceService.pickupTime }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Destination -->
               <div class="space-y-2 mb-6">
                 <p
                   class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                 >
-                  Alasan Permintaan
+                  Tujuan
                 </p>
                 <div
                   class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 leading-relaxed"
                 >
-                  {{ ambulanceService.requestReason || '-' }}
+                  {{ ambulanceService.destination || '-' }}
                 </div>
               </div>
 
-              <!-- Description -->
-              <div v-if="ambulanceService.description" class="space-y-2 mb-6">
+              <!-- Note -->
+              <div v-if="ambulanceService.note" class="space-y-2 mb-6">
                 <p
                   class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                 >
-                  Deskripsi Tambahan
+                  Catatan Tambahan
                 </p>
                 <div
                   class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 leading-relaxed"
                 >
-                  {{ ambulanceService.description }}
+                  {{ ambulanceService.note }}
                 </div>
               </div>
 
@@ -460,11 +576,8 @@ const handleConfirmComplete = () => {
             (ambulanceService.status === AmbulanceServiceStatus.ACCEPTED ||
               ambulanceService.status === AmbulanceServiceStatus.IN_SERVICE)
           "
-          class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
+          class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end"
         >
-          <p class="text-xs text-gray-500 dark:text-gray-400 italic">
-            Dikirim pada {{ formatDate(ambulanceService.createdAt) }}
-          </p>
           <div class="flex items-center gap-3">
             <BaseButton
               v-if="ambulanceService.status === AmbulanceServiceStatus.ACCEPTED"
@@ -494,11 +607,8 @@ const handleConfirmComplete = () => {
         <!-- Action Footer (only for pending and manager) -->
         <div
           v-else-if="!isDriver && ambulanceService.status === 'pending'"
-          class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
+          class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end"
         >
-          <p class="text-xs text-gray-500 dark:text-gray-400 italic">
-            Dikirim pada {{ formatDate(ambulanceService.createdAt) }}
-          </p>
           <div class="flex items-center gap-3">
             <BaseButton
               variant="danger"
@@ -527,11 +637,7 @@ const handleConfirmComplete = () => {
         <div
           v-else
           class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700"
-        >
-          <p class="text-xs text-gray-500 dark:text-gray-400 italic">
-            Dikirim pada {{ formatDate(ambulanceService.createdAt) }}
-          </p>
-        </div>
+        ></div>
       </div>
     </div>
 
@@ -575,7 +681,7 @@ const handleConfirmComplete = () => {
     <!-- Reject Confirmation Modal -->
     <RejectConfirmationModal
       :show="confirmReject"
-      :title="`Tolak permintaan ${ambulanceService?.applicantName || ''}?`"
+      :title="`Tolak permintaan ${ambulanceService?.submitterName || ''}?`"
       message="Berikan alasan penolakan untuk permintaan ambulans ini."
       primary-button-text="Tolak"
       secondary-button-text="Batal"
@@ -612,6 +718,13 @@ const handleConfirmComplete = () => {
       @primary="handleConfirmComplete"
       @secondary="confirmComplete = false"
       @close="confirmComplete = false"
+    />
+
+    <!-- KTP Preview Modal -->
+    <FilePreviewModal
+      :show="showKtpModal"
+      :fileUrl="ambulanceService?.submitterIdCard || null"
+      @close="showKtpModal = false"
     />
   </DashboardLayout>
 </template>

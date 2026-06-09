@@ -15,12 +15,19 @@ export interface AmbulanceService {
   id: string
   accountId: string
   ambulanceId?: string
-  applicantName: string
-  applicantPhone: string
-  applicantAddress: string
-  description?: string
-  requestDate: string
-  requestReason: string
+  submitterName: string
+  submitterPhone: string
+  submitterIdCard: string
+  patientName: string
+  patientAddress: string
+  patientAge: number
+  isInfectious: boolean
+  disease: string
+  isAbleToSit: boolean
+  pickupDate: string
+  pickupTime: string
+  destination: string
+  note: string
   status: AmbulanceServiceStatus
   serviceCategory: AmbulanceServiceCategory
   assignedAmbulance?: Ambulance
@@ -42,12 +49,19 @@ export interface AmbulanceServiceQueryParams extends PaginationParams {
 }
 
 export interface CreateAmbulanceServiceRequest {
-  accountId?: string
-  applicantName: string
-  applicantPhone: string
-  applicantAddress: string
-  requestDate: string
-  requestReason: string
+  submitterName: string
+  submitterPhone: string
+  submitterIdCard: File
+  patientName: string
+  patientAddress?: string
+  patientAge?: number
+  isInfectious?: boolean
+  disease?: string
+  isAbleToSit?: boolean
+  pickupDate: string
+  pickupTime: string
+  destination: string
+  note?: string
   serviceCategory: AmbulanceServiceCategory
 }
 
