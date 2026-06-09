@@ -18,19 +18,7 @@ const goToDetail = (type: 'donation' | 'social' | 'foster', slug: string) => {
   router.push({ name: 'report-detail', params: { type, slug } })
 }
 
-const hasLoadedDonation = ref(false)
-const hasLoadedSocial = ref(false)
-const hasLoadedFoster = ref(false)
 
-watch(
-  activeTab,
-  (newVal) => {
-    if (newVal === 'donation') hasLoadedDonation.value = true
-    if (newVal === 'social') hasLoadedSocial.value = true
-    if (newVal === 'foster') hasLoadedFoster.value = true
-  },
-  { immediate: true },
-)
 
 const donationPage = ref(1)
 const socialPage = ref(1)
@@ -64,9 +52,9 @@ const donationParams = computed(() => ({ limit: 10, page: donationPage.value, se
 const socialParams = computed(() => ({ limit: 10, page: socialPage.value, search: debouncedSearchQuery.value }))
 const fosterParams = computed(() => ({ limit: 10, page: fosterPage.value, search: debouncedSearchQuery.value }))
 
-const { listQuery: donationQuery } = useDonationProgramList(donationParams, { enabled: hasLoadedDonation })
-const { listQuery: socialQuery } = usePublishedSocialProgramList(socialParams, { enabled: hasLoadedSocial })
-const { listQuery: fosterQuery } = useFosterChildrenList(fosterParams, false, { enabled: hasLoadedFoster })
+const { listQuery: donationQuery } = useDonationProgramList(donationParams, { enabled: computed(() => activeTab.value === 'donation') })
+const { listQuery: socialQuery } = usePublishedSocialProgramList(socialParams, { enabled: computed(() => activeTab.value === 'social') })
+const { listQuery: fosterQuery } = useFosterChildrenList(fosterParams, false, { enabled: computed(() => activeTab.value === 'foster') })
 
 watch(() => donationQuery.data.value, (newData) => {
   if (newData?.data?.donationPrograms) {

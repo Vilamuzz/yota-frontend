@@ -231,10 +231,6 @@ watch(ambulanceSearchQuery, (val) => {
 
 const setActiveTab = (tab: 'foster' | 'ambulance') => {
   if (activeTab.value !== tab) {
-    fosterCursor.value = undefined
-    ambulanceCursor.value = undefined
-    accumulatedFoster.value = []
-    accumulatedAmbulance.value = []
     activeTab.value = tab
   }
 }

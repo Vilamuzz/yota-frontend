@@ -12,7 +12,18 @@ import { api } from '@/utils/api'
 export const ambulanceServiceService = {
   // Public
   createAmbulanceServiceRequest: async (data: CreateAmbulanceServiceRequest) => {
-    const response = await api.post(`${API.AMBULANCES}/requests`, data)
+    const formData = new FormData()
+    Object.keys(data).forEach((key) => {
+      const val = data[key as keyof CreateAmbulanceServiceRequest]
+      if (val !== undefined && val !== null) {
+        formData.append(key, val as Blob | string)
+      }
+    })
+    const response = await api.post(`${API.AMBULANCES}/requests`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   },
 
