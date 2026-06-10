@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   PhoneCall,
 } from 'lucide-vue-next'
+import { formatPhoneWithDashes } from '@/utils/phone'
 
 const props = defineProps<{
   show: boolean
@@ -211,7 +212,7 @@ const statusConfig = computed(() => {
                         >Nama Pemohon</span
                       >
                       <p class="text-sm font-bold text-gray-800">
-                        {{ ambulanceService.applicantName }}
+                        {{ ambulanceService.submitterName }}
                       </p>
                     </div>
 
@@ -221,11 +222,11 @@ const statusConfig = computed(() => {
                         >Nomor Telepon</span
                       >
                       <a
-                        :href="`tel:${ambulanceService.applicantPhone}`"
+                        :href="`https://wa.me/+62${ambulanceService.submitterPhone}`"
                         class="text-sm font-bold text-primary-500 hover:text-primary-600 hover:underline flex items-center gap-1 mt-0.5"
                       >
                         <Phone :size="14" />
-                        {{ ambulanceService.applicantPhone }}
+                        {{ formatPhoneWithDashes(ambulanceService.submitterPhone) }}
                       </a>
                     </div>
                   </div>
@@ -259,7 +260,7 @@ const statusConfig = computed(() => {
                           >Tanggal Layanan</span
                         >
                         <p class="text-xs font-bold text-gray-700 mt-0.5 text-right">
-                          {{ formatDate(ambulanceService.requestDate) }}
+                          {{ formatDate(ambulanceService.pickupDate) }}
                         </p>
                       </div>
                     </div>
@@ -289,7 +290,7 @@ const statusConfig = computed(() => {
                 <p
                   class="text-sm font-semibold text-gray-700 leading-relaxed bg-white border border-gray-100/80 p-3.5 rounded-xl"
                 >
-                  {{ ambulanceService.applicantAddress }}
+                  {{ ambulanceService.patientAddress }}
                 </p>
               </div>
 
@@ -304,9 +305,7 @@ const statusConfig = computed(() => {
                 <p
                   class="text-sm font-medium text-gray-600 leading-relaxed bg-white border border-gray-100/80 p-3.5 rounded-xl italic"
                 >
-                  "{{
-                    ambulanceService.requestReason || 'Tidak ada alasan tambahan yang diberikan.'
-                  }}"
+                  "{{ ambulanceService.note || 'Tidak ada alasan tambahan yang diberikan.' }}"
                 </p>
               </div>
 
@@ -394,9 +393,14 @@ const statusConfig = computed(() => {
                             class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider"
                             >Telepon</span
                           >
-                          <p class="text-xs font-bold text-gray-700">
-                            {{ ambulanceService.assignedAmbulance.driver.phone }}
-                          </p>
+                          <a
+                            :href="`https://wa.me/+62${ambulanceService.assignedAmbulance.driver.phone}`"
+                            class="text-xs font-bold text-gray-700"
+                          >
+                            {{
+                              formatPhoneWithDashes(ambulanceService.assignedAmbulance.driver.phone)
+                            }}
+                          </a>
                         </div>
                       </div>
                       <a

@@ -807,13 +807,13 @@ const getStatusConfig = (status: string) => {
                     </span>
                     <div class="h-1 w-1 rounded-full bg-gray-200"></div>
                     <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                      {{ formatDate(service.requestDate) }}
+                      {{ formatDate(service.pickupDate) }}
                     </span>
                   </div>
                   <h3
                     class="text-xl font-black text-gray-900 leading-tight group-hover:text-primary-400 transition-colors duration-300"
                   >
-                    {{ service.applicantName }}
+                    {{ service.submitterName }}
                   </h3>
                   <div class="flex flex-wrap items-center gap-4 pt-1">
                     <span
@@ -837,7 +837,7 @@ const getStatusConfig = (status: string) => {
               >
                 <button
                   v-if="service.status === 'pending'"
-                  @click.stop="openCancelModal(service.id, service.applicantName, 'ambulance')"
+                  @click.stop="openCancelModal(service.id, service.submitterName, 'ambulance')"
                   :disabled="ambulanceCancelMutation.isPending.value"
                   class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-600 hover:text-white transition-all duration-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   title="Batalkan Permintaan"

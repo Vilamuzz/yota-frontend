@@ -30,10 +30,10 @@ const alertClasses = computed(() => {
 })
 
 const iconMap = {
-  success: '✓',
-  error: '⚠️',
-  warning: '⚡',
-  info: 'ℹ️',
+  success: '',
+  error: '',
+  warning: '',
+  info: '',
 }
 </script>
 

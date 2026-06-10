@@ -47,7 +47,7 @@ const buttonClasses = computed(() => {
 </script>
 
 <template>
-  <router-link v-if="to" :to="to" :class="buttonClasses"> <slot /></router-link>
+  <RouterLink v-if="to" :to="to" :class="buttonClasses"> <slot /></RouterLink>
   <button v-else :type="type" :disabled="disabled || loading" :class="buttonClasses">
     <span v-if="loading" class="flex items-center justify-center">
       <svg
