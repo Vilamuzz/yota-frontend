@@ -51,8 +51,13 @@ const emit = defineEmits(['close'])
             </div>
 
             <div class="mt-8 flex justify-center">
-              <BaseButton variant="primary" size="md" class="px-10 rounded-xl" @click="emit('close')">
-                TUTUP
+              <BaseButton
+                variant="primary"
+                size="md"
+                class="px-10 rounded-xl"
+                @click="emit('close')"
+              >
+                Tutup
               </BaseButton>
             </div>
           </div>
