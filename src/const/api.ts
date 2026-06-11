@@ -19,4 +19,5 @@ export const API = {
   AMBULANCES_ADMIN: '/api/admin/ambulances',
   FOUNDATION_PROFILE: '/api/foundation-profile',
   FOUNDATION_PROFILE_ADMIN: '/api/admin/foundation-profile',
+  BACKUP: '/api/admin/backups',
 }

@@ -4,16 +4,7 @@ import { useBackups } from '@/composables/backup/useBackups'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import {
-  HardDrive,
-  Plus,
-  RefreshCw,
-  Download,
-  Trash2,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-} from 'lucide-vue-next'
+import { HardDrive, Plus, RefreshCw, Download, Trash2, Clock } from 'lucide-vue-next'
 
 const {
   backups,
@@ -73,6 +64,14 @@ const formatFileSize = (bytes: number) => {
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString()
+}
+
+const formatDuration = (seconds: number) => {
+  if (seconds < 60) return `${seconds}s`
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  if (remainingSeconds === 0) return `${minutes}m`
+  return `${minutes}m ${remainingSeconds}s`
 }
 </script>
 
@@ -156,7 +155,7 @@ const formatDate = (dateString: string) => {
                     Size
                   </th>
                   <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
-                    Status
+                    Duration
                   </th>
                   <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
                     Actions
@@ -175,26 +174,14 @@ const formatDate = (dateString: string) => {
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
                     {{ formatFileSize(backup.size) }}
                   </td>
-                  <td class="px-4 py-3">
-                    <span
-                      :class="[
-                        'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold',
-                        backup.status === 'success'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                          : backup.status === 'failed'
-                            ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
-                      ]"
-                    >
-                      <CheckCircle v-if="backup.status === 'success'" :size="14" />
-                      <AlertCircle v-else-if="backup.status === 'failed'" :size="14" />
-                      <Clock v-else :size="14" />
-                      {{ backup.status }}
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    <span class="inline-flex items-center gap-1.5">
+                      <Clock class="text-gray-400 dark:text-gray-500" :size="14" />
+                      {{ formatDuration(backup.durationSeconds) }}
                     </span>
                   </td>
                   <td class="px-4 py-3 space-x-2">
                     <button
-                      v-if="backup.status === 'success'"
                       @click="handleDownloadBackup(backup.id)"
                       :disabled="isDownloading"
                       class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-500 transition duration-200 text-sm font-medium"
