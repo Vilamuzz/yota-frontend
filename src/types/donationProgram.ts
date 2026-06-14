@@ -1,12 +1,4 @@
-import type { Pagination, PaginationParams, Response } from './response'
-
-export enum DonationProgramStatusEnum {
-  DRAFT = 'draft',
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-  EXPIRED = 'expired',
-  ARCHIVED = 'archived',
-}
+import type { PaginationParams, Response } from './response'
 
 export interface DonationProgram {
   id: string
@@ -24,6 +16,14 @@ export interface DonationProgram {
   createdAt: string
 }
 
+export enum DonationProgramStatusEnum {
+  DRAFT = 'draft',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  EXPIRED = 'expired',
+  ARCHIVED = 'archived',
+}
+
 export enum DonationProgramCategoryEnum {
   EDUCATION = 'pendidikan',
   HEALTH = 'kesehatan',
@@ -32,6 +32,28 @@ export enum DonationProgramCategoryEnum {
   DISASTER = 'bencana',
   HUMANITY = 'kemanusiaan',
   OTHER = 'lainnya',
+}
+
+export const donationProgramStatusOptions = [
+  { value: DonationProgramStatusEnum.DRAFT, label: 'Draf' },
+  { value: DonationProgramStatusEnum.ACTIVE, label: 'Aktif' },
+  { value: DonationProgramStatusEnum.COMPLETED, label: 'Selesai' },
+  { value: DonationProgramStatusEnum.EXPIRED, label: 'Kedaluwarsa' },
+  { value: DonationProgramStatusEnum.ARCHIVED, label: 'Diarsipkan' },
+]
+
+export const donationProgramCategoryOptions = [
+  { value: DonationProgramCategoryEnum.EDUCATION, label: 'Pendidikan' },
+  { value: DonationProgramCategoryEnum.HEALTH, label: 'Kesehatan' },
+  { value: DonationProgramCategoryEnum.ENVIRONMENT, label: 'Lingkungan' },
+  { value: DonationProgramCategoryEnum.SOCIAL, label: 'Sosial' },
+  { value: DonationProgramCategoryEnum.DISASTER, label: 'Bencana' },
+  { value: DonationProgramCategoryEnum.HUMANITY, label: 'Kemanusiaan' },
+  { value: DonationProgramCategoryEnum.OTHER, label: 'Lainnya' },
+]
+
+export const formatDonationProgramCategory = (category: DonationProgramCategoryEnum) => {
+  return donationProgramCategoryOptions.find((option) => option.value === category)?.label
 }
 
 export interface DonationProgramList {

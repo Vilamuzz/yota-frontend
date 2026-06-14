@@ -6,11 +6,12 @@ import DonationCard from '@/components/molecules/DonationCard.vue'
 import { useDonationProgramList } from '@/composables/donationProgram/useDonationProgramList'
 import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import BasePagination from '@/components/atoms/BasePagination.vue'
-import { Search, Loader2, Check } from 'lucide-vue-next'
+import { Search, Loader2, Check, RotateCcw } from 'lucide-vue-next'
 import {
   type DonationProgramQueryParams,
-  DonationProgramCategoryEnum,
-  DonationProgramStatusEnum,
+  donationProgramCategoryOptions,
+  donationProgramStatusOptions,
+  formatDonationProgramCategory,
 } from '@/types/donationProgram'
 
 const searchQuery = ref('')
@@ -64,10 +65,6 @@ const toggleSort = () => {
 const toggleFilter = () => {
   showFilterDropdown.value = !showFilterDropdown.value
   showSortDropdown.value = false
-
-  // Sync local temp state when opening filter dropdown
-  tempCategory.value = queryParams.category || null
-  tempStatus.value = queryParams.status || null
 }
 
 const selectSort = (val: string) => {
@@ -76,57 +73,19 @@ const selectSort = (val: string) => {
   showSortDropdown.value = false
 }
 
-const tempCategory = ref<DonationProgramCategoryEnum | null>(null)
-const tempStatus = ref<DonationProgramStatusEnum | null>(null)
-
-const selectStatus = (statusValue: DonationProgramStatusEnum) => {
-  if (tempStatus.value === statusValue) {
-    tempStatus.value = null
-  } else {
-    tempStatus.value = statusValue
-  }
-}
-
-const applyFilters = () => {
-  queryParams.category = tempCategory.value || undefined
-  queryParams.status = tempStatus.value || undefined
-  resetPagination()
-  showFilterDropdown.value = false
-}
-
-const resetFilters = () => {
-  tempCategory.value = null
-  queryParams.category = undefined
-  tempStatus.value = null
-  queryParams.status = undefined
-  resetPagination()
-  showFilterDropdown.value = false
-}
-
 const clearCategoryFilter = () => {
-  tempCategory.value = null
   queryParams.category = undefined
   resetPagination()
 }
 
 const clearStatusFilter = () => {
-  tempStatus.value = null
   queryParams.status = undefined
   resetPagination()
 }
 
 const hasActiveFilters = computed(() => !!queryParams.category || !!queryParams.status)
 
-const formatCategory = (cat: DonationProgramCategoryEnum) => {
-  if (cat === DonationProgramCategoryEnum.EDUCATION) return 'Pendidikan'
-  if (cat === DonationProgramCategoryEnum.HEALTH) return 'Kesehatan'
-  if (cat === DonationProgramCategoryEnum.ENVIRONMENT) return 'Lingkungan'
-  if (cat === DonationProgramCategoryEnum.SOCIAL) return 'Sosial'
-  if (cat === DonationProgramCategoryEnum.DISASTER) return 'Bencana'
-  if (cat === DonationProgramCategoryEnum.HUMANITY) return 'Kemanusiaan'
-  if (cat === DonationProgramCategoryEnum.OTHER) return 'Lainnya'
-  return cat
-}
+const formatCategory = formatDonationProgramCategory
 
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
@@ -217,16 +176,20 @@ onUnmounted(() => {
                   <label class="block text-xs font-bold text-gray-500 mb-2">Status</label>
                   <div class="flex gap-2">
                     <button
-                      v-for="statusOpt in [
-                        { label: 'Aktif', value: DonationProgramStatusEnum.ACTIVE },
-                        { label: 'Selesai', value: DonationProgramStatusEnum.COMPLETED },
-                        { label: 'Kedaluwarsa', value: DonationProgramStatusEnum.EXPIRED },
-                      ]"
+                      v-for="statusOpt in donationProgramStatusOptions.filter((o) =>
+                        ['active', 'completed', 'expired'].includes(o.value),
+                      )"
                       :key="statusOpt.value"
-                      @click="selectStatus(statusOpt.value)"
+                      @click="
+                        () => {
+                          queryParams.status =
+                            queryParams.status === statusOpt.value ? undefined : statusOpt.value
+                          resetPagination()
+                        }
+                      "
                       class="flex-1 text-center py-2.5 rounded-xl text-xs transition-colors border"
                       :class="
-                        tempStatus === statusOpt.value
+                        queryParams.status === statusOpt.value
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
@@ -241,35 +204,25 @@ onUnmounted(() => {
                   <label class="block text-xs font-bold text-gray-500 mb-2">Kategori</label>
                   <div class="grid grid-cols-2 gap-2">
                     <button
-                      v-for="cat in Object.values(DonationProgramCategoryEnum)"
-                      :key="cat"
-                      @click="tempCategory = tempCategory === cat ? null : cat"
+                      v-for="cat in donationProgramCategoryOptions"
+                      :key="cat.value"
+                      @click="
+                        () => {
+                          queryParams.category =
+                            queryParams.category === cat.value ? undefined : cat.value
+                          resetPagination()
+                        }
+                      "
                       class="w-full text-center px-3 py-2 rounded-xl text-xs transition-colors border"
                       :class="
-                        tempCategory === cat
+                        queryParams.category === cat.value
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
                     >
-                      {{ formatCategory(cat) }}
+                      {{ cat.label }}
                     </button>
                   </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    @click="resetFilters"
-                    class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    @click="applyFilters"
-                    class="flex-1 px-4 py-2.5 bg-primary-500 text-white rounded-xl text-xs font-semibold hover:bg-primary-600 transition-colors shadow-sm shadow-primary-500/20"
-                  >
-                    Terapkan
-                  </button>
                 </div>
               </div>
             </div>
@@ -294,11 +247,8 @@ onUnmounted(() => {
             <span
               >Status:
               {{
-                queryParams.status === 'active'
-                  ? 'Aktif'
-                  : queryParams.status === 'completed'
-                    ? 'Selesai'
-                    : 'Kedaluwarsa'
+                donationProgramStatusOptions.find((o) => o.value === queryParams.status)?.label ||
+                queryParams.status
               }}</span
             >
             <button @click="clearStatusFilter" class="hover:text-primary-800 focus:outline-none">
@@ -314,15 +264,14 @@ onUnmounted(() => {
         </div>
 
         <!-- Error State -->
-        <div
-          v-else-if="isError"
-          class="bg-red-50 border border-red-100 rounded-2xl p-8 text-center"
-        >
-          <div
-            class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500"
+        <div v-else-if="isError" class="py-24 text-center">
+          <button
+            @click="listQuery.refetch()"
+            class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-red-400 hover:bg-gray-200 transition-colors cursor-pointer"
+            aria-label="Coba Lagi"
           >
-            <Search :size="32" />
-          </div>
+            <RotateCcw :size="32" />
+          </button>
           <h3 class="text-lg font-bold text-gray-900 mb-2">Gagal Memuat Data</h3>
           <p class="text-gray-600 max-w-md mx-auto">
             {{
@@ -330,12 +279,6 @@ onUnmounted(() => {
               'Terjadi kesalahan sistem saat mencoba mengambil daftar program donasi.'
             }}
           </p>
-          <button
-            class="mt-6 px-6 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-            @click="listQuery.refetch()"
-          >
-            Coba Lagi
-          </button>
         </div>
 
         <!-- Main Content -->
@@ -363,12 +306,6 @@ onUnmounted(() => {
             <p class="text-gray-500 max-w-sm mx-auto">
               Maaf, kami tidak dapat menemukan program donasi dengan kata kunci "{{ searchQuery }}".
             </p>
-            <button
-              class="mt-8 px-6 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-              @click="searchQuery = ''"
-            >
-              Lihat Semua Program
-            </button>
           </div>
 
           <!-- Pagination -->

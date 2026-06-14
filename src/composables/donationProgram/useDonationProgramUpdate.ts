@@ -15,7 +15,7 @@ export const useDonationProgramUpdate = () => {
     mutationFn: ({ id, data }) => donationProgramService.updateDonationProgram(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
-      queryClient.invalidateQueries({ queryKey: ['adminDonationDetail', variables.id] })
+      queryClient.invalidateQueries({ queryKey: ['adminDonationProgramDetail', variables.id] })
     },
   })
 

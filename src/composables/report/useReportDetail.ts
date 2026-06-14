@@ -33,15 +33,18 @@ export const useReportDetail = (
   expenseParams: MaybeRefOrGetter<any> = { limit: 100 },
 ) => {
   const donationDetailQuery = useQuery({
-    queryKey: ['donationDetail', slug],
+    queryKey: ['donationProgramDetail', slug],
     queryFn: () => donationProgramService.getDonationProgramDetail(toValue(slug)),
     enabled: computed(() => toValue(type) === 'donation'),
   })
 
   const donationExpenseQuery = useQuery({
-    queryKey: ['donationExpenses', slug, expenseParams],
+    queryKey: ['donationProgramExpenses', slug, expenseParams],
     queryFn: () =>
-      donationProgramExpenseService.getDonationProgramExpenses(toValue(slug), toValue(expenseParams)),
+      donationProgramExpenseService.getDonationProgramExpenses(
+        toValue(slug),
+        toValue(expenseParams),
+      ),
     enabled: computed(() => toValue(type) === 'donation'),
   })
 

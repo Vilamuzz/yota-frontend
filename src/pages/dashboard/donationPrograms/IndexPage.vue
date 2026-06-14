@@ -13,8 +13,10 @@ import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
 import {
   type DonationProgram,
-  DonationProgramCategoryEnum,
   DonationProgramStatusEnum,
+  donationProgramCategoryOptions,
+  donationProgramStatusOptions,
+  formatDonationProgramCategory,
 } from '@/types/donationProgram'
 import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
@@ -31,25 +33,10 @@ const {
   hasActiveFilters,
   handleNextPage,
   handlePrevPage,
-  clearFilters,
 } = useDonationProgramFilters()
 
 const { deleteMutation, activeMutation, archiveMutation } = useDonationProgramUpdate()
 const { showToast } = useToast()
-
-const categories = Object.values(DonationProgramCategoryEnum)
-const statuses = Object.values(DonationProgramStatusEnum)
-
-const formatCategory = (cat: DonationProgramCategoryEnum) => {
-  if (cat === DonationProgramCategoryEnum.EDUCATION) return 'Pendidikan'
-  if (cat === DonationProgramCategoryEnum.HEALTH) return 'Kesehatan'
-  if (cat === DonationProgramCategoryEnum.ENVIRONMENT) return 'Lingkungan'
-  if (cat === DonationProgramCategoryEnum.SOCIAL) return 'Sosial'
-  if (cat === DonationProgramCategoryEnum.DISASTER) return 'Bencana'
-  if (cat === DonationProgramCategoryEnum.HUMANITY) return 'Kemanusiaan'
-  if (cat === DonationProgramCategoryEnum.OTHER) return 'Lainnya'
-  return cat
-}
 
 const confirmShow = ref(false)
 const confirmDonationProgram = ref<DonationProgram | null>(null)
@@ -137,12 +124,12 @@ function handleConfirmArchive() {
 
           <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
             <BaseFilter :has-active-filters="hasActiveFilters">
-              <template #default="{ closeDropdown }">
+              <template #default>
                 <div class="space-y-4 w-64">
                   <!-- Category filter -->
                   <div>
                     <label
-                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                     >
                       Kategori
                     </label>
@@ -151,8 +138,12 @@ function handleConfirmArchive() {
                       class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
                     >
                       <option :value="undefined">Semua Kategori</option>
-                      <option v-for="category in categories" :key="category" :value="category">
-                        {{ formatCategory(category) }}
+                      <option
+                        v-for="category in donationProgramCategoryOptions"
+                        :key="category.value"
+                        :value="category.value"
+                      >
+                        {{ category.label }}
                       </option>
                     </select>
                   </div>
@@ -160,7 +151,7 @@ function handleConfirmArchive() {
                   <!-- Status filter -->
                   <div>
                     <label
-                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                     >
                       Status
                     </label>
@@ -169,8 +160,12 @@ function handleConfirmArchive() {
                       class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
                     >
                       <option :value="undefined">Semua Status</option>
-                      <option v-for="status in statuses" :key="status" :value="status">
-                        {{ formatStatus(status) }}
+                      <option
+                        v-for="status in donationProgramStatusOptions"
+                        :key="status.value"
+                        :value="status.value"
+                      >
+                        {{ status.label }}
                       </option>
                     </select>
                   </div>
@@ -178,7 +173,7 @@ function handleConfirmArchive() {
                   <!-- Sort filter -->
                   <div>
                     <label
-                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                     >
                       Urutkan
                     </label>
@@ -197,21 +192,6 @@ function handleConfirmArchive() {
                       <option value="end_date asc">Tanggal Selesai (Terdekat)</option>
                       <option value="end_date desc">Tanggal Selesai (Terlama)</option>
                     </select>
-                  </div>
-
-                  <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                    <button
-                      @click="clearFilters"
-                      class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-                    >
-                      RESET
-                    </button>
-                    <button
-                      @click="closeDropdown"
-                      class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
-                    >
-                      APPLY
-                    </button>
                   </div>
                 </div>
               </template>
@@ -266,7 +246,7 @@ function handleConfirmArchive() {
                   {{ donation.title }}
                 </span>
                 <span class="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                  {{ formatCategory(donation.category) }}
+                  {{ formatDonationProgramCategory(donation.category) }}
                 </span>
               </div>
             </td>

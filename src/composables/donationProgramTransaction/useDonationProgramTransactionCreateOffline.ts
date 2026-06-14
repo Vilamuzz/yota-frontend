@@ -6,9 +6,8 @@ import type {
 } from '@/types/donationProgramTransaction'
 import type { ApiError } from '@/types/response'
 
-export const useDonationProgramTransactionCreateOffline = () => {
+export const useDonationProgramTransactionCreateOffline = (donationId: string) => {
   const queryClient = useQueryClient()
-
   const createMutation = useMutation<
     DonationProgramTransactionResponse,
     ApiError,
@@ -18,6 +17,7 @@ export const useDonationProgramTransactionCreateOffline = () => {
       donationProgramTransactionService.createOfflineDonationProgramTransaction(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['donationProgramTransactions'] })
+      queryClient.invalidateQueries({ queryKey: ['adminDonationProgramDetail', donationId] })
     },
   })
 

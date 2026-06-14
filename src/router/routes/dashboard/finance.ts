@@ -49,7 +49,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 component: () =>
                   import('@/pages/dashboard/income/donationProgramTransactions/IndexPage.vue'),
                 meta: {
-                  title: 'Transaksi Pengeluaran Program Donasi',
+                  title: 'Transaksi Pemasukan Program Donasi',
                   activeMenu: 'dashboard-donation-programs-income',
                 },
               },

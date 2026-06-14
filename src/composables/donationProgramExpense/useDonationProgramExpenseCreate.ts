@@ -18,7 +18,7 @@ export const useDonationProgramExpenseCreate = () => {
     mutationFn: ({ id, data }) =>
       donationProgramExpenseService.createDonationProgramExpense(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['donationProgramExpenses'] })
+      queryClient.invalidateQueries({ queryKey: ['adminDonationProgramExpenses'] })
     },
   })
 

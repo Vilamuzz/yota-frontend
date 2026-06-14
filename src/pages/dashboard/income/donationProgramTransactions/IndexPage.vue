@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { HandHeart, Plus, XCircle } from 'lucide-vue-next'
 import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
@@ -25,12 +25,11 @@ import { getStatusColor } from '@/utils/statusColor'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 import { useDonationProgramAdminDetail } from '@/composables/donationProgram'
 
-const router = useRouter()
+const route = useRoute()
+const donationId = route.params.id as string
 const { showToast } = useToast()
-const { cancelMutation } = useDonationProgramTransactionCancel()
-const { createMutation } = useDonationProgramTransactionCreateOffline()
-
-const donationId = router.currentRoute.value.params.id as string
+const { cancelMutation } = useDonationProgramTransactionCancel(donationId)
+const { createMutation } = useDonationProgramTransactionCreateOffline(donationId)
 
 const { detailQuery, isDonationLoading } = useDonationProgramAdminDetail(donationId)
 const donation = computed(() => detailQuery.data.value?.data)

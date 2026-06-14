@@ -27,7 +27,6 @@ const route = useRoute()
 const { showToast } = useToast()
 const donationId = route.params.id as string
 const { deleteMutation } = useDonationProgramExpenseDelete(donationId)
-
 const { detailQuery, isDonationLoading } = useDonationProgramAdminDetail(donationId)
 const donation = computed(() => detailQuery.data.value?.data)
 

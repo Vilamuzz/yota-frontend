@@ -25,9 +25,9 @@ const form = reactive({
   note: '',
   proofFile: null as File | null,
 })
+
 const proofPreview = ref<string | null>(null)
 const errors = ref<Record<string, string>>({})
-
 const isLoading = computed(() => createMutation.isPending.value)
 
 const formatCurrencyPreview = computed(() => {
