@@ -38,7 +38,11 @@ const {
         <div class="flex flex-col md:flex-col gap-4">
           <!-- Search and Filter Controls -->
           <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-            <BaseSearch v-model="searchQuery" placeholder="Search donations..." />
+            <BaseSearch
+              v-model="searchQuery"
+              placeholder="Cari program donasi..."
+              class="w-full sm:w-64"
+            />
             <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
               <BaseFilter :has-active-filters="hasActiveFilters">
                 <template #default>
