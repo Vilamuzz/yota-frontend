@@ -7,6 +7,9 @@ export interface FinanceRecord {
   totalDonationProgramExpense: number
   totalSocialProgramExpense: number
   totalFosterChildrenExpense: number
+  totalDonationProgramIncome?: number
+  totalSocialProgramIncome?: number
+  totalFosterChildrenIncome?: number
 }
 
 export type FinanceRecordResponse = Response<FinanceRecord>

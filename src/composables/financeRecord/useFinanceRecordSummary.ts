@@ -12,3 +12,13 @@ export const useFinanceRecordSummary = () => {
 
   return { summaryQuery }
 }
+
+export const useAdminFinanceRecordSummary = () => {
+  const summaryQuery = useQuery<FinanceRecordResponse, ApiError>({
+    queryKey: ['adminFinanceRecordSummary'],
+    queryFn: () => financeRecordService.getAdminSummaryFinanceRecord(),
+    retry: 1,
+  })
+
+  return { summaryQuery }
+}
