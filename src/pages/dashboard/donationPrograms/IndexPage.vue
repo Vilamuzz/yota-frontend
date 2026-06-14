@@ -57,12 +57,12 @@ function handleConfirmDelete() {
 
   deleteMutation.mutate(confirmDonationProgram.value.id, {
     onSuccess: () => {
-      showToast('Donation program deleted successfully!', 'success')
+      showToast('Program donasi berhasil dihapus!', 'success')
       confirmShow.value = false
       confirmDonationProgram.value = null
     },
     onError: (err) => {
-      showToast(extractError(err, 'Failed to delete donation program.'), 'error')
+      showToast(extractError(err, 'Gagal menghapus program donasi.'), 'error')
     },
   })
 }
@@ -77,12 +77,12 @@ function handleConfirmActive() {
 
   activeMutation.mutate(activeDonationProgram.value.id, {
     onSuccess: () => {
-      showToast('Donation program activated successfully!', 'success')
+      showToast('Program donasi berhasil diaktifkan!', 'success')
       activeConfirmShow.value = false
       activeDonationProgram.value = null
     },
     onError: (err) => {
-      showToast(extractError(err, 'Failed to activate donation program.'), 'error')
+      showToast(extractError(err, 'Gagal mengaktifkan program donasi.'), 'error')
     },
   })
 }
@@ -97,12 +97,12 @@ function handleConfirmArchive() {
 
   archiveMutation.mutate(archiveDonationProgram.value.id, {
     onSuccess: () => {
-      showToast('Donation program archived successfully!', 'success')
+      showToast('Program donasi berhasil diarsipkan!', 'success')
       archiveConfirmShow.value = false
       archiveDonationProgram.value = null
     },
     onError: (err) => {
-      showToast(extractError(err, 'Failed to archive donation program.'), 'error')
+      showToast(extractError(err, 'Gagal mengarsipkan program donasi.'), 'error')
     },
   })
 }
@@ -117,10 +117,10 @@ function handleConfirmArchive() {
       <div class="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
         <BaseButton variant="primary" :to="{ name: 'dashboard-donation-programs-create' }">
           <Plus :size="20" class="mr-1" />
-          Create Donation
+          Buat Program Donasi
         </BaseButton>
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <BaseSearch v-model="searchQuery" placeholder="Search donations..." />
+          <BaseSearch v-model="searchQuery" placeholder="Cari program donasi..." />
 
           <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
             <BaseFilter :has-active-filters="hasActiveFilters">

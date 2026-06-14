@@ -64,4 +64,17 @@ router.beforeEach(async (to, _from, next) => {
   next()
 })
 
+router.onError((error, to) => {
+  const errors = [
+    'Failed to fetch dynamically imported module',
+    'error loading dynamically imported module',
+  ]
+
+  const isChunkLoadFailed = errors.some((msg) => error.message?.includes(msg))
+
+  if (isChunkLoadFailed) {
+    window.location.href = to.fullPath
+  }
+})
+
 export default router

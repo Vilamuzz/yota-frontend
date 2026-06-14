@@ -11,6 +11,7 @@ export const API = {
   SOCIAL_PROGRAMS: '/api/social-programs',
   SOCIAL_PROGRAMS_ADMIN: '/api/admin/social-programs',
   FINANCE_RECORD: '/api/finance-records',
+  FINANCE_RECORD_ADMIN: '/api/admin/finance-records',
   GALLERIES: '/api/galleries',
   GALLERIES_ADMIN: '/api/admin/galleries',
   NEWS: '/api/news',

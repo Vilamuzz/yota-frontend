@@ -7,4 +7,9 @@ export const financeRecordService = {
     const response = await api.get<FinanceRecordResponse>(`${API.FINANCE_RECORD}/summary`)
     return response.data
   },
+
+  getAdminSummaryFinanceRecord: async (): Promise<FinanceRecordResponse> => {
+    const response = await api.get<FinanceRecordResponse>(`${API.FINANCE_RECORD_ADMIN}/summary`)
+    return response.data
+  },
 }
