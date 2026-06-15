@@ -16,19 +16,19 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useFosterChildrenUpdate } from '@/composables/fosterChildren/useFosterChildrenUpdate'
-import { useFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenDetail'
 import { updateFosterChildrenSchema } from '@/schemas/fosterChildren.schema'
 import { Category, Gender, type Achievement } from '@/types/fosterChildren'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
+import { useAdminFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenAdminDetail'
 
 const route = useRoute()
 const router = useRouter()
 const fosterChildId = route.params.id as string
 
 const { updateMutation, validationErrors } = useFosterChildrenUpdate()
-const { detailQuery } = useFosterChildrenDetail(fosterChildId)
+const { detailQuery } = useAdminFosterChildrenDetail(fosterChildId)
 const { showToast } = useToast()
 
 const genders = Object.values(Gender)

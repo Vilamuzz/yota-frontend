@@ -1,7 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, watch, reactive } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Plus, Heart, Check, X, AlertCircle, CheckCircle } from 'lucide-vue-next'
+import {
+  Eye,
+  SquarePen,
+  Trash2,
+  Plus,
+  Heart,
+  Check,
+  X,
+  AlertCircle,
+  CheckCircle,
+} from 'lucide-vue-next'
 import { useSocialProgramStatus } from '@/composables/socialProgram/useSocialProgramStatus'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
 import { useToast } from '@/composables/ui/useToast'
@@ -13,9 +23,13 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import type { SocialProgram, SocialProgramQueryParams } from '@/types/socialProgram'
-import { SocialProgramStatusEnum } from '@/types/socialProgram'
+import {
+  formatSocialProgramStatus,
+  SocialProgramStatusEnum,
+  socialProgramStatusOptions,
+} from '@/types/socialProgram'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
+import { formatCurrency, formatDate } from '@/utils/format'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
@@ -26,7 +40,6 @@ import { extractError } from '@/utils/error'
 const authStore = useAuthStore()
 const { deleteMutation } = useSocialProgramDelete()
 
-const statuses = Object.values(SocialProgramStatusEnum)
 const isChairman = computed(() => authStore.activeRole === ROLES.CHAIRMAN)
 
 const queryParams = reactive<SocialProgramQueryParams>({
@@ -199,8 +212,12 @@ const handleConfirmReject = async (reason: string) => {
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
                   >
                     <option :value="undefined">Semua</option>
-                    <option v-for="status in statuses" :key="status" :value="status">
-                      {{ formatStatus(status) }}
+                    <option
+                      v-for="status in socialProgramStatusOptions"
+                      :key="status.value"
+                      :value="status.value"
+                    >
+                      {{ status.label }}
                     </option>
                   </select>
                 </div>
@@ -307,7 +324,7 @@ const handleConfirmReject = async (reason: string) => {
                   getStatusColor(program.status),
                 ]"
               >
-                {{ formatStatus(program.status) }}
+                {{ formatSocialProgramStatus(program.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">

@@ -7,6 +7,17 @@ export enum SocialProgramStatusEnum {
   REJECTED = 'rejected',
 }
 
+export const socialProgramStatusOptions = [
+  { value: SocialProgramStatusEnum.PENDING, label: 'Diajukan' },
+  { value: SocialProgramStatusEnum.ACTIVE, label: 'Aktif' },
+  { value: SocialProgramStatusEnum.COMPLETED, label: 'Selesai' },
+  { value: SocialProgramStatusEnum.REJECTED, label: 'Ditolak' },
+]
+
+export const formatSocialProgramStatus = (status: SocialProgramStatusEnum) => {
+  return socialProgramStatusOptions.find((option) => option.value === status)?.label
+}
+
 export interface SocialProgram {
   id: string
   slug: string
