@@ -5,8 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Yayasan Orang Tua Asuh (YOTA) — lembaga sosial yang bergerak dalam pendampingan anak asuh, program donasi, dan penyaluran bantuan secara transparan.">
     <link rel="icon" href="/favicon.ico">
-    <!-- Preconnect to API and Midtrans to start DNS/TLS early -->
     <link rel="preconnect" href="https://app.sandbox.midtrans.com">
+
+    <!--
+      Preload fonts: break the critical chain HTML → CSS → font file.
+      Without preload the browser can't discover the font until it has
+      downloaded and parsed the CSS, causing a FOIT that blocks FCP.
+      With preload the font download starts in parallel with the CSS.
+      'as=font' + 'crossorigin' are required for correct cache behaviour.
+    -->
+    <link rel="preload" href="/src/assets/fonts/poppins.medium.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/src/assets/fonts/SFPRODISPLAYMEDIUM.OTF" as="font" type="font/otf" crossorigin>
+
     <title>Yota - Yayasan Orang Tua Asuh</title>
   </head>
   <body>
@@ -20,3 +30,4 @@
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
+

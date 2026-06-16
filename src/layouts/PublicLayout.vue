@@ -2,7 +2,7 @@
 import { useRouter } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useFoundationProfileStore } from '@/stores/foundationProfile'
-import { Motion } from 'motion-v'
+
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLogout } from '@/composables/auth/useLogout'
@@ -188,28 +188,33 @@ const dropdownLinks = [
                   />
                 </button>
 
-                <Motion
-                  v-if="isServicesMenuOpen"
-                  :initial="{ opacity: 0, y: -10, scale: 0.95 }"
-                  :animate="{ opacity: 1, y: 0, scale: 1 }"
-                  :exit="{ opacity: 0, y: -10, scale: 0.95 }"
-                  :transition="{ duration: 0.2 }"
-                  class="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-52 z-50"
+                <Transition
+                  enter-active-class="transition-all duration-200 ease-out"
+                  enter-from-class="opacity-0 -translate-y-2 scale-95"
+                  enter-to-class="opacity-100 translate-y-0 scale-100"
+                  leave-active-class="transition-all duration-150 ease-in"
+                  leave-from-class="opacity-100 translate-y-0 scale-100"
+                  leave-to-class="opacity-0 -translate-y-2 scale-95"
                 >
                   <div
-                    class="bg-white rounded-xl shadow-xl overflow-hidden p-1.5 border border-gray-100"
+                    v-if="isServicesMenuOpen"
+                    class="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-52 z-50"
                   >
-                    <RouterLink
-                      v-for="link in dropdownLinks"
-                      :key="link.to"
-                      :to="link.to"
-                      class="block p-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition font-medium"
-                      @click="isServicesMenuOpen = false"
+                    <div
+                      class="bg-white rounded-xl shadow-xl overflow-hidden p-1.5 border border-gray-100"
                     >
-                      {{ link.label }}
-                    </RouterLink>
+                      <RouterLink
+                        v-for="link in dropdownLinks"
+                        :key="link.to"
+                        :to="link.to"
+                        class="block p-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition font-medium"
+                        @click="isServicesMenuOpen = false"
+                      >
+                        {{ link.label }}
+                      </RouterLink>
+                    </div>
                   </div>
-                </Motion>
+                </Transition>
               </div>
             </div>
 
@@ -246,12 +251,16 @@ const dropdownLinks = [
                     </span>
                   </button>
 
-                  <Motion
+                <Transition
+                  enter-active-class="transition-all duration-200 ease-out"
+                  enter-from-class="opacity-0 -translate-y-2 scale-95"
+                  enter-to-class="opacity-100 translate-y-0 scale-100"
+                  leave-active-class="transition-all duration-150 ease-in"
+                  leave-from-class="opacity-100 translate-y-0 scale-100"
+                  leave-to-class="opacity-0 -translate-y-2 scale-95"
+                >
+                  <div
                     v-if="isProfileMenuOpen"
-                    :initial="{ opacity: 0, y: -10, scale: 0.95 }"
-                    :animate="{ opacity: 1, y: 0, scale: 1 }"
-                    :exit="{ opacity: 0, y: -10, scale: 0.95 }"
-                    :transition="{ duration: 0.2 }"
                     class="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl overflow-hidden z-50 p-1.5 border border-gray-100"
                     @click.stop
                   >
@@ -353,7 +362,8 @@ const dropdownLinks = [
                         </button>
                       </div>
                     </div>
-                  </Motion>
+                  </div>
+                </Transition>
                 </div>
               </template>
             </div>
