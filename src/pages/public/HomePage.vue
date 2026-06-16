@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import { formatCurrency, formatDate } from '@/utils/format'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
@@ -14,7 +14,7 @@ const router = useRouter()
 
 // Hero carousel
 const currentSlide = ref(0)
-const slides = [
+const slides = computed(() => [
   {
     image: foundationProfileStore.heroImages[0],
     title: 'Selamat Datang di Yayasan Orang Tua Asuh',
@@ -39,12 +39,12 @@ const slides = [
     buttonText: 'Ajukan Peminjaman Ambulans',
     buttonLink: '/ambulance/request',
   },
-]
+])
 
 let slideInterval: number | null = null
 
 const nextSlide = () => {
-  currentSlide.value = (currentSlide.value + 1) % slides.length
+  currentSlide.value = (currentSlide.value + 1) % slides.value.length
 }
 
 const goToSlide = (index: number) => {
@@ -61,7 +61,6 @@ onUnmounted(() => {
   }
 })
 
-// Real data fetching via composables
 const { donationPrograms, isLoading: isDonationLoading } = useDonationProgramList({ limit: 3 })
 const { news: latestNews, isLoading: isNewsLoading } = usePublishedNewsList({ limit: 3 })
 const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ limit: 5 })
@@ -80,22 +79,26 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
           :class="currentSlide === index ? 'opacity-100' : 'opacity-0'"
         >
           <!-- Background Image -->
-          <!-- First slide: eager load with high fetch priority (this IS the LCP element) -->
-          <img
-            v-if="index === 0"
-            :src="slide.image"
-            :alt="slide.title"
-            class="w-full h-full object-cover"
-            fetchpriority="high"
-          />
-          <!-- Other slides: lazy is fine — they're hidden behind opacity:0 -->
-          <img
-            v-else
-            :src="slide.image"
-            :alt="slide.title"
-            class="w-full h-full object-cover"
-            loading="lazy"
-          />
+          <template v-if="slide.image">
+            <!-- First slide: eager load with high fetch priority (this IS the LCP element) -->
+            <img
+              v-if="index === 0"
+              :src="slide.image"
+              :alt="slide.title"
+              class="w-full h-full object-cover"
+              fetchpriority="high"
+            />
+            <!-- Other slides: lazy is fine — they're hidden behind opacity:0 -->
+            <img
+              v-else
+              :src="slide.image"
+              :alt="slide.title"
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </template>
+          <!-- Fallback Skeleton -->
+          <div v-else class="w-full h-full bg-gray-200 animate-pulse"></div>
 
           <!-- Overlay -->
           <div class="absolute inset-0 bg-black opacity-50"></div>
