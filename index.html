@@ -1,15 +1,19 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="id">
   <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="/src/assets/styles/style.css" rel="stylesheet">
+    <meta name="description" content="Yayasan Orang Tua Asuh (YOTA) — lembaga sosial yang bergerak dalam pendampingan anak asuh, program donasi, dan penyaluran bantuan secara transparan.">
+    <link rel="icon" href="/favicon.ico">
+    <!-- Preconnect to API and Midtrans to start DNS/TLS early -->
+    <link rel="preconnect" href="https://app.sandbox.midtrans.com">
     <title>Yota - Yayasan Orang Tua Asuh</title>
   </head>
   <body>
     <div id="app"></div>
+    <!-- async: loads in parallel, does NOT block HTML parsing or Vue app mount -->
     <script
+      async
       src="https://app.sandbox.midtrans.com/snap/snap.js"
       data-client-key="%VITE_MIDTRANS_CLIENT_KEY%"
     ></script>

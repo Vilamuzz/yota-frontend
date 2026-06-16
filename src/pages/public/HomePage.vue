@@ -80,7 +80,22 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
           :class="currentSlide === index ? 'opacity-100' : 'opacity-0'"
         >
           <!-- Background Image -->
-          <img :src="slide.image" :alt="slide.title" class="w-full h-full object-cover" />
+          <!-- First slide: eager load with high fetch priority (this IS the LCP element) -->
+          <img
+            v-if="index === 0"
+            :src="slide.image"
+            :alt="slide.title"
+            class="w-full h-full object-cover"
+            fetchpriority="high"
+          />
+          <!-- Other slides: lazy is fine — they're hidden behind opacity:0 -->
+          <img
+            v-else
+            :src="slide.image"
+            :alt="slide.title"
+            class="w-full h-full object-cover"
+            loading="lazy"
+          />
 
           <!-- Overlay -->
           <div class="absolute inset-0 bg-black opacity-50"></div>
@@ -148,6 +163,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
               :src="foundationProfileStore.founderPicture"
               :alt="foundationProfileStore.founderName"
               class="w-full h-full object-cover rounded-full shadow-md"
+              loading="lazy"
             />
             <BaseSkeleton
               v-else
@@ -203,6 +219,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
                 :src="donation.coverImage"
                 :alt="donation.title"
                 class="w-full h-full object-cover"
+                loading="lazy"
               />
             </div>
 
@@ -281,6 +298,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
                 :src="news.coverImage"
                 :alt="news.title"
                 class="w-full h-full object-cover rounded-l-lg"
+                loading="lazy"
               />
             </div>
 
@@ -340,6 +358,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
                 :src="item.coverImage"
                 :alt="item.title"
                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                loading="lazy"
               />
             </div>
           </div>
@@ -355,6 +374,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
                 :src="item.coverImage"
                 :alt="item.title"
                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                loading="lazy"
               />
             </div>
           </div>

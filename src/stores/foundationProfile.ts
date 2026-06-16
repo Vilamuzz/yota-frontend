@@ -3,8 +3,28 @@ import { ref, computed } from 'vue'
 import { foundationProfileService } from '@/services/foundationProfile.service'
 import type { FoundationProfile } from '@/types/foundationProfile'
 
+const CACHE_KEY = 'yota_foundation_profile'
+
+const readCache = (): FoundationProfile | null => {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    return raw ? (JSON.parse(raw) as FoundationProfile) : null
+  } catch {
+    return null
+  }
+}
+
+const writeCache = (data: FoundationProfile) => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+  } catch {
+    // storage quota exceeded — silently ignore
+  }
+}
+
 export const useFoundationProfileStore = defineStore('foundationProfile', () => {
-  const profile = ref<FoundationProfile | null>(null)
+  // Initialise from cache SYNCHRONOUSLY — no network wait for returning visitors
+  const profile = ref<FoundationProfile | null>(readCache())
   const isLoading = ref(false)
   const hasFetched = ref(false)
 
@@ -33,14 +53,19 @@ export const useFoundationProfileStore = defineStore('foundationProfile', () => 
   const foundationTwitter = computed(() => profile.value?.foundationTwitter ?? null)
 
   const fetchProfile = async () => {
-    if (hasFetched.value || isLoading.value) return
+    // If already fetching, skip
+    if (isLoading.value) return
     isLoading.value = true
     try {
       const response = await foundationProfileService.getFoundationProfile()
-      profile.value = response.data ?? null
+      if (response.data) {
+        profile.value = response.data
+        writeCache(response.data)
+      }
       hasFetched.value = true
     } catch {
       // Profile may not exist yet — that's fine
+      // Keep showing stale cached data if available
     } finally {
       isLoading.value = false
     }
@@ -50,6 +75,7 @@ export const useFoundationProfileStore = defineStore('foundationProfile', () => 
   const refresh = () => {
     hasFetched.value = false
     profile.value = null
+    localStorage.removeItem(CACHE_KEY)
     fetchProfile()
   }
 
@@ -75,3 +101,4 @@ export const useFoundationProfileStore = defineStore('foundationProfile', () => 
     refresh,
   }
 })
+
