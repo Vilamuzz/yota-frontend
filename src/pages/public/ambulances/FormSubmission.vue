@@ -424,7 +424,8 @@ const handleSubmit = () => {
     <!-- Footer -->
     <div class="sticky bottom-0 z-40 bg-white border-t border-slate-200 px-6 py-4 flex justify-end">
       <BaseButton
-        type="submit"
+        @click="handleSubmit"
+        type="button"
         variant="primary"
         :loading="isLoading"
         :disabled="isLoading"
