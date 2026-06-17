@@ -9,9 +9,12 @@ import { usePrayerList } from '@/composables/prayer/usePrayerList'
 import { usePrayerAmen } from '@/composables/prayer/usePrayerAmen'
 import { usePrayerReport } from '@/composables/prayer/usePrayerReport'
 import { formatDate } from '@/utils/format'
+import type { Prayer } from '@/types/prayer'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const donationSlug = computed(() => route.params.slug as string)
+const authStore = useAuthStore()
 
 const { detailQuery } = useDonationProgramDetail(donationSlug)
 const program = computed(() => {
@@ -79,12 +82,8 @@ const reportPrayerId = ref<string>('')
 
 const prays = computed(() => {
   return accumulatedPrayers.value.map((pray) => ({
-    id: pray.id,
-    name: pray.username,
-    message: pray.content,
-    amenCount: pray.amenCount ?? (pray as any).amen_count,
-    isAmen: pray.isAmen ?? (pray as any).is_amen,
-    date: formatDate(pray.createdAt ?? (pray as any).created_at),
+    ...pray,
+    date: formatDate(pray.createdAt),
   }))
 })
 
@@ -98,17 +97,17 @@ const getInitials = (name: string) =>
 const amenStateOverrides = ref<Record<string, boolean>>({})
 const amenCountOverrides = ref<Record<string, number>>({})
 
-const isPrayerAmened = (pray: any) => {
+const isPrayerAmened = (pray: Prayer) => {
   const overridden = amenStateOverrides.value[pray.id]
   return overridden ?? pray.isAmen
 }
 
-const getPrayerAmenCount = (pray: any) => {
+const getPrayerAmenCount = (pray: Prayer) => {
   const overridden = amenCountOverrides.value[pray.id]
   return overridden ?? pray.amenCount
 }
 
-const handleAmenPrayer = async (pray: any) => {
+const handleAmenPrayer = async (pray: Prayer) => {
   const previousState = isPrayerAmened(pray)
   const previousCount = getPrayerAmenCount(pray)
 
@@ -118,11 +117,13 @@ const handleAmenPrayer = async (pray: any) => {
   amenStateOverrides.value[pray.id] = nextState
   amenCountOverrides.value[pray.id] = nextCount
 
-  try {
-    await amenMutation.mutateAsync(pray.id)
-  } catch {
-    amenStateOverrides.value[pray.id] = previousState
-    amenCountOverrides.value[pray.id] = previousCount
+  if (authStore.isAuthenticated) {
+    try {
+      await amenMutation.mutateAsync(pray.id)
+    } catch {
+      amenStateOverrides.value[pray.id] = previousState
+      amenCountOverrides.value[pray.id] = previousCount
+    }
   }
 }
 
@@ -143,12 +144,12 @@ const handleReportPrayer = async () => {
   closeReportModal()
 }
 
-const handleShare = (pray: any) => {
-  const shareTitle = `Doa dari ${pray.name}`
+const handleShare = (pray: Prayer) => {
+  const shareTitle = `Doa dari ${pray.username}`
   if (navigator.share) {
-    navigator.share({ title: shareTitle, text: pray.message, url: window.location.href })
+    navigator.share({ title: shareTitle, text: pray.content, url: window.location.href })
   } else {
-    navigator.clipboard.writeText(`"${pray.message}" - oleh ${pray.name}`)
+    navigator.clipboard.writeText(`"${pray.content}" - oleh ${pray.username}`)
   }
 }
 </script>
@@ -234,10 +235,10 @@ const handleShare = (pray: any) => {
                 <div
                   class="w-12 h-12 rounded-full bg-linear-to-br from-primary-300 to-primary-500 text-white flex items-center justify-center text-lg font-bold shadow-sm shadow-primary-200"
                 >
-                  {{ getInitials(pray.name) }}
+                  {{ getInitials(pray.username) }}
                 </div>
                 <div>
-                  <h3 class="font-bold text-gray-900">{{ pray.name }}</h3>
+                  <h3 class="font-bold text-gray-900">{{ pray.username }}</h3>
                   <p class="text-xs text-gray-400">{{ pray.date }}</p>
                 </div>
               </div>
@@ -249,7 +250,7 @@ const handleShare = (pray: any) => {
               </button>
             </div>
 
-            <p class="text-gray-600 text-sm leading-relaxed italic">"{{ pray.message }}"</p>
+            <p class="text-gray-600 text-sm leading-relaxed italic">"{{ pray.content }}"</p>
 
             <div class="flex items-center gap-6 pt-2 border-t border-gray-55">
               <button

@@ -3,6 +3,7 @@ import { ref, computed, watch, onUnmounted, onMounted } from 'vue'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import BasePublicSearch from '@/components/atoms/BasePublicSearch.vue'
 import { extractError } from '@/utils/error'
+import { useAuthStore } from '@/stores/auth'
 import type { ApiError } from '@/types/response'
 import { useMyFosterChildrenCandidateList } from '@/composables/fosterChildrenCandidate/useMyFosterChildrenCandidateList'
 import { useMyFosterChildrenCandidateCancel } from '@/composables/fosterChildrenCandidate/useMyFosterChildrenCandidateCancel'
@@ -38,6 +39,7 @@ import {
 } from '@/types/ambulanceService'
 
 const { showToast } = useToast()
+const authStore = useAuthStore()
 
 const activeTab = ref<'foster' | 'ambulance'>('foster')
 
@@ -124,7 +126,7 @@ const fosterQueryParams = computed<FosterChildrenCandidateQueryParams>(() => ({
 
 const { listQuery: fosterListQuery, isLoading: isFosterLoading } = useMyFosterChildrenCandidateList(
   fosterQueryParams,
-  { enabled: computed(() => activeTab.value === 'foster') },
+  { enabled: computed(() => activeTab.value === 'foster' && authStore.isAuthenticated) },
 )
 
 const { cancelMutation: fosterCancelMutation } = useMyFosterChildrenCandidateCancel()
@@ -165,7 +167,7 @@ const ambulanceQueryParams = computed<AmbulanceServiceQueryParams>(() => {
 
 const { listQuery: ambulanceListQuery, isLoading: isAmbulanceLoading } =
   useMyAmbulanceServiceCandidateList(ambulanceQueryParams, {
-    enabled: computed(() => activeTab.value === 'ambulance'),
+    enabled: computed(() => activeTab.value === 'ambulance' && authStore.isAuthenticated),
   })
 
 const { cancelMutation: ambulanceCancelMutation } = useMyAmbulanceServiceCandidateCancel()
@@ -396,6 +398,7 @@ const getStatusConfig = (status: string) => {
           </p>
         </div>
 
+        <template v-if="authStore.isAuthenticated">
         <!-- Category Tabs (InvoicePage style) -->
         <div class="flex flex-col md:flex-row justify-center md:justify-start gap-4 mb-8">
           <button
@@ -882,6 +885,27 @@ const getStatusConfig = (status: string) => {
             class="h-20 w-full flex items-center justify-center mt-6"
           >
             <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
+          </div>
+        </template>
+        </template>
+
+        <template v-else>
+          <div class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-12 md:p-24 text-center mt-12">
+            <div class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-8 text-primary-300">
+              <FileText :size="48" />
+            </div>
+            <h3 class="text-2xl font-black text-gray-900 mb-3">Akses Terbatas</h3>
+            <p class="text-gray-500 max-w-md mx-auto text-base leading-relaxed mb-8">
+              Silakan masuk terlebih dahulu untuk melihat riwayat pengajuan layanan Anda.
+            </p>
+            <div class="flex items-center justify-center gap-4">
+              <RouterLink
+                to="/login"
+                class="px-8 py-4 bg-primary-500 text-white font-bold rounded-2xl hover:bg-primary-600 transition shadow-lg shadow-primary-500/20"
+              >
+                Masuk ke Akun
+              </RouterLink>
+            </div>
           </div>
         </template>
       </div>

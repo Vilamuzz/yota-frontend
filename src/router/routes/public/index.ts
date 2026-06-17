@@ -169,13 +169,11 @@ export const publicRoutes: RouteRecordRaw[] = [
   {
     path: '/invoices',
     name: 'invoices',
-    meta: { requiresAuth: true },
     component: () => import('@/pages/public/InvoicePage.vue'),
   },
   {
     path: '/submission-history',
     name: 'submission-history',
-    meta: { requiresAuth: true },
     component: () => import('@/pages/public/SubmissionHistoryPage.vue'),
   },
 ]

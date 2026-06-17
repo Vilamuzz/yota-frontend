@@ -38,9 +38,13 @@ export const donationProgramStatusOptions = [
   { value: DonationProgramStatusEnum.DRAFT, label: 'Draf' },
   { value: DonationProgramStatusEnum.ACTIVE, label: 'Aktif' },
   { value: DonationProgramStatusEnum.COMPLETED, label: 'Selesai' },
-  { value: DonationProgramStatusEnum.EXPIRED, label: 'Kedaluwarsa' },
+  { value: DonationProgramStatusEnum.EXPIRED, label: 'Kadaluwarsa' },
   { value: DonationProgramStatusEnum.ARCHIVED, label: 'Diarsipkan' },
 ]
+
+export const formatDonationProgramStatus = (status: DonationProgramStatusEnum) => {
+  return donationProgramStatusOptions.find((option) => option.value === status)?.label
+}
 
 export const donationProgramCategoryOptions = [
   { value: DonationProgramCategoryEnum.EDUCATION, label: 'Pendidikan' },

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/ui/useToast'
 import PublicLayout from '@/layouts/PublicLayout.vue'
+import { useAuthStore } from '@/stores/auth'
 import {
   FileText,
   Clock,
@@ -31,6 +32,7 @@ import { formatCurrency, formatDate } from '@/utils/format'
 const route = useRoute()
 const router = useRouter()
 const { showToast } = useToast()
+const authStore = useAuthStore()
 
 const activeCategory = ref('Program Donasi')
 const activeStatus = ref('WAITING')
@@ -59,15 +61,15 @@ const socialParams = computed(() => ({
 
 const { isLoading: isLoadingDonations, query: donationQuery } = useMyDonationProgramTransactions(
   donationParams,
-  { enabled: computed(() => activeCategory.value === 'Program Donasi') },
+  { enabled: computed(() => activeCategory.value === 'Program Donasi' && authStore.isAuthenticated) },
 )
 const { isLoading: isLoadingFoster, query: fosterQuery } = useMyFosterChildrenTransactions(
   fosterParams,
-  { enabled: computed(() => activeCategory.value === 'Donasi Anak Asuh') },
+  { enabled: computed(() => activeCategory.value === 'Donasi Anak Asuh' && authStore.isAuthenticated) },
 )
 const { isLoading: isLoadingSocial, query: socialQuery } = useMySocialProgramInvoices(
   socialParams,
-  { enabled: computed(() => activeCategory.value === 'Program Sosial') },
+  { enabled: computed(() => activeCategory.value === 'Program Sosial' && authStore.isAuthenticated) },
 )
 
 const accumulatedDonations = ref<DonationProgramTransaction[]>([])
@@ -356,6 +358,7 @@ const getStatusLabel = (status: string) => {
           </p>
         </div>
 
+        <template v-if="authStore.isAuthenticated">
         <!-- Main Category Tabs -->
         <div class="flex flex-col md:flex-row justify-center md:justify-start gap-4 mb-8">
           <button
@@ -563,6 +566,26 @@ const getStatusLabel = (status: string) => {
             >.
           </p>
         </div>
+        </template>
+        <template v-else>
+          <div class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-12 md:p-24 text-center mt-12">
+            <div class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-8 text-primary-300">
+              <Receipt :size="48" />
+            </div>
+            <h3 class="text-2xl font-black text-gray-900 mb-3">Akses Terbatas</h3>
+            <p class="text-gray-500 max-w-md mx-auto text-base leading-relaxed mb-8">
+              Silakan masuk terlebih dahulu untuk melihat riwayat donasi dan tagihan layanan Anda.
+            </p>
+            <div class="flex items-center justify-center gap-4">
+              <RouterLink
+                to="/login"
+                class="px-8 py-4 bg-primary-500 text-white font-bold rounded-2xl hover:bg-primary-600 transition shadow-lg shadow-primary-500/20"
+              >
+                Masuk ke Akun
+              </RouterLink>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </PublicLayout>

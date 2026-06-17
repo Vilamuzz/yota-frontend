@@ -2,7 +2,11 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatCurrency } from '@/utils/format'
-import { type DonationProgram, DonationProgramStatusEnum } from '@/types/donationProgram'
+import {
+  type DonationProgram,
+  DonationProgramStatusEnum,
+  formatDonationProgramStatus,
+} from '@/types/donationProgram'
 
 const props = defineProps<{
   donation: DonationProgram
@@ -48,13 +52,13 @@ const remainingDays = computed(() =>
         v-if="donation.status === DonationProgramStatusEnum.COMPLETED"
         class="absolute top-3 left-3 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm"
       >
-        Selesai
+        {{ formatDonationProgramStatus(donation.status) }}
       </div>
       <div
         v-else-if="donation.status === DonationProgramStatusEnum.EXPIRED"
         class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm"
       >
-        Kadaluarsa
+        {{ formatDonationProgramStatus(donation.status) }}
       </div>
     </div>
 
