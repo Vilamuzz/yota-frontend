@@ -37,7 +37,7 @@ const slides = computed(() => [
     subtitle:
       'Butuh armada darurat medis? Yayasan Orang Tua Asuh menyediakan peminjaman mobil ambulans gratis bagi masyarakat yang membutuhkan.',
     buttonText: 'Ajukan Peminjaman Ambulans',
-    buttonLink: '/ambulance/request',
+    buttonLink: '/ambulance/submission',
   },
 ])
 
@@ -76,7 +76,11 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
           v-for="(slide, index) in slides"
           :key="index"
           class="absolute inset-0 transition-opacity duration-1000"
-          :class="currentSlide === index ? 'opacity-100' : 'opacity-0'"
+          :class="
+            currentSlide === index
+              ? 'opacity-100 pointer-events-auto z-10'
+              : 'opacity-0 pointer-events-none z-0'
+          "
         >
           <!-- Background Image -->
           <template v-if="slide.image">

@@ -58,7 +58,7 @@ const handleGoogleLogin = () => {
     :show-o-auth="true"
     @google-login="handleGoogleLogin"
   >
-    <form @submit.prevent="handleLogin" class="space-y-4">
+    <form @submit.prevent="handleLogin" class="space-y-4" novalidate>
       <AuthInput
         id="email"
         v-model="form.email"

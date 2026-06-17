@@ -1,42 +1,33 @@
 import { z } from 'zod'
 
 export const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().min(1, 'Email wajib diisi').email('Format email tidak valid'),
+  password: z.string().min(1, 'Kata sandi wajib diisi'),
 })
 
 export const registerSchema = z
   .object({
-    username: z
-      .string()
-      .min(1, 'Username is required')
-      .min(3, 'Username must be at least 3 characters'),
-    email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-    password: z
-      .string()
-      .min(1, 'Password is required')
-      .min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
+    username: z.string().min(1, 'Username wajib diisi').min(3, 'Username minimal 3 karakter'),
+    email: z.string().min(1, 'Email wajib diisi').email('Format email tidak valid'),
+    password: z.string().min(1, 'Kata sandi wajib diisi').min(8, 'Kata sandi minimal 8 karakter'),
+    confirmPassword: z.string().min(1, 'Konfirmasi kata sandi wajib diisi'),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'Kata sandi tidak cocok',
     path: ['confirmPassword'],
   })
 
 export const forgetPasswordSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+  email: z.string().min(1, 'Email wajib diisi').email('Format email tidak valid'),
 })
 
 export const resetPasswordSchema = z
   .object({
-    password: z
-      .string()
-      .min(1, 'Password is required')
-      .min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
+    password: z.string().min(1, 'Kata sandi wajib diisi').min(8, 'Kata sandi minimal 8 karakter'),
+    confirmPassword: z.string().min(1, 'Konfirmasi kata sandi wajib diisi'),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'Kata sandi tidak cocok',
     path: ['confirmPassword'],
   })
 
