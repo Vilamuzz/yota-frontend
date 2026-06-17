@@ -80,13 +80,6 @@ watch(
   () => resetPagination(),
 )
 
-function clearFilters() {
-  searchInput.value = ''
-  queryParams.search = undefined
-  queryParams.sortBy = undefined
-  resetPagination()
-}
-
 function openDeleteModal(id: string) {
   selectedExpenseId.value = id
   isDeleteModalOpen.value = true
@@ -159,25 +152,14 @@ function handleConfirmDelete() {
 
       <!-- Header Section -->
       <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <BaseButton
-          variant="primary"
-          :to="{
-            name: 'dashboard-donation-programs-expense-transaction-create',
-            params: { id: donationId },
-          }"
-          class="w-full sm:w-auto"
-        >
-          <Plus :size="20" class="mr-1" />
-          Tambah Pengeluaran
-        </BaseButton>
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <div class="flex flex-row gap-3 w-full md:w-auto">
           <BaseSearch
             v-model="searchInput"
             placeholder="Cari pengeluaran..."
-            class="w-full sm:w-64"
+            class="flex-1 w-full"
           />
-          <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default="{ closeDropdown }">
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
               <div class="space-y-4 w-64">
                 <!-- Sort filter -->
                 <div>
@@ -200,25 +182,21 @@ function handleConfirmDelete() {
                     <option value="expense_date asc">Tanggal Pengeluaran (Terlama)</option>
                   </select>
                 </div>
-
-                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                  <button
-                    @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-                  >
-                    RESET
-                  </button>
-                  <button
-                    @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
-                  >
-                    TERAPKAN
-                  </button>
-                </div>
               </div>
             </template>
           </BaseFilter>
         </div>
+        <BaseButton
+          variant="primary"
+          :to="{
+            name: 'dashboard-donation-programs-expense-transaction-create',
+            params: { id: donationId },
+          }"
+          class="w-full sm:w-auto justify-center"
+        >
+          <Plus :size="20" class="mr-1" />
+          Tambah Pengeluaran
+        </BaseButton>
       </div>
 
       <!-- Table Section -->

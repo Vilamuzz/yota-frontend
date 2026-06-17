@@ -138,7 +138,6 @@ const getCategoryLabel = (cat: string) => {
                 <h3 class="text-lg font-black text-gray-900 leading-tight">
                   Detail Pengajuan Anak Asuh
                 </h3>
-                <p class="text-xs font-mono text-gray-400 mt-0.5">ID: {{ id }}</p>
               </div>
             </div>
             <button

@@ -90,7 +90,7 @@ function truncate(text: string, max = 80) {
       <!-- Filters Section -->
       <div class="flex justify-end">
         <BaseFilter :has-active-filters="queryParams.sortBy !== 'reportCount'">
-          <template #default="{ closeDropdown }">
+          <template #default>
             <div class="space-y-4 w-64">
               <!-- Sort filter -->
               <div>
@@ -109,20 +109,6 @@ function truncate(text: string, max = 80) {
                 </select>
               </div>
 
-              <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                <button
-                  @click="queryParams.sortBy = 'reportCount'"
-                  class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-                >
-                  RESET
-                </button>
-                <button
-                  @click="closeDropdown"
-                  class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
-                >
-                  APPLY
-                </button>
-              </div>
             </div>
           </template>
         </BaseFilter>
@@ -192,7 +178,7 @@ function truncate(text: string, max = 80) {
 
               <!-- Content -->
               <td class="max-w-xs px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                {{ truncate(comment.content) }}
+                {{ truncate(comment.content, 40) }}
               </td>
 
               <!-- Report count -->

@@ -48,13 +48,6 @@ const hasActiveFilters = computed(
   () => queryParams.status !== undefined || queryParams.sortBy !== undefined,
 )
 
-const clearFilters = () => {
-  searchQuery.value = ''
-  queryParams.search = undefined
-  queryParams.status = undefined
-  queryParams.sortBy = undefined
-  resetPagination()
-}
 </script>
 
 <template>
@@ -63,11 +56,12 @@ const clearFilters = () => {
 
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <BaseSearch v-model="searchQuery" placeholder="Cari Program..." class="w-full sm:w-64" />
-          <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default="{ closeDropdown }">
+      <div class="flex flex-col md:flex-row gap-4 justify-end items-start md:items-center">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchQuery" placeholder="Cari Program..." class="flex-1 w-full" />
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
               <div class="space-y-4">
                 <div>
                   <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
@@ -101,20 +95,6 @@ const clearFilters = () => {
                   </select>
                 </div>
 
-                <div class="flex gap-2 pt-2">
-                  <button
-                    @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 dark:border-gray-600 dark:hover:bg-gray-700"
-                  >
-                    Hapus
-                  </button>
-                  <button
-                    @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-150"
-                  >
-                    Terapkan
-                  </button>
-                </div>
               </div>
             </template>
           </BaseFilter>

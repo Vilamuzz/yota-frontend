@@ -399,499 +399,499 @@ const getStatusConfig = (status: string) => {
         </div>
 
         <template v-if="authStore.isAuthenticated">
-        <!-- Category Tabs (InvoicePage style) -->
-        <div class="flex flex-col md:flex-row justify-center md:justify-start gap-4 mb-8">
-          <button
-            v-for="tab in tabs"
-            :key="tab.key"
-            @click="setActiveTab(tab.key)"
-            class="flex items-center gap-3 px-6 py-4 rounded-xl text-sm font-black transition-all duration-500 border-2"
-            :class="
-              activeTab === tab.key
-                ? 'bg-primary-400 border-primary-400 text-white shadow-xl shadow-primary-400/20 translate-y-1'
-                : 'bg-white border-gray-100 text-gray-500 hover:border-primary-200 hover:text-primary-400'
-            "
-          >
-            <component :is="tab.icon" :size="20" />
-            {{ tab.label }}
-          </button>
-        </div>
-
-        <!-- Sub-bar: search + count (InvoicePage toolbar style) -->
-        <div
-          class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm"
-        >
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400"
-            >
-              <component :is="tabs.find((t) => t.key === activeTab)!.icon" :size="20" />
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                Jenis Pengajuan
-              </p>
-              <h3 class="text-sm font-black text-gray-900">
-                {{ tabs.find((t) => t.key === activeTab)!.label }}
-              </h3>
-            </div>
-          </div>
-
-          <div class="relative w-full md:w-80" ref="searchContainerRef">
-            <BasePublicSearch
-              v-model="searchQuery"
-              :placeholder="activeTab === 'foster' ? 'Cari nama calon...' : 'Cari nama pemohon...'"
-              @on-sort="toggleSort"
-              @on-filter="toggleFilter"
-            />
-
-            <!-- SORT DROPDOWN -->
-            <div
-              v-if="showSortDropdown"
-              class="absolute right-0 sm:right-[3.5rem] top-full mt-2 w-64 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50"
-            >
-              <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
-                Urutkan Berdasarkan
-              </h4>
-              <div class="space-y-1">
-                <button
-                  v-for="option in sortOptions"
-                  :key="option.value"
-                  @click="selectSort(option.value)"
-                  class="w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors flex items-center justify-between"
-                  :class="
-                    sortBy === option.value || (!sortBy && option.value === 'created_at desc')
-                      ? 'bg-primary-50 text-primary-600 font-semibold'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  "
-                >
-                  {{ option.label }}
-                  <Check
-                    v-if="
-                      sortBy === option.value || (!sortBy && option.value === 'created_at desc')
-                    "
-                    :size="16"
-                  />
-                </button>
-              </div>
-            </div>
-
-            <!-- FILTER DROPDOWN -->
-            <div
-              v-if="showFilterDropdown"
-              class="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
-            >
-              <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
-                Saring Berdasarkan
-              </h4>
-
-              <div class="space-y-4">
-                <!-- Status Filter -->
-                <div>
-                  <label class="block text-xs font-bold text-gray-500 mb-2">Status Pengajuan</label>
-                  <div class="grid grid-cols-2 gap-2">
-                    <button
-                      v-for="status in activeTab === 'ambulance'
-                        ? Object.values(AmbulanceServiceStatus)
-                        : ['pending', 'accepted', 'rejected', 'cancelled']"
-                      :key="status"
-                      @click="
-                        () => {
-                          filterStatus = filterStatus === status ? undefined : status
-                          fosterCursor = undefined
-                          ambulanceCursor = undefined
-                          accumulatedFoster = []
-                          accumulatedAmbulance = []
-                        }
-                      "
-                      class="w-full text-center px-2 py-2 rounded-xl text-[10px] sm:text-xs transition-colors border"
-                      :class="
-                        filterStatus === status
-                          ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
-                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                      "
-                    >
-                      {{
-                        activeTab === 'ambulance'
-                          ? formatAmbulanceServiceStatus(status as AmbulanceServiceStatus)
-                          : status === 'pending'
-                            ? 'Menunggu'
-                            : status === 'accepted'
-                              ? 'Diterima'
-                              : status === 'rejected'
-                                ? 'Ditolak'
-                                : 'Dibatalkan'
-                      }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ACTIVE FILTER CHIPS -->
-        <div
-          v-if="hasActiveFilters"
-          class="flex flex-wrap justify-center md:justify-start gap-2 mb-6 -mt-4"
-        >
-          <div
-            v-if="activeTab === 'foster' ? fosterQueryParams.status : ambulanceQueryParams.status"
-            class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-200 text-primary-600 text-xs font-semibold rounded-full"
-          >
-            <span
-              >Status:
-              {{
-                activeTab === 'ambulance'
-                  ? formatAmbulanceServiceStatus(
-                      ambulanceQueryParams.status as AmbulanceServiceStatus,
-                    )
-                  : fosterQueryParams.status === 'pending'
-                    ? 'Menunggu'
-                    : fosterQueryParams.status === 'accepted'
-                      ? 'Diterima'
-                      : fosterQueryParams.status === 'rejected'
-                        ? 'Ditolak'
-                        : 'Dibatalkan'
-              }}</span
-            >
+          <!-- Category Tabs (InvoicePage style) -->
+          <div class="flex flex-col md:flex-row justify-center md:justify-start gap-4 mb-8">
             <button
-              @click="
-                activeTab === 'foster'
-                  ? ((filterStatus = undefined),
-                    (fosterCursor = undefined),
-                    (accumulatedFoster = []))
-                  : ((filterStatus = undefined),
-                    (ambulanceCursor = undefined),
-                    (accumulatedAmbulance = []))
+              v-for="tab in tabs"
+              :key="tab.key"
+              @click="setActiveTab(tab.key)"
+              class="flex items-center gap-3 px-6 py-4 rounded-xl text-sm font-black transition-all duration-500 border-2"
+              :class="
+                activeTab === tab.key
+                  ? 'bg-primary-400 border-primary-400 text-white shadow-xl shadow-primary-400/20 translate-y-1'
+                  : 'bg-white border-gray-100 text-gray-500 hover:border-primary-200 hover:text-primary-400'
               "
-              class="hover:text-primary-800 focus:outline-none"
             >
-              &times;
+              <component :is="tab.icon" :size="20" />
+              {{ tab.label }}
             </button>
           </div>
-        </div>
 
-        <!-- Loading -->
-        <div v-if="isLoading" class="flex flex-col items-center justify-center py-24">
-          <Loader2 class="w-12 h-12 text-primary-400 animate-spin mb-4" />
-          <p class="text-gray-500 font-medium animate-pulse">Memuat riwayat pengajuan...</p>
-        </div>
-
-        <!-- Error -->
-        <div
-          v-else-if="isError"
-          class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
-        >
+          <!-- Sub-bar: search + count (InvoicePage toolbar style) -->
           <div
-            class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8 text-red-500 animate-pulse"
+            class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm"
           >
-            <X :size="48" />
-          </div>
-          <h3 class="text-2xl font-black text-gray-900 mb-3">Gagal Memuat Data</h3>
-          <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
-            {{
-              errorValue
-                ? extractError(
-                    errorValue as unknown as ApiError,
-                    'Terjadi kesalahan saat mengambil riwayat. Silakan coba lagi.',
-                  )
-                : 'Terjadi kesalahan saat mengambil riwayat. Silakan coba lagi.'
-            }}
-          </p>
-        </div>
-
-        <template v-else-if="activeTab === 'foster'">
-          <div v-if="accumulatedFoster.length > 0" class="grid grid-cols-1 gap-6">
-            <div
-              v-for="candidate in accumulatedFoster"
-              :key="candidate.id"
-              @click="selectedFosterId = candidate.id"
-              class="group bg-white rounded-4xl border border-gray-100 p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
-            >
-              <!-- Status left stripe -->
+            <div class="flex items-center gap-3">
               <div
-                class="absolute top-0 left-0 w-2 h-full transition-all duration-500"
-                :class="
-                  candidate.status === 'accepted'
-                    ? 'bg-green-500'
-                    : candidate.status === 'rejected'
-                      ? 'bg-red-500'
-                      : candidate.status === 'cancelled'
-                        ? 'bg-gray-400'
-                        : 'bg-primary-400'
-                "
-              ></div>
+                class="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400"
+              >
+                <component :is="tabs.find((t) => t.key === activeTab)!.icon" :size="20" />
+              </div>
+              <div>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Jenis Pengajuan
+                </p>
+                <h3 class="text-sm font-black text-gray-900">
+                  {{ tabs.find((t) => t.key === activeTab)!.label }}
+                </h3>
+              </div>
+            </div>
 
-              <div class="flex items-start gap-6 relative z-10">
-                <img
-                  :src="candidate.profilePicture"
-                  :alt="candidate.name"
-                  class="w-16 h-16 rounded-2xl object-cover bg-gray-100 shrink-0 border border-gray-100 group-hover:rotate-3 transition-transform duration-500"
-                />
-                <div class="space-y-1.5">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                      {{ candidate.id.slice(0, 8) }}...
-                    </span>
-                    <div class="h-1 w-1 rounded-full bg-gray-200"></div>
-                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                      {{ formatDate(candidate.createdAt) }}
-                    </span>
-                  </div>
-                  <h3
-                    class="text-xl font-black text-gray-900 leading-tight group-hover:text-primary-400 transition-colors duration-300"
+            <div class="relative w-full md:w-80" ref="searchContainerRef">
+              <BasePublicSearch
+                v-model="searchQuery"
+                :placeholder="
+                  activeTab === 'foster' ? 'Cari nama calon...' : 'Cari nama pemohon...'
+                "
+                @on-sort="toggleSort"
+                @on-filter="toggleFilter"
+              />
+
+              <!-- SORT DROPDOWN -->
+              <div
+                v-if="showSortDropdown"
+                class="absolute right-0 sm:right-[3.5rem] top-full mt-2 w-64 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50"
+              >
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                  Urutkan Berdasarkan
+                </h4>
+                <div class="space-y-1">
+                  <button
+                    v-for="option in sortOptions"
+                    :key="option.value"
+                    @click="selectSort(option.value)"
+                    class="w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors flex items-center justify-between"
+                    :class="
+                      sortBy === option.value || (!sortBy && option.value === 'created_at desc')
+                        ? 'bg-primary-50 text-primary-600 font-semibold'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    "
                   >
-                    {{ candidate.name }}
-                  </h3>
-                  <div class="flex flex-wrap items-center gap-4 pt-1">
-                    <span
-                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border"
-                      :class="getStatusConfig(candidate.status).class"
+                    {{ option.label }}
+                    <Check
+                      v-if="
+                        sortBy === option.value || (!sortBy && option.value === 'created_at desc')
+                      "
+                      :size="16"
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <!-- FILTER DROPDOWN -->
+              <div
+                v-if="showFilterDropdown"
+                class="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+              >
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+                  Saring Berdasarkan
+                </h4>
+
+                <div class="space-y-4">
+                  <!-- Status Filter -->
+                  <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-2"
+                      >Status Pengajuan</label
                     >
-                      <component :is="getStatusConfig(candidate.status).icon" :size="12" />
-                      {{ getStatusConfig(candidate.status).label }}
-                    </span>
-                    <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
-                      <FileText :size="14" />
-                      <span class="capitalize">{{ candidate.category }}</span>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button
+                        v-for="status in activeTab === 'ambulance'
+                          ? Object.values(AmbulanceServiceStatus)
+                          : ['pending', 'accepted', 'rejected', 'cancelled']"
+                        :key="status"
+                        @click="
+                          () => {
+                            filterStatus = filterStatus === status ? undefined : status
+                            fosterCursor = undefined
+                            ambulanceCursor = undefined
+                            accumulatedFoster = []
+                            accumulatedAmbulance = []
+                          }
+                        "
+                        class="w-full text-center px-2 py-2 rounded-xl text-[10px] sm:text-xs transition-colors border"
+                        :class="
+                          filterStatus === status
+                            ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
+                            : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        "
+                      >
+                        {{
+                          activeTab === 'ambulance'
+                            ? formatAmbulanceServiceStatus(status as AmbulanceServiceStatus)
+                            : status === 'pending'
+                              ? 'Menunggu'
+                              : status === 'accepted'
+                                ? 'Diterima'
+                                : status === 'rejected'
+                                  ? 'Ditolak'
+                                  : 'Dibatalkan'
+                        }}
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <!-- Action -->
-              <div
-                class="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-6 md:pt-0 relative z-10 shrink-0"
-              >
-                <button
-                  v-if="candidate.status.toLowerCase() === 'pending'"
-                  @click.stop="openCancelModal(candidate.id, candidate.name, 'foster')"
-                  :disabled="fosterCancelMutation.isPending.value"
-                  class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-600 hover:text-white transition-all duration-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  title="Batalkan Pengajuan"
-                >
-                  <X :size="22" />
-                </button>
-                <div
-                  v-else-if="candidate.status === 'accepted'"
-                  class="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-sm"
-                >
-                  <CheckCircle2 :size="24" />
-                </div>
-                <div
-                  v-else
-                  class="w-14 h-14 bg-gray-100 text-gray-400 rounded-2xl flex items-center justify-center shadow-sm"
-                >
-                  <XCircle :size="24" />
-                </div>
-              </div>
             </div>
           </div>
 
-          <!-- Foster empty: search -->
-          <div v-else-if="fosterSearchQuery" class="py-24 text-center">
-            <div
-              class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
-            >
-              <Search :size="40" />
-            </div>
-            <h3 class="text-2xl font-black text-gray-900 mb-3">Hasil Tidak Ditemukan</h3>
-            <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
-              Tidak ada pengajuan yang cocok dengan
-              <span class="font-bold text-gray-900">"{{ fosterSearchQuery }}"</span>.
-            </p>
-          </div>
-
-          <!-- Foster empty: no data -->
+          <!-- ACTIVE FILTER CHIPS -->
           <div
-            v-else
+            v-if="hasActiveFilters"
+            class="flex flex-wrap justify-center md:justify-start gap-2 mb-6 -mt-4"
+          >
+            <div
+              v-if="activeTab === 'foster' ? fosterQueryParams.status : ambulanceQueryParams.status"
+              class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-200 text-primary-600 text-xs font-semibold rounded-full"
+            >
+              <span
+                >Status:
+                {{
+                  activeTab === 'ambulance'
+                    ? formatAmbulanceServiceStatus(
+                        ambulanceQueryParams.status as AmbulanceServiceStatus,
+                      )
+                    : fosterQueryParams.status === 'pending'
+                      ? 'Menunggu'
+                      : fosterQueryParams.status === 'accepted'
+                        ? 'Diterima'
+                        : fosterQueryParams.status === 'rejected'
+                          ? 'Ditolak'
+                          : 'Dibatalkan'
+                }}</span
+              >
+              <button
+                @click="
+                  activeTab === 'foster'
+                    ? ((filterStatus = undefined),
+                      (fosterCursor = undefined),
+                      (accumulatedFoster = []))
+                    : ((filterStatus = undefined),
+                      (ambulanceCursor = undefined),
+                      (accumulatedAmbulance = []))
+                "
+                class="hover:text-primary-800 focus:outline-none"
+              >
+                &times;
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div v-if="isLoading" class="flex flex-col items-center justify-center py-24">
+            <Loader2 class="w-12 h-12 text-primary-400 animate-spin mb-4" />
+            <p class="text-gray-500 font-medium animate-pulse">Memuat riwayat pengajuan...</p>
+          </div>
+
+          <!-- Error -->
+          <div
+            v-else-if="isError"
             class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
           >
             <div
-              class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
+              class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8 text-red-500 animate-pulse"
             >
-              <Baby :size="48" />
+              <X :size="48" />
             </div>
-            <h3 class="text-2xl font-black text-gray-900 mb-3">Belum Ada Pengajuan</h3>
+            <h3 class="text-2xl font-black text-gray-900 mb-3">Gagal Memuat Data</h3>
             <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
-              Anda belum pernah mengajukan calon anak asuh. Ajukan sekarang untuk membantu mereka.
+              {{
+                errorValue
+                  ? extractError(
+                      errorValue as unknown as ApiError,
+                      'Terjadi kesalahan saat mengambil riwayat. Silakan coba lagi.',
+                    )
+                  : 'Terjadi kesalahan saat mengambil riwayat. Silakan coba lagi.'
+              }}
             </p>
           </div>
 
-          <!-- Foster pagination -->
-          <div
-            v-if="hasNextPage"
-            ref="loadMoreTrigger"
-            class="h-20 w-full flex items-center justify-center mt-6"
-          >
-            <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
-          </div>
-        </template>
-
-        <template v-else>
-          <div v-if="accumulatedAmbulance.length > 0" class="grid grid-cols-1 gap-6">
-            <div
-              v-for="service in accumulatedAmbulance"
-              :key="service.id"
-              @click="selectedAmbulanceId = service.id"
-              class="group bg-white rounded-4xl border border-gray-100 p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
-            >
-              <!-- Status left stripe -->
+          <template v-else-if="activeTab === 'foster'">
+            <div v-if="accumulatedFoster.length > 0" class="grid grid-cols-1 gap-6">
               <div
-                class="absolute top-0 left-0 w-2 h-full transition-all duration-500"
-                :class="
-                  service.status === AmbulanceServiceStatus.ACCEPTED
-                    ? 'bg-green-500'
-                    : service.status === AmbulanceServiceStatus.DONE
-                      ? 'bg-blue-500'
-                      : service.status === AmbulanceServiceStatus.IN_SERVICE
-                        ? 'bg-primary-500'
-                        : service.status === AmbulanceServiceStatus.REJECTED
-                          ? 'bg-red-500'
-                          : service.status === AmbulanceServiceStatus.CANCELLED
-                            ? 'bg-gray-400'
-                            : 'bg-primary-400'
-                "
-              ></div>
-
-              <div class="flex items-start gap-6 relative z-10">
+                v-for="candidate in accumulatedFoster"
+                :key="candidate.id"
+                @click="selectedFosterId = candidate.id"
+                class="group bg-white rounded-4xl border border-gray-100 p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
+              >
+                <!-- Status left stripe -->
                 <div
-                  class="w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6"
+                  class="absolute top-0 left-0 w-2 h-full transition-all duration-500"
+                  :class="
+                    candidate.status === 'accepted'
+                      ? 'bg-green-500'
+                      : candidate.status === 'rejected'
+                        ? 'bg-red-500'
+                        : candidate.status === 'cancelled'
+                          ? 'bg-gray-400'
+                          : 'bg-primary-400'
+                  "
+                ></div>
+
+                <div class="flex items-start gap-6 relative z-10">
+                  <img
+                    :src="candidate.profilePicture"
+                    :alt="candidate.name"
+                    class="w-16 h-16 rounded-2xl object-cover bg-gray-100 shrink-0 border border-gray-100 group-hover:rotate-3 transition-transform duration-500"
+                  />
+                  <div class="space-y-1.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        {{ formatDate(candidate.createdAt) }}
+                      </span>
+                    </div>
+                    <h3
+                      class="text-xl font-black text-gray-900 leading-tight group-hover:text-primary-400 transition-colors duration-300"
+                    >
+                      {{ candidate.name }}
+                    </h3>
+                    <div class="flex flex-wrap items-center gap-4 pt-1">
+                      <span
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border"
+                        :class="getStatusConfig(candidate.status).class"
+                      >
+                        <component :is="getStatusConfig(candidate.status).icon" :size="12" />
+                        {{ getStatusConfig(candidate.status).label }}
+                      </span>
+                      <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
+                        <FileText :size="14" />
+                        <span class="capitalize">{{ candidate.category }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action -->
+                <div
+                  class="flex items-center justify-end gap-6 border-t md:border-t-0 pt-6 md:pt-0 relative z-10 shrink-0"
+                >
+                  <button
+                    v-if="candidate.status.toLowerCase() === 'pending'"
+                    @click.stop="openCancelModal(candidate.id, candidate.name, 'foster')"
+                    :disabled="fosterCancelMutation.isPending.value"
+                    class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-600 hover:text-white transition-all duration-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    title="Batalkan Pengajuan"
+                  >
+                    <X :size="22" />
+                  </button>
+                  <div
+                    v-else-if="candidate.status === 'accepted'"
+                    class="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-sm"
+                  >
+                    <CheckCircle2 :size="24" />
+                  </div>
+                  <div
+                    v-else
+                    class="w-14 h-14 bg-gray-100 text-gray-400 rounded-2xl flex items-center justify-center shadow-sm"
+                  >
+                    <XCircle :size="24" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Foster empty: search -->
+            <div v-else-if="fosterSearchQuery" class="py-24 text-center">
+              <div
+                class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
+              >
+                <Search :size="40" />
+              </div>
+              <h3 class="text-2xl font-black text-gray-900 mb-3">Hasil Tidak Ditemukan</h3>
+              <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
+                Tidak ada pengajuan yang cocok dengan
+                <span class="font-bold text-gray-900">"{{ fosterSearchQuery }}"</span>.
+              </p>
+            </div>
+
+            <!-- Foster empty: no data -->
+            <div
+              v-else
+              class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
+            >
+              <div
+                class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
+              >
+                <Baby :size="48" />
+              </div>
+              <h3 class="text-2xl font-black text-gray-900 mb-3">Belum Ada Pengajuan</h3>
+              <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
+                Anda belum pernah mengajukan calon anak asuh. Ajukan sekarang untuk membantu mereka.
+              </p>
+            </div>
+
+            <!-- Foster pagination -->
+            <div
+              v-if="hasNextPage"
+              ref="loadMoreTrigger"
+              class="h-20 w-full flex items-center justify-center mt-6"
+            >
+              <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
+            </div>
+          </template>
+
+          <template v-else>
+            <div v-if="accumulatedAmbulance.length > 0" class="grid grid-cols-1 gap-6">
+              <div
+                v-for="service in accumulatedAmbulance"
+                :key="service.id"
+                @click="selectedAmbulanceId = service.id"
+                class="group bg-white rounded-4xl border border-gray-100 p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
+              >
+                <!-- Status left stripe -->
+                <div
+                  class="absolute top-0 left-0 w-2 h-full transition-all duration-500"
                   :class="
                     service.status === AmbulanceServiceStatus.ACCEPTED
-                      ? 'bg-green-50 text-green-600'
+                      ? 'bg-green-500'
                       : service.status === AmbulanceServiceStatus.DONE
-                        ? 'bg-blue-50 text-blue-600'
+                        ? 'bg-blue-500'
                         : service.status === AmbulanceServiceStatus.IN_SERVICE
-                          ? 'bg-primary-50 text-primary-600'
+                          ? 'bg-primary-500'
                           : service.status === AmbulanceServiceStatus.REJECTED
-                            ? 'bg-red-50 text-red-500'
+                            ? 'bg-red-500'
                             : service.status === AmbulanceServiceStatus.CANCELLED
-                              ? 'bg-gray-50 text-gray-400'
-                              : 'bg-primary-50 text-primary-400'
+                              ? 'bg-gray-400'
+                              : 'bg-primary-400'
                   "
-                >
-                  <Ambulance :size="32" />
-                </div>
-                <div class="space-y-1.5">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                      {{ service.id.slice(0, 8) }}...
-                    </span>
-                    <div class="h-1 w-1 rounded-full bg-gray-200"></div>
-                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                      {{ formatDate(service.pickupDate) }}
-                    </span>
-                  </div>
-                  <h3
-                    class="text-xl font-black text-gray-900 leading-tight group-hover:text-primary-400 transition-colors duration-300"
+                ></div>
+
+                <div class="flex items-start gap-6 relative z-10">
+                  <div
+                    class="w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6"
+                    :class="
+                      service.status === AmbulanceServiceStatus.ACCEPTED
+                        ? 'bg-green-50 text-green-600'
+                        : service.status === AmbulanceServiceStatus.DONE
+                          ? 'bg-blue-50 text-blue-600'
+                          : service.status === AmbulanceServiceStatus.IN_SERVICE
+                            ? 'bg-primary-50 text-primary-600'
+                            : service.status === AmbulanceServiceStatus.REJECTED
+                              ? 'bg-red-50 text-red-500'
+                              : service.status === AmbulanceServiceStatus.CANCELLED
+                                ? 'bg-gray-50 text-gray-400'
+                                : 'bg-primary-50 text-primary-400'
+                    "
                   >
-                    {{ service.submitterName }}
-                  </h3>
-                  <div class="flex flex-wrap items-center gap-4 pt-1">
-                    <span
-                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border"
-                      :class="getStatusConfig(service.status).class"
+                    <Ambulance :size="32" />
+                  </div>
+                  <div class="space-y-1.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        {{ formatDate(service.pickupDate) }}
+                      </span>
+                    </div>
+                    <h3
+                      class="text-xl font-black text-gray-900 leading-tight group-hover:text-primary-400 transition-colors duration-300"
                     >
-                      <component :is="getStatusConfig(service.status).icon" :size="12" />
-                      {{ getStatusConfig(service.status).label }}
-                    </span>
-                    <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
-                      <Clock :size="14" />
-                      Diajukan: {{ formatDate(service.createdAt) }}
+                      {{ service.submitterName }}
+                    </h3>
+                    <div class="flex flex-wrap items-center gap-4 pt-1">
+                      <span
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border"
+                        :class="getStatusConfig(service.status).class"
+                      >
+                        <component :is="getStatusConfig(service.status).icon" :size="12" />
+                        {{ getStatusConfig(service.status).label }}
+                      </span>
+                      <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
+                        <Clock :size="14" />
+                        Diajukan: {{ formatDate(service.createdAt) }}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Action -->
+                <!-- Action -->
+                <div
+                  class="flex items-center justify-end gap-6 border-t md:border-t-0 pt-6 md:pt-0 relative z-10 shrink-0"
+                >
+                  <button
+                    v-if="service.status === AmbulanceServiceStatus.PENDING"
+                    @click.stop="openCancelModal(service.id, service.submitterName, 'ambulance')"
+                    :disabled="ambulanceCancelMutation.isPending.value"
+                    class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-600 hover:text-white transition-all duration-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    title="Batalkan Permintaan"
+                  >
+                    <X :size="22" />
+                  </button>
+                  <div
+                    v-else-if="
+                      service.status === AmbulanceServiceStatus.ACCEPTED ||
+                      service.status === AmbulanceServiceStatus.DONE
+                    "
+                    class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm"
+                    :class="
+                      service.status === AmbulanceServiceStatus.DONE
+                        ? 'bg-blue-50 text-blue-500'
+                        : 'bg-green-50 text-green-500'
+                    "
+                  >
+                    <CheckCircle2 :size="24" />
+                  </div>
+                  <div
+                    v-else-if="service.status === AmbulanceServiceStatus.IN_SERVICE"
+                    class="w-14 h-14 bg-primary-50 text-primary-500 rounded-2xl flex items-center justify-center shadow-sm"
+                  >
+                    <Ambulance :size="24" />
+                  </div>
+                  <div
+                    v-else
+                    class="w-14 h-14 bg-gray-100 text-gray-400 rounded-2xl flex items-center justify-center shadow-sm"
+                  >
+                    <XCircle :size="24" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ambulance empty: search -->
+            <div v-else-if="ambulanceSearchQuery" class="py-24 text-center">
               <div
-                class="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-6 md:pt-0 relative z-10 shrink-0"
+                class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
               >
-                <button
-                  v-if="service.status === AmbulanceServiceStatus.PENDING"
-                  @click.stop="openCancelModal(service.id, service.submitterName, 'ambulance')"
-                  :disabled="ambulanceCancelMutation.isPending.value"
-                  class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-600 hover:text-white transition-all duration-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  title="Batalkan Permintaan"
-                >
-                  <X :size="22" />
-                </button>
-                <div
-                  v-else-if="
-                    service.status === AmbulanceServiceStatus.ACCEPTED ||
-                    service.status === AmbulanceServiceStatus.DONE
-                  "
-                  class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm"
-                  :class="
-                    service.status === AmbulanceServiceStatus.DONE
-                      ? 'bg-blue-50 text-blue-500'
-                      : 'bg-green-50 text-green-500'
-                  "
-                >
-                  <CheckCircle2 :size="24" />
-                </div>
-                <div
-                  v-else-if="service.status === AmbulanceServiceStatus.IN_SERVICE"
-                  class="w-14 h-14 bg-primary-50 text-primary-500 rounded-2xl flex items-center justify-center shadow-sm"
-                >
-                  <Ambulance :size="24" />
-                </div>
-                <div
-                  v-else
-                  class="w-14 h-14 bg-gray-100 text-gray-400 rounded-2xl flex items-center justify-center shadow-sm"
-                >
-                  <XCircle :size="24" />
-                </div>
+                <Search :size="40" />
               </div>
+              <h3 class="text-2xl font-black text-gray-900 mb-3">Hasil Tidak Ditemukan</h3>
+              <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
+                Tidak ada permintaan yang cocok dengan
+                <span class="font-bold text-gray-900">"{{ ambulanceSearchQuery }}"</span>.
+              </p>
             </div>
-          </div>
 
-          <!-- Ambulance empty: search -->
-          <div v-else-if="ambulanceSearchQuery" class="py-24 text-center">
+            <!-- Ambulance empty: no data -->
             <div
-              class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
+              v-else
+              class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
             >
-              <Search :size="40" />
+              <div
+                class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
+              >
+                <Ambulance :size="48" />
+              </div>
+              <h3 class="text-2xl font-black text-gray-900 mb-3">Belum Ada Permintaan</h3>
+              <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
+                Anda belum pernah mengajukan permintaan layanan ambulans.
+              </p>
             </div>
-            <h3 class="text-2xl font-black text-gray-900 mb-3">Hasil Tidak Ditemukan</h3>
-            <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
-              Tidak ada permintaan yang cocok dengan
-              <span class="font-bold text-gray-900">"{{ ambulanceSearchQuery }}"</span>.
-            </p>
-          </div>
 
-          <!-- Ambulance empty: no data -->
-          <div
-            v-else
-            class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
-          >
+            <!-- Ambulance pagination -->
             <div
-              class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
+              v-if="hasNextPage"
+              ref="loadMoreTrigger"
+              class="h-20 w-full flex items-center justify-center mt-6"
             >
-              <Ambulance :size="48" />
+              <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
             </div>
-            <h3 class="text-2xl font-black text-gray-900 mb-3">Belum Ada Permintaan</h3>
-            <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
-              Anda belum pernah mengajukan permintaan layanan ambulans.
-            </p>
-          </div>
-
-          <!-- Ambulance pagination -->
-          <div
-            v-if="hasNextPage"
-            ref="loadMoreTrigger"
-            class="h-20 w-full flex items-center justify-center mt-6"
-          >
-            <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
-          </div>
-        </template>
+          </template>
         </template>
 
         <template v-else>
-          <div class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-12 md:p-24 text-center mt-12">
-            <div class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-8 text-primary-300">
+          <div
+            class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-12 md:p-24 text-center mt-12"
+          >
+            <div
+              class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-8 text-primary-300"
+            >
               <FileText :size="48" />
             </div>
             <h3 class="text-2xl font-black text-gray-900 mb-3">Akses Terbatas</h3>

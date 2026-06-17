@@ -61,15 +61,23 @@ const socialParams = computed(() => ({
 
 const { isLoading: isLoadingDonations, query: donationQuery } = useMyDonationProgramTransactions(
   donationParams,
-  { enabled: computed(() => activeCategory.value === 'Program Donasi' && authStore.isAuthenticated) },
+  {
+    enabled: computed(() => activeCategory.value === 'Program Donasi' && authStore.isAuthenticated),
+  },
 )
 const { isLoading: isLoadingFoster, query: fosterQuery } = useMyFosterChildrenTransactions(
   fosterParams,
-  { enabled: computed(() => activeCategory.value === 'Donasi Anak Asuh' && authStore.isAuthenticated) },
+  {
+    enabled: computed(
+      () => activeCategory.value === 'Donasi Anak Asuh' && authStore.isAuthenticated,
+    ),
+  },
 )
 const { isLoading: isLoadingSocial, query: socialQuery } = useMySocialProgramInvoices(
   socialParams,
-  { enabled: computed(() => activeCategory.value === 'Program Sosial' && authStore.isAuthenticated) },
+  {
+    enabled: computed(() => activeCategory.value === 'Program Sosial' && authStore.isAuthenticated),
+  },
 )
 
 const accumulatedDonations = ref<DonationProgramTransaction[]>([])
@@ -359,217 +367,219 @@ const getStatusLabel = (status: string) => {
         </div>
 
         <template v-if="authStore.isAuthenticated">
-        <!-- Main Category Tabs -->
-        <div class="flex flex-col md:flex-row justify-center md:justify-start gap-4 mb-8">
-          <button
-            v-for="cat in categories"
-            :key="cat.name"
-            @click="activeCategory = cat.name"
-            class="flex items-center gap-3 px-6 py-4 rounded-xl text-sm font-black transition-all duration-500 border-2"
-            :class="
-              activeCategory === cat.name
-                ? 'bg-primary-400 border-primary-400 text-white shadow-xl shadow-primary-400/20 translate-y-1'
-                : 'bg-white border-gray-100 text-gray-500 hover:border-primary-200 hover:text-primary-400'
-            "
-          >
-            <component :is="cat.icon" :size="20" />
-            {{ cat.name }}
-          </button>
-        </div>
-
-        <!-- Sub Status Tabs -->
-        <div
-          class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm"
-        >
-          <div class="flex items-center gap-2">
-            <div
-              class="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400"
-            >
-              <Receipt :size="20" />
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                Filter Status
-              </p>
-              <h3 class="text-sm font-black text-gray-900">{{ activeCategory }}</h3>
-            </div>
-          </div>
-
-          <div class="flex flex-col md:flex-row p-1 bg-gray-100 rounded-2xl w-full md:w-fit">
+          <!-- Main Category Tabs -->
+          <div class="flex flex-col md:flex-row justify-center md:justify-start gap-4 mb-8">
             <button
-              @click="activeStatus = 'WAITING'"
-              class="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-wider"
+              v-for="cat in categories"
+              :key="cat.name"
+              @click="activeCategory = cat.name"
+              class="flex items-center gap-3 px-6 py-4 rounded-xl text-sm font-black transition-all duration-500 border-2"
               :class="
-                activeStatus === 'WAITING'
-                  ? 'bg-white text-primary-400 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-600'
+                activeCategory === cat.name
+                  ? 'bg-primary-400 border-primary-400 text-white shadow-xl shadow-primary-400/20 translate-y-1'
+                  : 'bg-white border-gray-100 text-gray-500 hover:border-primary-200 hover:text-primary-400'
               "
             >
-              <Clock :size="14" />
-              Menunggu
-              <span
-                v-if="
-                  invoices.filter((i) => i.type === activeCategory && i.status === 'WAITING').length
-                "
-                class="ml-1 px-1.5 py-0.5 bg-primary-400 text-white text-[9px] rounded-full"
-              >
-                {{
-                  invoices.filter((i) => i.type === activeCategory && i.status === 'WAITING').length
-                }}
-              </span>
-            </button>
-            <button
-              @click="activeStatus = 'PAID'"
-              class="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-wider"
-              :class="
-                activeStatus === 'PAID'
-                  ? 'bg-white text-green-600 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-600'
-              "
-            >
-              <CheckCircle2 :size="14" />
-              Sudah Bayar
+              <component :is="cat.icon" :size="20" />
+              {{ cat.name }}
             </button>
           </div>
-        </div>
 
-        <!-- Invoice List -->
-        <div v-if="isAnyLoading" class="flex flex-col items-center justify-center py-24">
-          <Loader2 class="w-12 h-12 text-primary-400 animate-spin mb-4" />
-          <p class="text-gray-500 font-medium animate-pulse">Memuat data invoice...</p>
-        </div>
-
-        <!-- Error State -->
-        <div
-          v-else-if="isError"
-          class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
-        >
+          <!-- Sub Status Tabs -->
           <div
-            class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8 text-red-500 animate-pulse"
+            class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm"
           >
-            <X :size="48" />
-          </div>
-          <h3 class="text-2xl font-black text-gray-900 mb-3">
-            {{ is403 ? 'Akses Terbatas' : 'Gagal Memuat Data' }}
-          </h3>
-          <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
-            {{
-              is403
-                ? 'Kategori ini hanya dapat diakses oleh Orang Tua Asuh. Silakan ganti peran Anda terlebih dahulu.'
-                : 'Terjadi kesalahan saat memuat invoice. Silakan coba lagi.'
-            }}
-          </p>
-        </div>
-
-        <div v-else-if="filteredInvoices.length > 0" class="grid grid-cols-1 gap-6">
-          <div
-            v-for="invoice in filteredInvoices"
-            :key="invoice.id"
-            class="group bg-white rounded-4xl border border-gray-100 p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8"
-          >
-            <!-- Background Decorative Element -->
-            <div
-              class="absolute top-0 left-0 w-2 h-full transition-all duration-500"
-              :class="invoice.status === 'PAID' ? 'bg-green-500' : 'bg-primary-400'"
-            ></div>
-
-            <div class="flex items-start gap-6 relative z-10">
+            <div class="flex items-center gap-2">
               <div
-                class="w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6"
+                class="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400"
+              >
+                <Receipt :size="20" />
+              </div>
+              <div>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Filter Status
+                </p>
+                <h3 class="text-sm font-black text-gray-900">{{ activeCategory }}</h3>
+              </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row p-1 bg-gray-100 rounded-2xl w-full md:w-fit">
+              <button
+                @click="activeStatus = 'WAITING'"
+                class="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-wider"
                 :class="
-                  invoice.status === 'PAID'
-                    ? 'bg-green-50 text-green-600'
-                    : 'bg-primary-50 text-primary-400'
+                  activeStatus === 'WAITING'
+                    ? 'bg-white text-primary-400 shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600'
                 "
               >
-                <Receipt :size="32" />
-              </div>
-
-              <div class="space-y-1.5">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                  <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] break-all">{{
-                    invoice.id
-                  }}</span>
-                  <div class="hidden sm:block h-1 w-1 rounded-full bg-gray-200 shrink-0"></div>
-                  <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{{
-                    formatDate(invoice.date)
-                  }}</span>
-                </div>
-                <h3
-                  class="text-xl font-black text-gray-900 leading-tight group-hover:text-primary-400 transition-colors duration-300"
+                <Clock :size="14" />
+                Menunggu
+                <span
+                  v-if="
+                    invoices.filter((i) => i.type === activeCategory && i.status === 'WAITING')
+                      .length
+                  "
+                  class="ml-1 px-1.5 py-0.5 bg-primary-400 text-white text-[9px] rounded-full"
                 >
-                  {{ invoice.programName }}
-                </h3>
-                <div class="flex items-center gap-4 pt-1">
-                  <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
-                    <Wallet :size="14" />
-                    {{ invoice.paymentMethod }}
+                  {{
+                    invoices.filter((i) => i.type === activeCategory && i.status === 'WAITING')
+                      .length
+                  }}
+                </span>
+              </button>
+              <button
+                @click="activeStatus = 'PAID'"
+                class="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-wider"
+                :class="
+                  activeStatus === 'PAID'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600'
+                "
+              >
+                <CheckCircle2 :size="14" />
+                Sudah Bayar
+              </button>
+            </div>
+          </div>
+
+          <!-- Invoice List -->
+          <div v-if="isAnyLoading" class="flex flex-col items-center justify-center py-24">
+            <Loader2 class="w-12 h-12 text-primary-400 animate-spin mb-4" />
+            <p class="text-gray-500 font-medium animate-pulse">Memuat data invoice...</p>
+          </div>
+
+          <!-- Error State -->
+          <div
+            v-else-if="isError"
+            class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
+          >
+            <div
+              class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8 text-red-500 animate-pulse"
+            >
+              <X :size="48" />
+            </div>
+            <h3 class="text-2xl font-black text-gray-900 mb-3">
+              {{ is403 ? 'Akses Terbatas' : 'Gagal Memuat Data' }}
+            </h3>
+            <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
+              {{
+                is403
+                  ? 'Kategori ini hanya dapat diakses oleh Orang Tua Asuh. Silakan ganti peran Anda terlebih dahulu.'
+                  : 'Terjadi kesalahan saat memuat invoice. Silakan coba lagi.'
+              }}
+            </p>
+          </div>
+
+          <div v-else-if="filteredInvoices.length > 0" class="grid grid-cols-1 gap-6">
+            <div
+              v-for="invoice in filteredInvoices"
+              :key="invoice.id"
+              class="group bg-white rounded-4xl border border-gray-100 p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8"
+            >
+              <!-- Background Decorative Element -->
+              <div
+                class="absolute top-0 left-0 w-2 h-full transition-all duration-500"
+                :class="invoice.status === 'PAID' ? 'bg-green-500' : 'bg-primary-400'"
+              ></div>
+
+              <div class="flex items-start gap-6 relative z-10">
+                <div
+                  class="w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6"
+                  :class="
+                    invoice.status === 'PAID'
+                      ? 'bg-green-50 text-green-600'
+                      : 'bg-primary-50 text-primary-400'
+                  "
+                >
+                  <Receipt :size="32" />
+                </div>
+
+                <div class="space-y-1.5">
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{{
+                      formatDate(invoice.date)
+                    }}</span>
+                  </div>
+                  <h3
+                    class="text-xl font-black text-gray-900 leading-tight group-hover:text-primary-400 transition-colors duration-300"
+                  >
+                    {{ invoice.programName }}
+                  </h3>
+                  <div class="flex items-center gap-4 pt-1">
+                    <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
+                      <Wallet :size="14" />
+                      {{ invoice.paymentMethod }}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div
-              class="flex items-center justify-between md:justify-end gap-10 border-t md:border-t-0 pt-6 md:pt-0"
-            >
-              <div class="text-right">
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                  Total Tagihan
-                </p>
-                <p class="text-2xl font-black text-gray-900 tracking-tight">
-                  {{ formatCurrency(invoice.amount) }}
-                </p>
-              </div>
-
-              <button
-                v-if="invoice.status === 'WAITING'"
-                @click="handlePay(invoice)"
-                class="w-14 h-14 bg-primary-50 text-primary-500 rounded-2xl flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all duration-500 shadow-sm group-hover:translate-x-2 cursor-pointer"
-                title="Bayar Sekarang"
-              >
-                <ChevronRight :size="24" />
-              </button>
               <div
-                v-else
-                class="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-sm"
+                class="flex items-center justify-between md:justify-end gap-10 border-t md:border-t-0 pt-6 md:pt-0"
               >
-                <CheckCircle2 :size="24" />
+                <div class="text-right">
+                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                    Total Tagihan
+                  </p>
+                  <p class="text-2xl font-black text-gray-900 tracking-tight">
+                    {{ formatCurrency(invoice.amount) }}
+                  </p>
+                </div>
+
+                <button
+                  v-if="invoice.status === 'WAITING'"
+                  @click="handlePay(invoice)"
+                  class="w-14 h-14 bg-primary-50 text-primary-500 rounded-2xl flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all duration-500 shadow-sm group-hover:translate-x-2 cursor-pointer"
+                  title="Bayar Sekarang"
+                >
+                  <ChevronRight :size="24" />
+                </button>
+                <div
+                  v-else
+                  class="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-sm"
+                >
+                  <CheckCircle2 :size="24" />
+                </div>
               </div>
+            </div>
+
+            <!-- Infinite Scroll Trigger -->
+            <div
+              v-if="hasNextPage"
+              ref="loadMoreTrigger"
+              class="h-20 w-full flex items-center justify-center mt-6"
+            >
+              <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
             </div>
           </div>
 
-          <!-- Infinite Scroll Trigger -->
+          <!-- Empty State -->
           <div
-            v-if="hasNextPage"
-            ref="loadMoreTrigger"
-            class="h-20 w-full flex items-center justify-center mt-6"
+            v-else
+            class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
           >
-            <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
+            <div
+              class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
+            >
+              <FileText :size="48" />
+            </div>
+            <h3 class="text-2xl font-black text-gray-900 mb-3">Tidak Ada Tagihan</h3>
+            <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
+              Saat ini Anda tidak memiliki invoice di kategori
+              <span class="font-bold text-gray-900">{{ activeCategory }}</span> dengan status
+              <span class="font-bold text-primary-400">{{ getStatusLabel(activeStatus) }}</span
+              >.
+            </p>
           </div>
-        </div>
-
-        <!-- Empty State -->
-        <div
-          v-else
-          class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center"
-        >
-          <div
-            class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300 animate-pulse"
-          >
-            <FileText :size="48" />
-          </div>
-          <h3 class="text-2xl font-black text-gray-900 mb-3">Tidak Ada Tagihan</h3>
-          <p class="text-gray-500 max-w-sm mx-auto text-base leading-relaxed">
-            Saat ini Anda tidak memiliki invoice di kategori
-            <span class="font-bold text-gray-900">{{ activeCategory }}</span> dengan status
-            <span class="font-bold text-primary-400">{{ getStatusLabel(activeStatus) }}</span
-            >.
-          </p>
-        </div>
         </template>
         <template v-else>
-          <div class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-12 md:p-24 text-center mt-12">
-            <div class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-8 text-primary-300">
+          <div
+            class="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-12 md:p-24 text-center mt-12"
+          >
+            <div
+              class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-8 text-primary-300"
+            >
               <Receipt :size="48" />
             </div>
             <h3 class="text-2xl font-black text-gray-900 mb-3">Akses Terbatas</h3>

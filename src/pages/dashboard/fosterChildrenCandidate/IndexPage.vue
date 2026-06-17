@@ -57,16 +57,6 @@ watch(
   () => resetPagination(),
 )
 
-const clearFilters = () => {
-  searchInput.value = ''
-  queryParams.search = undefined
-  queryParams.gender = undefined
-  queryParams.category = undefined
-  queryParams.status = undefined
-  queryParams.sortBy = undefined
-  resetPagination()
-}
-
 const genders = Object.values(Gender)
 const categories = Object.values(Category)
 
@@ -103,20 +93,17 @@ const hasActiveFilters = computed(
   <DashboardLayout>
     <div class="space-y-6">
       <!-- Filters & Search -->
-      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-end">
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <BaseSearch
-            v-model="searchInput"
-            placeholder="Cari nama anak..."
-            class="w-full sm:max-w-xs"
-          />
+      <div class="flex flex-col md:flex-row gap-4 justify-end items-start md:items-center">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchInput" placeholder="Cari nama anak..." class="flex-1 w-full" />
 
-          <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default="{ closeDropdown }">
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
               <div class="space-y-4 w-64">
                 <div>
                   <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                     >Jenis Kelamin</label
                   >
                   <select
@@ -132,7 +119,7 @@ const hasActiveFilters = computed(
 
                 <div>
                   <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                     >Kategori</label
                   >
                   <select
@@ -148,7 +135,7 @@ const hasActiveFilters = computed(
 
                 <div>
                   <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                     >Status</label
                   >
                   <select
@@ -168,7 +155,7 @@ const hasActiveFilters = computed(
 
                 <div>
                   <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                     >Urutkan</label
                   >
                   <select
@@ -181,21 +168,6 @@ const hasActiveFilters = computed(
                     <option value="name asc">Nama (A-Z)</option>
                     <option value="name desc">Nama (Z-A)</option>
                   </select>
-                </div>
-
-                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                  <button
-                    @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-                  >
-                    RESET
-                  </button>
-                  <button
-                    @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
-                  >
-                    APPLY
-                  </button>
                 </div>
               </div>
             </template>

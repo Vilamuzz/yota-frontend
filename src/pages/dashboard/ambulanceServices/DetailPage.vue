@@ -204,9 +204,6 @@ const handleConfirmComplete = () => {
               <h2 class="text-lg font-bold text-gray-900 dark:text-white">
                 Detail Permintaan Layanan Ambulans
               </h2>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                ID: {{ ambulanceService.id }}
-              </p>
             </div>
           </div>
           <span

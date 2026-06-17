@@ -204,9 +204,7 @@ const handleBack = () => {
             </div>
 
             <!-- Timeline dates -->
-            <div
-              class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-50 dark:border-gray-700"
-            >
+            <div class="grid grid-cols-2 gap-6 pt-4 border-t border-gray-50 dark:border-gray-700">
               <div class="flex items-start gap-3">
                 <CalendarDays class="text-gray-400 mt-0.5" :size="18" />
                 <div>

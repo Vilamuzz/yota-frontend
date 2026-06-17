@@ -58,8 +58,6 @@ const searchContainerRef = ref<HTMLElement | null>(null)
 const sortOptions = [
   { label: 'Terbaru', value: 'created_at desc' },
   { label: 'Terlama', value: 'created_at asc' },
-  { label: 'Nama (A-Z)', value: 'title asc' },
-  { label: 'Nama (Z-A)', value: 'title desc' },
   { label: 'Pelanggan Terbanyak', value: 'total_subscribers desc' },
   { label: 'Pelanggan Paling Sedikit', value: 'total_subscribers asc' },
   { label: 'Donasi Terendah', value: 'minimum_amount asc' },

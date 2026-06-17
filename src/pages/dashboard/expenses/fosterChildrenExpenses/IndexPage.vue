@@ -16,7 +16,10 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import ExpenseDetailModal from '@/components/molecules/ExpenseDetailModal.vue'
 import FilePreviewModal from '@/components/molecules/FilePreviewModal.vue'
-import type { FosterChildrenExpense, FosterChildrenExpenseQueryParams } from '@/types/fosterChildrenExpense'
+import type {
+  FosterChildrenExpense,
+  FosterChildrenExpenseQueryParams,
+} from '@/types/fosterChildrenExpense'
 import { useAdminFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenAdminDetail'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
@@ -151,24 +154,13 @@ function handleConfirmDelete() {
 
       <!-- Header Section -->
       <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <BaseButton
-          variant="primary"
-          :to="{
-            name: 'dashboard-foster-children-expense-transaction-create',
-            params: { id: childId },
-          }"
-          class="w-full sm:w-auto"
-        >
-          <Plus :size="20" class="mr-1" />
-          Tambah Pengeluaran
-        </BaseButton>
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <div class="flex flex-row gap-3 w-full md:w-auto">
           <BaseSearch
             v-model="searchInput"
             placeholder="Cari pengeluaran..."
-            class="w-full sm:w-64"
+            class="flex-1 w-full"
           />
-          <BaseFilter :has-active-filters="hasActiveFilters">
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
             <template #default="{ closeDropdown }">
               <div class="space-y-4 w-64">
                 <!-- Sort filter -->
@@ -211,6 +203,17 @@ function handleConfirmDelete() {
             </template>
           </BaseFilter>
         </div>
+        <BaseButton
+          variant="primary"
+          :to="{
+            name: 'dashboard-foster-children-expense-transaction-create',
+            params: { id: childId },
+          }"
+          class="w-full sm:w-auto justify-center"
+        >
+          <Plus :size="20" class="mr-1" />
+          Tambah Pengeluaran
+        </BaseButton>
       </div>
 
       <!-- Table Section -->

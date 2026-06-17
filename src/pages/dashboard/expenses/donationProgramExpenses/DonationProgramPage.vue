@@ -34,14 +34,15 @@ const {
 
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+      <div class="flex flex-col md:flex-row gap-4 justify-end items-start md:items-center">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-row gap-3 w-full md:w-auto">
           <BaseSearch
             v-model="searchQuery"
             placeholder="Cari program donasi..."
-            class="w-full sm:w-64"
+            class="flex-1 w-full"
           />
-          <BaseFilter :has-active-filters="hasActiveFilters">
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
             <template #default>
               <div class="space-y-4 w-64">
                 <!-- Category filter -->
@@ -152,28 +153,28 @@ const {
             :key="donationProgram.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
           >
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+            <td class="px-6 py-2 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
               {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium max-w-50 truncate text-gray-600 dark:text-gray-200"
+              class="px-6 py-2 whitespace-nowrap font-medium max-w-50 truncate text-gray-600 dark:text-gray-200"
             >
               {{ donationProgram.title }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+            <td class="px-6 py-2 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
               {{ formatDonationProgramCategory(donationProgram.category) }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+              class="px-6 py-2 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
             >
               {{ formatCurrency(donationProgram.collectedFund) }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+              class="px-6 py-2 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
             >
               {{ formatCurrency(donationProgram.totalExpense ?? 0) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">
+            <td class="px-6 py-2 whitespace-nowrap text-center">
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
@@ -183,7 +184,7 @@ const {
                 {{ formatStatus(donationProgram.status) }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-2 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
                 <BaseIconButton
                   :to="{

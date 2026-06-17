@@ -358,7 +358,7 @@ const dropdownLinks = [
                             class="w-full p-2.5 rounded-lg text-left text-sm transition flex items-center justify-between font-medium group"
                             :class="
                               authStore.activeRole === role
-                                ? 'bg-primary-300 text-primary-700'
+                                ? 'bg-primary-300 text-white'
                                 : 'text-gray-700 hover:bg-gray-100'
                             "
                           >

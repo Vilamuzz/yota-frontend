@@ -51,13 +51,6 @@ const hasActiveFilters = computed(
   () => queryParams.roleId !== undefined || queryParams.isBanned !== undefined,
 )
 
-function clearFilters() {
-  searchQuery.value = ''
-  queryParams.roleId = undefined
-  queryParams.isBanned = undefined
-  resetPagination()
-}
-
 const modalShow = ref(false)
 const modalAccount = ref<Account | null>(null)
 const modalMode = ref<'view' | 'edit'>('view')
@@ -130,11 +123,14 @@ function handleConfirmAction() {
 
     <div class="space-y-6">
       <!-- Search and Filter Controls -->
-      <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-        <BaseSearch v-model="searchQuery" placeholder="Search accounts..." />
-
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-          <BaseFilter :has-active-filters="hasActiveFilters">
+      <div class="flex flex-col md:flex-row gap-4 justify-end items-start md:items-center">
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch
+            v-model="searchQuery"
+            placeholder="Search accounts..."
+            class="flex-1 w-full"
+          />
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
             <template #default>
               <div class="space-y-4">
                 <!-- Role filter -->
@@ -144,7 +140,7 @@ function handleConfirmAction() {
                     v-model="queryParams.roleId"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option :value="undefined">All</option>
+                    <option :value="undefined">Semua</option>
                     <option v-for="role in roles" :key="role.id" :value="role.id">
                       {{ role.name.charAt(0).toUpperCase() + role.name.slice(1) }}
                     </option>
@@ -158,20 +154,12 @@ function handleConfirmAction() {
                     v-model="queryParams.isBanned"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option :value="undefined">All</option>
-                    <option :value="false">Active</option>
-                    <option :value="true">Banned</option>
+                    <option :value="undefined">Semua</option>
+                    <option :value="false">Aktif</option>
+                    <option :value="true">Diblokir</option>
                   </select>
                 </div>
 
-                <div class="flex gap-2 pt-2">
-                  <button
-                    @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    Clear
-                  </button>
-                </div>
               </div>
             </template>
           </BaseFilter>

@@ -149,10 +149,10 @@ const formatDate = (dateStr: string) =>
       >
         <div
           v-if="show && displayUser"
-          class="bg-white rounded-sm shadow-2xl w-full max-w-md relative overflow-hidden dark:bg-gray-900"
+          class="bg-white rounded-sm shadow-2xl w-full max-w-md relative overflow-hidden dark:bg-gray-900 flex flex-col max-h-[90vh]"
         >
           <!-- Header -->
-          <div class="flex flex-col items-center px-6 py-4">
+          <div class="flex flex-col items-center px-4 sm:px-6 py-4 text-center">
             <h1 class="text-lg text-gray-900 font-sf-pro dark:text-white">Edit Peran Pengguna</h1>
             <p class="text-xs text-gray-500 dark:text-gray-400">
               {{
@@ -165,7 +165,7 @@ const formatDate = (dateStr: string) =>
 
           <!-- Body -->
           <div
-            class="px-6 py-5 space-y-4 border border-gray-100 rounded-sm mx-6 relative dark:border-gray-800"
+            class="px-4 sm:px-6 py-4 sm:py-5 space-y-4 border border-gray-100 rounded-sm mx-4 sm:mx-6 relative dark:border-gray-800 overflow-y-auto"
           >
             <!-- Loading state -->
             <div
@@ -188,30 +188,30 @@ const formatDate = (dateStr: string) =>
             </div>
 
             <!-- Username (read-only) -->
-            <div class="flex justify-between items-center gap-2">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
               <label
-                class="w-1/2 flex justify-between text-xs font-semibold text-gray-600 mb-1.5 dark:text-gray-400"
+                class="w-full sm:w-1/2 flex justify-between text-xs font-semibold text-gray-600 mb-1 sm:mb-0 dark:text-gray-400"
               >
                 <p>Username</p>
-                <p>:</p></label
+                <p class="hidden sm:block">:</p></label
               >
               <div
-                class="w-1/2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-sm text-sm text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400"
+                class="w-full sm:w-1/2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-sm text-sm text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400"
               >
                 {{ displayUser.username }}
               </div>
             </div>
 
             <!-- Email (read-only) -->
-            <div class="flex justify-between items-center gap-2">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
               <label
-                class="w-1/2 flex justify-between text-xs font-semibold text-gray-600 mb-1.5 dark:text-gray-400"
+                class="w-full sm:w-1/2 flex justify-between text-xs font-semibold text-gray-600 mb-1 sm:mb-0 dark:text-gray-400"
               >
                 <p>Email</p>
-                <p>:</p></label
+                <p class="hidden sm:block">:</p></label
               >
               <div
-                class="w-1/2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-sm text-sm text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400"
+                class="w-full sm:w-1/2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-sm text-sm text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 break-all"
               >
                 {{ displayUser.email }}
               </div>
@@ -261,7 +261,7 @@ const formatDate = (dateStr: string) =>
                         role.isActive ? 'text-green-600' : 'text-gray-400 dark:text-gray-500',
                       ]"
                     >
-                      {{ role.isActive ? 'Active' : 'Inactive' }}
+                      {{ role.isActive ? 'Aktif' : 'Non-Aktif' }}
                     </span>
                     <!-- Toggle Switch -->
                     <button
@@ -283,7 +283,7 @@ const formatDate = (dateStr: string) =>
                         role.isActive ? 'text-green-600' : 'text-red-500 dark:text-red-400',
                       ]"
                     >
-                      {{ role.isActive ? 'Active' : 'Inactive' }}
+                      {{ role.isActive ? 'Aktif' : 'Non-Aktif' }}
                     </span>
                   </div>
                 </div>
@@ -300,9 +300,9 @@ const formatDate = (dateStr: string) =>
                   class="p-3 bg-primary-50 border border-primary-100 rounded-sm space-y-3 dark:bg-gray-800 dark:border-gray-700"
                 >
                   <p class="text-xs font-semibold text-primary-700 dark:text-primary-400">
-                    Add New Role
+                    Tambah Role Baru
                   </p>
-                  <div class="flex gap-2">
+                  <div class="flex flex-col sm:flex-row gap-2">
                     <select
                       v-model="newRoleId"
                       class="flex-1 px-3 py-1.5 border border-gray-300 rounded-sm text-sm focus:ring-2 focus:ring-primary-500 outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-white"
@@ -319,7 +319,7 @@ const formatDate = (dateStr: string) =>
                       :loading="addRoleMutation.isPending.value"
                       :disabled="!newRoleId"
                     >
-                      Add
+                      Tambah
                     </BaseButton>
                   </div>
                 </div>
@@ -327,13 +327,13 @@ const formatDate = (dateStr: string) =>
             </div>
 
             <!-- Status (read-only — change via ban/unban on the list) -->
-            <div class="flex justify-between items-center gap-2">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
               <label
-                class="w-1/2 flex justify-between text-xs font-semibold text-gray-600 mb-1.5 dark:text-gray-400"
+                class="w-full sm:w-1/2 flex justify-between text-xs font-semibold text-gray-600 mb-1 sm:mb-0 dark:text-gray-400"
                 ><p>Status</p>
-                <p>:</p></label
+                <p class="hidden sm:block">:</p></label
               >
-              <div class="flex w-1/2 justify-start items-center gap-2">
+              <div class="flex w-full sm:w-1/2 justify-start items-center gap-2">
                 <span
                   :class="[
                     'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
@@ -342,20 +342,20 @@ const formatDate = (dateStr: string) =>
                       : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800',
                   ]"
                 >
-                  {{ !displayUser.isBanned ? 'Active' : 'Banned' }}
+                  {{ !displayUser.isBanned ? 'Aktif' : 'Diblokir' }}
                 </span>
               </div>
             </div>
 
             <!-- Member since (view only) -->
-            <div class="flex justify-between items-center gap-2" v-if="!isEdit">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2" v-if="!isEdit">
               <label
-                class="w-1/2 flex justify-between text-xs font-semibold text-gray-600 mb-1.5 dark:text-gray-400"
-                ><p>Member Since</p>
-                <p>:</p></label
+                class="w-full sm:w-1/2 flex justify-between text-xs font-semibold text-gray-600 mb-1 sm:mb-0 dark:text-gray-400"
+                ><p>Member Sejak</p>
+                <p class="hidden sm:block">:</p></label
               >
               <div
-                class="w-1/2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-sm text-sm text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+                class="w-full sm:w-1/2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-sm text-sm text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
               >
                 {{ formatDate(displayUser.createdAt) }}
               </div>

@@ -11,7 +11,7 @@ export enum AmbulanceServiceStatus {
   DONE = 'done',
 }
 
-export const ambulanceStatusOptions = [
+export const ambulanceServiceStatusOptions = [
   { value: AmbulanceServiceStatus.PENDING, label: 'Menunggu' },
   { value: AmbulanceServiceStatus.ACCEPTED, label: 'Diterima' },
   { value: AmbulanceServiceStatus.REJECTED, label: 'Ditolak' },
@@ -21,7 +21,7 @@ export const ambulanceStatusOptions = [
 ]
 
 export const formatAmbulanceServiceStatus = (status: AmbulanceServiceStatus) => {
-  return ambulanceStatusOptions.find((option) => option.value === status)?.label
+  return ambulanceServiceStatusOptions.find((option) => option.value === status)?.label
 }
 
 export interface AmbulanceService {

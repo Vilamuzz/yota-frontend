@@ -114,90 +114,95 @@ function handleConfirmArchive() {
 
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-        <BaseButton variant="primary" :to="{ name: 'dashboard-donation-programs-create' }">
+      <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch
+            v-model="searchQuery"
+            placeholder="Cari program donasi..."
+            class="flex-1 w-full"
+          />
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
+              <div class="space-y-4 w-64">
+                <!-- Category filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Kategori
+                  </label>
+                  <select
+                    v-model="queryParams.category"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Kategori</option>
+                    <option
+                      v-for="category in donationProgramCategoryOptions"
+                      :key="category.value"
+                      :value="category.value"
+                    >
+                      {{ category.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Status filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Status
+                  </label>
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Status</option>
+                    <option
+                      v-for="status in donationProgramStatusOptions"
+                      :key="status.value"
+                      :value="status.value"
+                    >
+                      {{ status.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Sort filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Urutkan
+                  </label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at asc">Terlama</option>
+                    <option value="title asc">Judul (A-Z)</option>
+                    <option value="title desc">Judul (Z-A)</option>
+                    <option value="fund_target desc">Target Dana Tertinggi</option>
+                    <option value="fund_target asc">Target Dana Terendah</option>
+                    <option value="start_date desc">Tanggal Mulai (Terbaru)</option>
+                    <option value="start_date asc">Tanggal Mulai (Terlama)</option>
+                    <option value="end_date asc">Tanggal Selesai (Terdekat)</option>
+                    <option value="end_date desc">Tanggal Selesai (Terlama)</option>
+                  </select>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
+        </div>
+        <BaseButton
+          variant="primary"
+          :to="{ name: 'dashboard-donation-programs-create' }"
+          class="w-full md:w-auto justify-center"
+        >
           <Plus :size="20" class="mr-1" />
           Buat Program Donasi
         </BaseButton>
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <BaseSearch v-model="searchQuery" placeholder="Cari program donasi..." />
-
-          <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <BaseFilter :has-active-filters="hasActiveFilters">
-              <template #default>
-                <div class="space-y-4 w-64">
-                  <!-- Category filter -->
-                  <div>
-                    <label
-                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
-                    >
-                      Kategori
-                    </label>
-                    <select
-                      v-model="queryParams.category"
-                      class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option :value="undefined">Semua Kategori</option>
-                      <option
-                        v-for="category in donationProgramCategoryOptions"
-                        :key="category.value"
-                        :value="category.value"
-                      >
-                        {{ category.label }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <!-- Status filter -->
-                  <div>
-                    <label
-                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
-                    >
-                      Status
-                    </label>
-                    <select
-                      v-model="queryParams.status"
-                      class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option :value="undefined">Semua Status</option>
-                      <option
-                        v-for="status in donationProgramStatusOptions"
-                        :key="status.value"
-                        :value="status.value"
-                      >
-                        {{ status.label }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <!-- Sort filter -->
-                  <div>
-                    <label
-                      class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
-                    >
-                      Urutkan
-                    </label>
-                    <select
-                      v-model="queryParams.sortBy"
-                      class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option :value="undefined">Bawaan (Terbaru)</option>
-                      <option value="created_at asc">Terlama</option>
-                      <option value="title asc">Judul (A-Z)</option>
-                      <option value="title desc">Judul (Z-A)</option>
-                      <option value="fund_target desc">Target Dana Tertinggi</option>
-                      <option value="fund_target asc">Target Dana Terendah</option>
-                      <option value="start_date desc">Tanggal Mulai (Terbaru)</option>
-                      <option value="start_date asc">Tanggal Mulai (Terlama)</option>
-                      <option value="end_date asc">Tanggal Selesai (Terdekat)</option>
-                      <option value="end_date desc">Tanggal Selesai (Terlama)</option>
-                    </select>
-                  </div>
-                </div>
-              </template>
-            </BaseFilter>
-          </div>
-        </div>
       </div>
 
       <!-- Donations Table -->

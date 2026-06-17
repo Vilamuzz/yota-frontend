@@ -15,6 +15,16 @@ export enum AmbulanceStatus {
   Maintenance = 'maintenance',
 }
 
+export const ambulanceStatusOptions = [
+  { value: AmbulanceStatus.Available, label: 'Tersedia' },
+  { value: AmbulanceStatus.InUse, label: 'Sedang Digunakan' },
+  { value: AmbulanceStatus.Maintenance, label: 'Pemeliharaan' },
+]
+
+export const formatAmbulanceStatus = (status: AmbulanceStatus) => {
+  return ambulanceStatusOptions.find((option) => option.value === status)?.label
+}
+
 export interface AmbulanceList {
   ambulances: Ambulance[]
   pagination: Pagination

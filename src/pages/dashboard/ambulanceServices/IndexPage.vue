@@ -102,13 +102,6 @@ watch(
   () => resetPagination(),
 )
 
-function clearFilters() {
-  searchQuery.value = ''
-  queryParams.status = undefined
-  queryParams.serviceCategory = undefined
-  resetPagination()
-}
-
 const { acceptMutation, rejectMutation } = useAmbulanceServiceUpdate()
 
 const acceptModalShow = ref(false)
@@ -259,15 +252,16 @@ function handleConfirmComplete() {
       </div>
 
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end">
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <BaseSearch v-model="searchQuery" placeholder="Cari pemohon..." class="w-full sm:w-64" />
-          <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default="{ closeDropdown }">
+      <div class="flex flex-col md:flex-row gap-4 justify-end items-start md:items-center">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchQuery" placeholder="Cari pemohon..." class="flex-1 w-full" />
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
               <div class="space-y-4 w-64">
                 <div>
                   <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                   >
                     Status
                   </label>
@@ -284,7 +278,7 @@ function handleConfirmComplete() {
 
                 <div>
                   <label
-                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
                   >
                     Kategori Layanan
                   </label>
@@ -301,21 +295,6 @@ function handleConfirmComplete() {
                       {{ option.label }}
                     </option>
                   </select>
-                </div>
-
-                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                  <button
-                    @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-                  >
-                    RESET
-                  </button>
-                  <button
-                    @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-xs font-bold bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
-                  >
-                    APPLY
-                  </button>
                 </div>
               </div>
             </template>

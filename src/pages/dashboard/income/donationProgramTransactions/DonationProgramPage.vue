@@ -34,92 +34,87 @@ const {
 
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="">
-        <div class="flex flex-col md:flex-col gap-4">
-          <!-- Search and Filter Controls -->
-          <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-            <BaseSearch
-              v-model="searchQuery"
-              placeholder="Cari program donasi..."
-              class="w-full sm:w-64"
-            />
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <BaseFilter :has-active-filters="hasActiveFilters">
-                <template #default>
-                  <div class="space-y-4 w-64">
-                    <!-- Category filter -->
-                    <div>
-                      <label
-                        class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
-                      >
-                        Kategori
-                      </label>
-                      <select
-                        v-model="queryParams.category"
-                        class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option :value="undefined">Semua Kategori</option>
-                        <option
-                          v-for="category in donationProgramCategoryOptions"
-                          :key="category.value"
-                          :value="category.value"
-                        >
-                          {{ category.label }}
-                        </option>
-                      </select>
-                    </div>
+      <div class="flex flex-col md:flex-row gap-4 justify-end items-start md:items-center">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch
+            v-model="searchQuery"
+            placeholder="Cari program donasi..."
+            class="flex-1 w-full"
+          />
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
+              <div class="space-y-4 w-64">
+                <!-- Category filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Kategori
+                  </label>
+                  <select
+                    v-model="queryParams.category"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Kategori</option>
+                    <option
+                      v-for="category in donationProgramCategoryOptions"
+                      :key="category.value"
+                      :value="category.value"
+                    >
+                      {{ category.label }}
+                    </option>
+                  </select>
+                </div>
 
-                    <!-- Status filter -->
-                    <div>
-                      <label
-                        class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
-                      >
-                        Status
-                      </label>
-                      <select
-                        v-model="queryParams.status"
-                        class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option :value="undefined">Semua Status</option>
-                        <option
-                          v-for="status in donationProgramStatusOptions"
-                          :key="status.value"
-                          :value="status.value"
-                        >
-                          {{ status.label }}
-                        </option>
-                      </select>
-                    </div>
+                <!-- Status filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Status
+                  </label>
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Status</option>
+                    <option
+                      v-for="status in donationProgramStatusOptions"
+                      :key="status.value"
+                      :value="status.value"
+                    >
+                      {{ status.label }}
+                    </option>
+                  </select>
+                </div>
 
-                    <!-- Sort filter -->
-                    <div>
-                      <label
-                        class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
-                      >
-                        Urutkan
-                      </label>
-                      <select
-                        v-model="queryParams.sortBy"
-                        class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option :value="undefined">Bawaan (Terbaru)</option>
-                        <option value="created_at asc">Terlama</option>
-                        <option value="fund_target desc">Target Dana Tertinggi</option>
-                        <option value="fund_target asc">Target Dana Terendah</option>
-                        <option value="start_date desc">Tanggal Mulai (Terbaru)</option>
-                        <option value="start_date asc">Tanggal Mulai (Terlama)</option>
-                        <option value="end_date asc">Tanggal Selesai (Terdekat)</option>
-                        <option value="end_date desc">Tanggal Selesai (Terlama)</option>
-                      </select>
-                    </div>
-                  </div>
-                </template>
-              </BaseFilter>
-            </div>
-          </div>
+                <!-- Sort filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Urutkan
+                  </label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at asc">Terlama</option>
+                    <option value="fund_target desc">Target Dana Tertinggi</option>
+                    <option value="fund_target asc">Target Dana Terendah</option>
+                    <option value="start_date desc">Tanggal Mulai (Terbaru)</option>
+                    <option value="start_date asc">Tanggal Mulai (Terlama)</option>
+                    <option value="end_date asc">Tanggal Selesai (Terdekat)</option>
+                    <option value="end_date desc">Tanggal Selesai (Terlama)</option>
+                  </select>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
         </div>
       </div>
-
       <!-- Donations Table -->
       <BaseTable
         :loading="isLoading"
@@ -157,28 +152,28 @@ const {
             :key="donationProgram.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
           >
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+            <td class="px-6 py-2 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
               {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium max-w-50 truncate text-gray-600 dark:text-gray-200"
+              class="px-6 py-2 whitespace-nowrap font-medium max-w-50 truncate text-gray-600 dark:text-gray-200"
             >
               {{ donationProgram.title }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
+            <td class="px-6 py-2 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">
               {{ formatDonationProgramCategory(donationProgram.category) }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+              class="px-6 py-2 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
             >
               {{ formatCurrency(donationProgram.fundTarget) }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
+              class="px-6 py-2 whitespace-nowrap font-medium text-right text-gray-600 dark:text-gray-200"
             >
               {{ formatCurrency(donationProgram.collectedFund) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">
+            <td class="px-6 py-2 whitespace-nowrap text-center">
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
@@ -188,7 +183,7 @@ const {
                 {{ formatStatus(donationProgram.status) }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-2 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
                 <BaseIconButton
                   :to="{

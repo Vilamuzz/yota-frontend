@@ -76,15 +76,10 @@ const hasActiveFilters = computed(() => {
   <DashboardLayout>
     <div class="space-y-6">
       <!-- Filters & Search -->
-      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-end">
-        <BaseSearch
-          v-model="searchInput"
-          placeholder="Cari anak asuh..."
-          class="w-full sm:max-w-xs"
-        />
-
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <BaseFilter :has-active-filters="hasActiveFilters">
+      <div class="flex flex-col md:flex-row gap-4 justify-end items-start md:items-center">
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchInput" placeholder="Cari anak asuh..." class="flex-1 w-full" />
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
             <template #default="{ closeDropdown }">
               <div class="space-y-4 w-64">
                 <div>

@@ -23,7 +23,11 @@ const queryParams = reactive({
 })
 const limitOptions = [10, 25, 50]
 
-const { prayers, pagination: prayerPagination, isLoading: prayersLoading } = useAdminPrayerList(queryParams)
+const {
+  prayers,
+  pagination: prayerPagination,
+  isLoading: prayersLoading,
+} = useAdminPrayerList(queryParams)
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
   queryParams,
   prayerPagination,
@@ -93,7 +97,7 @@ function truncate(text: string, max = 80) {
       <!-- Filters Section -->
       <div class="flex justify-end">
         <BaseFilter :has-active-filters="queryParams.sortBy !== 'reportCount'">
-          <template #default="{ closeDropdown }">
+          <template #default>
             <div class="space-y-4 w-64">
               <!-- Sort filter -->
               <div>
@@ -111,21 +115,6 @@ function truncate(text: string, max = 80) {
                   <option value="createdAt asc">Terlama</option>
                 </select>
               </div>
-
-              <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                <button
-                  @click="queryParams.sortBy = 'reportCount'"
-                  class="flex-1 px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-                >
-                  RESET
-                </button>
-                <button
-                  @click="closeDropdown"
-                  class="flex-1 px-3 py-2 text-xs font-bold bg-primary-300 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-sm"
-                >
-                  APPLY
-                </button>
-              </div>
             </div>
           </template>
         </BaseFilter>
@@ -139,7 +128,9 @@ function truncate(text: string, max = 80) {
           :is-empty="!prayersLoading && prayers.length === 0"
           empty-message="Tidak ada doa yang ditemukan."
           :has-prev="(queryParams.page ?? 1) > 1"
-          :has-next="prayerPagination ? (queryParams.page ?? 1) < prayerPagination.totalPages : false"
+          :has-next="
+            prayerPagination ? (queryParams.page ?? 1) < prayerPagination.totalPages : false
+          "
           v-model:limit="queryParams.limit"
           :limit-options="limitOptions"
           @prev="handlePrevPage"
@@ -193,7 +184,7 @@ function truncate(text: string, max = 80) {
 
               <!-- Content -->
               <td class="max-w-xs px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                {{ truncate(prayer.content) }}
+                {{ truncate(prayer.content, 40) }}
               </td>
 
               <!-- Amen count -->

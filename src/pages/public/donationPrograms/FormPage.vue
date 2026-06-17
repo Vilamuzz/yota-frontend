@@ -220,7 +220,7 @@ const handleSubmit = () => {
           <input
             v-model="donorName"
             type="text"
-            placeholder="Nama Anda"
+            placeholder="Hamba Allah"
             class="w-full border-2 border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 focus:border-primary-400 transition-colors"
           />
         </div>
