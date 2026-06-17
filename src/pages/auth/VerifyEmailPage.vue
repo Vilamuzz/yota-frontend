@@ -17,31 +17,31 @@ onMounted(() => {
   const token = route.query.token as string
 
   if (!token) {
-    error.value = 'Invalid or missing verification token.'
+    error.value = 'Token verifikasi tidak valid atau hilang.'
     return
   }
 
   verifyEmailMutation.mutate(token, {
     onSuccess: (data) => {
-      success.value = data.message || 'Email verified successfully!'
+      success.value = data.message || 'Email berhasil diverifikasi!'
     },
     onError: (err) => {
-      error.value = extractError(err, 'Failed to verify email. Please try again.')
+      error.value = extractError(err, 'Gagal memverifikasi email. Silakan coba lagi.')
     },
   })
 })
 
 const title = computed(() => {
-  if (verifyEmailMutation.isPending.value) return 'Verifying Email'
-  if (success.value) return 'Email Verified!'
-  if (error.value) return 'Verification Failed'
-  return 'Email Verification'
+  if (verifyEmailMutation.isPending.value) return 'Memverifikasi Email'
+  if (success.value) return 'Email Diverifikasi!'
+  if (error.value) return 'Verifikasi Gagal'
+  return 'Verifikasi Email'
 })
 
 const subtitle = computed(() => {
-  if (verifyEmailMutation.isPending.value) return 'Please wait while we secure your account.'
-  if (success.value) return 'Your account is now ready to use.'
-  if (error.value) return 'We encountered an issue during verification.'
+  if (verifyEmailMutation.isPending.value) return 'Harap tunggu sementara kami mengamankan akun Anda.'
+  if (success.value) return 'Akun Anda sekarang siap digunakan.'
+  if (error.value) return 'Kami mengalami masalah selama verifikasi.'
   return ''
 })
 </script>
@@ -56,7 +56,7 @@ const subtitle = computed(() => {
         >
           <Loader2 class="w-10 h-10 text-primary-300 animate-spin" />
         </div>
-        <p class="text-gray-600">Completing the verification process...</p>
+        <p class="text-gray-600">Menyelesaikan proses verifikasi...</p>
       </div>
 
       <!-- Success State -->
@@ -66,10 +66,10 @@ const subtitle = computed(() => {
         >
           <CheckCircle2 class="w-10 h-10 text-green-600" />
         </div>
-        <p class="text-gray-600 text-sm mb-8">Thank you for verifying your email.</p>
+        <p class="text-gray-600 text-sm mb-8">Terima kasih telah memverifikasi email Anda.</p>
         <BaseButton variant="primary" full-width size="lg" to="/login">
           <div class="flex items-center justify-center gap-2">
-            <span>Go to Login</span>
+            <span>Pergi ke Halaman Masuk</span>
             <LogIn class="w-4 h-4" />
           </div>
         </BaseButton>
@@ -100,7 +100,7 @@ const subtitle = computed(() => {
         </div>
 
         <p class="text-gray-600 text-sm mb-8">
-          The link might be expired or already used. Please try requesting a new verification email.
+          Tautan tersebut mungkin sudah kedaluwarsa atau sudah digunakan. Silakan coba minta email verifikasi baru.
         </p>
 
         <div class="space-y-4">
@@ -110,7 +110,7 @@ const subtitle = computed(() => {
             size="lg"
             @click="router.push('/resend-verification')"
           >
-            Resend Verification Email
+            Kirim Ulang Email Verifikasi
           </BaseButton>
 
           <RouterLink
@@ -118,7 +118,7 @@ const subtitle = computed(() => {
             class="w-full flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-primary-300 transition-colors duration-200"
           >
             <ArrowLeft class="w-4 h-4" />
-            Back to Login
+            Kembali ke Halaman Masuk
           </RouterLink>
         </div>
       </div>
@@ -126,8 +126,8 @@ const subtitle = computed(() => {
 
     <template #footer>
       <p class="text-xs text-gray-500">
-        Need help?
-        <a href="#" class="text-primary-300 font-semibold hover:underline">Contact Support</a>
+        Butuh bantuan?
+        <a href="#" class="text-primary-300 font-semibold hover:underline">Hubungi Dukungan</a>
       </p>
     </template>
   </AuthLayout>

@@ -8,7 +8,7 @@ import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import BasePagination from '@/components/atoms/BasePagination.vue'
 import { Search, Loader2, Check, LogIn } from 'lucide-vue-next'
 import { useRouter, useRoute } from 'vue-router'
-import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
+import PublicConfirmationModal from '@/components/organisms/PublicConfirmationModal.vue'
 import type { SocialProgramQueryParams } from '@/types/socialProgram'
 
 const searchQuery = ref('')
@@ -75,18 +75,6 @@ const toggleSort = () => {
 const toggleFilter = () => {
   showFilterDropdown.value = !showFilterDropdown.value
   showSortDropdown.value = false
-
-  // Sync local temp state when opening filter dropdown
-  if (queryParams.startDate && queryParams.endDate) {
-    const range = billingRanges.find(
-      (r) => r.startDate === queryParams.startDate && r.endDate === queryParams.endDate,
-    )
-    tempBillingRange.value = range || null
-  } else {
-    tempBillingRange.value = null
-  }
-
-  tempStatus.value = queryParams.status || null
 }
 
 const selectSort = (val: string) => {
@@ -108,67 +96,23 @@ const billingRanges: BillingRange[] = [
   { label: 'Akhir Bulan (Tgl 21 - 31)', startDate: '2026-01-21', endDate: '2026-01-31' },
 ]
 
-const tempBillingRange = ref<BillingRange | null>(null)
-const selectedBillingRangeLabel = ref('')
-
-const selectBillingRange = (range: BillingRange) => {
-  if (tempBillingRange.value?.label === range.label) {
-    tempBillingRange.value = null // Deselect if already selected
-  } else {
-    tempBillingRange.value = range
+const selectedBillingRangeLabel = computed(() => {
+  if (queryParams.startDate && queryParams.endDate) {
+    const range = billingRanges.find(
+      (r) => r.startDate === queryParams.startDate && r.endDate === queryParams.endDate,
+    )
+    return range ? range.label : ''
   }
-}
-
-const tempStatus = ref<string | null>(null)
-
-const selectStatus = (statusValue: string) => {
-  if (tempStatus.value === statusValue) {
-    tempStatus.value = null
-  } else {
-    tempStatus.value = statusValue
-  }
-}
-
-const applyFilters = () => {
-  if (tempBillingRange.value) {
-    queryParams.startDate = tempBillingRange.value.startDate
-    queryParams.endDate = tempBillingRange.value.endDate
-    selectedBillingRangeLabel.value = tempBillingRange.value.label
-  } else {
-    queryParams.startDate = undefined
-    queryParams.endDate = undefined
-    selectedBillingRangeLabel.value = ''
-  }
-
-  queryParams.status = tempStatus.value || undefined
-
-  resetPagination()
-  showFilterDropdown.value = false
-}
-
-const resetFilters = () => {
-  tempBillingRange.value = null
-  queryParams.startDate = undefined
-  queryParams.endDate = undefined
-  selectedBillingRangeLabel.value = ''
-
-  tempStatus.value = null
-  queryParams.status = undefined
-
-  resetPagination()
-  showFilterDropdown.value = false
-}
+  return ''
+})
 
 const clearBillingRangeFilter = () => {
-  tempBillingRange.value = null
   queryParams.startDate = undefined
   queryParams.endDate = undefined
-  selectedBillingRangeLabel.value = ''
   resetPagination()
 }
 
 const clearStatusFilter = () => {
-  tempStatus.value = null
   queryParams.status = undefined
   resetPagination()
 }
@@ -196,7 +140,7 @@ onUnmounted(() => {
 
 <template>
   <PublicLayout>
-    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-18 font-poppins">
+    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-6 md:px-18 font-poppins">
       <div class="max-w-7xl mx-auto">
         <!-- TITLE -->
         <div class="text-center mb-8">
@@ -270,10 +214,16 @@ onUnmounted(() => {
                         { label: 'Selesai', value: 'completed' },
                       ]"
                       :key="statusOpt.value"
-                      @click="selectStatus(statusOpt.value)"
+                      @click="
+                        () => {
+                          queryParams.status =
+                            queryParams.status === statusOpt.value ? undefined : statusOpt.value
+                          resetPagination()
+                        }
+                      "
                       class="flex-1 text-center py-2.5 rounded-xl text-xs transition-colors border"
                       :class="
-                        tempStatus === statusOpt.value
+                        queryParams.status === statusOpt.value
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
@@ -290,10 +240,25 @@ onUnmounted(() => {
                     <button
                       v-for="range in billingRanges"
                       :key="range.label"
-                      @click="selectBillingRange(range)"
+                      @click="
+                        () => {
+                          if (
+                            queryParams.startDate === range.startDate &&
+                            queryParams.endDate === range.endDate
+                          ) {
+                            queryParams.startDate = undefined
+                            queryParams.endDate = undefined
+                          } else {
+                            queryParams.startDate = range.startDate
+                            queryParams.endDate = range.endDate
+                          }
+                          resetPagination()
+                        }
+                      "
                       class="w-full text-left px-3 py-2.5 rounded-xl text-xs transition-colors border"
                       :class="
-                        tempBillingRange?.label === range.label
+                        queryParams.startDate === range.startDate &&
+                        queryParams.endDate === range.endDate
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
@@ -302,35 +267,22 @@ onUnmounted(() => {
                     </button>
                   </div>
                 </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    @click="resetFilters"
-                    class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    @click="applyFilters"
-                    class="flex-1 px-4 py-2.5 bg-primary-500 text-white rounded-xl text-xs font-semibold hover:bg-primary-600 transition-colors shadow-sm shadow-primary-500/20"
-                  >
-                    Terapkan
-                  </button>
-                </div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- ACTIVE FILTER CHIPS -->
-        <div v-if="hasActiveFilters" class="flex justify-center gap-2 mb-6 -mt-4">
+        <div v-if="hasActiveFilters" class="flex flex-wrap justify-center gap-2 mb-6 -mt-4">
           <div
             v-if="queryParams.startDate && queryParams.endDate"
             class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-200 text-primary-600 text-xs font-semibold rounded-full"
           >
             <span>Tagihan: {{ selectedBillingRangeLabel }}</span>
-            <button @click="clearBillingRangeFilter" class="hover:text-primary-800 focus:outline-none">
+            <button
+              @click="clearBillingRangeFilter"
+              class="hover:text-primary-800 focus:outline-none"
+            >
               &times;
             </button>
           </div>

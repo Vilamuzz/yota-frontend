@@ -2,14 +2,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import {
-  Check,
-  X as XIcon,
-  ClipboardList,
-  AlertCircle,
-  Eye,
-  Play,
-} from 'lucide-vue-next'
+import { Check, X as XIcon, ClipboardList, AlertCircle, Eye, Play } from 'lucide-vue-next'
 import { useAmbulanceServiceList } from '@/composables/ambulanceService/useAmbulanceServiceList'
 import { useAssignedAmbulanceServiceList } from '@/composables/ambulanceService/useAssignedAmbulanceServiceList'
 import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
@@ -26,7 +19,7 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
 import { getStatusColor } from '@/utils/statusColor'
 import { formatStatus, getCategoryLabel } from '@/utils/format'
-import { serviceCategoryOptions } from '@/types/ambulanceHistory'
+import { ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
@@ -301,7 +294,7 @@ function handleConfirmComplete() {
                   >
                     <option :value="undefined">Semua Kategori</option>
                     <option
-                      v-for="option in serviceCategoryOptions"
+                      v-for="option in ambulanceServiceCategoryOptions"
                       :key="option.value"
                       :value="option.value"
                     >
@@ -382,7 +375,7 @@ function handleConfirmComplete() {
               <span
                 class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30"
               >
-                {{ getCategoryLabel(service.serviceCategory, serviceCategoryOptions) }}
+                {{ getCategoryLabel(service.serviceCategory, ambulanceServiceCategoryOptions) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">

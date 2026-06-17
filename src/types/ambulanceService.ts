@@ -6,9 +6,22 @@ export enum AmbulanceServiceStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
-  CANCELED = 'canceled',
+  CANCELLED = 'cancelled',
   IN_SERVICE = 'in_service',
   DONE = 'done',
+}
+
+export const ambulanceStatusOptions = [
+  { value: AmbulanceServiceStatus.PENDING, label: 'Menunggu' },
+  { value: AmbulanceServiceStatus.ACCEPTED, label: 'Diterima' },
+  { value: AmbulanceServiceStatus.REJECTED, label: 'Ditolak' },
+  { value: AmbulanceServiceStatus.CANCELLED, label: 'Dibatalkan' },
+  { value: AmbulanceServiceStatus.IN_SERVICE, label: 'Dalam Perjalanan' },
+  { value: AmbulanceServiceStatus.DONE, label: 'Selesai' },
+]
+
+export const formatAmbulanceServiceStatus = (status: AmbulanceServiceStatus) => {
+  return ambulanceStatusOptions.find((option) => option.value === status)?.label
 }
 
 export interface AmbulanceService {

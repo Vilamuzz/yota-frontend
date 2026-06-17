@@ -53,8 +53,8 @@ const mapSrc = computed(() => {
     <!-- Vision & Mission Section -->
     <section class="w-full">
       <div class="max-w-7xl mx-auto mt-12 px-6 md:px-12 lg:px-24">
-        <div class="flex flex-col md:flex-row items-center gap-32">
-          <div class="h-full w-1/4 shrink-0">
+        <div class="flex flex-col md:flex-row items-center gap-12 md:gap-20 lg:gap-32">
+          <div class="h-full w-48 md:w-1/4 shrink-0 text-center">
             <img
               v-if="foundationProfileStore.founderPicture"
               :src="foundationProfileStore.founderPicture"
@@ -98,8 +98,8 @@ const mapSrc = computed(() => {
     </section>
 
     <!-- Organizational Structure Section -->
-    <section class="w-full">
-      <div class="max-w-7xl mx-auto mt-36 px-6 md:px-12 lg:px-24">
+    <section class="w-full px-6">
+      <div class="max-w-7xl mx-auto mt-12 md:mt-36 md:px-12 lg:px-24">
         <div class="mb-8 space-y-4">
           <h2 class="text-xl font-bold text-gray-900">Struktur Organisasi</h2>
           <p class="text-gray-600">
@@ -119,8 +119,8 @@ const mapSrc = computed(() => {
     </section>
 
     <!-- Location Section -->
-    <section class="w-full mb-20">
-      <div class="max-w-7xl mx-auto mt-36 px-6 md:px-12 lg:px-24">
+    <section class="w-full px-6 mb-20">
+      <div class="max-w-7xl mx-auto mt-12 md:mt-36 md:px-12 lg:px-24">
         <div class="mb-8 space-y-4">
           <h2 class="text-xl font-bold text-gray-900">
             Lokasi Posko {{ foundationProfileStore.foundationName }}

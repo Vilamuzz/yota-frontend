@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useMyAmbulanceServiceDetail } from '@/composables/ambulanceService/useMyAmbulanceServiceDetail'
 import { formatDate } from '@/utils/format'
-import { AmbulanceServiceCategory } from '@/types/ambulanceHistory'
+import { formatAmbulanceServiceCategory } from '@/types/ambulanceHistory'
 import {
   X,
   Loader2,
@@ -19,6 +19,7 @@ import {
   PhoneCall,
 } from 'lucide-vue-next'
 import { formatPhoneWithDashes } from '@/utils/phone'
+import { AmbulanceServiceStatus } from '@/types/ambulanceService'
 
 const props = defineProps<{
   show: boolean
@@ -33,28 +34,11 @@ function useMyMyAmbulanceServiceDetail() {
   })
 }
 
-const getCategoryLabel = (category: string) => {
-  switch (category) {
-    case AmbulanceServiceCategory.SOCIAL_SERVICE:
-      return 'Layanan Sosial'
-    case AmbulanceServiceCategory.MORTUARY_SERVICE:
-      return 'Layanan Jenazah'
-    case AmbulanceServiceCategory.PATIENT_SERVICE:
-      return 'Layanan Pasien'
-    case AmbulanceServiceCategory.EMERGENCY_SERVICE:
-      return 'Layanan Darurat'
-    case AmbulanceServiceCategory.OTHER_SERVICE:
-      return 'Layanan Lainnya'
-    default:
-      return category
-  }
-}
-
 const statusConfig = computed(() => {
   if (!ambulanceService.value) return null
 
   switch (ambulanceService.value.status.toLowerCase()) {
-    case 'accepted':
+    case AmbulanceServiceStatus.ACCEPTED:
       return {
         icon: CheckCircle2,
         bgClass: 'bg-green-50/80 border-green-100 text-green-800',
@@ -62,7 +46,23 @@ const statusConfig = computed(() => {
         label: 'Diterima & Ditugaskan',
         desc: 'Permintaan Anda telah disetujui. Ambulans dan pengemudi telah ditugaskan untuk menjemput.',
       }
-    case 'rejected':
+    case AmbulanceServiceStatus.IN_SERVICE:
+      return {
+        icon: Ambulance,
+        bgClass: 'bg-primary-50/80 border-primary-100 text-primary-800',
+        iconBgClass: 'bg-primary-100 text-primary-600',
+        label: 'Dalam Perjalanan',
+        desc: 'Ambulans sedang dalam perjalanan untuk melayani permintaan Anda.',
+      }
+    case AmbulanceServiceStatus.DONE:
+      return {
+        icon: CheckCircle2,
+        bgClass: 'bg-blue-50/80 border-blue-100 text-blue-800',
+        iconBgClass: 'bg-blue-100 text-blue-600',
+        label: 'Selesai',
+        desc: 'Layanan ambulans telah selesai dilakukan. Terima kasih telah menggunakan layanan kami.',
+      }
+    case AmbulanceServiceStatus.REJECTED:
       return {
         icon: XCircle,
         bgClass: 'bg-red-50/80 border-red-100 text-red-800',
@@ -70,8 +70,7 @@ const statusConfig = computed(() => {
         label: 'Ditolak',
         desc: 'Maaf, permintaan layanan ambulans Anda tidak dapat dipenuhi oleh petugas.',
       }
-    case 'cancelled':
-    case 'canceled':
+    case AmbulanceServiceStatus.CANCELLED:
       return {
         icon: AlertTriangle,
         bgClass: 'bg-gray-50 border-gray-200 text-gray-800',
@@ -79,7 +78,7 @@ const statusConfig = computed(() => {
         label: 'Dibatalkan',
         desc: 'Permintaan layanan ambulans ini telah dibatalkan oleh Anda.',
       }
-    case 'pending':
+    case AmbulanceServiceStatus.PENDING:
     default:
       return {
         icon: Clock,
@@ -103,7 +102,7 @@ const statusConfig = computed(() => {
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      class="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       @click.self="$emit('close')"
     >
       <Transition
@@ -251,7 +250,7 @@ const statusConfig = computed(() => {
                         <span
                           class="inline-block px-2 py-0.5 bg-primary-50 border border-primary-100 text-primary-600 text-[10px] font-bold uppercase tracking-wider rounded-lg mt-0.5"
                         >
-                          {{ getCategoryLabel(ambulanceService.serviceCategory) }}
+                          {{ formatAmbulanceServiceCategory(ambulanceService.serviceCategory) }}
                         </span>
                       </div>
                       <div>
@@ -404,7 +403,8 @@ const statusConfig = computed(() => {
                         </div>
                       </div>
                       <a
-                        :href="`tel:${ambulanceService.assignedAmbulance.driver.phone}`"
+                        :href="`https://wa.me/+62${ambulanceService.assignedAmbulance.driver.phone}`"
+                        target="_blank"
                         class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition flex items-center justify-center shrink-0"
                         title="Hubungi Pengemudi"
                       >

@@ -216,7 +216,7 @@ const updatePassword = () => {
           <div class="lg:col-span-8 space-y-6">
             <!-- Profile Form -->
             <section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div class="px-8 py-6 border-b border-gray-100 flex items-center gap-3">
+              <div class="px-4 sm:px-6 md:px-8 py-6 border-b border-gray-100 flex items-center gap-3">
                 <div class="p-2 bg-primary-50 rounded-xl text-primary-400">
                   <User :size="20" />
                 </div>
@@ -226,7 +226,7 @@ const updatePassword = () => {
                 </div>
               </div>
 
-              <form @submit.prevent="updateProfile" class="p-8 space-y-6">
+              <form @submit.prevent="updateProfile" class="p-4 sm:p-6 md:p-8 space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <BasePublicInput
                     id="username"
@@ -299,7 +299,7 @@ const updatePassword = () => {
 
             <!-- Password Form -->
             <section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div class="px-8 py-6 border-b border-gray-100 flex items-center gap-3">
+              <div class="px-4 sm:px-6 md:px-8 py-6 border-b border-gray-100 flex items-center gap-3">
                 <div class="p-2 bg-yellow-50 rounded-xl text-yellow-500">
                   <KeyRound :size="20" />
                 </div>
@@ -309,7 +309,7 @@ const updatePassword = () => {
                 </div>
               </div>
 
-              <form @submit.prevent="updatePassword" class="p-8 space-y-6">
+              <form @submit.prevent="updatePassword" class="p-4 sm:p-6 md:p-8 space-y-6">
                 <BasePublicInput
                   id="current-password"
                   v-model="passwordForm.currentPassword"

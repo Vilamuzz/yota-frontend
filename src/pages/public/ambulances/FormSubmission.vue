@@ -6,7 +6,7 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
 import { useAmbulanceRequestService } from '@/composables/ambulanceService/useAmbulanceRequestService'
-import { AmbulanceServiceCategory, serviceCategoryOptions } from '@/types/ambulanceHistory'
+import { AmbulanceServiceCategory, ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
 
 const router = useRouter()
 const { showToast } = useToast()
@@ -66,7 +66,9 @@ const validate = (): boolean => {
   }
   if (!form.submitterIdCard) newErrors.submitterIdCard = 'Unggah foto KTP pengaju wajib diisi'
   if (!form.patientName.trim()) {
-    newErrors.patientName = isMortuary.value ? 'Nama almarhum wajib diisi' : 'Nama pasien wajib diisi'
+    newErrors.patientName = isMortuary.value
+      ? 'Nama almarhum wajib diisi'
+      : 'Nama pasien wajib diisi'
   }
   if (!form.pickupDate) newErrors.pickupDate = 'Tanggal penjemputan wajib diisi'
   if (!form.pickupTime) newErrors.pickupTime = 'Waktu penjemputan wajib diisi'
@@ -205,7 +207,11 @@ const handleSubmit = () => {
               {{ isMortuary ? 'Informasi Almarhum' : 'Informasi Pasien' }}
             </h3>
             <p class="text-sm text-slate-500 mt-1">
-              {{ isMortuary ? 'Data diri almarhum yang membutuhkan ambulans' : 'Data diri pasien yang membutuhkan ambulans' }}
+              {{
+                isMortuary
+                  ? 'Data diri almarhum yang membutuhkan ambulans'
+                  : 'Data diri pasien yang membutuhkan ambulans'
+              }}
             </p>
           </div>
 
@@ -213,12 +219,15 @@ const handleSubmit = () => {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2"
-                >{{ isMortuary ? 'Nama Almarhum' : 'Nama Pasien' }} <span class="text-red-500">*</span></label
+                >{{ isMortuary ? 'Nama Almarhum' : 'Nama Pasien' }}
+                <span class="text-red-500">*</span></label
               >
               <input
                 v-model="form.patientName"
                 type="text"
-                :placeholder="isMortuary ? 'Masukkan nama lengkap almarhum' : 'Masukkan nama lengkap pasien'"
+                :placeholder="
+                  isMortuary ? 'Masukkan nama lengkap almarhum' : 'Masukkan nama lengkap pasien'
+                "
                 class="w-full px-4 py-3 text-sm border rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                 :class="errors.patientName ? 'border-red-300 bg-red-50' : 'border-slate-300'"
               />
@@ -251,7 +260,9 @@ const handleSubmit = () => {
             <textarea
               v-model="form.patientAddress"
               rows="3"
-              :placeholder="isMortuary ? 'Masukkan alamat lengkap almarhum' : 'Masukkan alamat lengkap pasien'"
+              :placeholder="
+                isMortuary ? 'Masukkan alamat lengkap almarhum' : 'Masukkan alamat lengkap pasien'
+              "
               class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-white transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
             ></textarea>
           </div>
@@ -262,7 +273,11 @@ const handleSubmit = () => {
             <input
               v-model="form.disease"
               type="text"
-              :placeholder="isMortuary ? 'Masukkan riwayat penyakit almarhum (opsional)' : 'Masukkan penyakit atau kondisi pasien (opsional)'"
+              :placeholder="
+                isMortuary
+                  ? 'Masukkan riwayat penyakit almarhum (opsional)'
+                  : 'Masukkan penyakit atau kondisi pasien (opsional)'
+              "
               class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
             />
           </div>
@@ -277,11 +292,18 @@ const handleSubmit = () => {
                 class="w-4 h-4 rounded accent-rose-500 cursor-pointer"
               />
               <label for="isInfectious" class="text-sm font-medium text-slate-700 cursor-pointer">
-                {{ isMortuary ? 'Almarhum memiliki riwayat penyakit menular' : 'Pasien memiliki penyakit menular' }}
+                {{
+                  isMortuary
+                    ? 'Almarhum memiliki riwayat penyakit menular'
+                    : 'Pasien memiliki penyakit menular'
+                }}
               </label>
             </div>
 
-            <div v-if="!isMortuary" class="flex items-center gap-3 p-4 border border-slate-200 rounded-xl">
+            <div
+              v-if="!isMortuary"
+              class="flex items-center gap-3 p-4 border border-slate-200 rounded-xl"
+            >
               <input
                 id="isAbleToSit"
                 v-model="form.isAbleToSit"
@@ -351,7 +373,11 @@ const handleSubmit = () => {
                 "
               >
                 <option value="" disabled>Pilih kategori layanan</option>
-                <option v-for="cat in serviceCategoryOptions" :key="cat.value" :value="cat.value">
+                <option
+                  v-for="cat in ambulanceServiceCategoryOptions"
+                  :key="cat.value"
+                  :value="cat.value"
+                >
                   {{ cat.label }}
                 </option>
               </select>
@@ -391,13 +417,22 @@ const handleSubmit = () => {
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center justify-end gap-3">
-          <BaseButton type="button" variant="danger" @click="handleBack">Batal</BaseButton>
-          <BaseButton type="submit" variant="primary" :loading="isLoading" :disabled="isLoading">
-            Ajukan Permintaan
-          </BaseButton>
-        </div>
+        <div class="flex items-center justify-end gap-3"></div>
       </div>
     </form>
+
+    <!-- Footer -->
+    <div class="sticky bottom-0 z-40 bg-white border-t border-slate-200 px-6 py-4 flex justify-end">
+      <BaseButton
+        type="submit"
+        variant="primary"
+        :loading="isLoading"
+        :disabled="isLoading"
+        size="lg"
+        class="flex-1 h-14 font-bold shadow-lg shadow-primary-200"
+      >
+        Ajukan Permintaan
+      </BaseButton>
+    </div>
   </div>
 </template>

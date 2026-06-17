@@ -15,28 +15,28 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="min-h-screen flex">
+  <div class="min-h-screen flex flex-col md:flex-row">
     <!-- Left Section - Logo -->
-    <div class="w-2/4 flex items-center justify-center bg-primary-500">
-      <div class="text-center">
+    <div class="w-full md:w-2/5 flex items-center justify-center bg-primary-500 py-8 md:py-0 shrink-0">
+      <div class="text-center px-4">
         <img
           v-if="foundationProfileStore.logo"
           :src="foundationProfileStore.logo"
           :alt="foundationProfileStore.foundationName"
-          class="h-24 w-auto object-contain brightness-0 invert"
+          class="h-16 md:h-24 w-auto mx-auto object-contain brightness-0 invert"
         />
-        <h3 class="text-2xl font-bold text-white mt-4">
+        <h3 class="text-xl md:text-2xl font-bold text-white mt-4">
           {{ foundationProfileStore.foundationName }}
         </h3>
       </div>
     </div>
 
     <!-- Right Section - Form Content -->
-    <div class="w-3/4 bg-white flex items-center justify-center p-8">
+    <div class="w-full md:w-3/5 bg-white flex items-center justify-center p-4 sm:p-8 flex-1">
       <div class="w-full max-w-md">
-        <div class="border border-gray-300 rounded-lg p-8 bg-white shadow-lg">
+        <div class="border border-gray-300 rounded-lg p-6 sm:p-8 bg-white shadow-lg">
           <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ title }}</h2>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-2">{{ title }}</h2>
             <p v-if="subtitle" class="text-gray-600 text-sm">{{ subtitle }}</p>
           </div>
 

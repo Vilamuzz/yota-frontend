@@ -42,7 +42,7 @@ export const getStatusColor = (status: string) => {
     case FosterChildrenCandidateStatus.REJECTED:
     case FosterChildrenCandidateStatus.CANCELED:
     case AmbulanceServiceStatus.REJECTED:
-    case AmbulanceServiceStatus.CANCELED:
+    case AmbulanceServiceStatus.CANCELLED:
     case 'banned':
     case 'overdue':
       return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'

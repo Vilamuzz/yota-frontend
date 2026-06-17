@@ -23,7 +23,7 @@ import { useAmbulanceDetail } from '@/composables/ambulance/useAmbulanceDetail'
 import { useAmbulanceHistoryList } from '@/composables/ambulanceHistory/useAmbulanceHistoryList'
 import { useAmbulanceHistorySummary } from '@/composables/ambulanceHistory/useAmbulanceHistorySummary'
 import { AmbulanceStatus } from '@/types/ambulance'
-import { serviceCategoryOptions } from '@/types/ambulanceHistory'
+import { ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
 import { formatDate } from '@/utils/format'
 
 const route = useRoute()
@@ -160,7 +160,7 @@ const statusDotClass = (status: AmbulanceStatus) => {
 }
 
 const getCategoryLabel = (value: string) =>
-  serviceCategoryOptions.find((o) => o.value === value)?.label ?? value
+  ambulanceServiceCategoryOptions.find((o) => o.value === value)?.label ?? value
 
 const categoryBadgeClass = (value: string) => {
   switch (value) {

@@ -4,7 +4,7 @@ import { ArrowLeft, Loader2, Share2, LogIn } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/format'
 import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
+import PublicConfirmationModal from '@/components/organisms/PublicConfirmationModal.vue'
 import SubscriptionInfo from '@/components/molecules/SubscriptionInfo.vue'
 import { usePublishedSocialProgramDetail } from '@/composables/socialProgram/usePublishedSocialProgramDetail'
 import { useSocialProgramSubscribe } from '@/composables/socialProgramSubscription/useSocialProgramSubscribe'
@@ -198,8 +198,6 @@ const handleLogin = () => {
       @close="showUnsubscribeModal = false"
       @secondary="showUnsubscribeModal = false"
       @primary="handleUnsubscribe"
-    />
-
     />
   </template>
 </template>

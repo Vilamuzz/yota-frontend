@@ -30,13 +30,17 @@ export enum AmbulanceServiceCategory {
   OTHER_SERVICE = 'other_service',
 }
 
-export const serviceCategoryOptions = [
+export const ambulanceServiceCategoryOptions = [
   { value: AmbulanceServiceCategory.SOCIAL_SERVICE, label: 'Layanan Sosial' },
   { value: AmbulanceServiceCategory.MORTUARY_SERVICE, label: 'Layanan Jenazah' },
   { value: AmbulanceServiceCategory.PATIENT_SERVICE, label: 'Layanan Pasien' },
   { value: AmbulanceServiceCategory.EMERGENCY_SERVICE, label: 'Layanan Darurat' },
   { value: AmbulanceServiceCategory.OTHER_SERVICE, label: 'Layanan Lainnya' },
 ]
+
+export const formatAmbulanceServiceCategory = (category: AmbulanceServiceCategory) => {
+  return ambulanceServiceCategoryOptions.find((option) => option.value === category)?.label
+}
 
 export interface AmbulanceHistoryList {
   histories: AmbulanceHistory[]

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { Motion } from 'motion-v'
 import { useRoute, useRouter } from 'vue-router'
 import { useCurrentUser } from '@/composables/account/useCurrentUser'
-import { ChevronDown, User, ChevronRight, Check, Sun, Moon, Globe } from 'lucide-vue-next'
+import { ChevronDown, User, ChevronRight, Check, Sun, Moon, Globe, Menu } from 'lucide-vue-next'
 import { useTheme } from '@/composables/ui/useTheme'
 import { useRoleSwitch } from '@/composables/auth/useRoleSwitch'
 import { useAuthStore } from '@/stores/auth'
@@ -19,6 +19,8 @@ const { user } = useCurrentUser()
 const { switchRole, isLoading: isSwitchingRole } = useRoleSwitch()
 const route = useRoute()
 const router = useRouter()
+
+const isSidebarOpen = ref(false)
 
 const breadcrumbs = computed(() => {
   const crumbs = [{ label: 'Dashboard', path: '/dashboard' }]
@@ -93,41 +95,61 @@ const handleRoleSwitch = (role: Role) => {
 </script>
 
 <template>
-  <div class="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
-    <DashboardSidebar />
+  <div class="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden relative">
+    <!-- Sidebar Backdrop for Mobile -->
+    <div
+      v-if="isSidebarOpen"
+      @click="isSidebarOpen = false"
+      class="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity duration-300"
+    ></div>
+
+    <DashboardSidebar :is-open="isSidebarOpen" @close="isSidebarOpen = false" />
 
     <div class="flex-1 flex flex-col overflow-hidden">
       <header
         class="bg-white dark:bg-gray-800 z-10 font-sf-pro border-b border-gray-200 dark:border-gray-700"
       >
-        <div class="flex items-center justify-between px-6 py-4">
-          <div class="flex flex-col gap-1.5">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
-              {{ route.meta.title }}
-            </h1>
+        <div class="flex items-center justify-between px-4 sm:px-6 py-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <!-- Hamburger button for mobile -->
+            <button
+              @click="isSidebarOpen = true"
+              class="md:hidden p-2 text-gray-500 hover:text-gray-750 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              aria-label="Open sidebar"
+            >
+              <Menu :size="20" />
+            </button>
 
-            <!-- Breadcrumbs -->
-            <nav class="flex items-center text-sm font-medium text-gray-500">
-              <template v-for="(crumb, index) in breadcrumbs" :key="crumb.path">
-                <RouterLink
-                  v-if="index < breadcrumbs.length - 1"
-                  :to="crumb.path"
-                  class="hover:text-primary-600 transition-colors duration-200"
-                >
-                  {{ crumb.label }}
-                </RouterLink>
-                <span v-else class="text-gray-900 dark:text-gray-200">{{ crumb.label }}</span>
+            <div class="flex flex-col gap-1 min-w-0">
+              <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight truncate">
+                {{ route.meta.title }}
+              </h1>
 
-                <ChevronRight
-                  v-if="index < breadcrumbs.length - 1"
-                  class="w-4 h-4 mx-1.5 text-gray-400"
-                />
-              </template>
-            </nav>
+              <!-- Breadcrumbs -->
+              <nav class="flex flex-wrap items-center text-xs sm:text-sm font-medium text-gray-500">
+                <template v-for="(crumb, index) in breadcrumbs" :key="crumb.path">
+                  <RouterLink
+                    v-if="index < breadcrumbs.length - 1"
+                    :to="crumb.path"
+                    class="hover:text-primary-600 transition-colors duration-200 truncate max-w-[100px] sm:max-w-none"
+                  >
+                    {{ crumb.label }}
+                  </RouterLink>
+                  <span v-else class="text-gray-900 dark:text-gray-200 truncate max-w-[100px] sm:max-w-none">
+                    {{ crumb.label }}
+                  </span>
+
+                  <ChevronRight
+                    v-if="index < breadcrumbs.length - 1"
+                    class="w-4 h-4 mx-1.5 text-gray-400 shrink-0"
+                  />
+                </template>
+              </nav>
+            </div>
           </div>
 
           <!-- Actions & User Profile Section -->
-          <div class="relative flex items-center gap-4">
+          <div class="relative flex items-center gap-2 sm:gap-4 shrink-0">
             <!-- Theme Toggle -->
             <button
               @click="toggleTheme"
@@ -143,25 +165,25 @@ const handleRoleSwitch = (role: Role) => {
 
             <button
               @click="showUserMenu = !showUserMenu"
-              class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+              class="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
             >
               <!-- Avatar -->
               <div
                 v-if="user?.profilePicture"
-                class="w-10 h-10 rounded-full overflow-hidden bg-primary-300 flex items-center justify-center"
+                class="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-primary-300 flex items-center justify-center shrink-0"
               >
                 <img :src="user.profilePicture" alt="Avatar" class="w-full h-full object-cover" />
               </div>
               <div
                 v-else
-                class="w-10 h-10 rounded-full bg-primary-300 flex items-center justify-center text-white font-semibold text-sm shadow-md"
+                class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-300 flex items-center justify-center text-white font-semibold text-xs sm:text-sm shadow-md shrink-0"
               >
                 {{ userInitials }}
               </div>
 
               <!-- User Info -->
-              <div class="text-left hidden md:block">
-                <div class="text-sm font-semibold text-gray-800 dark:text-white">
+              <div class="text-left hidden sm:block">
+                <div class="text-sm font-semibold text-gray-800 dark:text-white truncate max-w-[100px]">
                   {{ user?.username || 'User' }}
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">{{ userRole }}</div>
@@ -170,7 +192,7 @@ const handleRoleSwitch = (role: Role) => {
               <!-- Dropdown Arrow -->
               <ChevronDown
                 :size="16"
-                class="text-gray-500 transition-transform duration-200"
+                class="text-gray-500 transition-transform duration-200 shrink-0"
                 :class="{ 'rotate-180': showUserMenu }"
               />
             </button>
@@ -182,13 +204,13 @@ const handleRoleSwitch = (role: Role) => {
               :animate="{ opacity: 1, y: 0, scale: 1 }"
               :exit="{ opacity: 0, y: -10, scale: 0.95 }"
               :transition="{ duration: 0.2 }"
-              class="absolute right-0 top-15 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 text-gray-800 dark:text-gray-200"
+              class="absolute right-0 top-13 sm:top-15 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 text-gray-800 dark:text-gray-200"
             >
               <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                <div class="text-sm font-semibold text-gray-800 dark:text-white">
+                <div class="text-sm font-semibold text-gray-800 dark:text-white truncate">
                   {{ user?.username || 'User' }}
                 </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ user?.email }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ user?.email }}</div>
               </div>
 
               <!-- Role Switcher -->
@@ -245,7 +267,7 @@ const handleRoleSwitch = (role: Role) => {
       <main
         class="flex-1 overflow-y-auto bg-transparent dark:bg-[#121212] font-sf-pro text-gray-900 dark:text-white"
       >
-        <div class="p-6">
+        <div class="p-4 sm:p-6">
           <slot />
         </div>
       </main>

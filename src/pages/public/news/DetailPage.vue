@@ -25,7 +25,7 @@ import { useToast } from '@/composables/ui/useToast'
 import { useNewsCommentCreate } from '@/composables/newsComment/useNewsCommentCreate'
 import { useNewsCommentList } from '@/composables/newsComment/useNewsCommentList'
 import { useNewsCommentReport } from '@/composables/newsComment/useNewsCommentReport'
-import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
+import PublicConfirmationModal from '@/components/organisms/PublicConfirmationModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -639,20 +639,6 @@ const filteredRelatedNews = computed(() => {
               </div>
             </div>
           </aside>
-        </div>
-
-        <!-- Mobile Footer -->
-        <div class="lg:hidden flex flex-col gap-3 pb-12 pt-4 border-t border-gray-100">
-          <button
-            @click="handleShare"
-            class="w-full flex items-center justify-center gap-2 py-3 bg-primary-400 hover:bg-primary-500 text-white rounded-xl transition-colors text-sm font-bold"
-          >
-            <Share2 :size="14" />
-            Bagikan Artikel
-          </button>
-          <BaseButton variant="outline" class="w-full" :to="{ name: 'news' }">
-            Lihat Berita Lainnya
-          </BaseButton>
         </div>
       </div>
     </div>

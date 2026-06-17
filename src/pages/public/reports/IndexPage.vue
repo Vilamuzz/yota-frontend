@@ -18,8 +18,6 @@ const goToDetail = (type: 'donation' | 'social' | 'foster', slug: string) => {
   router.push({ name: 'report-detail', params: { type, slug } })
 }
 
-
-
 const donationPage = ref(1)
 const socialPage = ref(1)
 const fosterPage = ref(1)
@@ -42,55 +40,85 @@ watch(debouncedSearchQuery, () => {
   donationPage.value = 1
   socialPage.value = 1
   fosterPage.value = 1
-  
+
   accumulatedDonation.value = []
   accumulatedSocial.value = []
   accumulatedFoster.value = []
 })
 
-const donationParams = computed(() => ({ limit: 10, page: donationPage.value, search: debouncedSearchQuery.value }))
-const socialParams = computed(() => ({ limit: 10, page: socialPage.value, search: debouncedSearchQuery.value }))
-const fosterParams = computed(() => ({ limit: 10, page: fosterPage.value, search: debouncedSearchQuery.value }))
+const donationParams = computed(() => ({
+  limit: 10,
+  page: donationPage.value,
+  search: debouncedSearchQuery.value,
+}))
+const socialParams = computed(() => ({
+  limit: 10,
+  page: socialPage.value,
+  search: debouncedSearchQuery.value,
+}))
+const fosterParams = computed(() => ({
+  limit: 10,
+  page: fosterPage.value,
+  search: debouncedSearchQuery.value,
+}))
 
-const { listQuery: donationQuery } = useDonationProgramList(donationParams, { enabled: computed(() => activeTab.value === 'donation') })
-const { listQuery: socialQuery } = usePublishedSocialProgramList(socialParams, { enabled: computed(() => activeTab.value === 'social') })
-const { listQuery: fosterQuery } = useFosterChildrenList(fosterParams, false, { enabled: computed(() => activeTab.value === 'foster') })
+const { listQuery: donationQuery } = useDonationProgramList(donationParams, {
+  enabled: computed(() => activeTab.value === 'donation'),
+})
+const { listQuery: socialQuery } = usePublishedSocialProgramList(socialParams, {
+  enabled: computed(() => activeTab.value === 'social'),
+})
+const { listQuery: fosterQuery } = useFosterChildrenList(fosterParams, false, {
+  enabled: computed(() => activeTab.value === 'foster'),
+})
 
-watch(() => donationQuery.data.value, (newData) => {
-  if (newData?.data?.donationPrograms) {
-    if (donationPage.value === 1) {
-      accumulatedDonation.value = [...newData.data.donationPrograms]
-    } else {
-      const existingIds = new Set(accumulatedDonation.value.map((i: any) => i.id))
-      const newItems = newData.data.donationPrograms.filter((i: any) => !existingIds.has(i.id))
-      accumulatedDonation.value.push(...newItems)
+watch(
+  () => donationQuery.data.value,
+  (newData) => {
+    if (newData?.data?.donationPrograms) {
+      if (donationPage.value === 1) {
+        accumulatedDonation.value = [...newData.data.donationPrograms]
+      } else {
+        const existingIds = new Set(accumulatedDonation.value.map((i: any) => i.id))
+        const newItems = newData.data.donationPrograms.filter((i: any) => !existingIds.has(i.id))
+        accumulatedDonation.value.push(...newItems)
+      }
     }
-  }
-}, { immediate: true })
+  },
+  { immediate: true },
+)
 
-watch(() => socialQuery.data.value, (newData) => {
-  if (newData?.data?.socialPrograms) {
-    if (socialPage.value === 1) {
-      accumulatedSocial.value = [...newData.data.socialPrograms]
-    } else {
-      const existingIds = new Set(accumulatedSocial.value.map((i: any) => i.id))
-      const newItems = newData.data.socialPrograms.filter((i: any) => !existingIds.has(i.id))
-      accumulatedSocial.value.push(...newItems)
+watch(
+  () => socialQuery.data.value,
+  (newData) => {
+    if (newData?.data?.socialPrograms) {
+      if (socialPage.value === 1) {
+        accumulatedSocial.value = [...newData.data.socialPrograms]
+      } else {
+        const existingIds = new Set(accumulatedSocial.value.map((i: any) => i.id))
+        const newItems = newData.data.socialPrograms.filter((i: any) => !existingIds.has(i.id))
+        accumulatedSocial.value.push(...newItems)
+      }
     }
-  }
-}, { immediate: true })
+  },
+  { immediate: true },
+)
 
-watch(() => fosterQuery.data.value, (newData) => {
-  if (newData?.data?.fosterChildren) {
-    if (fosterPage.value === 1) {
-      accumulatedFoster.value = [...newData.data.fosterChildren]
-    } else {
-      const existingIds = new Set(accumulatedFoster.value.map((i: any) => i.id))
-      const newItems = newData.data.fosterChildren.filter((i: any) => !existingIds.has(i.id))
-      accumulatedFoster.value.push(...newItems)
+watch(
+  () => fosterQuery.data.value,
+  (newData) => {
+    if (newData?.data?.fosterChildren) {
+      if (fosterPage.value === 1) {
+        accumulatedFoster.value = [...newData.data.fosterChildren]
+      } else {
+        const existingIds = new Set(accumulatedFoster.value.map((i: any) => i.id))
+        const newItems = newData.data.fosterChildren.filter((i: any) => !existingIds.has(i.id))
+        accumulatedFoster.value.push(...newItems)
+      }
     }
-  }
-}, { immediate: true })
+  },
+  { immediate: true },
+)
 
 const { summaryQuery } = useFinanceRecordSummary()
 const summary = computed(() => summaryQuery.data.value?.data)
@@ -153,13 +181,16 @@ watch(loadMoreTrigger, (el) => {
     observer.disconnect()
   }
   if (el) {
-    observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) {
-        loadNextPage()
-      }
-    }, {
-      rootMargin: '100px',
-    })
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadNextPage()
+        }
+      },
+      {
+        rootMargin: '100px',
+      },
+    )
     observer.observe(el)
   }
 })
@@ -187,9 +218,9 @@ onUnmounted(() => {
         </div>
 
         <!-- Summary Stats -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div class="grid grid-cols-3 md:grid-cols-4 gap-4 mb-10">
           <div
-            class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm col-span-2 lg:col-span-1"
+            class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm col-span-3 md:col-span-1"
           >
             <p class="text-xs text-gray-400 mb-1 font-medium uppercase tracking-wider">
               Total Pengeluaran
@@ -197,7 +228,9 @@ onUnmounted(() => {
             <p class="text-2xl font-black text-gray-900">{{ formatCurrency(grandTotal) }}</p>
             <p class="text-xs text-gray-400 mt-1">Semua program</p>
           </div>
-          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+          <div
+            class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm col-span-3 sm:col-span-1"
+          >
             <div class="flex items-center gap-2 mb-2">
               <div class="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center">
                 <Heart :size="16" class="text-rose-500" />
@@ -209,7 +242,9 @@ onUnmounted(() => {
             </p>
             <p class="text-xs text-gray-400">{{ totalDonationProgramsCount }} program</p>
           </div>
-          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+          <div
+            class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm col-span-3 sm:col-span-1"
+          >
             <div class="flex items-center gap-2 mb-2">
               <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
                 <Users :size="16" class="text-blue-500" />
@@ -219,7 +254,9 @@ onUnmounted(() => {
             <p class="text-lg font-bold text-gray-900">{{ formatCurrency(totalSocialExpense) }}</p>
             <p class="text-xs text-gray-400">{{ totalSocialProgramsCount }} program</p>
           </div>
-          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+          <div
+            class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm col-span-3 sm:col-span-1"
+          >
             <div class="flex items-center gap-2 mb-2">
               <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
                 <Baby :size="16" class="text-emerald-500" />
@@ -246,7 +283,7 @@ onUnmounted(() => {
 
         <!-- Tabs -->
         <div
-          class="flex gap-1 bg-white rounded-2xl p-1.5 border border-gray-100 shadow-sm mb-8 w-fit"
+          class="flex flex-col sm:flex-row gap-1 bg-white rounded-2xl p-1.5 border border-gray-100 shadow-sm mb-8 w-full sm:w-fit"
         >
           <button
             v-for="tab in [
@@ -256,7 +293,7 @@ onUnmounted(() => {
             ]"
             :key="tab.key"
             @click="((activeTab = tab.key as any), (searchQuery = ''))"
-            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+            class="flex items-center justify-center sm:justify-start gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
             :class="
               activeTab === tab.key
                 ? 'bg-primary-500 text-white shadow-sm'
@@ -285,7 +322,7 @@ onUnmounted(() => {
                 />
                 <div class="flex-1 min-w-0">
                   <h3 class="font-bold text-gray-900 truncate">{{ program.title }}</h3>
-                  <div class="flex items-center gap-4 mt-1 text-sm">
+                  <div class="hidden sm:flex items-center gap-4 mt-1 text-sm">
                     <span class="text-gray-400"
                       >Target:
                       <span class="text-gray-700 font-medium">{{
@@ -300,7 +337,7 @@ onUnmounted(() => {
                     >
                   </div>
                 </div>
-                <div class="text-right shrink-0">
+                <div class="text-right shrink-0 hidden">
                   <p class="text-xs text-gray-400 mb-0.5">Total Pengeluaran</p>
                   <p class="text-xl font-black text-rose-500">
                     {{ formatCurrency(program.totalExpense!) }}
@@ -340,7 +377,7 @@ onUnmounted(() => {
                     pelanggan aktif
                   </p>
                 </div>
-                <div class="text-right shrink-0">
+                <div class="text-right shrink-0 hidden sm:flex">
                   <p class="text-xs text-gray-400 mb-0.5">Total Pengeluaran</p>
                   <p class="text-xl font-black text-blue-500">
                     {{ formatCurrency(program.totalExpense!) }}
@@ -381,7 +418,7 @@ onUnmounted(() => {
                     {{ formatStatus(child.category) }}
                   </span>
                 </div>
-                <div class="text-right shrink-0">
+                <div class="text-right shrink-0 hidden sm:flex">
                   <p class="text-xs text-gray-400 mb-0.5">Total Pengeluaran</p>
                   <p class="text-xl font-black text-emerald-600">
                     {{ formatCurrency(child.totalExpense!) }}

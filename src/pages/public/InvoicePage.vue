@@ -357,7 +357,7 @@ const getStatusLabel = (status: string) => {
         </div>
 
         <!-- Main Category Tabs -->
-        <div class="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
+        <div class="flex flex-col md:flex-row justify-center md:justify-start gap-4 mb-8">
           <button
             v-for="cat in categories"
             :key="cat.name"
@@ -392,7 +392,7 @@ const getStatusLabel = (status: string) => {
             </div>
           </div>
 
-          <div class="flex p-1 bg-gray-100 rounded-2xl w-full md:w-fit">
+          <div class="flex flex-col md:flex-row p-1 bg-gray-100 rounded-2xl w-full md:w-fit">
             <button
               @click="activeStatus = 'WAITING'"
               class="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-wider"
@@ -462,7 +462,7 @@ const getStatusLabel = (status: string) => {
           <div
             v-for="invoice in filteredInvoices"
             :key="invoice.id"
-            class="group bg-white rounded-4xl border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8"
+            class="group bg-white rounded-4xl border border-gray-100 p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8"
           >
             <!-- Background Decorative Element -->
             <div
@@ -483,11 +483,11 @@ const getStatusLabel = (status: string) => {
               </div>
 
               <div class="space-y-1.5">
-                <div class="flex items-center gap-3">
-                  <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{{
+                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] break-all">{{
                     invoice.id
                   }}</span>
-                  <div class="h-1 w-1 rounded-full bg-gray-200"></div>
+                  <div class="hidden sm:block h-1 w-1 rounded-full bg-gray-200 shrink-0"></div>
                   <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{{
                     formatDate(invoice.date)
                   }}</span>

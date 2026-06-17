@@ -14,7 +14,7 @@ import {
   type CreateAmbulanceHistoryRequest,
   type UpdateAmbulanceHistoryRequest,
   type AmbulanceServiceCategory,
-  serviceCategoryOptions,
+  ambulanceServiceCategoryOptions,
 } from '@/types/ambulanceHistory'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -205,7 +205,7 @@ function handleConfirmEdit() {
                   >
                     <option :value="undefined">Semua Kategori</option>
                     <option
-                      v-for="item in serviceCategoryOptions"
+                      v-for="item in ambulanceServiceCategoryOptions"
                       :key="item.value"
                       :value="item.value"
                     >
@@ -301,7 +301,7 @@ function handleConfirmEdit() {
                   getStatusColor(history.serviceCategory),
                 ]"
               >
-                {{ getCategoryLabel(history.serviceCategory, serviceCategoryOptions) }}
+                {{ getCategoryLabel(history.serviceCategory, ambulanceServiceCategoryOptions) }}
               </span>
             </td>
             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">
@@ -371,7 +371,11 @@ function handleConfirmEdit() {
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm"
           >
             <option value="" disabled>-- Pilih Kategori --</option>
-            <option v-for="cat in serviceCategoryOptions" :key="cat.value" :value="cat.value">
+            <option
+              v-for="cat in ambulanceServiceCategoryOptions"
+              :key="cat.value"
+              :value="cat.value"
+            >
               {{ cat.label }}
             </option>
           </select>
@@ -420,7 +424,11 @@ function handleConfirmEdit() {
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm"
         >
           <option value="" disabled>-- Pilih Kategori --</option>
-          <option v-for="cat in serviceCategoryOptions" :key="cat.value" :value="cat.value">
+          <option
+            v-for="cat in ambulanceServiceCategoryOptions"
+            :key="cat.value"
+            :value="cat.value"
+          >
             {{ cat.label }}
           </option>
         </select>

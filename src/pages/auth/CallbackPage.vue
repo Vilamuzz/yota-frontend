@@ -32,23 +32,23 @@ onMounted(() => {
               }"
             />
           </div>
-          <h2 class="text-xl font-semibold text-gray-900 mb-2">Authenticating...</h2>
-          <p class="text-gray-600">Please wait while we sign you in</p>
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">Sedang mengautentikasi...</h2>
+          <p class="text-gray-600">Harap tunggu sementara kami memasukkan Anda</p>
         </div>
 
         <!-- Success State -->
         <div v-else-if="!callbackError" class="text-center flex flex-col items-center">
           <CircleCheck :stroke-width="1.5" :size="48" class="text-green-500 text-5xl mb-4" />
-          <h2 class="text-2xl font-bold text-gray-900 mb-2">Success!</h2>
-          <p class="text-gray-600 text-sm">Redirecting to dashboard...</p>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Berhasil!</h2>
+          <p class="text-gray-600 text-sm">Mengarahkan ke dasbor...</p>
         </div>
 
         <!-- Error State -->
         <div v-else class="text-center flex flex-col items-center">
           <CircleX :stroke-width="1.5" :size="48" class="text-red-500 text-5xl mb-4" />
-          <h2 class="text-xl font-bold text-gray-900 mb-2">Authentication Failed</h2>
+          <h2 class="text-xl font-bold text-gray-900 mb-2">Autentikasi Gagal</h2>
           <p class="text-gray-600 text-sm mb-6">{{ callbackError }}</p>
-          <p class="text-gray-600 text-sm">Redirecting to login...</p>
+          <p class="text-gray-600 text-sm">Mengarahkan ke halaman masuk...</p>
         </div>
       </div>
     </div>

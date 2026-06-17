@@ -9,6 +9,7 @@ import BasePagination from '@/components/atoms/BasePagination.vue'
 import { Search, Loader2, Check, RotateCcw } from 'lucide-vue-next'
 import {
   type DonationProgramQueryParams,
+  DonationProgramStatusEnum,
   donationProgramCategoryOptions,
   donationProgramStatusOptions,
   formatDonationProgramCategory,
@@ -106,7 +107,7 @@ onUnmounted(() => {
 
 <template>
   <PublicLayout>
-    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-18 font-poppins">
+    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-6 md:px-18 font-poppins">
       <div class="max-w-7xl mx-auto">
         <!-- Title -->
         <div class="text-center mb-8">
@@ -177,7 +178,11 @@ onUnmounted(() => {
                   <div class="flex gap-2">
                     <button
                       v-for="statusOpt in donationProgramStatusOptions.filter((o) =>
-                        ['active', 'completed', 'expired'].includes(o.value),
+                        [
+                          DonationProgramStatusEnum.ACTIVE,
+                          DonationProgramStatusEnum.COMPLETED,
+                          DonationProgramStatusEnum.EXPIRED,
+                        ].includes(o.value),
                       )"
                       :key="statusOpt.value"
                       @click="

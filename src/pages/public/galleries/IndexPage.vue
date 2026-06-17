@@ -56,9 +56,6 @@ const toggleSort = () => {
 const toggleFilter = () => {
   showFilterDropdown.value = !showFilterDropdown.value
   showSortDropdown.value = false
-
-  // Sync local temp state when opening filter dropdown
-  tempCategory.value = queryParams.category || null
 }
 
 const selectSort = (val: string) => {
@@ -67,23 +64,7 @@ const selectSort = (val: string) => {
   showSortDropdown.value = false
 }
 
-const tempCategory = ref<MediaCategory | null>(null)
-
-const applyFilters = () => {
-  queryParams.category = tempCategory.value || undefined
-  resetPagination()
-  showFilterDropdown.value = false
-}
-
-const resetFilters = () => {
-  tempCategory.value = null
-  queryParams.category = undefined
-  resetPagination()
-  showFilterDropdown.value = false
-}
-
 const clearCategoryFilter = () => {
-  tempCategory.value = null
   queryParams.category = undefined
   resetPagination()
 }
@@ -116,7 +97,7 @@ onUnmounted(() => {
 
 <template>
   <PublicLayout>
-    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-18 font-poppins">
+    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-6 md:px-18 font-poppins">
       <div class="max-w-7xl mx-auto">
         <!-- TITLE -->
         <div class="text-center mb-12">
@@ -189,10 +170,15 @@ onUnmounted(() => {
                     <button
                       v-for="cat in Object.values(MediaCategory)"
                       :key="cat"
-                      @click="tempCategory = tempCategory === cat ? null : cat"
+                      @click="
+                        () => {
+                          queryParams.category = queryParams.category === cat ? undefined : cat
+                          resetPagination()
+                        }
+                      "
                       class="w-full text-center px-3 py-2 rounded-xl text-xs transition-colors border"
                       :class="
-                        tempCategory === cat
+                        queryParams.category === cat
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
@@ -200,22 +186,6 @@ onUnmounted(() => {
                       {{ formatCategory(cat) }}
                     </button>
                   </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    @click="resetFilters"
-                    class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    @click="applyFilters"
-                    class="flex-1 px-4 py-2.5 bg-primary-500 text-white rounded-xl text-xs font-semibold hover:bg-primary-600 transition-colors shadow-sm shadow-primary-500/20"
-                  >
-                    Terapkan
-                  </button>
                 </div>
               </div>
             </div>

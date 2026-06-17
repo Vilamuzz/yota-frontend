@@ -65,40 +65,12 @@ const toggleSort = () => {
 const toggleFilter = () => {
   showFilterDropdown.value = !showFilterDropdown.value
   showSortDropdown.value = false
-
-  // Sync local temp state when opening filter dropdown
-  tempGender.value = queryParams.gender || null
-  tempCategory.value = queryParams.category || null
-  tempIsGraduated.value = queryParams.isGraduated ?? null
 }
 
 const selectSort = (val: string) => {
   queryParams.sortBy = val
   resetPagination()
   showSortDropdown.value = false
-}
-
-const tempGender = ref<Gender | null>(null)
-const tempCategory = ref<Category | null>(null)
-const tempIsGraduated = ref<boolean | null>(null)
-
-const applyFilters = () => {
-  queryParams.gender = tempGender.value || undefined
-  queryParams.category = tempCategory.value || undefined
-  queryParams.isGraduated = tempIsGraduated.value !== null ? tempIsGraduated.value : undefined
-  resetPagination()
-  showFilterDropdown.value = false
-}
-
-const resetFilters = () => {
-  tempGender.value = null
-  tempCategory.value = null
-  tempIsGraduated.value = null
-  queryParams.gender = undefined
-  queryParams.category = undefined
-  queryParams.isGraduated = undefined
-  resetPagination()
-  showFilterDropdown.value = false
 }
 
 const hasActiveFilters = computed(
@@ -131,7 +103,7 @@ onUnmounted(() => {
 
 <template>
   <PublicLayout>
-    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-18 font-poppins">
+    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-6 md:px-18 font-poppins">
       <div class="max-w-7xl mx-auto">
         <!-- TITLE -->
         <div class="text-center mb-12">
@@ -204,10 +176,15 @@ onUnmounted(() => {
                     <button
                       v-for="gender in [Gender.male, Gender.female]"
                       :key="gender"
-                      @click="tempGender = tempGender === gender ? null : gender"
+                      @click="
+                        () => {
+                          queryParams.gender = queryParams.gender === gender ? undefined : gender
+                          resetPagination()
+                        }
+                      "
                       class="w-full text-center px-3 py-2 rounded-xl text-xs transition-colors border"
                       :class="
-                        tempGender === gender
+                        queryParams.gender === gender
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
@@ -224,10 +201,15 @@ onUnmounted(() => {
                     <button
                       v-for="cat in [Category.yatim, Category.piatu, Category.yatimPiatu]"
                       :key="cat"
-                      @click="tempCategory = tempCategory === cat ? null : cat"
+                      @click="
+                        () => {
+                          queryParams.category = queryParams.category === cat ? undefined : cat
+                          resetPagination()
+                        }
+                      "
                       class="w-full text-center px-3 py-2 rounded-xl text-xs transition-colors border"
                       :class="
-                        tempCategory === cat
+                        queryParams.category === cat
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
@@ -242,10 +224,15 @@ onUnmounted(() => {
                   <label class="block text-xs font-bold text-gray-500 mb-2">Status Kelulusan</label>
                   <div class="grid grid-cols-2 gap-2">
                     <button
-                      @click="tempIsGraduated = tempIsGraduated === true ? null : true"
+                      @click="
+                        () => {
+                          queryParams.isGraduated = queryParams.isGraduated === true ? undefined : true
+                          resetPagination()
+                        }
+                      "
                       class="w-full text-center px-3 py-2 rounded-xl text-xs transition-colors border"
                       :class="
-                        tempIsGraduated === true
+                        queryParams.isGraduated === true
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
@@ -253,10 +240,15 @@ onUnmounted(() => {
                       Lulus
                     </button>
                     <button
-                      @click="tempIsGraduated = tempIsGraduated === false ? null : false"
+                      @click="
+                        () => {
+                          queryParams.isGraduated = queryParams.isGraduated === false ? undefined : false
+                          resetPagination()
+                        }
+                      "
                       class="w-full text-center px-3 py-2 rounded-xl text-xs transition-colors border"
                       :class="
-                        tempIsGraduated === false
+                        queryParams.isGraduated === false
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
@@ -264,22 +256,6 @@ onUnmounted(() => {
                       Belum Lulus
                     </button>
                   </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    @click="resetFilters"
-                    class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    @click="applyFilters"
-                    class="flex-1 px-4 py-2.5 bg-primary-500 text-white rounded-xl text-xs font-semibold hover:bg-primary-600 transition-colors shadow-sm shadow-primary-500/20"
-                  >
-                    Terapkan
-                  </button>
                 </div>
               </div>
             </div>

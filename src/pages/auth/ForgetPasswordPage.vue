@@ -37,7 +37,7 @@ const handleSubmit = () => {
       showSuccessModal.value = true
     },
     onError: (err) => {
-      showToast(extractError(err, 'Failed to forget password. Please try again.'), 'error')
+      showToast(extractError(err, 'Gagal memproses lupa kata sandi. Silakan coba lagi.'), 'error')
     },
   })
 }
@@ -48,7 +48,7 @@ const resendResetLink = () => {
       showSuccessModal.value = true
     },
     onError: (err) => {
-      showToast(extractError(err, 'Failed to forget password. Please try again.'), 'error')
+      showToast(extractError(err, 'Gagal memproses lupa kata sandi. Silakan coba lagi.'), 'error')
     },
   })
 }
@@ -66,16 +66,16 @@ const closeModal = () => {
 
 <template>
   <AuthLayout
-    title="Forgot Password?"
-    subtitle="Enter your email address and we'll send you a link to reset your password"
+    title="Lupa Kata Sandi?"
+    subtitle="Masukkan alamat email Anda dan kami akan mengirimkan tautan untuk mengatur ulang kata sandi Anda"
   >
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <AuthInput
         id="email"
         v-model="email"
         type="email"
-        label="Email Address"
-        placeholder="you@example.com"
+        label="Alamat Email"
+        placeholder="anda@contoh.com"
         autocomplete="email"
         :error="emailError"
       />
@@ -86,8 +86,8 @@ const closeModal = () => {
         full-width
         :loading="forgetPasswordMutation.isPending.value"
       >
-        <template #loading>Sending...</template>
-        Send Reset Link
+        <template #loading>Sedang mengirim...</template>
+        Kirim Tautan Atur Ulang
       </BaseButton>
     </form>
 
@@ -96,7 +96,7 @@ const closeModal = () => {
         @click="goToLogin"
         class="text-xs text-primary-400 hover:text-primary-500 font-medium transition duration-200"
       >
-        ← Back to login
+        ← Kembali ke halaman masuk
       </button>
     </template>
   </AuthLayout>
@@ -104,11 +104,11 @@ const closeModal = () => {
   <!-- Success Modal -->
   <ConfirmationModal
     :show="showSuccessModal"
-    title="Reset Link Sent!"
-    message="We've sent a password reset link to your email. Click the link to reset your password. If you don't see it, check your spam folder."
+    title="Tautan Atur Ulang Terkirim!"
+    message="Kami telah mengirimkan tautan atur ulang kata sandi ke email Anda. Klik tautan untuk mengatur ulang kata sandi Anda. Jika Anda tidak melihatnya, periksa folder spam Anda."
     :icon="MailCheck"
-    primary-button-text="Resend Reset Link"
-    secondary-button-text="Back to Login"
+    primary-button-text="Kirim Ulang Tautan Atur Ulang"
+    secondary-button-text="Kembali ke Halaman Masuk"
     :primary-button-loading="forgetPasswordMutation.isPending.value"
     @close="closeModal"
     @primary="resendResetLink"

@@ -7,18 +7,40 @@ const isInitialized = ref(false)
 </script>
 
 <script setup lang="ts">
+import { watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronDown, LogOut } from 'lucide-vue-next'
+import { ChevronDown, LogOut, X } from 'lucide-vue-next'
 import { Motion, AnimatePresence } from 'motion-v'
 import { useLogout } from '@/composables/auth/useLogout'
 import { useNavigation } from '@/composables/navigation/useNavigation'
 import { useFoundationProfileStore } from '@/stores/foundationProfile'
+
+const props = withDefaults(
+  defineProps<{
+    isOpen?: boolean
+  }>(),
+  {
+    isOpen: false,
+  }
+)
+
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
 
 const route = useRoute()
 const router = useRouter()
 const { logout } = useLogout()
 const { visibleMenu } = useNavigation()
 const foundationProfileStore = useFoundationProfileStore()
+
+// Close sidebar on mobile when route changes
+watch(
+  () => route.path,
+  () => {
+    emit('close')
+  }
+)
 
 const isMenuActive = (menuRoute: string | undefined) => {
   if (!menuRoute) return false
@@ -69,10 +91,11 @@ const initiallyOpen = new Set(openDropdowns.value)
 
 <template>
   <aside
-    class="bg-primary-500 dark:bg-primary-300 text-white transition-all duration-300 flex flex-col w-64 font-poppins"
+    class="bg-primary-500 dark:bg-primary-300 text-white transition-all duration-300 flex flex-col w-64 font-poppins fixed md:relative inset-y-0 left-0 z-50 md:z-auto transform md:transform-none"
+    :class="props.isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
   >
     <!-- Logo Section -->
-    <div class="p-4 flex items-center justify-center border-b border-white/10">
+    <div class="p-4 flex items-center justify-between border-b border-white/10">
       <div class="flex items-center gap-3">
         <img
           :src="foundationProfileStore.logo!"
@@ -84,6 +107,13 @@ const initiallyOpen = new Set(openDropdowns.value)
           {{ foundationProfileStore.foundationName }}
         </div>
       </div>
+      <button
+        @click="emit('close')"
+        class="md:hidden p-2 text-white/85 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+        aria-label="Close sidebar"
+      >
+        <X :size="20" />
+      </button>
     </div>
 
     <!-- Navigation Menu -->

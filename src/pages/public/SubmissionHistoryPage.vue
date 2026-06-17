@@ -9,9 +9,9 @@ import { useMyFosterChildrenCandidateCancel } from '@/composables/fosterChildren
 import { useMyAmbulanceServiceCandidateList } from '@/composables/ambulanceService/useMyAmbulanceServiceList'
 import { useMyAmbulanceServiceCandidateCancel } from '@/composables/ambulanceService/useMyAmbulanceServiceCancel'
 import { useToast } from '@/composables/ui/useToast'
-import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
-import AmbulanceRequestDetailModal from '@/components/molecules/AmbulanceRequestDetailModal.vue'
-import FosterChildrenCandidateDetailModal from '@/components/molecules/FosterChildrenCandidateDetailModal.vue'
+import PublicConfirmationModal from '@/components/organisms/PublicConfirmationModal.vue'
+import AmbulanceRequestDetailModal from '@/components/organisms/AmbulanceRequestDetailModal.vue'
+import FosterChildrenCandidateDetailModal from '@/components/organisms/FosterChildrenCandidateDetailModal.vue'
 import {
   Loader2,
   X,
@@ -30,7 +30,12 @@ import type {
   FosterChildrenCandidate,
   FosterChildrenCandidateQueryParams,
 } from '@/types/fosterChildrenCandidate'
-import type { AmbulanceService, AmbulanceServiceQueryParams } from '@/types/ambulanceService'
+import {
+  type AmbulanceService,
+  type AmbulanceServiceQueryParams,
+  AmbulanceServiceStatus,
+  formatAmbulanceServiceStatus,
+} from '@/types/ambulanceService'
 
 const { showToast } = useToast()
 
@@ -80,58 +85,8 @@ const filterGender = ref<Gender | undefined>(undefined)
 const filterCategory = ref<Category | undefined>(undefined)
 const filterStatus = ref<string | undefined>(undefined)
 
-const tempGender = ref<Gender | null>(null)
-const tempCategory = ref<Category | null>(null)
-const tempStatus = ref<string | null>(null)
-
 const toggleFilter = () => {
   showFilterDropdown.value = !showFilterDropdown.value
-  showSortDropdown.value = false
-  tempGender.value = filterGender.value || null
-  tempCategory.value = filterCategory.value || null
-  tempStatus.value = filterStatus.value || null
-}
-
-const applyFilters = () => {
-  const hasChanged =
-    filterGender.value !== (tempGender.value || undefined) ||
-    filterCategory.value !== (tempCategory.value || undefined) ||
-    filterStatus.value !== (tempStatus.value || undefined)
-
-  if (hasChanged) {
-    filterGender.value = tempGender.value || undefined
-    filterCategory.value = tempCategory.value || undefined
-    filterStatus.value = tempStatus.value || undefined
-    fosterCursor.value = undefined
-    ambulanceCursor.value = undefined
-    accumulatedFoster.value = []
-    accumulatedAmbulance.value = []
-  }
-  showFilterDropdown.value = false
-}
-
-const resetFilters = () => {
-  tempGender.value = null
-  tempCategory.value = null
-  tempStatus.value = null
-
-  const hasChanged =
-    filterGender.value !== undefined ||
-    filterCategory.value !== undefined ||
-    filterStatus.value !== undefined ||
-    sortBy.value !== undefined
-
-  if (hasChanged) {
-    filterGender.value = undefined
-    filterCategory.value = undefined
-    filterStatus.value = undefined
-    sortBy.value = undefined
-    fosterCursor.value = undefined
-    ambulanceCursor.value = undefined
-    accumulatedFoster.value = []
-    accumulatedAmbulance.value = []
-  }
-  showFilterDropdown.value = false
   showSortDropdown.value = false
 }
 
@@ -391,6 +346,18 @@ const getStatusConfig = (status: string) => {
         class: 'bg-green-50 text-green-700 border-green-200',
         label: 'Diterima',
       }
+    case 'done':
+      return {
+        icon: CheckCircle2,
+        class: 'bg-blue-50 text-blue-700 border-blue-200',
+        label: 'Selesai',
+      }
+    case 'in_service':
+      return {
+        icon: Ambulance,
+        class: 'bg-primary-50 text-primary-700 border-primary-200',
+        label: 'Dalam Perjalanan',
+      }
     case 'rejected':
       return {
         icon: XCircle,
@@ -398,6 +365,7 @@ const getStatusConfig = (status: string) => {
         label: 'Ditolak',
       }
     case 'cancelled':
+    case 'canceled':
       return {
         icon: XCircle,
         class: 'bg-gray-50 text-gray-700 border-gray-200',
@@ -429,7 +397,7 @@ const getStatusConfig = (status: string) => {
         </div>
 
         <!-- Category Tabs (InvoicePage style) -->
-        <div class="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
+        <div class="flex flex-col md:flex-row justify-center md:justify-start gap-4 mb-8">
           <button
             v-for="tab in tabs"
             :key="tab.key"
@@ -477,7 +445,7 @@ const getStatusConfig = (status: string) => {
             <!-- SORT DROPDOWN -->
             <div
               v-if="showSortDropdown"
-              class="absolute right-[3.5rem] top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50"
+              class="absolute right-0 sm:right-[3.5rem] top-full mt-2 w-64 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50"
             >
               <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
                 Urutkan Berdasarkan
@@ -508,7 +476,7 @@ const getStatusConfig = (status: string) => {
             <!-- FILTER DROPDOWN -->
             <div
               v-if="showFilterDropdown"
-              class="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+              class="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
             >
               <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
                 Saring Berdasarkan
@@ -520,43 +488,39 @@ const getStatusConfig = (status: string) => {
                   <label class="block text-xs font-bold text-gray-500 mb-2">Status Pengajuan</label>
                   <div class="grid grid-cols-2 gap-2">
                     <button
-                      v-for="status in ['pending', 'accepted', 'rejected', 'cancelled']"
+                      v-for="status in activeTab === 'ambulance'
+                        ? Object.values(AmbulanceServiceStatus)
+                        : ['pending', 'accepted', 'rejected', 'cancelled']"
                       :key="status"
-                      @click="tempStatus = tempStatus === status ? null : status"
+                      @click="
+                        () => {
+                          filterStatus = filterStatus === status ? undefined : status
+                          fosterCursor = undefined
+                          ambulanceCursor = undefined
+                          accumulatedFoster = []
+                          accumulatedAmbulance = []
+                        }
+                      "
                       class="w-full text-center px-2 py-2 rounded-xl text-[10px] sm:text-xs transition-colors border"
                       :class="
-                        tempStatus === status
+                        filterStatus === status
                           ? 'border-primary-500 bg-primary-50 text-primary-600 font-semibold'
                           : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       "
                     >
                       {{
-                        status === 'pending'
-                          ? 'Menunggu'
-                          : status === 'accepted'
-                            ? 'Diterima'
-                            : status === 'rejected'
-                              ? 'Ditolak'
-                              : 'Dibatalkan'
+                        activeTab === 'ambulance'
+                          ? formatAmbulanceServiceStatus(status as AmbulanceServiceStatus)
+                          : status === 'pending'
+                            ? 'Menunggu'
+                            : status === 'accepted'
+                              ? 'Diterima'
+                              : status === 'rejected'
+                                ? 'Ditolak'
+                                : 'Dibatalkan'
                       }}
                     </button>
                   </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    @click="resetFilters"
-                    class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-100 transition-colors"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    @click="applyFilters"
-                    class="flex-1 px-4 py-2.5 bg-primary-300 text-white rounded-xl text-xs font-semibold hover:bg-primary-500 transition-colors shadow-sm shadow-primary-500/20"
-                  >
-                    Terapkan
-                  </button>
                 </div>
               </div>
             </div>
@@ -575,22 +539,17 @@ const getStatusConfig = (status: string) => {
             <span
               >Status:
               {{
-                (activeTab === 'foster'
-                  ? fosterQueryParams.status
-                  : ambulanceQueryParams.status) === 'pending'
-                  ? 'Menunggu'
-                  : (activeTab === 'foster'
-                        ? fosterQueryParams.status
-                        : ambulanceQueryParams.status) === 'accepted' ||
-                      (activeTab === 'foster'
-                        ? fosterQueryParams.status
-                        : ambulanceQueryParams.status) === 'approved'
-                    ? 'Diterima'
-                    : (activeTab === 'foster'
-                          ? fosterQueryParams.status
-                          : ambulanceQueryParams.status) === 'rejected'
-                      ? 'Ditolak'
-                      : 'Dibatalkan'
+                activeTab === 'ambulance'
+                  ? formatAmbulanceServiceStatus(
+                      ambulanceQueryParams.status as AmbulanceServiceStatus,
+                    )
+                  : fosterQueryParams.status === 'pending'
+                    ? 'Menunggu'
+                    : fosterQueryParams.status === 'accepted'
+                      ? 'Diterima'
+                      : fosterQueryParams.status === 'rejected'
+                        ? 'Ditolak'
+                        : 'Dibatalkan'
               }}</span
             >
             <button
@@ -645,13 +604,13 @@ const getStatusConfig = (status: string) => {
               v-for="candidate in accumulatedFoster"
               :key="candidate.id"
               @click="selectedFosterId = candidate.id"
-              class="group bg-white rounded-4xl border border-gray-100 p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
+              class="group bg-white rounded-4xl border border-gray-100 p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
             >
               <!-- Status left stripe -->
               <div
                 class="absolute top-0 left-0 w-2 h-full transition-all duration-500"
                 :class="
-                  candidate.status === 'accepted' || candidate.status === 'approved'
+                  candidate.status === 'accepted'
                     ? 'bg-green-500'
                     : candidate.status === 'rejected'
                       ? 'bg-red-500'
@@ -712,7 +671,7 @@ const getStatusConfig = (status: string) => {
                   <X :size="22" />
                 </button>
                 <div
-                  v-else-if="candidate.status === 'accepted' || candidate.status === 'approved'"
+                  v-else-if="candidate.status === 'accepted'"
                   class="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-sm"
                 >
                   <CheckCircle2 :size="24" />
@@ -773,17 +732,23 @@ const getStatusConfig = (status: string) => {
               v-for="service in accumulatedAmbulance"
               :key="service.id"
               @click="selectedAmbulanceId = service.id"
-              class="group bg-white rounded-4xl border border-gray-100 p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
+              class="group bg-white rounded-4xl border border-gray-100 p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
             >
               <!-- Status left stripe -->
               <div
                 class="absolute top-0 left-0 w-2 h-full transition-all duration-500"
                 :class="
-                  service.status === 'accepted'
+                  service.status === AmbulanceServiceStatus.ACCEPTED
                     ? 'bg-green-500'
-                    : service.status === 'rejected'
-                      ? 'bg-red-500'
-                      : 'bg-primary-400'
+                    : service.status === AmbulanceServiceStatus.DONE
+                      ? 'bg-blue-500'
+                      : service.status === AmbulanceServiceStatus.IN_SERVICE
+                        ? 'bg-primary-500'
+                        : service.status === AmbulanceServiceStatus.REJECTED
+                          ? 'bg-red-500'
+                          : service.status === AmbulanceServiceStatus.CANCELLED
+                            ? 'bg-gray-400'
+                            : 'bg-primary-400'
                 "
               ></div>
 
@@ -791,11 +756,17 @@ const getStatusConfig = (status: string) => {
                 <div
                   class="w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6"
                   :class="
-                    service.status === 'accepted'
+                    service.status === AmbulanceServiceStatus.ACCEPTED
                       ? 'bg-green-50 text-green-600'
-                      : service.status === 'rejected'
-                        ? 'bg-red-50 text-red-500'
-                        : 'bg-primary-50 text-primary-400'
+                      : service.status === AmbulanceServiceStatus.DONE
+                        ? 'bg-blue-50 text-blue-600'
+                        : service.status === AmbulanceServiceStatus.IN_SERVICE
+                          ? 'bg-primary-50 text-primary-600'
+                          : service.status === AmbulanceServiceStatus.REJECTED
+                            ? 'bg-red-50 text-red-500'
+                            : service.status === AmbulanceServiceStatus.CANCELLED
+                              ? 'bg-gray-50 text-gray-400'
+                              : 'bg-primary-50 text-primary-400'
                   "
                 >
                   <Ambulance :size="32" />
@@ -836,7 +807,7 @@ const getStatusConfig = (status: string) => {
                 class="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-6 md:pt-0 relative z-10 shrink-0"
               >
                 <button
-                  v-if="service.status === 'pending'"
+                  v-if="service.status === AmbulanceServiceStatus.PENDING"
                   @click.stop="openCancelModal(service.id, service.submitterName, 'ambulance')"
                   :disabled="ambulanceCancelMutation.isPending.value"
                   class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-600 hover:text-white transition-all duration-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
@@ -845,10 +816,24 @@ const getStatusConfig = (status: string) => {
                   <X :size="22" />
                 </button>
                 <div
-                  v-else-if="service.status === 'accepted'"
-                  class="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-sm"
+                  v-else-if="
+                    service.status === AmbulanceServiceStatus.ACCEPTED ||
+                    service.status === AmbulanceServiceStatus.DONE
+                  "
+                  class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm"
+                  :class="
+                    service.status === AmbulanceServiceStatus.DONE
+                      ? 'bg-blue-50 text-blue-500'
+                      : 'bg-green-50 text-green-500'
+                  "
                 >
                   <CheckCircle2 :size="24" />
+                </div>
+                <div
+                  v-else-if="service.status === AmbulanceServiceStatus.IN_SERVICE"
+                  class="w-14 h-14 bg-primary-50 text-primary-500 rounded-2xl flex items-center justify-center shadow-sm"
+                >
+                  <Ambulance :size="24" />
                 </div>
                 <div
                   v-else

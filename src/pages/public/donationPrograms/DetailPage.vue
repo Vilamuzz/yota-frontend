@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
-import PublicConfirmationModal from '@/components/molecules/PublicConfirmationModal.vue'
+import PublicConfirmationModal from '@/components/organisms/PublicConfirmationModal.vue'
 import { Share2, Flag, Heart, ArrowLeft } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'

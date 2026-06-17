@@ -25,7 +25,7 @@ import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceServic
 import { useToast } from '@/composables/ui/useToast'
 import { getStatusColor } from '@/utils/statusColor'
 import { formatDate, formatStatus, getCategoryLabel } from '@/utils/format'
-import { AmbulanceServiceCategory, serviceCategoryOptions } from '@/types/ambulanceHistory'
+import { AmbulanceServiceCategory, ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
@@ -286,7 +286,11 @@ const handleConfirmComplete = () => {
               class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
             >
               <UserCircle :size="18" class="text-blue-500" />
-              {{ ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE ? 'Informasi Almarhum' : 'Informasi Pasien' }}
+              {{
+                ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE
+                  ? 'Informasi Almarhum'
+                  : 'Informasi Pasien'
+              }}
             </h3>
             <div class="space-y-5 mb-8">
               <!-- Patient Name & Age -->
@@ -296,7 +300,11 @@ const handleConfirmComplete = () => {
                 </div>
                 <div>
                   <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
-                    {{ ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE ? 'Nama & Usia Almarhum' : 'Nama & Usia Pasien' }}
+                    {{
+                      ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE
+                        ? 'Nama & Usia Almarhum'
+                        : 'Nama & Usia Pasien'
+                    }}
                   </p>
                   <p class="text-sm font-semibold text-gray-900 dark:text-white">
                     {{ ambulanceService.patientName }}
@@ -314,7 +322,11 @@ const handleConfirmComplete = () => {
                 </div>
                 <div>
                   <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
-                    {{ ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE ? 'Alamat Almarhum' : 'Alamat Pasien' }}
+                    {{
+                      ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE
+                        ? 'Alamat Almarhum'
+                        : 'Alamat Pasien'
+                    }}
                   </p>
                   <p class="text-sm text-gray-900 dark:text-gray-200">
                     {{ ambulanceService.patientAddress || '-' }}
@@ -409,7 +421,12 @@ const handleConfirmComplete = () => {
                   <span
                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"
                   >
-                    {{ getCategoryLabel(ambulanceService.serviceCategory, serviceCategoryOptions) }}
+                    {{
+                      getCategoryLabel(
+                        ambulanceService.serviceCategory,
+                        ambulanceServiceCategoryOptions,
+                      )
+                    }}
                   </span>
                 </div>
               </div>

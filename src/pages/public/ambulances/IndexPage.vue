@@ -97,7 +97,7 @@ const statusDotClass = (status: AmbulanceStatus) => {
 
 <template>
   <PublicLayout>
-    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-18 font-poppins">
+    <div class="bg-gray-50 min-h-screen pt-28 pb-12 px-6 md:px-18 font-poppins">
       <div class="max-w-7xl mx-auto">
         <!-- TITLE -->
         <div class="text-center mb-8">

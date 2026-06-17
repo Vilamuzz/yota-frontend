@@ -160,7 +160,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
             </p>
           </div>
 
-          <div class="w-40 h-40 md:w-56 md:h-56 shrink-0">
+          <div class="w-40 h-40 md:w-56 md:h-56 shrink-0 mx-auto md:mx-0">
             <img
               v-if="foundationProfileStore.founderPicture"
               :src="foundationProfileStore.founderPicture"
@@ -179,7 +179,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
     </section>
 
     <!-- Donation Section -->
-    <section class="w-full py-16">
+    <section class="w-full pt-16">
       <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">
           Program Donasi Berjalan
@@ -261,20 +261,20 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
     </section>
 
     <!-- News Section -->
-    <section class="w-full py-16">
+    <section class="w-full pt-16">
       <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">Berita Terbaru</h2>
         <p class="text-gray-600 leading-relaxed mb-6">
           Berita dan kegiatan terkini Yayasan Orang Tua Asuh.
         </p>
         <!-- Loading Skeletons -->
-        <div v-if="isNewsLoading" class="flex flex-col gap-6 ml-15">
+        <div v-if="isNewsLoading" class="flex flex-col gap-6">
           <div
             v-for="i in 3"
             :key="i"
-            class="bg-white rounded-xl overflow-hidden flex gap-4 p-5 border border-gray-100 shadow-sm"
+            class="bg-white rounded-xl overflow-hidden flex flex-col sm:flex-row gap-4 p-5 border border-gray-100 shadow-sm"
           >
-            <BaseSkeleton class="w-[40%] h-64 shrink-0 rounded-lg" />
+            <BaseSkeleton class="w-full sm:w-[40%] h-48 sm:h-64 shrink-0 rounded-lg" />
             <div class="flex flex-col justify-center gap-3 flex-1">
               <BaseSkeleton variant="text-xs" class="w-24" />
               <BaseSkeleton variant="text-lg" class="w-3/4" />
@@ -288,25 +288,25 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
         </div>
 
         <!-- News Cards -->
-        <div v-else class="flex flex-col gap-6 ml-15">
+        <div v-else class="flex flex-col gap-6">
           <div
             v-for="news in latestNews"
             :key="news.id"
-            class="bg-white rounded-xl hover:shadow-lg transition-shadow duration-200 overflow-hidden flex cursor-pointer"
+            class="bg-white rounded-xl hover:shadow-lg transition-shadow duration-200 overflow-hidden flex flex-col sm:flex-row cursor-pointer"
             @click="router.push('/news/' + news.slug)"
           >
-            <!-- Image: left ~30% -->
-            <div class="w-[40%] h-64 shrink-0">
+            <!-- Image: left ~30% on larger screens -->
+            <div class="w-full sm:w-[40%] h-48 sm:h-64 shrink-0">
               <img
                 :src="news.coverImage"
                 :alt="news.title"
-                class="w-full h-full object-cover rounded-l-lg"
+                class="w-full h-full object-cover rounded-t-lg sm:rounded-l-lg sm:rounded-t-none"
                 loading="lazy"
               />
             </div>
 
             <!-- Content -->
-            <div class="flex flex-col justify-center gap-2 p-5">
+            <div class="flex flex-col justify-center gap-2 p-5 flex-1">
               <p class="text-xs text-gray-400">
                 {{ formatDate(news.publishedAt || news.createdAt) }}
               </p>
@@ -324,7 +324,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
 
     <!-- Gallery Section -->
     <section class="w-full mt-16">
-      <div class="max-w-7xl mx-auto py-8 md:px-12 lg:px-24">
+      <div class="max-w-7xl mx-auto py-8 px-6 md:px-12 lg:px-24">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">
           Galeri Yayasan OTA
         </h2>
@@ -334,10 +334,10 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
         </p>
         <!-- Loading Skeletons -->
         <div v-if="isGalleryLoading" class="flex flex-col gap-4">
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <BaseSkeleton class="h-72 w-full rounded-xl" v-for="i in 2" :key="i" />
           </div>
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <BaseSkeleton class="h-56 w-full rounded-xl" v-for="i in 3" :key="i" />
           </div>
         </div>
@@ -350,7 +350,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
         <!-- Gallery Grid -->
         <div v-else class="flex flex-col gap-4">
           <!-- Row 1: 2 images -->
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div
               v-for="item in galleries.slice(0, 2)"
               :key="item.id"
@@ -366,7 +366,7 @@ const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ lim
             </div>
           </div>
           <!-- Row 2: 3 images -->
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div
               v-for="item in galleries.slice(2, 5)"
               :key="item.id"
