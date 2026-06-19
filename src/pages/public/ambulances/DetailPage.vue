@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, reactive } from 'vue'
+import { computed, ref, reactive, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import {
@@ -11,8 +11,6 @@ import {
   AlertCircle,
   Clock,
   History,
-  ChevronLeft,
-  ChevronRight,
   Tag,
   CalendarDays,
   UserCircle,
@@ -35,21 +33,55 @@ const { detailQuery, isAmbulanceLoading } = useAmbulanceDetail(id)
 const ambulance = computed(() => detailQuery.data.value?.data)
 
 // History List
-import { useCursorPagination } from '@/composables/ui/usePagination'
 import type { AmbulanceHistoryQueryParams } from '@/types/ambulanceHistory'
 import { formatPhoneWithDashes } from '@/utils/phone'
 
 const queryParams = reactive<AmbulanceHistoryQueryParams>({
   limit: 8,
   nextCursor: undefined,
-  prevCursor: undefined,
 })
 const {
   histories,
   pagination,
   isLoading: isHistoryLoading,
+  listQuery,
 } = useAmbulanceHistoryList(id, queryParams)
-const { handleNextPage, handlePrevPage } = useCursorPagination(queryParams)
+
+const accumulatedHistories = ref<any[]>([])
+
+watch(
+  histories,
+  (newHistories) => {
+    if (!queryParams.nextCursor) {
+      accumulatedHistories.value = [...newHistories]
+    } else {
+      const existingIds = new Set(accumulatedHistories.value.map((h) => h.id))
+      for (const history of newHistories) {
+        if (!existingIds.has(history.id)) {
+          accumulatedHistories.value.push(history)
+        }
+      }
+    }
+  },
+  { immediate: true },
+)
+
+const handleScroll = () => {
+  const bottomOfWindow =
+    window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 200
+
+  if (bottomOfWindow && !listQuery.isFetching.value && pagination.value?.nextCursor) {
+    queryParams.nextCursor = pagination.value.nextCursor
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
 // Summary
 const PERIOD_OPTIONS = [
@@ -519,14 +551,14 @@ const categoryBarClass = (value: string) => {
             </div>
 
             <!-- History Loading -->
-            <div v-if="isHistoryLoading" class="flex flex-col items-center justify-center py-16">
+            <div v-if="isHistoryLoading && accumulatedHistories.length === 0" class="flex flex-col items-center justify-center py-16">
               <Loader2 class="w-10 h-10 text-primary-500 animate-spin mb-3" />
               <p class="text-gray-400 text-sm animate-pulse">Memuat riwayat layanan...</p>
             </div>
 
             <!-- History Empty -->
             <div
-              v-else-if="histories.length === 0"
+              v-else-if="!isHistoryLoading && accumulatedHistories.length === 0"
               class="flex flex-col items-center justify-center py-16 text-center px-6"
             >
               <div
@@ -541,7 +573,7 @@ const categoryBarClass = (value: string) => {
             </div>
 
             <!-- History Table -->
-            <div v-else>
+            <div v-else-if="accumulatedHistories.length > 0">
               <!-- Desktop Table -->
               <div class="hidden sm:block overflow-x-auto">
                 <table class="w-full text-sm">
@@ -566,7 +598,7 @@ const categoryBarClass = (value: string) => {
                   </thead>
                   <tbody class="divide-y divide-gray-50">
                     <tr
-                      v-for="(history, index) in histories"
+                      v-for="(history, index) in accumulatedHistories"
                       :key="index"
                       class="hover:bg-gray-50/70 transition-colors"
                     >
@@ -598,7 +630,7 @@ const categoryBarClass = (value: string) => {
 
               <!-- Mobile Cards -->
               <div class="sm:hidden divide-y divide-gray-100">
-                <div v-for="(history, index) in histories" :key="index" class="px-5 py-4 space-y-2">
+                <div v-for="(history, index) in accumulatedHistories" :key="index" class="px-5 py-4 space-y-2">
                   <div class="flex items-center justify-between">
                     <span
                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
@@ -616,27 +648,14 @@ const categoryBarClass = (value: string) => {
                 </div>
               </div>
 
-              <!-- Pagination -->
+              <!-- Infinite Scroll Loader -->
               <div
-                v-if="pagination?.nextCursor || pagination?.prevCursor"
-                class="px-6 py-4 border-t border-gray-100 flex items-center justify-end"
+                v-if="listQuery.isFetching.value && !isHistoryLoading"
+                class="px-6 py-4 border-t border-gray-100 flex justify-center"
               >
-                <div class="flex items-center gap-2">
-                  <button
-                    :disabled="!pagination?.prevCursor"
-                    @click="handlePrevPage(pagination)"
-                    class="p-2 rounded-lg border border-gray-200 text-gray-500 hover:border-primary-300 hover:text-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronLeft :size="16" />
-                  </button>
-                  <button
-                    :disabled="!pagination?.nextCursor"
-                    @click="handleNextPage(pagination)"
-                    class="p-2 rounded-lg border border-gray-200 text-gray-500 hover:border-primary-300 hover:text-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronRight :size="16" />
-                  </button>
-                </div>
+                <div
+                  class="w-6 h-6 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin"
+                ></div>
               </div>
             </div>
           </div>
