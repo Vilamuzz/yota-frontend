@@ -1,7 +1,10 @@
 import { computed } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fosterChildrenCandidateService } from '@/services/fosterChildrenCandidate.service'
-import type { FosterChildrenCandidateCreateRequest, FosterChildrenCandidate } from '@/types/fosterChildrenCandidate'
+import type {
+  FosterChildrenCandidateCreateRequest,
+  FosterChildrenCandidate,
+} from '@/types/fosterChildrenCandidate'
 import type { ApiError } from '@/types/response'
 import type { ApiResponse } from '@/types/response'
 
@@ -16,7 +19,7 @@ export const useFosterChildrenCandidateCreate = () => {
     mutationFn: (data: FosterChildrenCandidateCreateRequest) =>
       fosterChildrenCandidateService.createFosterChildrenCandidate(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fosterChildrenCandidate']})
+      queryClient.invalidateQueries({ queryKey: ['fosterChildrenCandidate'] })
     },
   })
 
@@ -26,6 +29,6 @@ export const useFosterChildrenCandidateCreate = () => {
 
   return {
     createMutation,
-    validationErrors
+    validationErrors,
   }
 }

@@ -11,14 +11,15 @@ export const useFosterChildrenList = (
 ) => {
   const listQuery = useQuery<FosterChildrenListResponse, ApiError>({
     queryKey: isAdmin ? ['adminFosterChildren', params] : ['fosterChildren', params],
-    queryFn: () => isAdmin ? fosterChildrenService.getAdminFosterChildren(toValue(params)) : fosterChildrenService.getFosterChildrenList(toValue(params)),
+    queryFn: () =>
+      isAdmin
+        ? fosterChildrenService.getAdminFosterChildren(toValue(params))
+        : fosterChildrenService.getFosterChildrenList(toValue(params)),
     retry: 1,
     ...options,
   })
 
-  const fosterChildren = computed(
-    () => listQuery.data.value?.data?.fosterChildren || [],
-  )
+  const fosterChildren = computed(() => listQuery.data.value?.data?.fosterChildren || [])
   const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {

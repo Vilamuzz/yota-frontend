@@ -13,7 +13,8 @@ export const useMyFosterChildrenTransactions = (
 ) => {
   const query = useQuery<FosterChildrenTransactionListResponse, ApiError>({
     queryKey: ['my-foster-children-transactions', params],
-    queryFn: () => fosterChildrenTransactionService.getMyFosterChildrenTransactions(toValue(params)),
+    queryFn: () =>
+      fosterChildrenTransactionService.getMyFosterChildrenTransactions(toValue(params)),
     ...options,
   })
 

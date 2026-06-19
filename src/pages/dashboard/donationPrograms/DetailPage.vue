@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Pencil, HandHeart, CalendarDays, Tag, Layout } from 'lucide-vue-next'
+import {
+  Pencil,
+  HandHeart,
+  CalendarDays,
+  Tag,
+  Layout,
+  TrendingUp,
+  TrendingDown,
+} from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useDonationProgramAdminDetail } from '@/composables/donationProgram/useDonationProgramAdminDetail'
@@ -47,6 +55,20 @@ const isEditable = computed(() => {
 const handleEdit = () => {
   router.push({
     name: 'dashboard-donation-programs-edit',
+    params: { id: donationId },
+  })
+}
+
+const handleViewIncome = () => {
+  router.push({
+    name: 'dashboard-donation-programs-transaction',
+    params: { id: donationId },
+  })
+}
+
+const handleViewExpense = () => {
+  router.push({
+    name: 'dashboard-donation-programs-expense-transaction',
     params: { id: donationId },
   })
 }
@@ -276,6 +298,24 @@ const handleBack = () => {
               >
                 <Pencil :size="16" />
                 Edit Program
+              </BaseButton>
+
+              <BaseButton
+                variant="outline"
+                class="w-full flex items-center justify-center gap-2"
+                @click="handleViewIncome"
+              >
+                <TrendingUp :size="16" class="text-green-500" />
+                Lihat Pemasukan
+              </BaseButton>
+
+              <BaseButton
+                variant="outline"
+                class="w-full flex items-center justify-center gap-2"
+                @click="handleViewExpense"
+              >
+                <TrendingDown :size="16" class="text-red-500" />
+                Lihat Pengeluaran
               </BaseButton>
 
               <BaseButton variant="outline" class="w-full" @click="handleBack">

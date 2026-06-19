@@ -226,7 +226,8 @@ onUnmounted(() => {
                     <button
                       @click="
                         () => {
-                          queryParams.isGraduated = queryParams.isGraduated === true ? undefined : true
+                          queryParams.isGraduated =
+                            queryParams.isGraduated === true ? undefined : true
                           resetPagination()
                         }
                       "
@@ -242,7 +243,8 @@ onUnmounted(() => {
                     <button
                       @click="
                         () => {
-                          queryParams.isGraduated = queryParams.isGraduated === false ? undefined : false
+                          queryParams.isGraduated =
+                            queryParams.isGraduated === false ? undefined : false
                           resetPagination()
                         }
                       "

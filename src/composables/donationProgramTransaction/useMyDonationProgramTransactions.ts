@@ -13,7 +13,8 @@ export const useMyDonationProgramTransactions = (
 ) => {
   const query = useQuery<DonationProgramTransactionListResponse, ApiError>({
     queryKey: ['my-donation-transactions', params],
-    queryFn: () => donationProgramTransactionService.getMyDonationProgramTransactions(toValue(params)),
+    queryFn: () =>
+      donationProgramTransactionService.getMyDonationProgramTransactions(toValue(params)),
     ...options,
   })
 

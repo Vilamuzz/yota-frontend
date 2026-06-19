@@ -36,8 +36,10 @@ watch(searchQuery, (val) => {
 })
 
 const { socialPrograms, pagination, isLoading } = useSocialProgramList(queryParams)
-const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-  useOffsetPagination(queryParams, pagination)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
+  queryParams,
+  pagination,
+)
 
 watch(
   () => [queryParams.status, queryParams.sortBy, queryParams.limit],
@@ -47,7 +49,6 @@ watch(
 const hasActiveFilters = computed(
   () => queryParams.status !== undefined || queryParams.sortBy !== undefined,
 )
-
 </script>
 
 <template>
@@ -94,7 +95,6 @@ const hasActiveFilters = computed(
                     <option value="billing_day asc">Hari Tagihan Terawal</option>
                   </select>
                 </div>
-
               </div>
             </template>
           </BaseFilter>

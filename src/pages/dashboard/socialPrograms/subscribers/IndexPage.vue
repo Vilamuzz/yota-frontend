@@ -56,7 +56,6 @@ watch(
 const hasActiveFilters = computed(
   () => queryParams.status !== undefined || queryParams.sortBy !== undefined,
 )
-
 </script>
 
 <template>
@@ -107,7 +106,9 @@ const hasActiveFilters = computed(
             <template #default>
               <div class="space-y-4">
                 <div>
-                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status Program</label>
+                  <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
+                    >Status Program</label
+                  >
                   <select
                     v-model="queryParams.status"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
@@ -131,7 +132,6 @@ const hasActiveFilters = computed(
                     <option value="total_paid_periods asc">Lama Berlangganan Terbaru</option>
                   </select>
                 </div>
-
               </div>
             </template>
           </BaseFilter>

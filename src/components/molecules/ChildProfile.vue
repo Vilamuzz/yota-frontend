@@ -24,8 +24,7 @@ function calculateAge(birthDate: string): number {
 
   const isBeforeBirthday =
     today.getMonth() < birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() &&
-      today.getDate() < birth.getDate())
+    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
 
   if (isBeforeBirthday) {
     age--

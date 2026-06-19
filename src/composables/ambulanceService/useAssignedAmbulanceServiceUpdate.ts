@@ -6,38 +6,38 @@ import type { ApiError } from '@/types/response'
 export const useAssignedAmbulanceServiceUpdate = () => {
   const queryClient = useQueryClient()
 
-  const startMutation = useMutation<
-    AmbulanceServiceResponse,
-    ApiError,
-    { ambulanceId: string; id: string }
-  >({
-    mutationFn: ({ ambulanceId, id }) =>
-      ambulanceServiceService.startService(ambulanceId, id),
-    onSuccess: (_, { ambulanceId, id }) => {
-      queryClient.invalidateQueries({ queryKey: ['assignedAmbulanceServices', ambulanceId] })
-      queryClient.invalidateQueries({
-        queryKey: ['assignedAmbulanceServiceDetail', ambulanceId, id],
-      })
+  const startMutation = useMutation<AmbulanceServiceResponse, ApiError, string>({
+    mutationFn: (id: string) => ambulanceServiceService.startService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignedAmbulanceServices'] })
+      queryClient.invalidateQueries({ queryKey: ['assignedAmbulanceServiceDetail'] })
     },
   })
 
-  const completeMutation = useMutation<
+  const completeMutation = useMutation<AmbulanceServiceResponse, ApiError, string>({
+    mutationFn: (id: string) => ambulanceServiceService.completeService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignedAmbulanceServices'] })
+      queryClient.invalidateQueries({ queryKey: ['assignedAmbulanceServiceDetail'] })
+    },
+  })
+
+  const cancelMutation = useMutation<
     AmbulanceServiceResponse,
     ApiError,
-    { ambulanceId: string; id: string }
+    { id: string; cancelationReason: string }
   >({
-    mutationFn: ({ ambulanceId, id }) =>
-      ambulanceServiceService.completeService(ambulanceId, id),
-    onSuccess: (_, { ambulanceId, id }) => {
-      queryClient.invalidateQueries({ queryKey: ['assignedAmbulanceServices', ambulanceId] })
-      queryClient.invalidateQueries({
-        queryKey: ['assignedAmbulanceServiceDetail', ambulanceId, id],
-      })
+    mutationFn: ({ id, cancelationReason }) =>
+      ambulanceServiceService.cancelService(id, cancelationReason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignedAmbulanceServices'] })
+      queryClient.invalidateQueries({ queryKey: ['assignedAmbulanceServiceDetail'] })
     },
   })
 
   return {
     startMutation,
     completeMutation,
+    cancelMutation,
   }
 }

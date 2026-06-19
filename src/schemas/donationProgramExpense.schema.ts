@@ -7,4 +7,6 @@ export const createDonationProgramExpenseSchema = z.object({
   note: z.string().optional(),
 })
 
-export type CreateDonationProgramExpenseFormData = z.infer<typeof createDonationProgramExpenseSchema>
+export type CreateDonationProgramExpenseFormData = z.infer<
+  typeof createDonationProgramExpenseSchema
+>

@@ -28,6 +28,12 @@ export const ambulanceManagerRoutes: RouteRecordRaw[] = [
             component: () => import('@/pages/dashboard/ambulances/EditPage.vue'),
             meta: { title: 'Edit Ambulans', activeMenu: 'dashboard-ambulance' },
           },
+          {
+            path: ':id/detail',
+            name: 'dashboard-ambulance-detail',
+            component: () => import('@/pages/dashboard/ambulances/DetailPage.vue'),
+            meta: { title: 'Detail Ambulans', activeMenu: 'dashboard-ambulance' },
+          },
         ],
       },
     ],
@@ -68,18 +74,12 @@ export const ambulanceManagerRoutes: RouteRecordRaw[] = [
         children: [
           {
             path: '',
-            name: 'dashboard-ambulance-assigned',
-            component: () => import('@/pages/dashboard/ambulanceServices/AmbulancePage.vue'),
-            meta: { title: 'Pilih Ambulans' },
-          },
-          {
-            path: ':ambulanceId',
             name: 'dashboard-ambulance-assigned-service',
             component: () => import('@/pages/dashboard/ambulanceServices/IndexPage.vue'),
             meta: { title: 'Layanan Ambulans', activeMenu: 'dashboard-ambulance-assigned' },
           },
           {
-            path: ':ambulanceId/detail/:serviceId',
+            path: 'detail/:serviceId',
             name: 'dashboard-ambulance-assigned-service-detail',
             component: () => import('@/pages/dashboard/ambulanceServices/DetailPage.vue'),
             meta: {
@@ -93,7 +93,7 @@ export const ambulanceManagerRoutes: RouteRecordRaw[] = [
   },
   {
     path: '',
-    meta: { roles: [ROLES.AMBULANCE_MANAGER, ROLES.AMBULANCE_DRIVER] },
+    meta: { roles: [ROLES.AMBULANCE_MANAGER] },
     children: [
       {
         path: 'ambulances/histories',
@@ -116,5 +116,11 @@ export const ambulanceManagerRoutes: RouteRecordRaw[] = [
         ],
       },
     ],
+  },
+  {
+    path: 'ambulances/histories/detail',
+    name: 'dashboard-ambulance-histories-detail-driver',
+    meta: { roles: ROLES.AMBULANCE_DRIVER, title: 'Riwayat Ambulans' },
+    component: () => import('@/pages/dashboard/ambulanceHistories/IndexPage.vue'),
   },
 ]

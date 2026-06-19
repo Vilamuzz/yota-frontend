@@ -136,7 +136,6 @@ const handleConfirmDelete = async () => {
                     <option value="birth_date desc">Umur Termuda</option>
                   </select>
                 </div>
-
               </div>
             </template>
           </BaseFilter>

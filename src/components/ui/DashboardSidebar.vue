@@ -21,7 +21,7 @@ const props = withDefaults(
   }>(),
   {
     isOpen: false,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -39,7 +39,7 @@ watch(
   () => route.path,
   () => {
     emit('close')
-  }
+  },
 )
 
 const isMenuActive = (menuRoute: string | undefined) => {

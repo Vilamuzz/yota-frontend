@@ -58,7 +58,6 @@ const {
                     <option value="billing_day asc">Hari Tagihan Terawal</option>
                   </select>
                 </div>
-
               </div>
             </template>
           </BaseFilter>

@@ -6,13 +6,8 @@ import type { ApiError } from '@/types/response'
 export const useNewsCommentReport = () => {
   const queryClient = useQueryClient()
 
-  const createMutation = useMutation<
-    NewsCommentResponse,
-    ApiError,
-    { newsCommentID: string }
-  >({
-    mutationFn: (report) =>
-      newsCommentService.reportNewsComment(report.newsCommentID),
+  const createMutation = useMutation<NewsCommentResponse, ApiError, { newsCommentID: string }>({
+    mutationFn: (report) => newsCommentService.reportNewsComment(report.newsCommentID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newsComments'] })
     },

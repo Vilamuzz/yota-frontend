@@ -159,7 +159,6 @@ function handleConfirmAction() {
                     <option :value="true">Diblokir</option>
                   </select>
                 </div>
-
               </div>
             </template>
           </BaseFilter>

@@ -562,17 +562,12 @@ const categoryBarClass = (value: string) => {
                       >
                         Sopir
                       </th>
-                      <th
-                        class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                      >
-                        Keterangan
-                      </th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-50">
                     <tr
-                      v-for="history in histories"
-                      :key="history.id"
+                      v-for="(history, index) in histories"
+                      :key="index"
                       class="hover:bg-gray-50/70 transition-colors"
                     >
                       <td class="px-6 py-4 text-gray-600 whitespace-nowrap">
@@ -596,9 +591,6 @@ const categoryBarClass = (value: string) => {
                           {{ history.driver.username }}
                         </div>
                       </td>
-                      <td class="px-6 py-4 text-gray-500 max-w-xs">
-                        <p class="line-clamp-2">{{ history.note || '-' }}</p>
-                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -606,7 +598,7 @@ const categoryBarClass = (value: string) => {
 
               <!-- Mobile Cards -->
               <div class="sm:hidden divide-y divide-gray-100">
-                <div v-for="history in histories" :key="history.id" class="px-5 py-4 space-y-2">
+                <div v-for="(history, index) in histories" :key="index" class="px-5 py-4 space-y-2">
                   <div class="flex items-center justify-between">
                     <span
                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
@@ -621,9 +613,6 @@ const categoryBarClass = (value: string) => {
                     <UserCircle :size="13" class="text-gray-400" />
                     {{ history.driver.username }}
                   </div>
-                  <p v-if="history.note" class="text-xs text-gray-500 leading-relaxed">
-                    {{ history.note }}
-                  </p>
                 </div>
               </div>
 

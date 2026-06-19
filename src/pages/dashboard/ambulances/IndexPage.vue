@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Plus, Trash2, Edit, Ambulance as AmbulanceIcon } from 'lucide-vue-next'
+import { Plus, Trash2, Edit, Eye, Ambulance as AmbulanceIcon } from 'lucide-vue-next'
 import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAmbulanceDelete } from '@/composables/ambulance/useAmbulanceDelete'
 import { useCursorPagination } from '@/composables/ui/usePagination'
@@ -168,8 +168,13 @@ function handleConfirmDelete() {
             >
               {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white">
-              {{ ambulance.plateNumber }}
+            <td class="px-6 py-4 whitespace-nowrap">
+              <RouterLink
+                :to="{ name: 'dashboard-ambulance-detail', params: { id: ambulance.id } }"
+                class="font-bold text-gray-900 dark:text-white hover:text-primary-600 transition-colors"
+              >
+                {{ ambulance.plateNumber }}
+              </RouterLink>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
               {{ ambulance.driver.username }}
@@ -189,6 +194,13 @@ function handleConfirmDelete() {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
+                <BaseIconButton
+                  :to="{ name: 'dashboard-ambulance-detail', params: { id: ambulance.id } }"
+                  variant="info"
+                  title="Detail Ambulans"
+                >
+                  <Eye :size="18" />
+                </BaseIconButton>
                 <BaseIconButton
                   :to="{ name: 'dashboard-ambulance-edit', params: { id: ambulance.id } }"
                   variant="primary"

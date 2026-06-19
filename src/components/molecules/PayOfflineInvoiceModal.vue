@@ -65,8 +65,6 @@ const handleSubmit = () => {
         required
       />
 
-
-
       <div class="flex justify-end gap-3 mt-6">
         <BaseButton type="button" variant="secondary" @click="emit('close')">Batal</BaseButton>
         <BaseButton type="submit" variant="primary" :loading="loading">Catat Pembayaran</BaseButton>

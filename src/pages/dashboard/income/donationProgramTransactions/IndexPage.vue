@@ -6,13 +6,16 @@ import { HandHeart, Plus, XCircle } from 'lucide-vue-next'
 import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { useDonationProgramTransactionList } from '@/composables/donationProgramTransaction/useDonationProgramTransactionList'
 import { useDonationProgramTransactionCancel } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCancel'
+import { useDonationProgramMonthlyIncome } from '@/composables/donationProgramTransaction/useDonationProgramMonthlyIncome'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useToast } from '@/composables/ui/useToast'
+import { useTheme } from '@/composables/ui/useTheme'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseModal from '@/components/organisms/BaseModal.vue'
+import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import { createDonationProgramTransactionSchema } from '@/schemas/donationProgramTransaction.schema'
 import { useDonationProgramTransactionCreateOffline } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCreateOffline'
 import { getZodErrors } from '@/utils/zodError'
@@ -24,6 +27,18 @@ import {
 import { getStatusColor } from '@/utils/statusColor'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 import { useDonationProgramAdminDetail } from '@/composables/donationProgram'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { LineChart } from 'echarts/charts'
+import {
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  TitleComponent,
+} from 'echarts/components'
+import VChart from 'vue-echarts'
+
+use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent])
 
 const route = useRoute()
 const donationId = route.params.id as string
@@ -135,6 +150,122 @@ function handleConfirmCancel() {
     })
   }
 }
+
+// ── Monthly Income Chart ────────────────────────────────────────────────────────
+const { isDark } = useTheme()
+const chartTheme = computed(() => (isDark.value ? 'dark' : 'light'))
+
+const { incomeQuery, incomeItems } = useDonationProgramMonthlyIncome(donationId)
+const isChartLoading = computed(() => incomeQuery.isPending.value)
+
+const MONTH_LABELS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'Mei',
+  'Jun',
+  'Jul',
+  'Agu',
+  'Sep',
+  'Okt',
+  'Nov',
+  'Des',
+]
+
+const incomeChartOption = computed(() => {
+  const isDarkMode = isDark.value
+  const c = {
+    income: isDarkMode ? '#34d399' : '#10b981',
+    text: isDarkMode ? '#9ca3af' : '#374151',
+    gridLine: isDarkMode ? '#374151' : '#e5e7eb',
+    bg: isDarkMode ? '#1f2937' : '#ffffff',
+    border: isDarkMode ? '#374151' : '#e5e7eb',
+    tooltip: isDarkMode ? '#f3f4f6' : '#1f2937',
+  }
+
+  const data = Array(12).fill(0)
+  incomeItems.value.forEach((item) => {
+    const idx = parseInt(item.month.split('-')[1] || '', 10) - 1
+    if (idx >= 0 && idx < 12) data[idx] = item.income
+  })
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: c.bg,
+      borderColor: c.border,
+      textStyle: { color: c.tooltip },
+      formatter: (params: any) => {
+        const p = params[0]
+        return `<div style="font-size:12px;padding:4px">
+          <b style="display:block;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid ${c.border}">${p.name}</b>
+          <div style="display:flex;justify-content:space-between;gap:16px">
+            <span>${p.marker} Pemasukan</span>
+            <b style="font-family:monospace">${formatCurrency(p.value)}</b>
+          </div></div>`
+      },
+    },
+    grid: { left: '2%', right: '2%', bottom: '4%', top: '8%', containLabel: true },
+    xAxis: [
+      {
+        type: 'category',
+        data: MONTH_LABELS,
+        boundaryGap: false,
+        axisLabel: { color: c.text, fontFamily: 'system-ui, sans-serif', fontSize: 11 },
+        axisLine: { lineStyle: { color: c.gridLine } },
+        axisTick: { show: false },
+      },
+    ],
+    yAxis: [
+      {
+        type: 'value',
+        axisLabel: {
+          color: c.text,
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: 11,
+          formatter: (v: number) => {
+            if (v >= 1e9) return `${(v / 1e9).toFixed(1)}M`
+            if (v >= 1e6) return `${(v / 1e6).toFixed(1)}jt`
+            if (v >= 1e3) return `${(v / 1e3).toFixed(0)}rb`
+            return `${v}`
+          },
+        },
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: c.gridLine, type: 'dashed' } },
+      },
+    ],
+    series: [
+      {
+        name: 'Pemasukan',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        data,
+        lineStyle: { color: c.income, width: 2.5 },
+        itemStyle: { color: c.income },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              {
+                offset: 0,
+                color: isDarkMode ? 'rgba(52,211,153,0.28)' : 'rgba(16,185,129,0.20)',
+              },
+              { offset: 1, color: 'rgba(0,0,0,0)' },
+            ],
+          },
+        },
+      },
+    ],
+  }
+})
 </script>
 
 <template>
@@ -180,6 +311,31 @@ function handleConfirmCancel() {
         <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl w-full"></div>
       </div>
 
+      <!-- Monthly Income Chart -->
+      <div
+        class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-6 rounded-2xl shadow-sm flex flex-col gap-3"
+      >
+        <div>
+          <h3 class="text-base font-bold text-gray-950 dark:text-white">Pemasukan Bulanan</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            Total donasi masuk per bulan · {{ new Date().getFullYear() }}
+          </p>
+        </div>
+
+        <div class="h-60 w-full">
+          <VChart
+            v-if="!isChartLoading"
+            class="w-full h-full"
+            :option="incomeChartOption"
+            :theme="chartTheme"
+            autoresize
+          />
+          <div v-else class="w-full h-full">
+            <BaseSkeleton variant="image" class="w-full h-full rounded-xl" />
+          </div>
+        </div>
+      </div>
+
       <!-- Header Section -->
       <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-start">
         <BaseButton variant="primary" class="w-full sm:w-auto" @click="isCreateModalOpen = true">
@@ -223,41 +379,38 @@ function handleConfirmCancel() {
             :key="transaction.id"
             class="hover:bg-gray-50 transition-colors duration-150 dark:hover:bg-gray-700"
           >
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-500 dark:text-gray-400">
+            <td class="px-6 py-2 whitespace-nowrap font-medium text-gray-500 dark:text-gray-400">
               {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-semibold max-w-50 truncate text-gray-900 dark:text-white"
+              class="px-6 py-2 whitespace-nowrap font-semibold max-w-50 truncate text-gray-900 dark:text-white"
             >
               {{ transaction.donorName }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200"
+              class="px-6 py-2 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200"
             >
               {{ transaction.isOnline ? 'Online' : 'Offline' }}
             </td>
             <td
-              class="px-6 py-4 whitespace-nowrap font-bold text-right text-gray-900 dark:text-white"
+              class="px-6 py-2 whitespace-nowrap font-bold text-right text-gray-900 dark:text-white"
             >
               {{ formatCurrency(transaction.grossAmount) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">
+            <td class="px-6 py-2 whitespace-nowrap text-center">
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
                   getStatusColor(transaction.transactionStatus),
                 ]"
               >
-                {{
-                  transaction.transactionStatus.charAt(0).toUpperCase() +
-                  transaction.transactionStatus.slice(1)
-                }}
+                {{ formatStatus(transaction.transactionStatus) }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-500 dark:text-gray-400">
+            <td class="px-6 py-2 whitespace-nowrap font-medium text-gray-500 dark:text-gray-400">
               {{ formatDate(transaction.createdAt) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-2 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
                 <BaseIconButton
                   v-if="

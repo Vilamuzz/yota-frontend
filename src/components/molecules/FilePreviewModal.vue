@@ -75,7 +75,11 @@ const isPdf = computed(() => {
             class="flex-1 bg-gray-100 dark:bg-gray-900 overflow-hidden relative flex items-center justify-center"
           >
             <template v-if="isPdf">
-              <iframe :src="fileUrl" class="w-full h-full border-none" title="Pratinjau PDF"></iframe>
+              <iframe
+                :src="fileUrl"
+                class="w-full h-full border-none"
+                title="Pratinjau PDF"
+              ></iframe>
             </template>
             <template v-else>
               <img

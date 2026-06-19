@@ -25,7 +25,9 @@ export const accountService = {
   },
 
   getFosterParentAccountList: async (params: AccountQueryParam): Promise<AccountListResponse> => {
-    const response = await api.get<AccountListResponse>(`${API.ACCOUNTS}/foster-parents`, { params })
+    const response = await api.get<AccountListResponse>(`${API.ACCOUNTS}/foster-parents`, {
+      params,
+    })
     return response.data
   },
 

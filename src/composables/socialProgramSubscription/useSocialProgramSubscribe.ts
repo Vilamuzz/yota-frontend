@@ -11,8 +11,7 @@ export const useSocialProgramSubscribe = () => {
     ApiError,
     { id: string }
   >({
-    mutationFn: (input: { id: string }) =>
-      socialProgramSubscriptionService.subscribe(input.id),
+    mutationFn: (input: { id: string }) => socialProgramSubscriptionService.subscribe(input.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['publishedSocialProgramDetail'] })
       queryClient.invalidateQueries({ queryKey: ['publishedSocialPrograms'] })

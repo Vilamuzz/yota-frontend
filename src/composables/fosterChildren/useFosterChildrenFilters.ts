@@ -35,11 +35,20 @@ export function useFosterChildrenFilters(isAdmin: boolean = false) {
   })
 
   watch(
-    () => [queryParams.gender, queryParams.category, queryParams.isGraduated, queryParams.sortBy, queryParams.limit],
+    () => [
+      queryParams.gender,
+      queryParams.category,
+      queryParams.isGraduated,
+      queryParams.sortBy,
+      queryParams.limit,
+    ],
     () => resetPagination(),
   )
 
-  const { fosterChildren, pagination, isLoading, listQuery } = useFosterChildrenList(queryParams, isAdmin)
+  const { fosterChildren, pagination, isLoading, listQuery } = useFosterChildrenList(
+    queryParams,
+    isAdmin,
+  )
   const { pageOffset, resetPagination, handleNextPage, handlePrevPage, goToPage } =
     useOffsetPagination(queryParams, pagination)
 

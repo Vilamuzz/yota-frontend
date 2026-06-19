@@ -29,6 +29,7 @@ import { AmbulanceServiceCategory, ambulanceServiceCategoryOptions } from '@/typ
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
+import BaseModal from '@/components/organisms/BaseModal.vue'
 import FilePreviewModal from '@/components/molecules/FilePreviewModal.vue'
 import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAuthStore } from '@/stores/auth'
@@ -47,7 +48,6 @@ const managerDetail = useAmbulanceServiceDetail(
   computed(() => !isDriver.value),
 )
 const driverDetail = useAssignedAmbulanceServiceDetail(
-  ambulanceId,
   id,
   computed(() => isDriver.value),
 )
@@ -59,7 +59,7 @@ const isLoading = computed(() =>
   isDriver.value ? driverDetail.isLoading.value : managerDetail.isLoading.value,
 )
 const { acceptMutation, rejectMutation } = useAmbulanceServiceUpdate()
-const { startMutation, completeMutation } = useAssignedAmbulanceServiceUpdate()
+const { startMutation, completeMutation, cancelMutation } = useAssignedAmbulanceServiceUpdate()
 const { ambulances, isLoading: isLoadingAmbulances } = useAmbulanceList(
   { limit: 100 },
   computed(() => !isDriver.value),
@@ -70,7 +70,8 @@ const isUpdating = computed(
     acceptMutation.isPending.value ||
     rejectMutation.isPending.value ||
     startMutation.isPending.value ||
-    completeMutation.isPending.value,
+    completeMutation.isPending.value ||
+    cancelMutation.isPending.value,
 )
 
 const confirmAccept = ref(false)
@@ -115,36 +116,49 @@ const handleConfirmReject = (reason: string) => {
   )
 }
 
-// START & COMPLETE (DRIVER)
+// START & COMPLETE & CANCEL (DRIVER)
 const confirmStart = ref(false)
 const confirmComplete = ref(false)
+const confirmCancel = ref(false)
+const cancelReason = ref('')
 const showKtpModal = ref(false)
 
 const handleConfirmStart = () => {
-  startMutation.mutate(
-    { ambulanceId, id },
-    {
-      onSuccess: () => {
-        showToast('Layanan ambulans berhasil dimulai', 'success')
-        confirmStart.value = false
-      },
-      onError: () => {
-        showToast('Gagal memulai layanan ambulans', 'error')
-      },
+  startMutation.mutate(id, {
+    onSuccess: () => {
+      showToast('Layanan ambulans berhasil dimulai', 'success')
+      confirmStart.value = false
     },
-  )
+    onError: () => {
+      showToast('Gagal memulai layanan ambulans', 'error')
+    },
+  })
 }
 
 const handleConfirmComplete = () => {
-  completeMutation.mutate(
-    { ambulanceId, id },
+  completeMutation.mutate(id, {
+    onSuccess: () => {
+      showToast('Layanan ambulans berhasil diselesaikan', 'success')
+      confirmComplete.value = false
+    },
+    onError: () => {
+      showToast('Gagal menyelesaikan layanan ambulans', 'error')
+    },
+  })
+}
+
+const handleConfirmCancel = () => {
+  if (!cancelReason.value.trim()) return
+  cancelMutation.mutate(
+    { id, cancelationReason: cancelReason.value },
     {
       onSuccess: () => {
-        showToast('Layanan ambulans berhasil diselesaikan', 'success')
-        confirmComplete.value = false
+        showToast('Layanan ambulans berhasil dibatalkan', 'success')
+        confirmCancel.value = false
+        cancelReason.value = ''
       },
       onError: () => {
-        showToast('Gagal menyelesaikan layanan ambulans', 'error')
+        showToast('Gagal membatalkan layanan ambulans', 'error')
       },
     },
   )
@@ -579,6 +593,21 @@ const handleConfirmComplete = () => {
                   {{ ambulanceService.rejectionReason }}
                 </p>
               </div>
+
+              <!-- Cancelation Reason -->
+              <div
+                v-if="ambulanceService.status === 'cancelled' && ambulanceService.cancelationReason"
+                class="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl animate-none transition-none"
+              >
+                <h4
+                  class="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2"
+                >
+                  Alasan Pembatalan
+                </h4>
+                <p class="text-sm text-red-700 dark:text-red-300">
+                  {{ ambulanceService.cancelationReason }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -593,6 +622,15 @@ const handleConfirmComplete = () => {
           class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end"
         >
           <div class="flex items-center gap-3">
+            <BaseButton
+              variant="danger"
+              size="md"
+              class="px-8"
+              @click="confirmCancel = true"
+              :disabled="isUpdating"
+            >
+              Batalkan Layanan
+            </BaseButton>
             <BaseButton
               v-if="ambulanceService.status === AmbulanceServiceStatus.ACCEPTED"
               variant="primary"
@@ -733,6 +771,48 @@ const handleConfirmComplete = () => {
       @secondary="confirmComplete = false"
       @close="confirmComplete = false"
     />
+
+    <!-- Cancel Service Confirmation Modal -->
+    <BaseModal
+      :show="confirmCancel"
+      title="Batalkan Layanan Ambulans"
+      @close="confirmCancel = false"
+    >
+      <div class="space-y-4 py-2 text-left">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Apakah Anda yakin ingin membatalkan layanan ambulans ini? Status akan berubah menjadi
+          <span class="font-semibold text-red-600 dark:text-red-400">"Dibatalkan"</span>.
+        </p>
+        <div class="text-left">
+          <label
+            for="detail-cancel-reason-textarea"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Alasan Pembatalan
+          </label>
+          <textarea
+            id="detail-cancel-reason-textarea"
+            v-model="cancelReason"
+            rows="3"
+            placeholder="Masukkan alasan pembatalan (wajib)"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm resize-none animate-none transition-none"
+            required
+          />
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <BaseButton variant="outline" @click="confirmCancel = false">Batal</BaseButton>
+          <BaseButton
+            variant="danger"
+            @click="handleConfirmCancel"
+            :disabled="cancelMutation.isPending.value || !cancelReason.trim()"
+          >
+            Batalkan
+          </BaseButton>
+        </div>
+      </template>
+    </BaseModal>
 
     <!-- KTP Preview Modal -->
     <FilePreviewModal

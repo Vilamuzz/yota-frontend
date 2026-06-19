@@ -1,6 +1,9 @@
 import { useMutation } from '@tanstack/vue-query'
 import { socialProgramTransactionService } from '@/services/socialProgramTransaction.service'
-import type { CreateSocialProgramTransactionRequest, SocialProgramTransactionResponse } from '@/types/socialProgramTransaction'
+import type {
+  CreateSocialProgramTransactionRequest,
+  SocialProgramTransactionResponse,
+} from '@/types/socialProgramTransaction'
 import type { ApiError } from '@/types/response'
 
 export const useSocialProgramTransactionCreate = () => {
@@ -9,7 +12,8 @@ export const useSocialProgramTransactionCreate = () => {
     ApiError,
     { id: string; data: CreateSocialProgramTransactionRequest }
   >({
-    mutationFn: ({ id, data }) => socialProgramTransactionService.createSocialProgramTransaction(id, data),
+    mutationFn: ({ id, data }) =>
+      socialProgramTransactionService.createSocialProgramTransaction(id, data),
   })
 
   return {

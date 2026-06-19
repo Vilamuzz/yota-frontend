@@ -260,7 +260,9 @@ const formatCategory = (cat: string) => {
                 <select
                   v-model="form.educationLevel"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
-                  :class="{ 'border-red-500': errors.educationLevel || validationErrors?.educationLevel }"
+                  :class="{
+                    'border-red-500': errors.educationLevel || validationErrors?.educationLevel,
+                  }"
                 >
                   <option :value="undefined" disabled>Pilih Tingkat Pendidikan</option>
                   <option v-for="el in educationLevels" :key="el.value" :value="el.value">

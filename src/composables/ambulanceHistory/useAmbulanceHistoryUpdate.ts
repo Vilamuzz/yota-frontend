@@ -1,7 +1,10 @@
 import { computed } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { ambulanceHistoryService } from '@/services/ambulanceHistory.service'
-import type { UpdateAmbulanceHistoryRequest, AmbulanceHistoryResponse } from '@/types/ambulanceHistory'
+import type {
+  UpdateAmbulanceHistoryRequest,
+  AmbulanceHistoryResponse,
+} from '@/types/ambulanceHistory'
 import type { ApiError } from '@/types/response'
 
 export const useAmbulanceHistoryUpdate = () => {
@@ -14,7 +17,10 @@ export const useAmbulanceHistoryUpdate = () => {
   >({
     mutationFn: ({ id, data }) => ambulanceHistoryService.updateAmbulanceHistory(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ambulanceHistories'] })
+      queryClient.invalidateQueries({ queryKey: ['adminAmbulanceHistories'] })
+      queryClient.invalidateQueries({ queryKey: ['driverAmbulanceHistories'] })
+      queryClient.invalidateQueries({ queryKey: ['driverHistorySummary'] })
+      queryClient.invalidateQueries({ queryKey: ['ambulanceHistoriesSummary'] })
     },
   })
 
@@ -25,12 +31,18 @@ export const useAmbulanceHistoryUpdate = () => {
   >({
     mutationFn: ({ id, data }) => ambulanceHistoryService.updateAmbulanceHistoryDriver(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ambulanceHistories'] })
+      queryClient.invalidateQueries({ queryKey: ['adminAmbulanceHistories'] })
+      queryClient.invalidateQueries({ queryKey: ['driverAmbulanceHistories'] })
+      queryClient.invalidateQueries({ queryKey: ['driverHistorySummary'] })
+      queryClient.invalidateQueries({ queryKey: ['ambulanceHistoriesSummary'] })
     },
   })
 
   const validationErrors = computed(
-    () => updateMutation.error.value?.response?.data?.validation ?? updateDriverMutation.error.value?.response?.data?.validation ?? null,
+    () =>
+      updateMutation.error.value?.response?.data?.validation ??
+      updateDriverMutation.error.value?.response?.data?.validation ??
+      null,
   )
 
   return {

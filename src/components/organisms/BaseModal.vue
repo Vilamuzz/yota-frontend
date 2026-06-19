@@ -45,7 +45,9 @@ const emit = defineEmits<{
           :class="maxWidth"
         >
           <!-- Header -->
-          <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between shrink-0">
+          <div
+            class="p-6 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between shrink-0"
+          >
             <div>
               <h3 class="text-lg font-bold text-gray-900 dark:text-white">
                 {{ title }}
@@ -68,7 +70,10 @@ const emit = defineEmits<{
           </div>
 
           <!-- Footer -->
-          <div v-if="$slots.footer" class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 shrink-0">
+          <div
+            v-if="$slots.footer"
+            class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 shrink-0"
+          >
             <slot name="footer" />
           </div>
         </div>

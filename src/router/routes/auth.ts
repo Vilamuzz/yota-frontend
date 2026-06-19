@@ -32,6 +32,12 @@ export const authRoutes: RouteRecordRaw[] = [
     component: () => import('@/pages/auth/CallbackPage.vue'),
   },
   {
+    path: '/auth/setup-password',
+    name: 'setup-password',
+    component: () => import('@/pages/auth/SetupPasswordPage.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/reset-password',
     name: 'reset-password',
     component: () => import('@/pages/auth/ResetPasswordPage.vue'),

@@ -20,8 +20,10 @@ export function useSocialProgramFilters() {
   let searchTimeout: ReturnType<typeof setTimeout>
 
   const { socialPrograms, pagination, isLoading, listQuery } = useSocialProgramList(queryParams)
-  const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-    useOffsetPagination(queryParams, pagination)
+  const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
+    queryParams,
+    pagination,
+  )
 
   watch(searchQuery, (val) => {
     clearTimeout(searchTimeout)

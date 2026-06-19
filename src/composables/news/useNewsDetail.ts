@@ -29,4 +29,3 @@ export const usePublishedNewsDetail = (slug: MaybeRefOrGetter<string>) => {
     detailQuery,
   }
 }
-

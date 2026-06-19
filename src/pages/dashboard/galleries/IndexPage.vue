@@ -67,7 +67,6 @@ watch(
   () => resetPagination(),
 )
 
-
 function openDeleteModal(gallery: Gallery) {
   selectedGallery.value = gallery
   isDeleteModalOpen.value = true
@@ -209,7 +208,6 @@ function formatCategory(category: string) {
                     <option value="title desc">Judul (Z-A)</option>
                   </select>
                 </div>
-
               </div>
             </template>
           </BaseFilter>

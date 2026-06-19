@@ -75,9 +75,14 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = cached
       isInitialized.value = true
       // Silently refresh in the background to keep data current
-      accountService.getCurrentUserProfile().then((response) => {
-        if (response.data) setUser(response.data)
-      }).catch(() => { /* ignore background refresh errors */ })
+      accountService
+        .getCurrentUserProfile()
+        .then((response) => {
+          if (response.data) setUser(response.data)
+        })
+        .catch(() => {
+          /* ignore background refresh errors */
+        })
       return
     }
 
@@ -109,4 +114,3 @@ export const useAuthStore = defineStore('auth', () => {
     initUser,
   }
 })
-

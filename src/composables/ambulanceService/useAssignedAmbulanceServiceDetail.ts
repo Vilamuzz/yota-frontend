@@ -5,13 +5,12 @@ import type { AmbulanceServiceResponse } from '@/types/ambulanceService'
 import type { ApiError } from '@/types/response'
 
 export const useAssignedAmbulanceServiceDetail = (
-  ambulanceId: string,
   id: string,
   enabled: MaybeRefOrGetter<boolean> = true,
 ) => {
   const detailQuery = useQuery<AmbulanceServiceResponse, ApiError>({
-    queryKey: ['assignedAmbulanceServiceDetail', ambulanceId, id],
-    queryFn: () => ambulanceServiceService.getAssignedAmbulanceServiceRequestByID(ambulanceId, id),
+    queryKey: ['assignedAmbulanceServiceDetail', id],
+    queryFn: () => ambulanceServiceService.getAssignedAmbulanceServiceRequestByID(id),
     retry: 1,
     enabled,
   })

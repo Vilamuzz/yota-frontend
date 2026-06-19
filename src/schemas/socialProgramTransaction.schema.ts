@@ -5,4 +5,6 @@ export const createSocialProgramTransactionSchema = z.object({
   accountId: z.string().min(1, 'Pilih akun terlebih dahulu'),
 })
 
-export type CreateSocialProgramTransactionFormData = z.infer<typeof createSocialProgramTransactionSchema>
+export type CreateSocialProgramTransactionFormData = z.infer<
+  typeof createSocialProgramTransactionSchema
+>

@@ -39,7 +39,8 @@ const title = computed(() => {
 })
 
 const subtitle = computed(() => {
-  if (verifyEmailMutation.isPending.value) return 'Harap tunggu sementara kami mengamankan akun Anda.'
+  if (verifyEmailMutation.isPending.value)
+    return 'Harap tunggu sementara kami mengamankan akun Anda.'
   if (success.value) return 'Akun Anda sekarang siap digunakan.'
   if (error.value) return 'Kami mengalami masalah selama verifikasi.'
   return ''
@@ -100,7 +101,8 @@ const subtitle = computed(() => {
         </div>
 
         <p class="text-gray-600 text-sm mb-8">
-          Tautan tersebut mungkin sudah kedaluwarsa atau sudah digunakan. Silakan coba minta email verifikasi baru.
+          Tautan tersebut mungkin sudah kedaluwarsa atau sudah digunakan. Silakan coba minta email
+          verifikasi baru.
         </p>
 
         <div class="space-y-4">

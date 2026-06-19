@@ -101,4 +101,3 @@ export const useFoundationProfileStore = defineStore('foundationProfile', () => 
     refresh,
   }
 })
-

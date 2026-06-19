@@ -14,10 +14,7 @@ export const useSocialProgramTransactionList = (
   const listQuery = useQuery<SocialProgramTransactionListResponse, ApiError>({
     queryKey: ['socialProgramTransactions', id, params],
     queryFn: () =>
-      socialProgramTransactionService.getSocialProgramTransactions(
-        toValue(id),
-        toValue(params),
-      ),
+      socialProgramTransactionService.getSocialProgramTransactions(toValue(id), toValue(params)),
     retry: 1,
   })
 

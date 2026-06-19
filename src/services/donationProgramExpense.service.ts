@@ -4,6 +4,8 @@ import type {
   DonationProgramExpenseResponse,
   DonationProgramExpenseExportRequest,
   DonationProgramExpenseQueryParams,
+  MonthlyExpenseParams,
+  MonthlyExpenseResponse,
 } from '@/types/donationProgramExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
@@ -67,6 +69,17 @@ export const donationProgramExpenseService = {
       },
       responseType: 'blob',
     })
+    return response.data
+  },
+
+  getMonthlyExpense: async (
+    id: string,
+    params?: MonthlyExpenseParams,
+  ): Promise<MonthlyExpenseResponse> => {
+    const response = await api.get<MonthlyExpenseResponse>(
+      `${API.DONATION_PROGRAMS_ADMIN}/${id}/expenses/monthly-expense`,
+      { params },
+    )
     return response.data
   },
 }

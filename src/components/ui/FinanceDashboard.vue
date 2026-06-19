@@ -2,34 +2,36 @@
 import { ref, computed } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { BarChart } from 'echarts/charts'
+import { LineChart } from 'echarts/charts'
 import {
   GridComponent,
   TooltipComponent,
   LegendComponent,
   TitleComponent,
+  MarkAreaComponent,
 } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { useTheme } from '@/composables/ui/useTheme'
 import { useAdminFinanceRecordSummary } from '@/composables/financeRecord/useFinanceRecordSummary'
+import { useAdminFinanceMonthlyTrend } from '@/composables/financeRecord/useFinanceMonthlyTrend'
 import { useDonationProgramAdminList } from '@/composables/donationProgram/useDonationProgramAdminList'
 import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { getStatusColor } from '@/utils/statusColor'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import { Motion } from 'motion-v'
-import {
-  HandHeart,
-  Briefcase,
-  Baby,
-  ChevronRight,
-  Calendar,
-  AlertCircle,
-  TrendingUp,
-  TrendingDown,
-} from 'lucide-vue-next'
+import type { FinanceModuleType } from '@/types/financeRecord'
+import { HandHeart, Briefcase, Baby, ChevronRight, Calendar, AlertCircle } from 'lucide-vue-next'
 
 // Register ECharts modules
-use([CanvasRenderer, BarChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent])
+use([
+  CanvasRenderer,
+  LineChart,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  TitleComponent,
+  MarkAreaComponent,
+])
 
 const { isDark } = useTheme()
 const chartTheme = computed(() => (isDark.value ? 'dark' : 'light'))
@@ -82,167 +84,160 @@ const getProgressPercentage = (target: number, collected: number) => {
   return Math.min(100, Math.round((collected / target) * 100))
 }
 
-// Nav links setup
-const navLinks = [
-  {
-    label: 'Program Donasi',
-    routeName: 'dashboard-donation-programs',
-    icon: HandHeart,
-  },
-  {
-    label: 'Riwayat Donasi',
-    routeName: 'dashboard-donation-programs-income',
-    icon: TrendingUp,
-  },
-  {
-    label: 'Pengeluaran Donasi',
-    routeName: 'dashboard-donation-programs-expense',
-    icon: TrendingDown,
-  },
-  {
-    label: 'Pengeluaran Program Sosial',
-    routeName: 'dashboard-social-programs-expense',
-    icon: Briefcase,
-  },
-  {
-    label: 'Pengeluaran Anak Asuh',
-    routeName: 'dashboard-foster-children-expense',
-    icon: Baby,
-  },
+// ── Monthly Trend Chart ────────────────────────────────────────────────────────
+const MONTH_TABS: { key: FinanceModuleType; label: string; color: string }[] = [
+  { key: 'donation_program', label: 'Program Donasi', color: 'emerald' },
+  { key: 'social_program', label: 'Program Sosial', color: 'blue' },
+  { key: 'foster_children', label: 'Anak Asuh', color: 'violet' },
 ]
 
-// ECharts configurations
-const chartOption = computed(() => {
+const activeModule = ref<FinanceModuleType>('donation_program')
+
+const trendParams = computed(() => ({
+  module: activeModule.value,
+  year: new Date().getFullYear(),
+}))
+
+const { trendQuery, trendItems } = useAdminFinanceMonthlyTrend(trendParams)
+
+const isTrendLoading = computed(() => trendQuery.isPending.value)
+
+// Month labels: Jan – Des
+const MONTH_LABELS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'Mei',
+  'Jun',
+  'Jul',
+  'Agu',
+  'Sep',
+  'Okt',
+  'Nov',
+  'Des',
+]
+
+const monthlyChartOption = computed(() => {
   const isDarkMode = isDark.value
 
-  const lightColors = {
-    income: '#10b981', // emerald-500
-    expense: '#f43f5e', // rose-500
-    text: '#374151', // gray-700
-    gridLine: '#e5e7eb', // gray-200
+  const c = {
+    income: isDarkMode ? '#34d399' : '#10b981',
+    expense: isDarkMode ? '#fb7185' : '#f43f5e',
+    text: isDarkMode ? '#9ca3af' : '#374151',
+    gridLine: isDarkMode ? '#374151' : '#e5e7eb',
+    bg: isDarkMode ? '#1f2937' : '#ffffff',
+    border: isDarkMode ? '#374151' : '#e5e7eb',
+    tooltip: isDarkMode ? '#f3f4f6' : '#1f2937',
   }
 
-  const darkColors = {
-    income: '#34d399', // emerald-400
-    expense: '#fb7185', // rose-400
-    text: '#9ca3af', // gray-400
-    gridLine: '#374151', // gray-700
-  }
-
-  const themeColors = isDarkMode ? darkColors : lightColors
+  // Build full 12-month arrays, filling 0 for missing months
+  const incomeData = Array(12).fill(0)
+  const expenseData = Array(12).fill(0)
+  trendItems.value.forEach((item) => {
+    const monthIndex = parseInt(item.month.split('-')[1] || '', 10) - 1
+    if (monthIndex >= 0 && monthIndex < 12) {
+      incomeData[monthIndex] = item.income
+      expenseData[monthIndex] = item.expense
+    }
+  })
 
   return {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
-      axisPointer: {
-        type: 'shadow',
-      },
-      backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-      borderColor: isDarkMode ? '#374151' : '#e5e7eb',
-      textStyle: {
-        color: isDarkMode ? '#f3f4f6' : '#1f2937',
-      },
+      backgroundColor: c.bg,
+      borderColor: c.border,
+      textStyle: { color: c.tooltip },
       formatter: (params: any) => {
-        let res = `<div class="font-sans text-xs p-1"><span class="font-bold block mb-1 text-sm border-b border-gray-200 dark:border-gray-700 pb-1">${params[0].name}</span>`
-        params.forEach((item: any) => {
-          const val = formatCurrency(item.value)
-          res += `<div class="flex items-center justify-between gap-4 my-1">
-            <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">${item.marker} ${item.seriesName}</span>
-            <span class="font-bold font-mono text-gray-900 dark:text-white">${val}</span>
+        let res = `<div style="font-size:12px;padding:4px"><b style="display:block;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid ${c.border}">${params[0].name}</b>`
+        params.forEach((p: any) => {
+          res += `<div style="display:flex;justify-content:space-between;gap:16px;margin:3px 0">
+            <span>${p.marker} ${p.seriesName}</span>
+            <b style="font-family:monospace">${formatCurrency(p.value)}</b>
           </div>`
         })
-        res += '</div>'
-        return res
+        return res + '</div>'
       },
     },
     legend: {
-      data: ['Pendapatan (Donasi)', 'Pengeluaran (Realisasi)'],
-      textStyle: {
-        color: themeColors.text,
-        fontFamily: 'system-ui, sans-serif',
-        fontWeight: '500',
-      },
+      data: ['Pendapatan', 'Pengeluaran'],
+      textStyle: { color: c.text, fontFamily: 'system-ui, sans-serif', fontWeight: '500' },
       bottom: '0%',
     },
-    grid: {
-      left: '2%',
-      right: '2%',
-      bottom: '12%',
-      top: '8%',
-      containLabel: true,
-    },
+    grid: { left: '2%', right: '2%', bottom: '12%', top: '8%', containLabel: true },
     xAxis: [
       {
         type: 'category',
-        data: ['Program Donasi', 'Program Sosial', 'Anak Asuh'],
-        axisLabel: {
-          color: themeColors.text,
-          fontFamily: 'system-ui, sans-serif',
-          fontWeight: '500',
-        },
-        axisLine: {
-          lineStyle: {
-            color: themeColors.gridLine,
-          },
-        },
+        data: MONTH_LABELS,
+        boundaryGap: false,
+        axisLabel: { color: c.text, fontFamily: 'system-ui, sans-serif' },
+        axisLine: { lineStyle: { color: c.gridLine } },
+        axisTick: { show: false },
       },
     ],
     yAxis: [
       {
         type: 'value',
         axisLabel: {
-          color: themeColors.text,
+          color: c.text,
           fontFamily: 'system-ui, sans-serif',
-          formatter: (value: number) => {
-            if (value >= 1e6) {
-              return `Rp ${(value / 1e6).toFixed(1)}jt`
-            }
-            if (value >= 1e3) {
-              return `Rp ${(value / 1e3).toFixed(0)}rb`
-            }
-            return `Rp ${value}`
+          formatter: (v: number) => {
+            if (v >= 1e9) return `${(v / 1e9).toFixed(1)}M`
+            if (v >= 1e6) return `${(v / 1e6).toFixed(1)}jt`
+            if (v >= 1e3) return `${(v / 1e3).toFixed(0)}rb`
+            return `${v}`
           },
         },
-        axisLine: {
-          show: false,
-        },
-        splitLine: {
-          lineStyle: {
-            color: themeColors.gridLine,
-            type: 'dashed',
-          },
-        },
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: c.gridLine, type: 'dashed' } },
       },
     ],
     series: [
       {
-        name: 'Pendapatan (Donasi)',
-        type: 'bar',
-        barWidth: '24%',
-        barGap: '35%',
-        data: [
-          summary.value.totalDonationProgramIncome,
-          summary.value.totalSocialProgramIncome,
-          summary.value.totalFosterChildrenIncome,
-        ],
-        itemStyle: {
-          color: themeColors.income,
-          borderRadius: [4, 4, 0, 0],
+        name: 'Pendapatan',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        data: incomeData,
+        lineStyle: { color: c.income, width: 2.5 },
+        itemStyle: { color: c.income },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: isDarkMode ? 'rgba(52,211,153,0.25)' : 'rgba(16,185,129,0.18)' },
+              { offset: 1, color: 'rgba(0,0,0,0)' },
+            ],
+          },
         },
       },
       {
-        name: 'Pengeluaran (Realisasi)',
-        type: 'bar',
-        barWidth: '24%',
-        data: [
-          summary.value.totalDonationProgramExpense,
-          summary.value.totalSocialProgramExpense,
-          summary.value.totalFosterChildrenExpense,
-        ],
-        itemStyle: {
-          color: themeColors.expense,
-          borderRadius: [4, 4, 0, 0],
+        name: 'Pengeluaran',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        data: expenseData,
+        lineStyle: { color: c.expense, width: 2.5 },
+        itemStyle: { color: c.expense },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: isDarkMode ? 'rgba(251,113,133,0.25)' : 'rgba(244,63,94,0.12)' },
+              { offset: 1, color: 'rgba(0,0,0,0)' },
+            ],
+          },
         },
       },
     ],
@@ -253,12 +248,8 @@ const chartOption = computed(() => {
 <template>
   <div class="space-y-8 font-poppins">
     <!-- Header Summary Section -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <div>
-        <h2 class="text-xl font-bold text-gray-950 dark:text-white flex items-center gap-2">
-          Ringkasan Keuangan
-        </h2>
-      </div>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+      <h2 class="text-xl font-bold text-gray-950 dark:text-white">Ringkasan Keuangan</h2>
     </div>
 
     <!-- Error State -->
@@ -276,7 +267,7 @@ const chartOption = computed(() => {
     </div>
 
     <!-- Skeleton Loaders -->
-    <div v-if="isLoading" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
         v-for="i in 3"
         :key="i"
@@ -305,7 +296,7 @@ const chartOption = computed(() => {
     </div>
 
     <!-- Metric Cards Grid -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- 1. Donation Programs Column -->
       <Motion
         :initial="{ opacity: 0, y: 15 }"
@@ -472,70 +463,51 @@ const chartOption = computed(() => {
       </Motion>
     </div>
 
-    <!-- Chart & Quick Links -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Chart Card (Span 2) -->
-      <div
-        class="lg:col-span-2 border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-6 rounded-2xl shadow-sm flex flex-col justify-between"
-      >
+    <!-- Line Chart Card -->
+    <div
+      class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-6 rounded-2xl shadow-sm flex flex-col gap-4"
+    >
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h3 class="text-lg font-bold text-gray-950 dark:text-white">
-            Perbandingan Pendapatan dan Pengeluaran
-          </h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Visualisasi realisasi anggaran pilar utama yayasan.
+          <h3 class="text-lg font-bold text-gray-950 dark:text-white">Pendapatan vs Pengeluaran</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            Perbandingan per bulan · {{ new Date().getFullYear() }}
           </p>
         </div>
 
-        <!-- ECharts Wrapper -->
-        <div class="h-80 w-full mt-4 flex items-center justify-center">
-          <VChart
-            v-if="!isLoading"
-            class="w-full h-full"
-            :option="chartOption"
-            :theme="chartTheme"
-            autoresize
-          />
-          <div v-else class="w-full h-full">
-            <BaseSkeleton variant="image" class="w-full h-full rounded-xl" />
-          </div>
+        <!-- Module Tabs -->
+        <div
+          class="flex flex-col md:flex-row w-full sm:w-auto items-stretch sm:items-center gap-1 p-1 bg-gray-100/80 dark:bg-gray-700/40 rounded-xl self-start sm:self-auto"
+        >
+          <button
+            v-for="tab in MONTH_TABS"
+            :key="tab.key"
+            :id="`chart-tab-${tab.key}`"
+            @click="activeModule = tab.key"
+            :class="[
+              'w-full sm:w-auto text-center px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 whitespace-nowrap',
+              activeModule === tab.key
+                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
+            ]"
+          >
+            {{ tab.label }}
+          </button>
         </div>
       </div>
 
-      <!-- Quick Navigation (Span 1) -->
-      <div
-        class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-6 rounded-2xl shadow-sm flex flex-col justify-between"
-      >
-        <div>
-          <h3 class="text-lg font-bold text-gray-950 dark:text-white mb-1">Navigasi Keuangan</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Akses cepat menu pengelolaan keuangan.
-          </p>
-
-          <div class="space-y-3">
-            <RouterLink
-              v-for="link in navLinks"
-              :key="link.routeName"
-              :to="{ name: link.routeName }"
-              class="group flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-gray-700/40 hover:border-primary-100 dark:hover:border-primary-900/40 hover:bg-primary-50/20 dark:hover:bg-primary-950/10 transition-all duration-300"
-            >
-              <div class="flex items-center gap-3">
-                <div
-                  class="p-2 rounded-lg bg-gray-50 dark:bg-gray-750 text-gray-600 dark:text-gray-400 group-hover:bg-primary-50 dark:group-hover:bg-primary-950/50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300"
-                >
-                  <component :is="link.icon" class="w-4 h-4" />
-                </div>
-                <span
-                  class="text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-primary-700 dark:group-hover:text-primary-300 transition-colors duration-300"
-                >
-                  {{ link.label }}
-                </span>
-              </div>
-              <ChevronRight
-                class="w-4 h-4 text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 group-hover:translate-x-0.5 transition-all duration-300"
-              />
-            </RouterLink>
-          </div>
+      <!-- ECharts Line Chart -->
+      <div class="h-72 w-full">
+        <VChart
+          v-if="!isTrendLoading"
+          class="w-full h-full"
+          :option="monthlyChartOption"
+          :theme="chartTheme"
+          autoresize
+        />
+        <div v-else class="w-full h-full">
+          <BaseSkeleton variant="image" class="w-full h-full rounded-xl" />
         </div>
       </div>
     </div>
@@ -545,7 +517,7 @@ const chartOption = computed(() => {
       class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 rounded-2xl shadow-sm overflow-hidden"
     >
       <div
-        class="p-6 border-b border-gray-100 dark:border-gray-700/50 flex justify-between items-center"
+        class="p-6 border-b border-gray-100 dark:border-gray-700/50 flex flex-wrap justify-between items-start gap-3"
       >
         <div>
           <h3 class="text-lg font-bold text-gray-950 dark:text-white">Program Donasi Terbaru</h3>
@@ -581,90 +553,159 @@ const chartOption = computed(() => {
       </div>
 
       <!-- Table / List -->
-      <div v-else class="overflow-x-auto">
-        <table class="w-full border-collapse">
-          <thead>
-            <tr
-              class="bg-gray-50/50 dark:bg-gray-800/20 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700/50"
-            >
-              <th class="px-6 py-4">Program Donasi</th>
-              <th class="px-6 py-4">Status</th>
-              <th class="px-6 py-4 text-right">Terkumpul / Target</th>
-              <th class="px-6 py-4">Persentase</th>
-              <th class="px-6 py-4 text-center">Aksi</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-700/40">
-            <tr
-              v-for="program in donationPrograms"
-              :key="program.id"
-              class="hover:bg-gray-50/40 dark:hover:bg-gray-800/10 transition-colors duration-150"
-            >
-              <td class="px-6 py-4 max-w-sm">
-                <div class="flex flex-col">
-                  <span
-                    class="font-semibold text-gray-900 dark:text-white truncate"
-                    :title="program.title"
-                  >
-                    {{ program.title }}
-                  </span>
-                  <span
-                    class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-1"
-                  >
-                    <Calendar class="w-3.5 h-3.5" />
-                    {{ formatDate(program.startDate) }} - {{ formatDate(program.endDate) }}
-                  </span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+      <div v-else>
+        <!-- Mobile card list (< sm) -->
+        <div class="sm:hidden divide-y divide-gray-100 dark:divide-gray-700/40">
+          <div v-for="program in donationPrograms" :key="program.id" class="p-4 space-y-3">
+            <!-- Title + Status -->
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex flex-col min-w-0">
                 <span
-                  :class="[
-                    'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border',
-                    getStatusColor(program.status),
-                  ]"
+                  class="font-semibold text-gray-900 dark:text-white truncate"
+                  :title="program.title"
                 >
-                  {{ formatStatus(program.status) }}
+                  {{ program.title }}
                 </span>
-              </td>
-              <td class="px-6 py-4 text-right whitespace-nowrap font-mono text-sm">
-                <div class="flex flex-col">
-                  <span class="font-bold text-gray-900 dark:text-white">
-                    {{ formatCurrency(program.collectedFund) }}
-                  </span>
-                  <span class="text-xs text-gray-400 dark:text-gray-500">
-                    Target: {{ formatCurrency(program.fundTarget) }}
-                  </span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="w-32 flex items-center gap-3">
-                  <div
-                    class="w-full bg-gray-100 dark:bg-gray-700/60 h-2 rounded-full overflow-hidden"
-                  >
-                    <div
-                      class="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                      :style="{
-                        width: `${getProgressPercentage(program.fundTarget, program.collectedFund)}%`,
-                      }"
-                    ></div>
+                <span class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-1">
+                  <Calendar class="w-3.5 h-3.5 flex-shrink-0" />
+                  {{ formatDate(program.startDate) }} – {{ formatDate(program.endDate) }}
+                </span>
+              </div>
+              <span
+                :class="[
+                  'shrink-0 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border',
+                  getStatusColor(program.status),
+                ]"
+              >
+                {{ formatStatus(program.status) }}
+              </span>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                <span>Terkumpul</span>
+                <span class="font-bold font-mono text-gray-900 dark:text-white">
+                  {{ getProgressPercentage(program.fundTarget, program.collectedFund) }}%
+                </span>
+              </div>
+              <div class="w-full bg-gray-100 dark:bg-gray-700/60 h-2 rounded-full overflow-hidden">
+                <div
+                  class="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                  :style="{
+                    width: `${getProgressPercentage(program.fundTarget, program.collectedFund)}%`,
+                  }"
+                />
+              </div>
+            </div>
+
+            <!-- Fund amounts + action -->
+            <div class="flex items-center justify-between gap-3">
+              <div class="font-mono text-sm">
+                <span class="font-bold text-gray-900 dark:text-white">
+                  {{ formatCurrency(program.collectedFund) }}
+                </span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 block">
+                  Target: {{ formatCurrency(program.fundTarget) }}
+                </span>
+              </div>
+              <RouterLink
+                :to="{ name: 'dashboard-donation-programs-detail', params: { id: program.id } }"
+                class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 border border-gray-200 dark:border-gray-700/60 rounded-lg bg-gray-50/50 dark:bg-gray-800/40 hover:bg-primary-50/20 dark:hover:bg-primary-950/10 transition-colors duration-200"
+              >
+                Detail
+                <ChevronRight class="w-3.5 h-3.5" />
+              </RouterLink>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop table (>= sm) -->
+        <div class="hidden sm:block overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr
+                class="bg-gray-50/50 dark:bg-gray-800/20 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700/50"
+              >
+                <th class="px-6 py-4">Program Donasi</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4 text-right">Terkumpul / Target</th>
+                <th class="px-6 py-4">Persentase</th>
+                <th class="px-6 py-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700/40">
+              <tr
+                v-for="program in donationPrograms"
+                :key="program.id"
+                class="hover:bg-gray-50/40 dark:hover:bg-gray-800/10 transition-colors duration-150"
+              >
+                <td class="px-6 py-4 max-w-sm">
+                  <div class="flex flex-col">
+                    <span
+                      class="font-semibold text-gray-900 dark:text-white truncate"
+                      :title="program.title"
+                    >
+                      {{ program.title }}
+                    </span>
+                    <span
+                      class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-1"
+                    >
+                      <Calendar class="w-3.5 h-3.5" />
+                      {{ formatDate(program.startDate) }} - {{ formatDate(program.endDate) }}
+                    </span>
                   </div>
-                  <span class="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">
-                    {{ getProgressPercentage(program.fundTarget, program.collectedFund) }}%
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span
+                    :class="[
+                      'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border',
+                      getStatusColor(program.status),
+                    ]"
+                  >
+                    {{ formatStatus(program.status) }}
                   </span>
-                </div>
-              </td>
-              <td class="px-6 py-4 text-center whitespace-nowrap">
-                <RouterLink
-                  :to="{ name: 'dashboard-donation-programs-detail', params: { id: program.id } }"
-                  class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 border border-gray-150 dark:border-gray-700/60 rounded-lg bg-gray-50/50 dark:bg-gray-800/40 hover:bg-primary-50/20 dark:hover:bg-primary-950/10 transition-colors duration-200"
-                >
-                  Detail
-                  <ChevronRight class="w-3.5 h-3.5" />
-                </RouterLink>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+                <td class="px-6 py-4 text-right whitespace-nowrap font-mono text-sm">
+                  <div class="flex flex-col">
+                    <span class="font-bold text-gray-900 dark:text-white">
+                      {{ formatCurrency(program.collectedFund) }}
+                    </span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                      Target: {{ formatCurrency(program.fundTarget) }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="w-32 flex items-center gap-3">
+                    <div
+                      class="w-full bg-gray-100 dark:bg-gray-700/60 h-2 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                        :style="{
+                          width: `${getProgressPercentage(program.fundTarget, program.collectedFund)}%`,
+                        }"
+                      ></div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300 font-mono">
+                      {{ getProgressPercentage(program.fundTarget, program.collectedFund) }}%
+                    </span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-center whitespace-nowrap">
+                  <RouterLink
+                    :to="{ name: 'dashboard-donation-programs-detail', params: { id: program.id } }"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 border border-gray-150 dark:border-gray-700/60 rounded-lg bg-gray-50/50 dark:bg-gray-800/40 hover:bg-primary-50/20 dark:hover:bg-primary-950/10 transition-colors duration-200"
+                  >
+                    Detail
+                    <ChevronRight class="w-3.5 h-3.5" />
+                  </RouterLink>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

@@ -6,4 +6,6 @@ export const createFosterChildrenTransactionSchema = z.object({
   donorEmail: z.string().email('Format email tidak valid').optional().or(z.literal('')),
 })
 
-export type CreateFosterChildrenTransactionFormData = z.infer<typeof createFosterChildrenTransactionSchema>
+export type CreateFosterChildrenTransactionFormData = z.infer<
+  typeof createFosterChildrenTransactionSchema
+>

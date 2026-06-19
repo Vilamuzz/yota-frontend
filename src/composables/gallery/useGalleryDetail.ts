@@ -29,4 +29,3 @@ export const usePublishedGalleryDetail = (slug: MaybeRefOrGetter<string>) => {
     detailQuery,
   }
 }
-

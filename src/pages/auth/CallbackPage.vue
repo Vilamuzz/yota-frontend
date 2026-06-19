@@ -9,7 +9,9 @@ const route = useRoute()
 const { handleOAuthCallback, callbackError, callbackLoading } = useOAuthCallback()
 
 onMounted(() => {
-  handleOAuthCallback(route.query.token as string | undefined)
+  const token = route.query.token as string | undefined
+  const setupPassword = route.query.setup_password === 'true'
+  handleOAuthCallback({ token, setupPassword })
 })
 </script>
 

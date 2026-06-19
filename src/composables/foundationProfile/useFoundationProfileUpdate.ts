@@ -9,7 +9,11 @@ import type { ApiError } from '@/types/response'
 export const useFoundationProfileUpdate = () => {
   const queryClient = useQueryClient()
 
-  const createFoundationProfileMutation = useMutation<any, ApiError, CreateFoundationProfileRequest>({
+  const createFoundationProfileMutation = useMutation<
+    any,
+    ApiError,
+    CreateFoundationProfileRequest
+  >({
     mutationFn: (data: CreateFoundationProfileRequest) =>
       foundationProfileService.createFoundationProfile(data),
     onSuccess: () => {
@@ -17,7 +21,11 @@ export const useFoundationProfileUpdate = () => {
     },
   })
 
-  const updateFoundationProfileMutation = useMutation<any, ApiError, { id: string; data: UpdateFoundationProfileRequest }>({
+  const updateFoundationProfileMutation = useMutation<
+    any,
+    ApiError,
+    { id: string; data: UpdateFoundationProfileRequest }
+  >({
     mutationFn: ({ id, data }: { id: string; data: UpdateFoundationProfileRequest }) =>
       foundationProfileService.updateFoundationProfile(id, data),
     onSuccess: () => {

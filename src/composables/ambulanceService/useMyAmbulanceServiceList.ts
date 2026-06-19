@@ -18,9 +18,7 @@ export const useMyAmbulanceServiceCandidateList = (
     ...options,
   })
 
-  const ambulanceServices = computed(
-    () => listQuery.data.value?.data?.requests || [],
-  )
+  const ambulanceServices = computed(() => listQuery.data.value?.data?.requests || [])
   const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {

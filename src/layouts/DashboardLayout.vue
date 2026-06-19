@@ -121,7 +121,9 @@ const handleRoleSwitch = (role: Role) => {
             </button>
 
             <div class="flex flex-col gap-1 min-w-0">
-              <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight truncate">
+              <h1
+                class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight truncate"
+              >
                 {{ route.meta.title }}
               </h1>
 
@@ -135,7 +137,10 @@ const handleRoleSwitch = (role: Role) => {
                   >
                     {{ crumb.label }}
                   </RouterLink>
-                  <span v-else class="text-gray-900 dark:text-gray-200 truncate max-w-[100px] sm:max-w-none">
+                  <span
+                    v-else
+                    class="text-gray-900 dark:text-gray-200 truncate max-w-[100px] sm:max-w-none"
+                  >
                     {{ crumb.label }}
                   </span>
 
@@ -183,7 +188,9 @@ const handleRoleSwitch = (role: Role) => {
 
               <!-- User Info -->
               <div class="text-left hidden sm:block">
-                <div class="text-sm font-semibold text-gray-800 dark:text-white truncate max-w-[100px]">
+                <div
+                  class="text-sm font-semibold text-gray-800 dark:text-white truncate max-w-[100px]"
+                >
                   {{ user?.username || 'User' }}
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">{{ userRole }}</div>
@@ -210,7 +217,9 @@ const handleRoleSwitch = (role: Role) => {
                 <div class="text-sm font-semibold text-gray-800 dark:text-white truncate">
                   {{ user?.username || 'User' }}
                 </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ user?.email }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {{ user?.email }}
+                </div>
               </div>
 
               <!-- Role Switcher -->

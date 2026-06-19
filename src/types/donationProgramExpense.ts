@@ -34,3 +34,20 @@ export interface DonationProgramExpenseExportRequest {
 
 export type DonationProgramExpenseResponse = Response<DonationProgramExpense>
 export type DonationProgramExpenseListResponse = Response<DonationProgramExpenseList>
+
+/** A single month's expense total for a donation program */
+export interface MonthlyExpenseItem {
+  month: string // e.g. "2025-01"
+  expense: number
+}
+
+export interface MonthlyExpenseRecord {
+  donationProgramId: string
+  items: MonthlyExpenseItem[]
+}
+
+export interface MonthlyExpenseParams {
+  year?: number
+}
+
+export type MonthlyExpenseResponse = Response<MonthlyExpenseRecord>

@@ -22,6 +22,7 @@ import { formatStatus, getCategoryLabel } from '@/utils/format'
 import { ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
+import BaseModal from '@/components/organisms/BaseModal.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAuthStore } from '@/stores/auth'
@@ -64,9 +65,8 @@ const managerList = useAmbulanceServiceList(
   computed(() => !isDriver.value),
 )
 const driverList = useAssignedAmbulanceServiceList(
-  ambulanceId,
   queryParams,
-  computed(() => isDriver.value && !!ambulanceId),
+  computed(() => isDriver.value),
 )
 
 const ambulanceServices = computed(() =>
@@ -161,12 +161,14 @@ function handleConfirmReject(rejectReason: string) {
   )
 }
 
-// START & COMPLETE (DRIVER)
-const { startMutation, completeMutation } = useAssignedAmbulanceServiceUpdate()
+// START & COMPLETE & CANCEL (DRIVER)
+const { startMutation, completeMutation, cancelMutation } = useAssignedAmbulanceServiceUpdate()
 
 const startModalShow = ref(false)
 const completeModalShow = ref(false)
+const cancelModalShow = ref(false)
 const actionServiceId = ref<string | null>(null)
+const cancelReason = ref('')
 
 function handleStart(id: string) {
   actionServiceId.value = id
@@ -175,19 +177,16 @@ function handleStart(id: string) {
 
 function handleConfirmStart() {
   if (!actionServiceId.value) return
-  startMutation.mutate(
-    { ambulanceId, id: actionServiceId.value },
-    {
-      onSuccess: () => {
-        showToast('Layanan ambulans berhasil dimulai', 'success')
-        startModalShow.value = false
-        actionServiceId.value = null
-      },
-      onError: () => {
-        showToast('Gagal memulai layanan ambulans', 'error')
-      },
+  startMutation.mutate(actionServiceId.value, {
+    onSuccess: () => {
+      showToast('Layanan ambulans berhasil dimulai', 'success')
+      startModalShow.value = false
+      actionServiceId.value = null
     },
-  )
+    onError: () => {
+      showToast('Gagal memulai layanan ambulans', 'error')
+    },
+  })
 }
 
 function handleComplete(id: string) {
@@ -197,16 +196,37 @@ function handleComplete(id: string) {
 
 function handleConfirmComplete() {
   if (!actionServiceId.value) return
-  completeMutation.mutate(
-    { ambulanceId, id: actionServiceId.value },
+  completeMutation.mutate(actionServiceId.value, {
+    onSuccess: () => {
+      showToast('Layanan ambulans berhasil diselesaikan', 'success')
+      completeModalShow.value = false
+      actionServiceId.value = null
+    },
+    onError: () => {
+      showToast('Gagal menyelesaikan layanan ambulans', 'error')
+    },
+  })
+}
+
+function handleCancel(id: string) {
+  actionServiceId.value = id
+  cancelReason.value = ''
+  cancelModalShow.value = true
+}
+
+function handleConfirmCancel() {
+  if (!actionServiceId.value || !cancelReason.value.trim()) return
+  cancelMutation.mutate(
+    { id: actionServiceId.value, cancelationReason: cancelReason.value },
     {
       onSuccess: () => {
-        showToast('Layanan ambulans berhasil diselesaikan', 'success')
-        completeModalShow.value = false
+        showToast('Layanan ambulans berhasil dibatalkan', 'success')
+        cancelModalShow.value = false
         actionServiceId.value = null
+        cancelReason.value = ''
       },
       onError: () => {
-        showToast('Gagal menyelesaikan layanan ambulans', 'error')
+        showToast('Gagal membatalkan layanan ambulans', 'error')
       },
     },
   )
@@ -377,7 +397,11 @@ function handleConfirmComplete() {
                   @click="handleStart(service.id)"
                   title="Mulai"
                   variant="primary"
-                  :disabled="startMutation.isPending.value || completeMutation.isPending.value"
+                  :disabled="
+                    startMutation.isPending.value ||
+                    completeMutation.isPending.value ||
+                    cancelMutation.isPending.value
+                  "
                 >
                   <Play :size="18" class="fill-current" />
                 </BaseIconButton>
@@ -386,9 +410,30 @@ function handleConfirmComplete() {
                   @click="handleComplete(service.id)"
                   title="Selesaikan"
                   variant="success"
-                  :disabled="startMutation.isPending.value || completeMutation.isPending.value"
+                  :disabled="
+                    startMutation.isPending.value ||
+                    completeMutation.isPending.value ||
+                    cancelMutation.isPending.value
+                  "
                 >
                   <Check :size="18" />
+                </BaseIconButton>
+                <BaseIconButton
+                  v-if="
+                    isDriver &&
+                    (service.status === AmbulanceServiceStatus.ACCEPTED ||
+                      service.status === AmbulanceServiceStatus.IN_SERVICE)
+                  "
+                  @click="handleCancel(service.id)"
+                  title="Batalkan"
+                  variant="danger"
+                  :disabled="
+                    startMutation.isPending.value ||
+                    completeMutation.isPending.value ||
+                    cancelMutation.isPending.value
+                  "
+                >
+                  <XIcon :size="18" />
                 </BaseIconButton>
                 <BaseIconButton
                   v-if="!isDriver && service.status === AmbulanceServiceStatus.PENDING"
@@ -510,5 +555,47 @@ function handleConfirmComplete() {
       @secondary="completeModalShow = false"
       @close="completeModalShow = false"
     />
+
+    <!-- Cancel Service Confirmation Modal -->
+    <BaseModal
+      :show="cancelModalShow"
+      title="Batalkan Layanan Ambulans"
+      @close="cancelModalShow = false"
+    >
+      <div class="space-y-4 py-2">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Apakah Anda yakin ingin membatalkan layanan ambulans ini? Status akan berubah menjadi
+          <span class="font-semibold text-red-650 dark:text-red-400">"Dibatalkan"</span>.
+        </p>
+        <div class="text-left">
+          <label
+            for="cancel-reason-textarea"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Alasan Pembatalan
+          </label>
+          <textarea
+            id="cancel-reason-textarea"
+            v-model="cancelReason"
+            rows="3"
+            placeholder="Masukkan alasan pembatalan (wajib)"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm resize-none animate-none transition-none"
+            required
+          />
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <BaseButton variant="outline" @click="cancelModalShow = false">Batal</BaseButton>
+          <BaseButton
+            variant="danger"
+            @click="handleConfirmCancel"
+            :disabled="cancelMutation.isPending.value || !cancelReason.trim()"
+          >
+            Batalkan
+          </BaseButton>
+        </div>
+      </template>
+    </BaseModal>
   </DashboardLayout>
 </template>

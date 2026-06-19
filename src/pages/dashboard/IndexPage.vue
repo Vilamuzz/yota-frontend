@@ -5,6 +5,8 @@ import { useCurrentUser } from '@/composables/account/useCurrentUser'
 import { ROLES } from '@/const/roles'
 import { useAuthStore } from '@/stores/auth'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
+import AmbulanceManagerDashboard from '@/components/ui/AmbulanceManagerDashboard.vue'
+import AmbulanceDriverDashboard from '@/components/ui/AmbulanceDriverDashboard.vue'
 
 const authStore = useAuthStore()
 const { user } = useCurrentUser()
@@ -18,6 +20,8 @@ const activeRole = computed(() => authStore.activeRole)
     <div class="space-y-6">
       <!-- Welcome Card -->
       <FinanceDashboard v-if="activeRole === ROLES.FINANCE" />
+      <AmbulanceManagerDashboard v-else-if="activeRole === ROLES.AMBULANCE_MANAGER" />
+      <AmbulanceDriverDashboard v-else-if="activeRole === ROLES.AMBULANCE_DRIVER" />
       <div
         v-else
         class="bg-white rounded-xl shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700"

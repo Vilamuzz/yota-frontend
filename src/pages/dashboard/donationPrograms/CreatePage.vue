@@ -339,7 +339,11 @@ const handleSubmit = (status: 'active' | 'draft' = 'active') => {
                 v-if="form.coverImagePreview"
                 class="relative w-full aspect-video rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden group shadow-sm"
               >
-                <img :src="form.coverImagePreview" class="w-full h-full object-cover" alt="Preview" />
+                <img
+                  :src="form.coverImagePreview"
+                  class="w-full h-full object-cover"
+                  alt="Preview"
+                />
                 <div
                   class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center"
                 >

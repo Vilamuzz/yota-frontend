@@ -171,7 +171,6 @@ const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRe
                     <option value="total_paid_periods asc">Periode Bayar Tersedikit</option>
                   </select>
                 </div>
-
               </div>
             </template>
           </BaseFilter>

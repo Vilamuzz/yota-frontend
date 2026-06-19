@@ -9,6 +9,7 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import { Camera, User, Mail, Phone, MapPin, Lock, Save, KeyRound } from 'lucide-vue-next'
 import { extractError } from '@/utils/error'
 import { useAuthStore } from '@/stores/auth'
+import { ROLES } from '@/const/roles'
 
 const {
   user,
@@ -244,7 +245,7 @@ const updatePassword = () => {
               </template>
             </BaseInput>
 
-            <div>
+            <div v-if="!authStore.hasRole(ROLES.SUPERADMIN)">
               <label class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Default Role
               </label>

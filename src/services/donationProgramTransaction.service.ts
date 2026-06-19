@@ -1,6 +1,8 @@
 import type {
   CreateDonationProgramTransactionRequest,
   DonationProgramTransactionQueryParams,
+  MonthlyIncomeParams,
+  MonthlyIncomeResponse,
 } from '@/types/donationProgramTransaction'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
@@ -47,6 +49,17 @@ export const donationProgramTransactionService = {
     params?: DonationProgramTransactionQueryParams,
   ) => {
     const response = await api.get(`${API.DONATION_PROGRAMS}/${slug}/transactions`, { params })
+    return response.data
+  },
+
+  getMonthlyIncome: async (
+    id: string,
+    params?: MonthlyIncomeParams,
+  ): Promise<MonthlyIncomeResponse> => {
+    const response = await api.get<MonthlyIncomeResponse>(
+      `${API.DONATION_PROGRAMS_ADMIN}/${id}/transactions/monthly-income`,
+      { params },
+    )
     return response.data
   },
 }

@@ -157,7 +157,13 @@ export const dashboardNavigation: NavItem[] = [
     icon: Ambulance,
     label: 'Riwayat Ambulans',
     route: '/dashboard/ambulances/histories',
-    roles: [ROLES.AMBULANCE_MANAGER, ROLES.AMBULANCE_DRIVER],
+    roles: [ROLES.AMBULANCE_MANAGER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Riwayat Ambulans',
+    route: '/dashboard/ambulances/histories/detail',
+    roles: [ROLES.AMBULANCE_DRIVER],
   },
   {
     icon: NotepadText,

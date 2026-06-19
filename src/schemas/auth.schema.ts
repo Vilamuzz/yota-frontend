@@ -31,7 +31,24 @@ export const resetPasswordSchema = z
     path: ['confirmPassword'],
   })
 
+export const setupPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(1, 'Kata sandi wajib diisi')
+      .min(8, 'Kata sandi minimal 8 karakter')
+      .regex(/[a-z]/, 'Kata sandi harus mengandung setidaknya satu huruf kecil')
+      .regex(/[A-Z]/, 'Kata sandi harus mengandung setidaknya satu huruf besar')
+      .regex(/\d/, 'Kata sandi harus mengandung setidaknya satu angka'),
+    confirmPassword: z.string().min(1, 'Konfirmasi kata sandi wajib diisi'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Kata sandi tidak cocok',
+    path: ['confirmPassword'],
+  })
+
 export type LoginFormData = z.infer<typeof loginSchema>
 export type RegisterFormData = z.infer<typeof registerSchema>
 export type ForgetPasswordFormData = z.infer<typeof forgetPasswordSchema>
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
+export type SetupPasswordFormData = z.infer<typeof setupPasswordSchema>

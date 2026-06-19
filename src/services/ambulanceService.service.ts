@@ -78,11 +78,10 @@ export const ambulanceServiceService = {
 
   // Driver
   listAssignedAmbulanceServiceRequests: async (
-    ambulanceId: string,
     params: AmbulanceServiceQueryParams,
   ): Promise<AmbulanceServiceListResponse> => {
     const response = await api.get<AmbulanceServiceListResponse>(
-      `${API.AMBULANCES_ADMIN}/requests/assigned/${ambulanceId}`,
+      `${API.AMBULANCES_ADMIN}/requests/assigned`,
       {
         params,
       },
@@ -90,27 +89,27 @@ export const ambulanceServiceService = {
     return response.data
   },
 
-  getAssignedAmbulanceServiceRequestByID: async (
-    ambulanceId: string,
-    id: string,
-  ): Promise<AmbulanceServiceResponse> => {
+  getAssignedAmbulanceServiceRequestByID: async (id: string): Promise<AmbulanceServiceResponse> => {
     const response = await api.get<AmbulanceServiceResponse>(
-      `${API.AMBULANCES_ADMIN}/requests/assigned/${ambulanceId}/detail/${id}`,
+      `${API.AMBULANCES_ADMIN}/requests/assigned/${id}/detail`,
     )
     return response.data
   },
 
-  startService: async (ambulanceId: string, id: string) => {
-    const response = await api.patch(
-      `${API.AMBULANCES_ADMIN}/requests/assigned/${ambulanceId}/start/${id}`,
-    )
+  startService: async (id: string) => {
+    const response = await api.patch(`${API.AMBULANCES_ADMIN}/requests/assigned/${id}/start`)
     return response.data
   },
 
-  completeService: async (ambulanceId: string, id: string) => {
-    const response = await api.patch(
-      `${API.AMBULANCES_ADMIN}/requests/assigned/${ambulanceId}/complete/${id}`,
-    )
+  completeService: async (id: string) => {
+    const response = await api.patch(`${API.AMBULANCES_ADMIN}/requests/assigned/${id}/complete`)
+    return response.data
+  },
+
+  cancelService: async (id: string, cancelationReason: string) => {
+    const response = await api.patch(`${API.AMBULANCES_ADMIN}/requests/assigned/${id}/cancel`, {
+      cancelationReason,
+    })
     return response.data
   },
 }

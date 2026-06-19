@@ -15,10 +15,10 @@ export interface AmbulanceHistorySummary {
 }
 
 export interface AmbulanceHistory {
-  id: string
+  id?: string
   driver: Driver
   serviceCategory: AmbulanceServiceCategory
-  note: string
+  note?: string
   createdAt: string
 }
 
@@ -60,6 +60,7 @@ export interface CreateAmbulanceHistoryRequest {
 
 export interface UpdateAmbulanceHistoryRequest {
   serviceCategory: AmbulanceServiceCategory
+  note?: string
 }
 
 export interface AmbulanceHistoryQueryParams extends PaginationParams {
@@ -72,3 +73,31 @@ export interface AmbulanceHistorySummaryQueryParams {
   startDate?: string
   endDate?: string
 }
+
+/** Admin-level all-ambulances aggregate summary */
+export interface AllAmbulanceHistorySummaryQueryParams {
+  startDate?: string
+  endDate?: string
+}
+
+/** A single month's breakdown per category, for the stacked bar chart */
+export interface MonthlyTrendItem {
+  month: string // e.g. "2025-01"
+  socialService: number
+  mortuaryService: number
+  patientService: number
+  emergencyService: number
+  otherService: number
+}
+
+export interface MonthlyTrendRecord {
+  year: number
+  items: MonthlyTrendItem[]
+}
+
+export interface MonthlyTrendParams {
+  year?: number
+}
+
+export type AllAmbulanceHistorySummaryResponse = Response<AmbulanceHistorySummary>
+export type MonthlyTrendResponse = Response<MonthlyTrendRecord>

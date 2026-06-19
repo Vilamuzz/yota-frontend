@@ -6,14 +6,16 @@ export const createFosterChildrenSchema = z.object({
   birthPlace: z.string().min(1, 'Tempat lahir wajib diisi'),
   birthDate: z.string().min(1, 'Tanggal lahir wajib diisi'),
   address: z.string().min(1, 'Alamat wajib diisi'),
-  gender: z.nativeEnum(Gender, {message: 'Jenis kelamin wajib diisi'}),
+  gender: z.nativeEnum(Gender, { message: 'Jenis kelamin wajib diisi' }),
   category: z.nativeEnum(Category, { message: 'Kategori wajib diisi' }),
   isGraduated: z.boolean(),
   schoolName: z.string().min(1, 'Nama sekolah/universitas wajib diisi'),
-  educationLevel: z.number({ message: 'Tingkat pendidikan wajib diisi' }).min(1, 'Tingkat pendidikan wajib diisi'),
+  educationLevel: z
+    .number({ message: 'Tingkat pendidikan wajib diisi' })
+    .min(1, 'Tingkat pendidikan wajib diisi'),
   profilePicture: z.instanceof(File, { message: 'Foto profil wajib diunggah' }),
-  familyCard: z.instanceof(File, { message: 'Kartu Keluarga wajib diunggah'}),
-  sktm: z.instanceof(File,{message: 'SKTM wajib diunggah'}),
+  familyCard: z.instanceof(File, { message: 'Kartu Keluarga wajib diunggah' }),
+  sktm: z.instanceof(File, { message: 'SKTM wajib diunggah' }),
   achievements: z.array(z.instanceof(File)).default([]),
   achivementNotes: z.array(z.string()).default([]),
 })
@@ -25,11 +27,13 @@ export const updateFosterChildrenSchema = z.object({
   birthPlace: z.string().min(1, 'Tempat lahir wajib diisi'),
   birthDate: z.string().min(1, 'Tanggal lahir wajib diisi'),
   address: z.string().min(1, 'Alamat wajib diisi'),
-  gender: z.nativeEnum(Gender, { message: 'Jenis kelamin wajib diisi'}),
-  category: z.nativeEnum(Category, { message: 'Kategori wajib diisi'}),
+  gender: z.nativeEnum(Gender, { message: 'Jenis kelamin wajib diisi' }),
+  category: z.nativeEnum(Category, { message: 'Kategori wajib diisi' }),
   isGraduated: z.boolean(),
   schoolName: z.string().min(1, 'Nama sekolah/universitas wajib diisi'),
-  educationLevel: z.number({ message: 'Tingkat pendidikan wajib diisi' }).min(1, 'Tingkat pendidikan wajib diisi'),
+  educationLevel: z
+    .number({ message: 'Tingkat pendidikan wajib diisi' })
+    .min(1, 'Tingkat pendidikan wajib diisi'),
   profilePicture: z.instanceof(File).optional(),
   familyCard: z.instanceof(File).optional(),
   sktm: z.instanceof(File).optional(),
@@ -38,4 +42,3 @@ export const updateFosterChildrenSchema = z.object({
 })
 
 export type FosterChildrenFormData = z.infer<typeof updateFosterChildrenSchema>
-

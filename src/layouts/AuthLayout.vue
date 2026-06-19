@@ -17,7 +17,9 @@ defineEmits<{
 <template>
   <div class="min-h-screen flex flex-col md:flex-row">
     <!-- Left Section - Logo -->
-    <div class="w-full md:w-2/5 flex items-center justify-center bg-primary-500 py-8 md:py-0 shrink-0">
+    <div
+      class="w-full md:w-2/5 flex items-center justify-center bg-primary-500 py-8 md:py-0 shrink-0"
+    >
       <div class="text-center px-4">
         <img
           v-if="foundationProfileStore.logo"

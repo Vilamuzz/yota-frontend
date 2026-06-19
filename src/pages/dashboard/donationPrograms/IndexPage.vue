@@ -304,7 +304,8 @@ function handleConfirmArchive() {
                   v-if="
                     donation.status === DonationProgramStatusEnum.COMPLETED ||
                     donation.status === DonationProgramStatusEnum.EXPIRED ||
-                    donation.status === DonationProgramStatusEnum.ARCHIVED
+                    donation.status === DonationProgramStatusEnum.ARCHIVED ||
+                    donation.status === DonationProgramStatusEnum.ACTIVE
                   "
                   :to="{
                     name: 'dashboard-donation-programs-detail',

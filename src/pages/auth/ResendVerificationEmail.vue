@@ -69,7 +69,8 @@ const handleResend = () => {
         <Mail class="w-10 h-10 text-primary-300" />
       </div>
       <p class="text-center text-gray-600 text-sm">
-        Tidak menerima email? Periksa folder spam Anda atau masukkan email Anda di bawah untuk mengirim ulang.
+        Tidak menerima email? Periksa folder spam Anda atau masukkan email Anda di bawah untuk
+        mengirim ulang.
       </p>
     </div>
 

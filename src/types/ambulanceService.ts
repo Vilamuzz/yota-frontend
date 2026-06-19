@@ -45,6 +45,7 @@ export interface AmbulanceService {
   serviceCategory: AmbulanceServiceCategory
   assignedAmbulance?: Ambulance
   rejectionReason?: string
+  cancelationReason?: string
   createdAt: string
   updatedAt?: string
 }

@@ -7,6 +7,10 @@ import type {
   UpdateAmbulanceHistoryRequest,
   AmbulanceHistorySummaryResponse,
   AmbulanceHistorySummaryQueryParams,
+  AllAmbulanceHistorySummaryQueryParams,
+  AllAmbulanceHistorySummaryResponse,
+  MonthlyTrendParams,
+  MonthlyTrendResponse,
 } from '@/types/ambulanceHistory'
 import { api } from '@/utils/api'
 
@@ -24,12 +28,73 @@ export const ambulanceHistoryService = {
     return response.data
   },
 
+  getAdminAmbulanceHistories: async (
+    params: AmbulanceHistoryQueryParams,
+    id: string,
+  ): Promise<AmbulanceHistoryListResponse> => {
+    const response = await api.get<AmbulanceHistoryListResponse>(
+      `${API.AMBULANCES_ADMIN}/history/${id}`,
+      {
+        params,
+      },
+    )
+    return response.data
+  },
+
   getAmbulanceHistorySummary: async (
     id: string,
     params?: AmbulanceHistorySummaryQueryParams,
   ): Promise<AmbulanceHistorySummaryResponse> => {
     const response = await api.get<AmbulanceHistorySummaryResponse>(
       `${API.AMBULANCES}/${id}/history/summary`,
+      { params },
+    )
+    return response.data
+  },
+
+  /** GET /api/admin/ambulances/history/summary — all-ambulances aggregate */
+  getAllHistorySummary: async (
+    params?: AllAmbulanceHistorySummaryQueryParams,
+  ): Promise<AllAmbulanceHistorySummaryResponse> => {
+    const response = await api.get<AllAmbulanceHistorySummaryResponse>(
+      `${API.AMBULANCES_ADMIN}/history/summary`,
+      { params },
+    )
+    return response.data
+  },
+
+  /** GET /api/admin/ambulances/history/monthly-trend?year= */
+  getMonthlyTrend: async (params?: MonthlyTrendParams): Promise<MonthlyTrendResponse> => {
+    const response = await api.get<MonthlyTrendResponse>(
+      `${API.AMBULANCES_ADMIN}/history/monthly-trend`,
+      { params },
+    )
+    return response.data
+  },
+
+  getDriverHistorySummary: async (
+    params?: AmbulanceHistorySummaryQueryParams,
+  ): Promise<AmbulanceHistorySummaryResponse> => {
+    const response = await api.get<AmbulanceHistorySummaryResponse>(
+      `${API.AMBULANCES_ADMIN}/history/driver/summary`,
+      { params },
+    )
+    return response.data
+  },
+
+  getDriverMonthlyTrend: async (params?: MonthlyTrendParams): Promise<MonthlyTrendResponse> => {
+    const response = await api.get<MonthlyTrendResponse>(
+      `${API.AMBULANCES_ADMIN}/history/driver/monthly-trend`,
+      { params },
+    )
+    return response.data
+  },
+
+  getDriverHistories: async (
+    params?: AmbulanceHistoryQueryParams,
+  ): Promise<AmbulanceHistoryListResponse> => {
+    const response = await api.get<AmbulanceHistoryListResponse>(
+      `${API.AMBULANCES_ADMIN}/history/driver`,
       { params },
     )
     return response.data

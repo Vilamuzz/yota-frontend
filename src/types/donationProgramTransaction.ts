@@ -40,3 +40,20 @@ export interface CreateDonationProgramTransactionRequest {
 
 export type DonationProgramTransactionResponse = Response<DonationProgramTransaction>
 export type DonationProgramTransactionListResponse = Response<DonationProgramTransactionList>
+
+/** A single month's income total for a donation program */
+export interface MonthlyIncomeItem {
+  month: string // e.g. "2025-01"
+  income: number
+}
+
+export interface MonthlyIncomeRecord {
+  donationProgramId: string
+  items: MonthlyIncomeItem[]
+}
+
+export interface MonthlyIncomeParams {
+  year?: number
+}
+
+export type MonthlyIncomeResponse = Response<MonthlyIncomeRecord>

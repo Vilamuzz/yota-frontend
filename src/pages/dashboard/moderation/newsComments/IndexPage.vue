@@ -108,7 +108,6 @@ function truncate(text: string, max = 80) {
                   <option value="createdAt asc">Terlama</option>
                 </select>
               </div>
-
             </div>
           </template>
         </BaseFilter>

@@ -1,7 +1,10 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fosterChildrenExpenseService } from '@/services/fosterChildrenExpense.service'
-import type { FosterChildrenExpenseListResponse, FosterChildrenExpenseQueryParams } from '@/types/fosterChildrenExpense'
+import type {
+  FosterChildrenExpenseListResponse,
+  FosterChildrenExpenseQueryParams,
+} from '@/types/fosterChildrenExpense'
 import type { ApiError } from '@/types/response'
 
 export const useFosterChildrenExpenseList = (

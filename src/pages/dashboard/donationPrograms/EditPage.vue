@@ -217,17 +217,18 @@ const handleSubmit = (asDraft: boolean = false) => {
 
     <div class="max-w-full mx-auto space-y-6">
       <!-- Loading Skeleton -->
-      <div
-        v-if="isFetching"
-        class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse"
-      >
+      <div v-if="isFetching" class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
         <div class="lg:col-span-2 space-y-6">
-          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
             <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
             <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
             <div class="h-36 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
             <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
             <div class="grid grid-cols-2 gap-4">
               <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
@@ -236,10 +237,14 @@ const handleSubmit = (asDraft: boolean = false) => {
           </div>
         </div>
         <div class="space-y-6">
-          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6"
+          >
             <div class="aspect-video bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-3">
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-3"
+          >
             <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
             <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
