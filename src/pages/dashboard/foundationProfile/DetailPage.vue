@@ -25,8 +25,11 @@ import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
 
 const { foundationProfileDetailQuery } = useFoundationProfileDetail()
-const { createFoundationProfileMutation, updateFoundationProfileMutation } =
-  useFoundationProfileUpdate()
+const {
+  createFoundationProfileMutation,
+  updateFoundationProfileMutation,
+  validationErrors,
+} = useFoundationProfileUpdate()
 const foundationProfileStore = useFoundationProfileStore()
 const { showToast } = useToast()
 
@@ -199,7 +202,7 @@ const handleSubmit = () => {
         foundationName: form.foundationName,
         founderName: form.founderName,
         foundationAddress: form.foundationAddress,
-        foundationPhone: form.foundationPhone ? `+62${form.foundationPhone}` : '',
+        foundationPhone: form.foundationPhone,
         foundationEmail: form.foundationEmail,
         foundationInstagram: form.foundationInstagram || undefined,
         foundationFacebook: form.foundationFacebook || undefined,
@@ -266,6 +269,7 @@ const handleSubmit = () => {
                 v-model="form.foundationName"
                 label="Nama Yayasan"
                 placeholder="Masukkan nama yayasan..."
+                :error="validationErrors?.foundationName"
                 required
               >
                 <template #prefix><Building2 :size="16" /></template>
@@ -277,6 +281,7 @@ const handleSubmit = () => {
                 label="Nomor Telepon"
                 placeholder="Masukkan nomor telepon (contoh: 08123456789)..."
                 input-class="pl-20"
+                :error="validationErrors?.foundationPhone"
                 required
               >
                 <template #prefix>
@@ -296,6 +301,7 @@ const handleSubmit = () => {
                 label="Email Yayasan"
                 type="email"
                 placeholder="Masukkan email yayasan..."
+                :error="validationErrors?.foundationEmail"
                 required
               >
                 <template #prefix><Mail :size="16" /></template>
@@ -306,6 +312,7 @@ const handleSubmit = () => {
                 v-model="form.foundationAddress"
                 label="Alamat Yayasan"
                 placeholder="Masukkan alamat lengkap yayasan..."
+                :error="validationErrors?.foundationAddress"
                 required
                 class="md:col-span-2"
               >
@@ -317,6 +324,7 @@ const handleSubmit = () => {
                 v-model="form.embeddedAddress"
                 label="Link Embed Peta (Google Maps)"
                 placeholder="Masukkan URL embed peta (src dari iframe Google Maps)..."
+                :error="validationErrors?.embeddedAddress"
                 required
                 class="md:col-span-2"
               >
@@ -345,6 +353,7 @@ const handleSubmit = () => {
                 v-model="form.founderName"
                 label="Nama Pendiri"
                 placeholder="Masukkan nama pendiri..."
+                :error="validationErrors?.founderName"
                 required
               >
                 <template #prefix><User :size="16" /></template>
@@ -356,6 +365,7 @@ const handleSubmit = () => {
                 v-model="form.foundationInstagram"
                 label="Instagram Yayasan (Opsional)"
                 placeholder="https://instagram.com/..."
+                :error="validationErrors?.foundationInstagram"
               >
                 <template #prefix><Instagram :size="16" /></template>
               </BaseInput>
@@ -366,6 +376,7 @@ const handleSubmit = () => {
                 v-model="form.foundationFacebook"
                 label="Facebook Yayasan (Opsional)"
                 placeholder="https://facebook.com/..."
+                :error="validationErrors?.foundationFacebook"
               >
                 <template #prefix><Facebook :size="16" /></template>
               </BaseInput>
@@ -376,6 +387,7 @@ const handleSubmit = () => {
                 v-model="form.foundationTwitter"
                 label="Twitter/X Yayasan (Opsional)"
                 placeholder="https://twitter.com/..."
+                :error="validationErrors?.foundationTwitter"
               >
                 <template #prefix><Twitter :size="16" /></template>
               </BaseInput>

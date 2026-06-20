@@ -5,6 +5,7 @@ import type {
   UpdateFoundationProfileRequest,
 } from '@/types/foundationProfile'
 import type { ApiError } from '@/types/response'
+import { computed } from 'vue'
 
 export const useFoundationProfileUpdate = () => {
   const queryClient = useQueryClient()
@@ -33,8 +34,17 @@ export const useFoundationProfileUpdate = () => {
     },
   })
 
+  const validationErrors = computed(() => {
+    return (
+      updateFoundationProfileMutation.error.value?.response?.data?.validation ||
+      createFoundationProfileMutation.error.value?.response?.data?.validation ||
+      null
+    )
+  })
+
   return {
     createFoundationProfileMutation,
     updateFoundationProfileMutation,
+    validationErrors,
   }
 }
