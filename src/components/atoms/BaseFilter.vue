@@ -4,10 +4,12 @@ import { Filter } from 'lucide-vue-next'
 
 interface Props {
   hasActiveFilters?: boolean
+  align?: 'left' | 'right'
 }
 
 withDefaults(defineProps<Props>(), {
   hasActiveFilters: false,
+  align: 'right',
 })
 
 const showFilterDropdown = ref(false)
@@ -44,7 +46,8 @@ onUnmounted(() => {
 
     <div
       v-if="showFilterDropdown"
-      class="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 z-50 text-left"
+      class="absolute mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 z-50 text-left"
+      :class="align === 'left' ? 'left-0' : 'right-0'"
     >
       <slot :close-dropdown="closeDropdown" />
     </div>

@@ -29,6 +29,9 @@ export interface DonationProgramTransactionList {
 
 export interface DonationProgramTransactionQueryParams extends PaginationParams {
   status?: string
+  sortBy?: string
+  startDate?: string
+  endDate?: string
 }
 
 export interface CreateDonationProgramTransactionRequest {

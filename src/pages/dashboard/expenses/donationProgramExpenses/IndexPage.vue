@@ -2,7 +2,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Trash2, Receipt, Plus, File, Eye } from 'lucide-vue-next'
+import { Trash2, Receipt, Plus, File, Eye, Download } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useDonationProgramExpenseList } from '@/composables/donationProgramExpense/useDonationProgramExpenseList'
 import { useDonationProgramExpenseDelete } from '@/composables/donationProgramExpense/useDonationProgramExpenseDelete'
@@ -17,6 +17,8 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import ExpenseDetailModal from '@/components/molecules/ExpenseDetailModal.vue'
 import FilePreviewModal from '@/components/molecules/FilePreviewModal.vue'
+import ExportCSVModal from '@/components/molecules/ExportCSVModal.vue'
+import { donationProgramExpenseService } from '@/services/donationProgramExpense.service'
 import type {
   DonationProgramExpense,
   DonationProgramExpenseQueryParams,
@@ -57,6 +59,8 @@ const limitOptions = [10, 25, 50, 100]
 const isDeleteModalOpen = ref(false)
 const isDetailModalOpen = ref(false)
 const isFilePreviewModalOpen = ref(false)
+const showExportModal = ref(false)
+const isExporting = ref(false)
 const selectedFileUrl = ref<string | null>(null)
 const selectedExpenseId = ref<string | null>(null)
 const selectedExpenseDetail = ref<DonationProgramExpense | null>(null)
@@ -123,6 +127,41 @@ function handleConfirmDelete() {
         showToast('Gagal menghapus pengeluaran', 'error')
       },
     })
+  }
+}
+
+const handleExport = async (payload: { startDate: string; endDate: string; sortBy: string }) => {
+  isExporting.value = true
+  try {
+    const blob = await donationProgramExpenseService.exportAdminDonationProgramExpenseCSV(
+      donationId,
+      {
+        startDate: payload.startDate,
+        endDate: payload.endDate,
+        sortBy: payload.sortBy,
+      },
+    )
+
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+
+    const nameSlug = donation.value?.slug || donationId
+    link.setAttribute(
+      'download',
+      `expenses_${nameSlug}_${payload.startDate}_to_${payload.endDate}.csv`,
+    )
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+
+    showExportModal.value = false
+    showToast('Laporan berhasil diunduh', 'success')
+  } catch {
+    showToast('Gagal mengunduh laporan', 'error')
+  } finally {
+    isExporting.value = false
   }
 }
 
@@ -342,17 +381,27 @@ const expenseChartOption = computed(() => {
             </template>
           </BaseFilter>
         </div>
-        <BaseButton
-          variant="primary"
-          :to="{
-            name: 'dashboard-donation-programs-expense-transaction-create',
-            params: { id: donationId },
-          }"
-          class="w-full sm:w-auto justify-center"
-        >
-          <Plus :size="20" class="mr-1" />
-          Tambah Pengeluaran
-        </BaseButton>
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <BaseButton
+            variant="outline"
+            @click="showExportModal = true"
+            class="w-full sm:w-auto justify-center"
+          >
+            <Download :size="20" class="mr-1" />
+            Ekspor CSV
+          </BaseButton>
+          <BaseButton
+            variant="primary"
+            :to="{
+              name: 'dashboard-donation-programs-expense-transaction-create',
+              params: { id: donationId },
+            }"
+            class="w-full sm:w-auto justify-center"
+          >
+            <Plus :size="20" class="mr-1" />
+            Tambah Pengeluaran
+          </BaseButton>
+        </div>
       </div>
 
       <!-- Table Section -->
@@ -471,6 +520,15 @@ const expenseChartOption = computed(() => {
       :show="isFilePreviewModalOpen"
       :file-url="selectedFileUrl"
       @close="isFilePreviewModalOpen = false"
+    />
+
+    <!-- Export CSV Modal -->
+    <ExportCSVModal
+      :show="showExportModal"
+      :title="donation?.title"
+      :is-exporting="isExporting"
+      @close="showExportModal = false"
+      @export="handleExport"
     />
   </DashboardLayout>
 </template>

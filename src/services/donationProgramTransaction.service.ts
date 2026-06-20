@@ -34,6 +34,17 @@ export const donationProgramTransactionService = {
     return response.data
   },
 
+  exportDonationProgramTransactionCSV: async (
+    id: string,
+    params: DonationProgramTransactionQueryParams,
+  ): Promise<Blob> => {
+    const response = await api.get(`${API.DONATION_PROGRAMS_ADMIN}/${id}/transactions/export`, {
+      params,
+      responseType: 'blob',
+    })
+    return response.data
+  },
+
   cancelDonationProgramTransaction: async (id: string) => {
     const response = await api.post(`${API.DONATION_PROGRAMS_ADMIN}/transactions/${id}/cancel`)
     return response.data

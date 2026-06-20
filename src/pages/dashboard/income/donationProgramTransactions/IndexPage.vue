@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { HandHeart, Plus, XCircle } from 'lucide-vue-next'
+import { HandHeart, Plus, XCircle, Download } from 'lucide-vue-next'
 import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { useDonationProgramTransactionList } from '@/composables/donationProgramTransaction/useDonationProgramTransactionList'
 import { useDonationProgramTransactionCancel } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCancel'
@@ -15,6 +15,9 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseModal from '@/components/organisms/BaseModal.vue'
+import ExportCSVModal from '@/components/molecules/ExportCSVModal.vue'
+import BaseFilter from '@/components/atoms/BaseFilter.vue'
+import { donationProgramTransactionService } from '@/services/donationProgramTransaction.service'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import { createDonationProgramTransactionSchema } from '@/schemas/donationProgramTransaction.schema'
 import { useDonationProgramTransactionCreateOffline } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCreateOffline'
@@ -50,6 +53,8 @@ const { detailQuery, isDonationLoading } = useDonationProgramAdminDetail(donatio
 const donation = computed(() => detailQuery.data.value?.data)
 
 const isCreateModalOpen = ref(false)
+const showExportModal = ref(false)
+const isExporting = ref(false)
 const donorName = ref('')
 const donorEmail = ref('')
 const grossAmount = ref('')
@@ -118,18 +123,38 @@ const queryParams = reactive<DonationProgramTransactionQueryParams>({
   status: undefined,
   nextCursor: undefined,
   prevCursor: undefined,
+  sortBy: undefined,
 })
 
 const limitOptions = [10, 25, 50, 100]
 const isCancelModalOpen = ref(false)
 const selectedTransactionId = ref<string | null>(null)
 
+const transactionSortOptions = [
+  { value: 'created_at desc', label: 'Tanggal Transaksi (Terbaru)' },
+  { value: 'created_at asc', label: 'Tanggal Transaksi (Terlama)' },
+  { value: 'gross_amount desc', label: 'Nominal Transaksi (Tertinggi)' },
+  { value: 'gross_amount asc', label: 'Nominal Transaksi (Terendah)' },
+]
+
 const { donationProgramTransactions, pagination, isLoading } = useDonationProgramTransactionList(
   donationId,
   queryParams,
 )
 
-const { pageOffset, handleNextPage, handlePrevPage } = useCursorPagination(queryParams)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
+  useCursorPagination(queryParams)
+
+const hasActiveFilters = computed(
+  () =>
+    queryParams.sortBy !== undefined ||
+    queryParams.status !== undefined,
+)
+
+watch(
+  () => [queryParams.limit, queryParams.sortBy, queryParams.status],
+  () => resetPagination(),
+)
 
 function openCancelModal(id: string) {
   selectedTransactionId.value = id
@@ -148,6 +173,41 @@ function handleConfirmCancel() {
         showToast('Gagal membatalkan transaksi', 'error')
       },
     })
+  }
+}
+
+const handleExport = async (payload: { startDate: string; endDate: string; sortBy: string }) => {
+  isExporting.value = true
+  try {
+    const blob = await donationProgramTransactionService.exportDonationProgramTransactionCSV(
+      donationId,
+      {
+        startDate: payload.startDate,
+        endDate: payload.endDate,
+        sortBy: payload.sortBy,
+      },
+    )
+
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+
+    const nameSlug = donation.value?.slug || donationId
+    link.setAttribute(
+      'download',
+      `transactions_${nameSlug}_${payload.startDate}_to_${payload.endDate}.csv`,
+    )
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+
+    showExportModal.value = false
+    showToast('Laporan berhasil diunduh', 'success')
+  } catch {
+    showToast('Gagal mengunduh laporan', 'error')
+  } finally {
+    isExporting.value = false
   }
 }
 
@@ -337,11 +397,61 @@ const incomeChartOption = computed(() => {
       </div>
 
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-start">
-        <BaseButton variant="primary" class="w-full sm:w-auto" @click="isCreateModalOpen = true">
-          <Plus :size="20" class="mr-1" />
-          Tambah Transaksi Donasi
-        </BaseButton>
+      <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseFilter align="left" :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
+              <div class="space-y-4 w-64">
+                <!-- Sort filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider text-left"
+                  >
+                    Urutkan
+                  </label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at asc">Terlama Dibuat</option>
+                    <option value="gross_amount desc">Nominal Tertinggi</option>
+                    <option value="gross_amount asc">Nominal Terendah</option>
+                  </select>
+                </div>
+
+                <!-- Status filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider text-left"
+                  >
+                    Status
+                  </label>
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Status</option>
+                    <option value="pending">Tertunda</option>
+                    <option value="settlement">Sukses</option>
+                    <option value="cancel">Dibatalkan</option>
+                    <option value="expired">Kedaluwarsa</option>
+                  </select>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <BaseButton variant="outline" class="w-full sm:w-auto justify-center" @click="showExportModal = true">
+            <Download :size="20" class="mr-1" />
+            Ekspor CSV
+          </BaseButton>
+          <BaseButton variant="primary" class="w-full sm:w-auto justify-center" @click="isCreateModalOpen = true">
+            <Plus :size="20" class="mr-1" />
+            Tambah Transaksi Donasi
+          </BaseButton>
+        </div>
       </div>
 
       <!-- Table Section -->
@@ -522,5 +632,15 @@ const incomeChartOption = computed(() => {
         </div>
       </form>
     </BaseModal>
+
+    <!-- Export CSV Modal -->
+    <ExportCSVModal
+      :show="showExportModal"
+      :title="donation?.title"
+      :is-exporting="isExporting"
+      :sort-by-options="transactionSortOptions"
+      @close="showExportModal = false"
+      @export="handleExport"
+    />
   </DashboardLayout>
 </template>

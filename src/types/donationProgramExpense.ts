@@ -17,6 +17,8 @@ export interface DonationProgramExpenseList {
 
 export interface DonationProgramExpenseQueryParams extends PaginationParams {
   sortBy?: string
+  startDate?: string
+  endDate?: string
 }
 
 export interface CreateDonationProgramExpenseRequest {

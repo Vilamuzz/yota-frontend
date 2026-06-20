@@ -31,6 +31,17 @@ export const donationProgramExpenseService = {
     return response.data
   },
 
+  exportAdminDonationProgramExpenseCSV: async (
+    id: string,
+    params: DonationProgramExpenseQueryParams,
+  ): Promise<Blob> => {
+    const response = await api.get(`${API.DONATION_PROGRAMS_ADMIN}/${id}/expenses/export`, {
+      params,
+      responseType: 'blob',
+    })
+    return response.data
+  },
+
   getAdminDonationProgramExpenseDetail: async (
     id: string,
   ): Promise<DonationProgramExpenseResponse> => {
