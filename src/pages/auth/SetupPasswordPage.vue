@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { reactive, computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { useCurrentUser } from '@/composables/account/useCurrentUser'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import AuthInput from '@/components/atoms/AuthInput.vue'
@@ -12,10 +11,8 @@ import { setupPasswordSchema } from '@/schemas/auth.schema'
 import { getZodErrors } from '@/utils/zodError'
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
-import { ROLES } from '@/const/roles'
 
 const router = useRouter()
-const authStore = useAuthStore()
 const { showToast } = useToast()
 const { updateCurrentUserPasswordMutation, passwordValidationErrors } = useCurrentUser()
 
@@ -75,11 +72,7 @@ const handleSubmit = () => {
 
 const handleSuccessRedirect = () => {
   showSuccessModal.value = false
-  if (authStore.activeRole === ROLES.ORANG_TUA_ASUH) {
-    router.push('/')
-  } else {
-    router.push('/dashboard')
-  }
+  router.push('/')
 }
 </script>
 
@@ -127,7 +120,7 @@ const handleSuccessRedirect = () => {
     title="Kata Sandi Berhasil Diatur!"
     message="Kata sandi akun Anda telah berhasil dikonfigurasi. Anda sekarang dapat masuk menggunakan kata sandi ini di masa mendatang."
     :icon="CheckCircle"
-    primary-button-text="Lanjutkan ke Dasbor"
+    primary-button-text="Lanjutkan ke Website"
     secondary-button-text=""
     @close="handleSuccessRedirect"
     @primary="handleSuccessRedirect"
