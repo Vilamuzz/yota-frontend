@@ -9,6 +9,7 @@ export const useSocialProgramExpenseDelete = (programId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminSocialPrograms'] })
       queryClient.invalidateQueries({ queryKey: ['adminSocialProgramDetail', programId] })
+      queryClient.invalidateQueries({ queryKey: ['adminSocialProgramExpenses', programId] })
     },
   })
 
