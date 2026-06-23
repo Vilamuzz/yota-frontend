@@ -7,10 +7,9 @@ export const useFosterChildrenExpenseDelete = (childId?: string) => {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => fosterChildrenExpenseService.deleteFosterChildrenExpense(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fosterChildrenExpenses'] })
-      if (childId) {
-        queryClient.invalidateQueries({ queryKey: ['adminFosterChildrenDetail', childId] })
-      }
+      queryClient.invalidateQueries({ queryKey: ['adminFosterChildren'] })
+      queryClient.invalidateQueries({ queryKey: ['adminFosterChildrenDetail', childId] })
+      queryClient.invalidateQueries({ queryKey: ['adminFosterChildrenExpenses', childId] })
     },
   })
 
