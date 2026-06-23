@@ -190,6 +190,7 @@ const ambulanceListParams = ref({ limit: 1 })
 const { ambulances: driverAmbulances, listQuery: ambulanceListQuery } =
   useAmbulanceList(ambulanceListParams)
 const driverAmbulanceId = computed(() => driverAmbulances.value[0]?.id ?? '')
+const isAmbulanceLoading = computed(() => ambulanceListQuery.isPending.value)
 
 // Assigned service lists filtered by status
 const acceptedParams = ref<{ limit: number; status: string }>({
@@ -324,8 +325,23 @@ function handleConfirmCancel() {
       </div>
     </div>
 
-    <!-- Task Tables for Assigned & In-Service Services -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Empty State for No Assigned Ambulance -->
+    <div
+      v-if="!isAmbulanceLoading && !driverAmbulanceId"
+      class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-12 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm"
+    >
+      <div class="p-4 bg-gray-100 dark:bg-gray-800/80 rounded-full mb-4">
+        <Siren class="w-12 h-12 text-gray-400 dark:text-gray-500" />
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Belum Ada Ambulans</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md">
+        Anda belum ditugaskan ke armada ambulans apa pun. Silakan hubungi admin untuk mendapatkan penugasan ambulans.
+      </p>
+    </div>
+
+    <template v-else>
+      <!-- Task Tables for Assigned & In-Service Services -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Table 1: Layanan Ditugaskan (Accepted) -->
       <div
         class="border border-indigo-100 dark:border-indigo-900/30 bg-white dark:bg-gray-800/40 rounded-2xl shadow-sm overflow-hidden"
@@ -801,6 +817,7 @@ function handleConfirmCancel() {
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Start Confirmation Modal -->
     <BaseModal :show="startModalShow" title="Mulai Layanan" @close="startModalShow = false">

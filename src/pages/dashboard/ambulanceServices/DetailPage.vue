@@ -639,7 +639,6 @@ const handleConfirmCancel = () => {
               @click="confirmStart = true"
               :disabled="isUpdating"
             >
-              <Play :size="16" class="mr-1.5 fill-current" />
               Mulai Layanan
             </BaseButton>
             <BaseButton
@@ -650,7 +649,6 @@ const handleConfirmCancel = () => {
               @click="confirmComplete = true"
               :disabled="isUpdating"
             >
-              <Check :size="16" class="mr-1.5" />
               Selesaikan Layanan
             </BaseButton>
           </div>
