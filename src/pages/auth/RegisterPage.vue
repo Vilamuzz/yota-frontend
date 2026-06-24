@@ -3,7 +3,7 @@ import { ref, computed, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRegister } from '@/composables/auth/useRegister'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
+import AuthInput from '@/components/atoms/AuthInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { registerSchema } from '@/schemas/auth.schema'
 import { getZodErrors } from '@/utils/zodError'
@@ -71,7 +71,7 @@ const handleRegister = () => {
         })
       },
       onError: (err) => {
-        showToast(extractError(err, 'Registration failed. Please try again.'), 'error')
+        showToast(extractError(err, 'Registrasi gagal. Silakan coba lagi.'), 'error')
       },
     },
   )
@@ -79,46 +79,46 @@ const handleRegister = () => {
 </script>
 
 <template>
-  <AuthLayout title="Create Account" subtitle="Sign up to get started">
+  <AuthLayout title="Buat Akun" subtitle="Daftar untuk memulai">
     <form @submit.prevent="handleRegister" class="space-y-4">
-      <BaseInput
+      <AuthInput
         id="username"
         v-model="form.username"
         type="text"
-        label="Username"
+        label="Nama Pengguna"
         placeholder="johndoe"
         autocomplete="username"
         :error="usernameError"
       />
 
-      <BaseInput
+      <AuthInput
         id="email"
         v-model="form.email"
         type="email"
-        label="Email Address"
-        placeholder="you@example.com"
+        label="Alamat Email"
+        placeholder="anda@contoh.com"
         autocomplete="email"
         :error="emailError"
       />
 
-      <BaseInput
+      <AuthInput
         id="password"
         v-model="form.password"
         type="password"
-        label="Password"
+        label="Kata Sandi"
         placeholder="••••••••"
         autocomplete="new-password"
-        hint="Must be at least 8 characters"
+        hint="Harus minimal 8 karakter"
         :show-password-toggle="true"
         :show-password-strength="true"
         :error="passwordError"
       />
 
-      <BaseInput
+      <AuthInput
         id="confirmPassword"
         v-model="form.confirmPassword"
         type="password"
-        label="Confirm Password"
+        label="Konfirmasi Kata Sandi"
         placeholder="••••••••"
         autocomplete="new-password"
         :show-password-toggle="true"
@@ -131,19 +131,16 @@ const handleRegister = () => {
         full-width
         :loading="registerMutation.isPending.value"
       >
-        <template #loading>Creating account...</template>
-        Create Account
+        <template #loading>Sedang membuat akun...</template>
+        Buat Akun
       </BaseButton>
     </form>
 
     <template #footer>
       <p class="text-xs text-gray-600">
-        Already have an account?
-        <RouterLink
-          to="/login"
-          class="text-indigo-600 hover:text-indigo-800 font-semibold transition duration-200"
-        >
-          Sign in
+        Sudah punya akun?
+        <RouterLink to="/login" class="text-primary-400 font-semibold hover:underline">
+          Masuk
         </RouterLink>
       </p>
     </template>

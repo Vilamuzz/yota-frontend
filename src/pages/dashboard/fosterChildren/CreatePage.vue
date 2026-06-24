@@ -1,613 +1,548 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
-import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import BaseButton from '@/components/atoms/BaseButton.vue'
-import { useChildCreate } from '@/composables/fosterChildren/useFosterChildrenCreate'
-import { createChildSchema } from '@/schemas/fosterChildren.schema'
-import { getZodErrors } from '@/utils/zodError'
-import { ArrowLeft, Trash2, Eye, X, Plus, Baby } from 'lucide-vue-next'
+import { ref, computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { Upload, X, Plus, Camera, GraduationCap, FileText, User, FileCheck } from 'lucide-vue-next'
+import DashboardLayout from '@/layouts/DashboardLayout.vue'
+import BaseInput from '@/components/atoms/BaseInput.vue'
+import BaseButton from '@/components/atoms/BaseButton.vue'
+import { useFosterChildrenCreate } from '@/composables/fosterChildren/useFosterChildrenCreate'
+import { createFosterChildrenSchema } from '@/schemas/fosterChildren.schema'
+import { Category, Gender } from '@/types/fosterChildren'
+import { useToast } from '@/composables/ui/useToast'
+import { getZodErrors } from '@/utils/zodError'
+import { extractError } from '@/utils/error'
 
 const router = useRouter()
-const { createMutation, createError } = useChildCreate()
+const { createMutation, validationErrors } = useFosterChildrenCreate()
+const { showToast } = useToast()
 
-const name = ref('')
-const gender = ref<'laki-laki' | 'perempuan' | ''>('')
-const category = ref<'yatim' | 'piatu' | 'yatim-piatu' | ''>('')
-const birthplace = ref('')
-const birthdate = ref('')
-const address = ref('')
-const achievementInput = ref('')
-const achievements = ref<string[]>([])
-const image = ref<File | null>(null)
-const imagePreview = ref<string | null>(null)
-const showImagePreview = ref(false)
-const certificates = ref<File[]>([])
-const certificatePreviews = ref<string[]>([])
-const status = ref<'aktif' | 'lulus'>('aktif')
+const genders = Object.values(Gender)
+const categories = Object.values(Category)
+const educationLevels = [
+  { label: 'Kelas 1', value: 1 },
+  { label: 'Kelas 2', value: 2 },
+  { label: 'Kelas 3', value: 3 },
+  { label: 'Kelas 4', value: 4 },
+  { label: 'Kelas 5', value: 5 },
+  { label: 'Kelas 6', value: 6 },
+  { label: 'Kelas 7', value: 7 },
+  { label: 'Kelas 8', value: 8 },
+  { label: 'Kelas 9', value: 9 },
+  { label: 'Kelas 10', value: 10 },
+  { label: 'Kelas 11', value: 11 },
+  { label: 'Kelas 12', value: 12 },
+]
+
 const errors = ref<Record<string, string>>({})
-
-const genders = ['laki-laki', 'perempuan']
-
-const categories = ['yatim', 'piatu', 'yatim piatu']
+const form = reactive({
+  name: '',
+  birthPlace: '',
+  birthDate: '',
+  address: '',
+  gender: '' as Gender | '',
+  category: '' as Category | '',
+  schoolName: '',
+  educationLevel: undefined as number | undefined,
+  isGraduated: false,
+  achievementInput: '',
+  achievementFile: null as File | null,
+  achievements: [] as { title: string; file: File }[],
+  profilePictureFile: null as File | null,
+  profilePicturePreview: null as string | null,
+  familyCardFile: null as File | null,
+  sktmFile: null as File | null,
+})
 
 const isLoading = computed(() => createMutation.isPending.value)
-const isSuccess = computed(() => createMutation.isSuccess.value)
+
+watch(
+  () => form,
+  () => {
+    if (Object.keys(errors.value).length > 0) {
+      errors.value = {}
+    }
+    if (createMutation.isError.value) {
+      createMutation.reset()
+    }
+  },
+  { deep: true },
+)
+
+const handleProfilePictureChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    form.profilePictureFile = file
+    form.profilePicturePreview = URL.createObjectURL(file)
+  }
+}
+
+const handleFileChange = (event: Event, type: 'familyCard' | 'sktm' | 'achievement') => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    if (type === 'familyCard') form.familyCardFile = file
+    else if (type === 'sktm') form.sktmFile = file
+    else form.achievementFile = file
+  }
+}
 
 const addAchievement = () => {
-  if (achievementInput.value.trim()) {
-    achievements.value.push(
-      achievementInput.value.trim()
-    )
-
-    achievementInput.value = ''
+  if (form.achievementInput.trim() && form.achievementFile) {
+    form.achievements.push({
+      title: form.achievementInput.trim(),
+      file: form.achievementFile,
+    })
+    form.achievementInput = ''
+    form.achievementFile = null
+  } else if (!form.achievementFile && form.achievementInput.trim()) {
+    showToast('Harap pilih file sertifikat/piagam untuk prestasi ini', 'warning')
   }
 }
 
 const removeAchievement = (index: number) => {
-  achievements.value.splice(index, 1)
+  form.achievements.splice(index, 1)
 }
 
-const imageInputRef = ref<HTMLInputElement | null>(null)
-
-const triggerImageInput = () => {
-  imageInputRef.value?.click()
-}
-
-const handleImageChange = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (!file) return
-
-  const allowedTypes = ['image/jpeg', 'image/png']
-  if (!allowedTypes.includes(file.type)) {
-    errors.value = { ...errors.value, image: 'Format gambar tidak valid. Hanya JPG dan PNG.' }
-    return
-  }
-  if (file.size > 2 * 1024 * 1024) {
-    errors.value = { ...errors.value, image: 'Ukuran gambar terlalu besar. Maksimal 5MB.' }
+const handleSubmit = () => {
+  if (!form.familyCardFile || !form.sktmFile) {
+    showToast('Kartu Keluarga dan SKTM wajib diunggah', 'error')
     return
   }
 
-  const { image: _, ...rest } = errors.value
-  void _
-  errors.value = rest
-  image.value = file
-  imagePreview.value = URL.createObjectURL(file)
-}
+  const result = createFosterChildrenSchema.safeParse({
+    ...form,
+    educationLevel: form.educationLevel !== undefined ? Number(form.educationLevel) : undefined,
+    profilePicture: form.profilePictureFile,
+    familyCard: form.familyCardFile,
+    sktm: form.sktmFile,
+    achievements: form.achievements.map((a) => a.file),
+    achivementNotes: form.achievements.map((a) => a.title),
+  })
 
-const removeImage = () => {
-  image.value = null
-  imagePreview.value = null
-  if (imageInputRef.value) imageInputRef.value.value = ''
-}
+  const zodErrors = getZodErrors(result)
+  errors.value = zodErrors
 
-const previewImage = () => {
-  showImagePreview.value = true
-}
-
-const closeImagePreview = () => {
-  showImagePreview.value = false
-}
-
-const certificateInputRef = ref<HTMLInputElement | null>(null)
-
-const triggerCertificateInput = () => {
-  certificateInputRef.value?.click()
-}
-
-const handleCertificateChange = (event: Event) => {
-  const files = (event.target as HTMLInputElement).files
-  if (!files) return
-
-  const allowedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  ]
-
-  for (const file of Array.from(files)) {
-
-    if (!allowedTypes.includes(file.type)) {
-      errors.value = {
-        ...errors.value,
-        certificate: 'Format sertifikat harus PDF atau DOC',
-      }
-      return
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      errors.value = {
-        ...errors.value,
-        certificate: 'Ukuran maksimal file 5MB',
-      }
-      return
-    }
-    certificates.value.push(file)
-    certificatePreviews.value.push(
-      URL.createObjectURL(file)
-    )
-
+  if (!result.success) {
+    showToast('Mohon lengkapi semua field yang wajib diisi', 'error')
+    return
   }
-}
 
-const removeCertificate = (index: number) => {
-  certificates.value.splice(index, 1)
-  certificatePreviews.value.splice(index, 1)
-}
-
-const previewCertificate = (file: File) => {
-  const url = URL.createObjectURL(file)
-  window.open(url)
-}
-
-const validate = () => {
-  const result = createChildSchema.safeParse({
-    name: name.value,
-    gender: gender.value,
-    category: category.value,
-    birthplace: birthplace.value,
-    birth_date: birthdate.value,
-    address: address.value,
-    image: image.value,
-    achievements: achievements.value,
-    certificates: certificates.value,
-    status: status.value,
-  })
-
-  const zodErrors = getZodErrors(result as Parameters<typeof getZodErrors>[0])
-
-  const imageError: Record<string, string> = image.value
-    ? {}
-    : { image: 'Foto anak asuh wajib diunggah' }
-  const certificateError: Record<string, string> =
-    certificates.value.length > 0 ? {} : { certificate: '' }
-
-  errors.value = { ...zodErrors, ...imageError, ...certificateError }
-  return Object.keys(errors.value).length === 0
-}
-
-const handleSubmit = async () => {
-  if (!validate()) return
-
-  await createMutation.mutateAsync({
-    name: name.value.trim(),
-    gender: gender.value as 'laki-laki' | 'perempuan',
-    category: category.value as 'yatim' | 'piatu' | 'yatim-piatu',
-    birthplace: birthplace.value.trim(),
-    birth_date: birthdate.value,
-    address: address.value.trim(),
-    achievements: achievements.value,
-    image: image.value!,
-    certificates: certificates.value!,
-    status: status.value === 'aktif',
-  })
-
-  if (createMutation.isSuccess.value) {
-    setTimeout(() => {
+  createMutation.mutate(result.data, {
+    onSuccess: () => {
+      showToast('Data anak asuh berhasil ditambahkan!', 'success')
       router.push({ name: 'dashboard-foster-children' })
-    }, 1200)
-  }
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Gagal menambahkan data anak asuh'), 'error')
+    },
+  })
 }
 
-const handleCancel = () => {
-  router.push({ name: 'dashboard-foster-children' })
+const formatCategory = (cat: string) => {
+  return cat.charAt(0).toUpperCase() + cat.slice(1)
 }
-
-const isSubmitDisabled = computed(() => {
-  return (
-    !name.value ||
-    !gender.value ||
-    !category.value ||
-    !birthplace.value ||
-    !birthdate.value ||
-    !address.value ||
-    !image.value ||
-    !status.value ||
-    isLoading.value
-  )
-})
 </script>
 
 <template>
   <DashboardLayout>
+    <template #title>Tambah Anak Asuh</template>
+
     <div class="max-w-full mx-auto space-y-6">
-      <div class="flex items-center gap-4">
-        <button
-          @click="handleCancel"
-          class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-150 text-gray-500 hover:text-gray-700"
-          title="Kembali ke anak asuh"
-        >
-          <ArrowLeft :size="20" />
-        </button>
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-primary-50 rounded-lg">
-            <Baby :size="24" class="text-primary-400" />
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900">Tambah Anak Asuh Baru</h2>
-            <p class="text-sm text-gray-500">
-              Lengkapi informasi berikut untuk menambahkan anak asuh baru.
-            </p>
-          </div>
-        </div>
-      </div>
+      <form @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Primary Information -->
+        <div class="lg:col-span-2 space-y-6">
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
+          >
+            <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300">
+                <User :size="20" />
+              </div>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Identitas Dasar
+              </h3>
+            </div>
 
-      <transition
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0"
-      >
-        <div
-          v-if="isSuccess"
-          class="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium"
-        >
-          <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Anak Asuh berhasil ditambahkan
-        </div>
-      </transition>
-
-      <div
-        v-if="createError"
-        class="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
-      >
-        <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-            clip-rule="evenodd"
-          />
-        </svg>
-        {{ createError }}
-      </div>
-
-      <form
-        @submit.prevent="handleSubmit"
-        class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-      >
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div class="p-6 space-y-5">
             <BaseInput
               id="name"
-              v-model="name"
-              label="Nama Anak Asuh"
-              placeholder="Masukkan nama lengkap anak asuh"
-              :required="true"
-              :error="errors.name"
+              v-model="form.name"
+              label="Nama Lengkap"
+              placeholder="Masukkan nama lengkap anak"
+              :error="errors.name || validationErrors?.name"
+              required
             />
-            <div>
-              <label for="gender" class="block text-xs font-poppins text-gray-700 mb-1">
-                Jenis Kelamin <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="gender"
-                v-model="gender"
-                class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                :class="[
-                  errors.gender ? 'border-red-300 focus:ring-red-500' : 'border-gray-300',
-                  !gender ? 'text-gray-500' : 'text-gray-700',
-                ]"
-              >
-                <option value="" disabled>Pilih jenis kelamin</option>
-                <option v-for="cat in genders" :key="cat" :value="cat">
-                  {{ cat.charAt(0).toUpperCase() + cat.slice(1) }}
-                </option>
-              </select>
-              <p v-if="errors.gender" class="mt-1 text-xs text-red-600">
-                {{ errors.gender }}
-              </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
+                >
+                  Jenis Kelamin <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="form.gender"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
+                  :class="{ 'border-red-500': errors.gender || validationErrors?.gender }"
+                >
+                  <option value="" disabled>Pilih Gender</option>
+                  <option v-for="g in genders" :key="g" :value="g">
+                    {{ formatCategory(g) }}
+                  </option>
+                </select>
+                <p
+                  v-if="errors.gender || validationErrors?.gender"
+                  class="mt-1 text-xs text-red-600"
+                >
+                  {{ errors.gender || validationErrors?.gender }}
+                </p>
+              </div>
+
+              <div>
+                <label
+                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
+                >
+                  Kategori <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="form.category"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
+                  :class="{ 'border-red-500': errors.category || validationErrors?.category }"
+                >
+                  <option value="" disabled>Pilih Kategori</option>
+                  <option v-for="cat in categories" :key="cat" :value="cat">
+                    {{ formatCategory(cat) }}
+                  </option>
+                </select>
+                <p
+                  v-if="errors.category || validationErrors?.category"
+                  class="mt-1 text-xs text-red-600"
+                >
+                  {{ errors.category || validationErrors?.category }}
+                </p>
+              </div>
             </div>
-            <div>
-              <label for="category" class="block text-xs font-poppins text-gray-700 mb-1">
-                Kategori <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="category"
-                v-model="category"
-                class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                :class="[
-                  errors.category ? 'border-red-300 focus:ring-red-500' : 'border-gray-300',
-                  !category ? 'text-gray-500' : 'text-gray-700',
-                ]"
-              >
-                <option value="" disabled>Pilih kategori anak asuh</option>
-                <option v-for="cat in categories" :key="cat" :value="cat">
-                  {{ cat.charAt(0).toUpperCase() + cat.slice(1) }}
-                </option>
-              </select>
-              <p v-if="errors.category" class="mt-1 text-xs text-red-600">
-                {{ errors.category }}
-              </p>
-            </div>
-            <BaseInput
-              id="birthplace"
-              v-model="birthplace"
-              label="Tempat Lahir"
-              placeholder="Masukkan tempat lahir anak asuh"
-              :required="true"
-              :error="errors.birthplace"
-            />
-            <div>
-              <label for="birthdate" class="block text-xs font-poppins text-gray-700 mb-1">
-                Tanggal Lahir <span class="text-red-500">*</span>
-              </label>
-              <input
-                id="birthdate"
-                v-model="birthdate"
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <BaseInput
+                id="birthPlace"
+                v-model="form.birthPlace"
+                label="Tempat Lahir"
+                placeholder="mis. Sukoharjo"
+                :error="errors.birthPlace || validationErrors?.birthPlace"
+                required
+              />
+              <BaseInput
+                id="birthDate"
+                v-model="form.birthDate"
                 type="date"
-                class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                :class="[
-                  errors.birthdate ? 'border-red-300 focus:ring-red-500' : 'border-gray-300',
-                  !birthdate ? 'text-gray-500' : 'text-gray-700',
-                ]"
+                label="Tanggal Lahir"
+                :error="errors.birthDate || validationErrors?.birthDate"
+                required
               />
-              <p v-if="errors.birth_date" class="mt-1 text-xs text-red-600">
-                {{ errors.birth_date }}
-              </p>
             </div>
-            <div>
-              <label for="address" class="block text-xs font-medium text-gray-700 mb-1">
-                Alamat <span class="text-red-500">*</span>
-              </label>
-              <textarea
-                id="address"
-                v-model="address"
-                rows="5"
-                placeholder="Masukkan alamat lengkap anak asuh"
-                class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                :class="errors.address ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'"
-              ></textarea>
-              <p v-if="errors.address" class="mt-1 text-xs text-red-600">
-                {{ errors.address }}
-              </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <BaseInput
+                id="schoolName"
+                v-model="form.schoolName"
+                label="Nama Sekolah"
+                placeholder="Masukkan nama sekolah"
+                :error="errors.schoolName || validationErrors?.schoolName"
+                required
+              />
+              <div>
+                <label
+                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
+                >
+                  Tingkat Pendidikan <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="form.educationLevel"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
+                  :class="{
+                    'border-red-500': errors.educationLevel || validationErrors?.educationLevel,
+                  }"
+                >
+                  <option :value="undefined" disabled>Pilih Tingkat Pendidikan</option>
+                  <option v-for="el in educationLevels" :key="el.value" :value="el.value">
+                    {{ el.label }}
+                  </option>
+                </select>
+                <p
+                  v-if="errors.educationLevel || validationErrors?.educationLevel"
+                  class="mt-1 text-xs text-red-600"
+                >
+                  {{ errors.educationLevel || validationErrors?.educationLevel }}
+                </p>
+              </div>
             </div>
+
+            <BaseInput
+              id="address"
+              v-model="form.address"
+              label="Alamat Lengkap"
+              placeholder="Masukkan alamat domisili saat ini"
+              :error="errors.address || validationErrors?.address"
+              required
+            />
           </div>
-          <div class="p-6 space-y-5">
-            <div>
-              <p class="text-xs font-poppins text-gray-700 mb-3">
-                Unggah Foto Anak Asuh <span class="text-red-500">*</span>
-              </p>
-              <div
-                v-if="imagePreview"
-                class="group flex items-center justify-between border p-3 rounded-lg"
-              >
-                <div class="flex items-center gap-3">
-                  <img :src="imagePreview" alt="preview" class="w-20 h-20 object-cover rounded" />
-                  <span class="mx-4 text-sm text-gray-500">{{ image?.name }}</span>
-                </div>
-                <div class="flex gap-2">
-                  <button
-                    type="button"
-                    @click="previewImage"
-                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-700"
-                    title="Pratinjau Gambar"
-                  >
-                    <Eye :size="18" />
-                  </button>
-                  <button
-                    type="button"
-                    @click="removeImage"
-                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-red-500 hover:text-red-600"
-                    title="Hapus Gambar"
-                  >
-                    <Trash2 :size="18" />
-                  </button>
-                </div>
-              </div>
-              <div
-                v-if="showImagePreview"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-              >
-                <div class="relative bg-white rounded-lg p-4 max-w-lg w-full">
-                  <button
-                    @click="closeImagePreview"
-                    class="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                  >
-                    <X :size="20" />
-                  </button>
 
-                  <img
-                    v-if="imagePreview"
-                    :src="imagePreview"
-                    class="w-full max-h-[70vh] object-contain rounded"
-                  />
-                </div>
+          <!-- Achievements Section -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <div class="flex items-center gap-3 pb-2">
+              <div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-yellow-600">
+                <Plus :size="20" />
               </div>
-              <div
-                v-if="!imagePreview"
-                @click="triggerImageInput"
-                class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150"
-                :class="
-                  errors.image
-                    ? 'border-red-300 bg-red-50 hover:bg-red-50/70'
-                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-                "
-              >
-                <p class="text-sm font-medium text-gray-600">Click to upload image</p>
-                <p class="text-xs text-gray-400 mt-1">JPG & PNG Max 5 MB</p>
-              </div>
-
-              <input
-                ref="imageInputRef"
-                type="file"
-                accept="image/jpeg, image/png"
-                class="hidden"
-                @change="handleImageChange"
-              />
-              <p v-if="errors.image" class="mt-1 text-xs text-red-600">
-                {{ errors.image }}
-              </p>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Prestasi & Sertifikat
+              </h3>
             </div>
 
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">
-                Catatan Prestasi
-              </label>
-              <div class="flex gap-2 mb-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-4">
                 <input
-                  v-model="achievementInput"
+                  v-model="form.achievementInput"
                   type="text"
-                  placeholder="Tambah prestasi"
-                  :class="[
-                    'w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
-                    errors.achievements
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-gray-300'
-                  ]"
+                  placeholder="Nama prestasi..."
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500"
                 />
+                <div class="relative group">
+                  <input
+                    type="file"
+                    class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    @change="handleFileChange($event, 'achievement')"
+                  />
+                  <div
+                    class="flex items-center gap-2 px-3 py-2 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:border-primary-400 transition-colors"
+                  >
+                    <Upload :size="14" />
+                    <span>{{
+                      form.achievementFile
+                        ? form.achievementFile.name
+                        : 'Pilih Sertifikat (PDF/JPG)'
+                    }}</span>
+                  </div>
+                </div>
                 <BaseButton
                   type="button"
                   variant="primary"
-                  size="sm"
+                  size="md"
+                  class="w-full"
                   @click="addAchievement"
                 >
-                  <Plus :size="16" />
+                  TAMBAH PRESTASI
                 </BaseButton>
               </div>
-              <ol class="list-decimal list-inside space-y-1 text-sm">
-                <li
-                  v-for="(item, index) in achievements"
-                  :key="index"
-                  class="flex justify-between items-center"
-                >
-                  {{ item }}
-                  <button
-                    type="button"
-                    @click="removeAchievement(index)"
-                    class="text-red-500 text-xs"
-                  >
-                    <Trash2 :size="16" />
-                  </button>
-                </li>
-              </ol>
-              <p
-                v-if="errors.achievements"
-                class="mt-1 text-xs text-red-600"
-              >
-                {{ errors.achievements }}
-              </p>
-            </div>
 
-            <div>
-              <p class="text-xs font-poppins text-gray-700 mb-3">
-                Unggah Piagam Penghargaan
-              </p>
-              <div v-if="certificates.length" class="space-y-2 mb-3">
-                <div
-                  v-for="(file, index) in certificates"
-                  :key="index"
-                  class="group flex items-center justify-between border p-3 rounded-lg bg-white"
-                >
-                  <div class="flex items-center gap-3 min-w-0">
-                    <iframe
-                      :src="certificatePreviews[index]"
-                      class="w-20 h-20 rounded border shrink-0"
-                    />
-                    <span class="text-sm text-gray-600 truncate">
-                      {{ file.name }}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-2 shrink-0">
+              <div class="space-y-2 max-h-45 overflow-y-auto pr-2">
+                <div v-if="form.achievements.length > 0" class="space-y-2">
+                  <div
+                    v-for="(item, index) in form.achievements"
+                    :key="index"
+                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700 group"
+                  >
+                    <div class="flex items-center gap-2 min-w-0">
+                      <FileCheck :size="16" class="text-green-500 shrink-0" />
+                      <div class="truncate">
+                        <p class="text-xs font-bold text-gray-900 dark:text-white">
+                          {{ item.title }}
+                        </p>
+                        <p class="text-[10px] text-gray-500 truncate">{{ item.file.name }}</p>
+                      </div>
+                    </div>
                     <button
                       type="button"
-                      @click="previewCertificate(file)"
-                      class="p-2 bg-white rounded-full shadow text-gray-500 hover:text-gray-700"
+                      @click="removeAchievement(index)"
+                      class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                     >
-                      <Eye :size="18"/>
+                      <X :size="14" />
                     </button>
-                    <button
-                      type="button"
-                      @click="removeCertificate(index)"
-                      class="p-2 bg-white rounded-full shadow text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 :size="18"/>
-                    </button>
-                    <BaseButton
-                      v-if="index === certificates.length - 1"
-                      size="sm"
-                      variant="primary"
-                      @click="triggerCertificateInput"
-                    >
-                      <Plus :size="16"/>
-                    </BaseButton>
                   </div>
                 </div>
+                <div
+                  v-else
+                  class="h-full border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center text-gray-400 text-center p-4"
+                >
+                  <p class="text-[10px]">Daftar prestasi akan muncul di sini</p>
+                </div>
               </div>
-              <div
-                v-else
-                @click="triggerCertificateInput"
-                class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150 border-gray-300 bg-gray-50 hover:bg-gray-100"
-              >
-                <p class="text-sm font-medium text-gray-600">
-                  Upload Sertifikat
-                </p>
-                <p class="text-xs text-gray-400 mt-1">
-                  PDF / DOC Max 5 MB
-                </p>
-              </div>
-              <input
-                ref="certificateInputRef"
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx"
-                class="hidden"
-                @change="handleCertificateChange"
-              />
-              <p v-if="errors.certificate" class="mt-1 text-xs text-red-600">
-                {{ errors.certificate }}
-              </p>
-            </div>
-            <div>
-              <label class="block text-xs font-poppins text-gray-700 mb-1">
-                Status Anak Asuh <span class="text-red-500">*</span>
-              </label>
-              <div class="flex gap-12">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    v-model="status"
-                    value="aktif"
-                    class="w-4 h-4 text-green-500 focus:ring-green-500"
-                  />
-                  Aktif
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    v-model="status"
-                    value="lulus"
-                    class="w-4 h-4 text-green-500 focus:ring-green-500"
-                  />
-                  Lulus
-                </label>
-              </div>
-              <p v-if="errors.status" class="mt-1 text-xs text-red-600">
-                {{ errors.status }}
-              </p>
             </div>
           </div>
         </div>
-        <div class="px-6 pb-4 flex justify-end gap-3">
-          <BaseButton type="button" variant="danger" @click="handleCancel" :disabled="isLoading">
-            Batal
-          </BaseButton>
 
-          <BaseButton
-            type="submit"
-            variant="primary"
-            :loading="isLoading"
-            :disabled="isSubmitDisabled"
-            class="disabled:opacity-50 disabled:cursor-not-allowed"
+        <!-- Right Column: Media & Actions -->
+        <div class="space-y-6">
+          <!-- Profile Picture -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
           >
-            <template #loading>Tambah..</template>
-            Tambahkan Anak Asuh
-          </BaseButton>
+            <h3
+              class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider text-center"
+            >
+              Foto Profil Anak
+            </h3>
+
+            <div class="flex justify-center">
+              <div
+                class="relative w-40 h-40 rounded-full border-4 border-dashed overflow-hidden transition-all duration-200 group bg-gray-50 dark:bg-gray-900/50"
+                :class="[
+                  form.profilePicturePreview
+                    ? 'border-primary-500'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-400',
+                ]"
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                  @change="handleProfilePictureChange"
+                />
+
+                <div
+                  v-if="!form.profilePicturePreview"
+                  class="h-full flex flex-col items-center justify-center p-4 text-center"
+                >
+                  <Camera class="text-gray-300 mb-2" :size="32" />
+                  <p class="text-[10px] font-medium text-gray-500">PILIH FOTO</p>
+                </div>
+
+                <template v-else>
+                  <img :src="form.profilePicturePreview" class="w-full h-full object-cover" />
+                  <div
+                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                  >
+                    <Camera class="text-white" :size="24" />
+                  </div>
+                </template>
+              </div>
+            </div>
+            <p v-if="errors.profilePicture" class="text-center text-[10px] text-red-600">
+              {{ errors.profilePicture }}
+            </p>
+          </div>
+
+          <!-- Documentation Status -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+              Dokumen Wajib
+            </h3>
+
+            <div class="space-y-4">
+              <!-- Family Card Upload -->
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest"
+                  >Kartu Keluarga (KK)</label
+                >
+                <div class="relative group">
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    @change="handleFileChange($event, 'familyCard')"
+                  />
+                  <div
+                    class="flex items-center justify-between p-3 border-2 border-dashed rounded-xl transition-colors"
+                    :class="
+                      form.familyCardFile
+                        ? 'border-primary-500 bg-primary-50/10'
+                        : 'border-gray-200 dark:border-gray-700'
+                    "
+                  >
+                    <div class="flex items-center gap-2 min-w-0">
+                      <FileText
+                        :size="18"
+                        :class="form.familyCardFile ? 'text-primary-500' : 'text-gray-400'"
+                      />
+                      <span class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
+                        form.familyCardFile ? form.familyCardFile.name : 'Pilih File KK'
+                      }}</span>
+                    </div>
+                    <Upload v-if="!form.familyCardFile" :size="14" class="text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- SKTM Upload -->
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest"
+                  >SKTM</label
+                >
+                <div class="relative group">
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    @change="handleFileChange($event, 'sktm')"
+                  />
+                  <div
+                    class="flex items-center justify-between p-3 border-2 border-dashed rounded-xl transition-colors"
+                    :class="
+                      form.sktmFile
+                        ? 'border-primary-500 bg-primary-50/10'
+                        : 'border-gray-200 dark:border-gray-700'
+                    "
+                  >
+                    <div class="flex items-center gap-2 min-w-0">
+                      <FileText
+                        :size="18"
+                        :class="form.sktmFile ? 'text-primary-500' : 'text-gray-400'"
+                      />
+                      <span class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
+                        form.sktmFile ? form.sktmFile.name : 'Pilih File SKTM'
+                      }}</span>
+                    </div>
+                    <Upload v-if="!form.sktmFile" :size="14" class="text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Graduation Toggle -->
+              <div
+                class="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 mt-2"
+              >
+                <div class="flex items-center gap-2">
+                  <GraduationCap :size="18" class="text-primary-300" />
+                  <span class="text-xs font-bold text-gray-700 dark:text-gray-300">LULUS</span>
+                </div>
+                <button
+                  type="button"
+                  @click="form.isGraduated = !form.isGraduated"
+                  class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                  :class="form.isGraduated ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'"
+                >
+                  <span
+                    class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                    :class="form.isGraduated ? 'translate-x-6' : 'translate-x-1'"
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <div class="flex flex-col gap-3">
+              <BaseButton type="submit" variant="primary" :loading="isLoading" class="w-full">
+                Simpan
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="danger"
+                @click="router.push({ name: 'dashboard-foster-children' })"
+                :disabled="isLoading"
+                class="w-full"
+              >
+                Batal
+              </BaseButton>
+            </div>
+          </div>
         </div>
       </form>
     </div>

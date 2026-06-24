@@ -13,6 +13,7 @@ export interface FosterChildrenTransaction {
   snapToken: string
   paidAt: string | null
   createdAt: string
+  fosterChildrenName?: string
 }
 
 export interface FosterChildrenTransactionList {
@@ -22,12 +23,14 @@ export interface FosterChildrenTransactionList {
 
 export interface FosterChildrenTransactionQueryParams extends PaginationParams {
   status?: string
+  isOnline?: boolean
 }
 
 export interface CreateFosterChildrenTransactionRequest {
   grossAmount: number
   donorName?: string
   donorEmail?: string
+  donationDate?: string
 }
 
 export type FosterChildrenTransactionResponse = Response<FosterChildrenTransaction>

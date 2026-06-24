@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AlertCircle, AlertTriangle, CheckCircle2, Info } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 interface Props {
@@ -30,10 +31,10 @@ const alertClasses = computed(() => {
 })
 
 const iconMap = {
-  success: '✓',
-  error: '⚠️',
-  warning: '⚡',
-  info: 'ℹ️',
+  success: CheckCircle2,
+  error: AlertCircle,
+  warning: AlertTriangle,
+  info: Info,
 }
 </script>
 
@@ -41,7 +42,7 @@ const iconMap = {
   <div :class="alertClasses" class="flex items-start justify-between gap-2">
     <div class="flex-1">
       <div v-if="title" class="flex items-center gap-2 font-semibold mb-1">
-        <span>{{ iconMap[type] }}</span>
+        <component :is="iconMap[type]" class="w-4 h-4 shrink-0" />
         <span>{{ title }}</span>
       </div>
       <slot />

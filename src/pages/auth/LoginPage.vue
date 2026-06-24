@@ -2,7 +2,7 @@
 import { reactive, computed, watch, ref } from 'vue'
 import { useLogin } from '@/composables/auth/useLogin'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
+import AuthInput from '@/components/atoms/AuthInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useToast } from '@/composables/ui/useToast'
 import { loginSchema } from '@/schemas/auth.schema'
@@ -41,7 +41,7 @@ const handleLogin = () => {
   if (!response.success) return
   loginMutation.mutate(response.data, {
     onError: (err) => {
-      showToast(extractError(err, 'Login failed. Please try again.'), 'error')
+      showToast(extractError(err, 'Login gagal. Silakan coba lagi.'), 'error')
     },
   })
 }
@@ -53,27 +53,27 @@ const handleGoogleLogin = () => {
 
 <template>
   <AuthLayout
-    title="Welcome Back"
-    subtitle="Sign in to your account"
+    title="Selamat Datang Kembali"
+    subtitle="Masuk ke akun Anda"
     :show-o-auth="true"
     @google-login="handleGoogleLogin"
   >
-    <form @submit.prevent="handleLogin" class="space-y-4">
-      <BaseInput
+    <form @submit.prevent="handleLogin" class="space-y-4" novalidate>
+      <AuthInput
         id="email"
         v-model="form.email"
         type="email"
-        label="Email Address"
-        placeholder="you@example.com"
+        label="Alamat Email"
+        placeholder="anda@contoh.com"
         autocomplete="email"
         :error="emailError"
       />
 
-      <BaseInput
+      <AuthInput
         id="password"
         v-model="form.password"
         type="password"
-        label="Password"
+        label="Kata Sandi"
         placeholder="••••••••"
         autocomplete="current-password"
         :show-password-toggle="true"
@@ -85,7 +85,7 @@ const handleGoogleLogin = () => {
           to="/forgot-password"
           class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition duration-200"
         >
-          Forgot password?
+          Lupa kata sandi?
         </RouterLink>
       </div>
 
@@ -95,19 +95,16 @@ const handleGoogleLogin = () => {
         full-width
         :loading="loginMutation.isPending.value"
       >
-        <template #loading>Signing in...</template>
-        Sign In
+        <template #loading>Sedang masuk...</template>
+        Masuk
       </BaseButton>
     </form>
 
     <template #footer>
       <p class="text-xs text-gray-600">
-        Don't have an account?
-        <RouterLink
-          to="/register"
-          class="text-indigo-600 hover:text-indigo-800 font-semibold transition duration-200"
-        >
-          Register now
+        Belum punya akun?
+        <RouterLink to="/register" class="text-primary-400 font-semibold hover:underline">
+          Daftar sekarang
         </RouterLink>
       </p>
     </template>

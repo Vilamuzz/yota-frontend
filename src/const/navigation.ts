@@ -1,4 +1,17 @@
-import { Home, Newspaper, Users, CirclePoundSterling, Baby, NotepadText } from 'lucide-vue-next'
+import {
+  Home,
+  Newspaper,
+  Users,
+  CirclePoundSterling,
+  Baby,
+  NotepadText,
+  GalleryHorizontal,
+  Ambulance,
+  HandHeart,
+  ShieldAlert,
+  Settings,
+  Building2,
+} from 'lucide-vue-next'
 import type { NavItem } from '@/types/navigation'
 import { ROLES } from './roles'
 
@@ -15,29 +28,28 @@ export const dashboardNavigation: NavItem[] = [
     roles: [ROLES.SUPERADMIN],
   },
   {
-    icon: Users,
-    label: 'Donasi',
-    route: '/dashboard/donations',
+    icon: Building2,
+    label: 'Profil Yayasan',
+    route: '/dashboard/foundation-profile',
+    roles: [ROLES.SUPERADMIN],
+  },
+  {
+    icon: Settings,
+    label: 'Pengaturan',
+    route: '/dashboard/settings',
+    roles: [ROLES.SUPERADMIN],
+  },
+  {
+    icon: HandHeart,
+    label: 'Program Donasi',
+    route: '/dashboard/donation-programs',
     roles: [ROLES.FINANCE],
   },
   {
     icon: CirclePoundSterling,
-    label: 'Pemasukan',
+    label: 'Riwayat Donasi',
     roles: [ROLES.FINANCE],
-    children: [
-      {
-        label: 'Donasi',
-        route: '/dashboard/income/donation',
-      },
-      {
-        label: 'Program Sosial',
-        route: '/dashboard/income/social-program',
-      },
-      {
-        label: 'Anak Asuh',
-        route: '/dashboard/income/foster-children',
-      },
-    ],
+    route: '/dashboard/donation-programs/income',
   },
   {
     icon: CirclePoundSterling,
@@ -45,16 +57,35 @@ export const dashboardNavigation: NavItem[] = [
     roles: [ROLES.FINANCE],
     children: [
       {
-        label: 'Donasi',
-        route: '/dashboard/expense/donation',
+        label: 'Program Donasi',
+        route: '/dashboard/expenses/donation-programs',
       },
       {
         label: 'Program Sosial',
-        route: '/dashboard/expense/social-program',
+        route: '/dashboard/expenses/social-programs',
       },
       {
         label: 'Anak Asuh',
-        route: '/dashboard/expense/foster-children',
+        route: '/dashboard/expenses/foster-children',
+      },
+    ],
+  },
+  {
+    icon: CirclePoundSterling,
+    label: 'Program Sosial',
+    roles: [ROLES.SOCIAL_MANAGER],
+    children: [
+      {
+        label: 'Data Program',
+        route: '/dashboard/social-programs',
+      },
+      {
+        label: 'Daftar Program Langganan',
+        route: '/dashboard/social-programs/subscriptions',
+      },
+      {
+        label: 'Daftar Pelanggan',
+        route: '/dashboard/social-programs/subscribers',
       },
     ],
   },
@@ -69,43 +100,81 @@ export const dashboardNavigation: NavItem[] = [
       },
       {
         label: 'Ajuan Anak Asuh',
-        route: '/dashboard/foster-children/submissions',
+        route: '/dashboard/foster-children/candidates',
       },
       {
         label: 'Riwayat Donasi Anak Asuh',
-        route: '/dashboard/foster-children/donations',
+        route: '/dashboard/foster-children/income',
       },
     ],
   },
   {
     icon: Newspaper,
-    label: 'News',
+    label: 'Berita',
     roles: [ROLES.PUBLICATION_MANAGER],
     route: '/dashboard/news',
   },
   {
-    icon: NotepadText,
-    label: 'Manajemen Program',
-    roles: [ROLES.SOCIAL_MANAGER],
+    icon: ShieldAlert,
+    label: 'Moderasi',
+    roles: [ROLES.PUBLICATION_MANAGER],
     children: [
       {
-        label: 'Data Program',
-        route: '/dashboard/social-program',
+        label: 'Komentar Berita',
+        route: '/dashboard/moderation/comments',
       },
       {
-        label: 'Riwayat Langganan',
-        route: '/dashboard/social-program/subscriptions',
-      },
-      {
-        label: 'Riwayat Pelanggan',
-        route: '/dashboard/social-program/customers',
+        label: 'Doa',
+        route: '/dashboard/moderation/prayers',
       },
     ],
+  },
+  {
+    icon: GalleryHorizontal,
+    label: 'Galeri',
+    route: '/dashboard/galleries',
+    roles: [ROLES.PUBLICATION_MANAGER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Kelola Ambulans',
+    route: '/dashboard/ambulances',
+    roles: [ROLES.AMBULANCE_MANAGER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Layanan Ambulans',
+    route: '/dashboard/ambulances/services',
+    roles: [ROLES.AMBULANCE_MANAGER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Layanan Ambulans',
+    route: '/dashboard/ambulances/assigned',
+    roles: [ROLES.AMBULANCE_DRIVER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Riwayat Ambulans',
+    route: '/dashboard/ambulances/histories',
+    roles: [ROLES.AMBULANCE_MANAGER],
+  },
+  {
+    icon: Ambulance,
+    label: 'Riwayat Ambulans',
+    route: '/dashboard/ambulances/histories/detail',
+    roles: [ROLES.AMBULANCE_DRIVER],
   },
   {
     icon: NotepadText,
     label: 'Manajemen Program',
     roles: [ROLES.CHAIRMAN],
-    route: '/dashboard/chairman/social-program',
+    route: '/dashboard/social-programs',
+  },
+  {
+    icon: Baby,
+    label: 'Anak Asuh',
+    roles: [ROLES.CHAIRMAN],
+    route: '/dashboard/foster-children/candidates',
   },
 ]

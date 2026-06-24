@@ -19,22 +19,21 @@ defineEmits<{
 const router = useRouter()
 
 const handleForm = () => {
-  router.push({name: 'foster-children-form',
-              params: {
-                slug: 'foster-children-submission' }})
+  router.push({
+    name: 'foster-children-submission',
+    params: {
+      slug: 'foster-children-submission',
+    },
+  })
 }
 </script>
 
 <template>
   <div class="bg-gray-100 pt-36 pb-14 w-full">
-
     <!-- container search + button -->
     <div class="mx-auto w-[70%] flex items-center gap-4">
-
       <!-- search bar -->
-      <div
-        class="text-gray-600 bg-gray-300 rounded-xl flex justify-between items-center flex-1"
-      >
+      <div class="text-gray-600 bg-gray-300 rounded-xl flex justify-between items-center flex-1">
         <input
           :value="modelValue"
           @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
@@ -51,8 +50,6 @@ const handleForm = () => {
         <Plus :size="16" />
         Ajukan Anak Asuh
       </BaseButton>
-
     </div>
-
   </div>
 </template>

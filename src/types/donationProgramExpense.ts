@@ -1,4 +1,4 @@
-import type { Pagination, Response } from './response'
+import type { Pagination, PaginationParams, Response } from './response'
 
 export interface DonationProgramExpense {
   id: string
@@ -15,6 +15,12 @@ export interface DonationProgramExpenseList {
   pagination: Pagination
 }
 
+export interface DonationProgramExpenseQueryParams extends PaginationParams {
+  sortBy?: string
+  startDate?: string
+  endDate?: string
+}
+
 export interface CreateDonationProgramExpenseRequest {
   title: string
   amount: number
@@ -23,5 +29,27 @@ export interface CreateDonationProgramExpenseRequest {
   note?: string
 }
 
+export interface DonationProgramExpenseExportRequest {
+  startDate: string
+  endDate: string
+}
+
 export type DonationProgramExpenseResponse = Response<DonationProgramExpense>
 export type DonationProgramExpenseListResponse = Response<DonationProgramExpenseList>
+
+/** A single month's expense total for a donation program */
+export interface MonthlyExpenseItem {
+  month: string // e.g. "2025-01"
+  expense: number
+}
+
+export interface MonthlyExpenseRecord {
+  donationProgramId: string
+  items: MonthlyExpenseItem[]
+}
+
+export interface MonthlyExpenseParams {
+  year?: number
+}
+
+export type MonthlyExpenseResponse = Response<MonthlyExpenseRecord>

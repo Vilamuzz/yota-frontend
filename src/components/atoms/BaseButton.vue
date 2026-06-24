@@ -30,7 +30,8 @@ const buttonClasses = computed(() => {
     secondary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
     danger: 'bg-danger-500 text-white hover:bg-red-700 focus:ring-red-500',
     white: 'bg-white text-primary-300 hover:bg-gray-300',
-    outline: 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-gray-50 focus:ring-gray-500',
+    outline:
+      'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:ring-gray-200',
   }
 
   const sizes = {
@@ -46,7 +47,7 @@ const buttonClasses = computed(() => {
 </script>
 
 <template>
-  <router-link v-if="to" :to="to" :class="buttonClasses"> <slot /></router-link>
+  <RouterLink v-if="to" :to="to" :class="buttonClasses"> <slot /></RouterLink>
   <button v-else :type="type" :disabled="disabled || loading" :class="buttonClasses">
     <span v-if="loading" class="flex items-center justify-center">
       <svg

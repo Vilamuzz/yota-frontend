@@ -4,6 +4,8 @@ export interface SocialProgramTransaction {
   id: string
   SocialProgramId: string
   orderId: string
+  donorName: string
+  donorEmail: string
   grossAmount: number
   isOnline: boolean
   transactionStatus: string

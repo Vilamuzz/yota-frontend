@@ -3,7 +3,7 @@ import { reactive, computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useResetPassword } from '@/composables/auth/useResetPassword'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
+import AuthInput from '@/components/atoms/AuthInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseAlert from '@/components/atoms/BaseAlert.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
@@ -36,7 +36,7 @@ const confirmPasswordError = computed(
 onMounted(() => {
   token.value = route.query.token as string
   if (!token.value) {
-    initError.value = 'Invalid or missing reset token. Please request a new one.'
+    initError.value = 'Token atur ulang tidak valid atau hilang. Silakan minta yang baru.'
   }
 })
 
@@ -73,7 +73,7 @@ const handleSubmit = () => {
         showSuccessModal.value = true
       },
       onError: (err) => {
-        showToast(extractError(err, 'Failed to reset password. Please try again.'), 'error')
+        showToast(extractError(err, 'Gagal mengatur ulang kata sandi. Silakan coba lagi.'), 'error')
       },
     },
   )
@@ -91,16 +91,16 @@ const closeModal = () => {
 </script>
 
 <template>
-  <AuthLayout title="Reset Password" subtitle="Enter your new password">
+  <AuthLayout title="Atur Ulang Kata Sandi" subtitle="Masukkan kata sandi baru Anda">
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <BaseAlert v-if="initError" type="error">
         {{ initError }}
       </BaseAlert>
-      <BaseInput
+      <AuthInput
         id="password"
         v-model="form.password"
         type="password"
-        label="New Password"
+        label="Kata Sandi Baru"
         placeholder="••••••••"
         autocomplete="new-password"
         :show-password-toggle="true"
@@ -108,11 +108,11 @@ const closeModal = () => {
         :error="passwordError"
       />
 
-      <BaseInput
+      <AuthInput
         id="confirmPassword"
         v-model="form.confirmPassword"
         type="password"
-        label="Confirm New Password"
+        label="Konfirmasi Kata Sandi Baru"
         placeholder="••••••••"
         autocomplete="new-password"
         :show-password-toggle="true"
@@ -125,17 +125,17 @@ const closeModal = () => {
         full-width
         :loading="resetPasswordMutation.isPending.value"
       >
-        <template #loading>Resetting...</template>
-        Reset Password
+        <template #loading>Sedang mengatur ulang...</template>
+        Atur Ulang Kata Sandi
       </BaseButton>
     </form>
 
     <template #footer>
       <button
         @click="goToLogin"
-        class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition duration-200"
+        class="text-xs text-primary-400 hover:text-primary-500 font-medium transition duration-200"
       >
-        ← Back to login
+        ← Kembali ke halaman masuk
       </button>
     </template>
   </AuthLayout>
@@ -143,10 +143,10 @@ const closeModal = () => {
   <!-- Success Modal -->
   <ConfirmationModal
     :show="showSuccessModal"
-    title="Password Reset Successful!"
-    message="Your password has been successfully reset. You can now login with your new password."
+    title="Atur Ulang Kata Sandi Berhasil!"
+    message="Kata sandi Anda telah berhasil diatur ulang. Anda sekarang dapat masuk dengan kata sandi baru Anda."
     :icon="CheckCircle"
-    primary-button-text="Login"
+    primary-button-text="Masuk"
     secondary-button-text=""
     @close="closeModal"
     @primary="goToLogin"

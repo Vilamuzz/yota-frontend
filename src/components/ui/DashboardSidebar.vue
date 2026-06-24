@@ -1,13 +1,67 @@
-<script setup lang="ts">
+<script lang="ts">
 import { ref } from 'vue'
-import { ChevronDown, LogOut } from 'lucide-vue-next'
+
+// Persist state across layout remounts
+const openDropdowns = ref<Set<string>>(new Set())
+const isInitialized = ref(false)
+</script>
+
+<script setup lang="ts">
+import { watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ChevronDown, LogOut, X } from 'lucide-vue-next'
+import { Motion, AnimatePresence } from 'motion-v'
 import { useLogout } from '@/composables/auth/useLogout'
 import { useNavigation } from '@/composables/navigation/useNavigation'
+import { useFoundationProfileStore } from '@/stores/foundationProfile'
 
+const props = withDefaults(
+  defineProps<{
+    isOpen?: boolean
+  }>(),
+  {
+    isOpen: false,
+  },
+)
+
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
+
+const route = useRoute()
+const router = useRouter()
 const { logout } = useLogout()
 const { visibleMenu } = useNavigation()
+const foundationProfileStore = useFoundationProfileStore()
 
-const openDropdowns = ref<Set<string>>(new Set())
+// Close sidebar on mobile when route changes
+watch(
+  () => route.path,
+  () => {
+    emit('close')
+  },
+)
+
+const isMenuActive = (menuRoute: string | undefined) => {
+  if (!menuRoute) return false
+  if (route.path === menuRoute) return true
+
+  let currentActiveMenu = route.meta.activeMenu as string | undefined
+  const visited = new Set<string>()
+
+  while (currentActiveMenu && !visited.has(currentActiveMenu)) {
+    visited.add(currentActiveMenu)
+    try {
+      const resolved = router.resolve({ name: currentActiveMenu })
+      if (resolved && resolved.path === menuRoute) return true
+      currentActiveMenu = resolved.meta.activeMenu as string | undefined
+    } catch {
+      break
+    }
+  }
+  return false
+}
+
 const toggleDropdown = (label: string) => {
   if (openDropdowns.value.has(label)) {
     openDropdowns.value.delete(label)
@@ -16,17 +70,50 @@ const toggleDropdown = (label: string) => {
   }
 }
 const isOpen = (label: string) => openDropdowns.value.has(label)
+
+if (!isInitialized.value) {
+  visibleMenu.value.forEach((item) => {
+    if (item.children) {
+      const isChildActive = item.children.some(
+        (child) => child.route && (route.path.startsWith(child.route) || isMenuActive(child.route)),
+      )
+      if (isChildActive) {
+        openDropdowns.value.add(item.label)
+      }
+    }
+  })
+  isInitialized.value = true
+}
+
+// Track which dropdowns were open at the exact moment this component mounted
+const initiallyOpen = new Set(openDropdowns.value)
 </script>
 
 <template>
   <aside
-    class="bg-primary-500 dark:bg-primary-300 text-white transition-all duration-300 flex flex-col w-64 font-poppins"
+    class="bg-primary-500 dark:bg-primary-300 text-white transition-all duration-300 flex flex-col w-64 font-poppins fixed md:relative inset-y-0 left-0 z-50 md:z-auto transform md:transform-none"
+    :class="props.isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
   >
     <!-- Logo Section -->
     <div class="p-4 flex items-center justify-between border-b border-white/10">
       <div class="flex items-center gap-3">
-        <div class="text-2xl font-bold">YOTA</div>
+        <img
+          :src="foundationProfileStore.logo!"
+          class="max-w-24"
+          alt="Logo"
+          v-if="foundationProfileStore.foundationName"
+        />
+        <div class="text-2xl font-bold" v-else>
+          {{ foundationProfileStore.foundationName }}
+        </div>
       </div>
+      <button
+        @click="emit('close')"
+        class="md:hidden p-2 text-white/85 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+        aria-label="Close sidebar"
+      >
+        <X :size="20" />
+      </button>
     </div>
 
     <!-- Navigation Menu -->
@@ -37,7 +124,7 @@ const isOpen = (label: string) => openDropdowns.value.has(label)
           <div
             :class="[
               'w-full flex items-center gap-3 px-4 py-2 rounded-sm transition-all duration-200 cursor-pointer',
-              isExactActive
+              isExactActive || isMenuActive(item.route)
                 ? 'bg-white/20 text-white shadow-sm'
                 : 'text-white/70 hover:bg-white/10 hover:text-white',
             ]"
@@ -51,12 +138,7 @@ const isOpen = (label: string) => openDropdowns.value.has(label)
         <div v-else class="space-y-1">
           <button
             @click="toggleDropdown(item.label)"
-            :class="[
-              'w-full flex items-center justify-between px-4 py-2 rounded-sm transition-all duration-200',
-              isOpen(item.label)
-                ? 'bg-white/10 text-white'
-                : 'text-white/70 hover:bg-white/10 hover:text-white',
-            ]"
+            class="w-full flex items-center justify-between px-4 py-2 rounded-sm transition-all duration-200 text-white/70 hover:bg-white/10 hover:text-white"
           >
             <div class="flex items-center gap-3">
               <component :is="item.icon" :size="20" :stroke-width="2" />
@@ -69,25 +151,34 @@ const isOpen = (label: string) => openDropdowns.value.has(label)
             />
           </button>
 
-          <div v-show="isOpen(item.label)" class="flex flex-col space-y-1">
-            <router-link
-              v-for="child in item.children"
-              :key="child.label"
-              :to="child.route || ''"
-              v-slot="{ isActive }"
+          <AnimatePresence>
+            <Motion
+              v-if="isOpen(item.label)"
+              :initial="initiallyOpen.has(item.label) ? false : { height: 0, opacity: 0 }"
+              :animate="{ height: 'auto', opacity: 1 }"
+              :exit="{ height: 0, opacity: 0 }"
+              :transition="{ duration: 0.25, ease: 'easeOut' }"
+              class="flex flex-col space-y-1 overflow-hidden"
             >
-              <div
-                :class="[
-                  'w-full flex items-center px-4 py-2 text-sm rounded-sm transition-all duration-200 text-left pl-11 cursor-pointer',
-                  isActive
-                    ? 'bg-white/20 text-white font-medium shadow-sm'
-                    : 'text-white/60 hover:text-white hover:bg-white/5',
-                ]"
+              <router-link
+                v-for="child in item.children"
+                :key="child.label"
+                :to="child.route || ''"
+                v-slot="{ isActive }"
               >
-                {{ child.label }}
-              </div>
-            </router-link>
-          </div>
+                <div
+                  :class="[
+                    'w-full flex items-center px-4 py-2 text-sm rounded-sm transition-all duration-200 text-left pl-11 cursor-pointer',
+                    isActive || isMenuActive(child.route)
+                      ? 'bg-white/20 text-white font-medium shadow-sm'
+                      : 'text-white/60 hover:text-white hover:bg-white/5',
+                  ]"
+                >
+                  {{ child.label }}
+                </div>
+              </router-link>
+            </Motion>
+          </AnimatePresence>
         </div>
       </div>
     </nav>

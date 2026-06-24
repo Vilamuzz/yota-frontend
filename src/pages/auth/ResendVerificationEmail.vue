@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useResendVerification } from '@/composables/auth/useResendVerification'
 import { useToast } from '@/composables/ui/useToast'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import BaseInput from '@/components/atoms/BaseInput.vue'
+import AuthInput from '@/components/atoms/AuthInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { Mail, ArrowLeft, Send } from 'lucide-vue-next'
 import { forgetPasswordSchema } from '@/schemas/auth.schema'
@@ -47,11 +47,11 @@ const handleResend = () => {
 
   resendVerificationMutation.mutate(result.data.email, {
     onSuccess: () => {
-      showToast('Verification email has been resent to your inbox.', 'success')
+      showToast('Email verifikasi telah dikirim ulang ke kotak masuk Anda.', 'success')
     },
     onError: (err) => {
       showToast(
-        extractError(err, 'Failed to resend verification email. Please try again.'),
+        extractError(err, 'Gagal mengirim ulang email verifikasi. Silakan coba lagi.'),
         'error',
       )
     },
@@ -61,32 +61,33 @@ const handleResend = () => {
 
 <template>
   <AuthLayout
-    title="Verify your email"
-    subtitle="We need to verify your email address to secure your account."
+    title="Verifikasi email Anda"
+    subtitle="Kami perlu memverifikasi alamat email Anda untuk mengamankan akun Anda."
   >
     <div class="flex flex-col items-center mb-8">
       <div class="w-20 h-20 bg-primary-300/10 rounded-full flex items-center justify-center mb-4">
         <Mail class="w-10 h-10 text-primary-300" />
       </div>
       <p class="text-center text-gray-600 text-sm">
-        Didn't receive the email? Check your spam folder or enter your email below to resend it.
+        Tidak menerima email? Periksa folder spam Anda atau masukkan email Anda di bawah untuk
+        mengirim ulang.
       </p>
     </div>
 
     <form @submit.prevent="handleResend" class="space-y-6">
-      <BaseInput
+      <AuthInput
         id="email"
         v-model="form.email"
         type="email"
-        label="Email Address"
-        placeholder="you@example.com"
+        label="Alamat Email"
+        placeholder="anda@contoh.com"
         autocomplete="email"
         :error="emailError"
       >
         <template #prefix>
           <Mail class="w-4 h-4 text-gray-400" />
         </template>
-      </BaseInput>
+      </AuthInput>
 
       <BaseButton
         type="submit"
@@ -95,9 +96,9 @@ const handleResend = () => {
         size="lg"
         :loading="resendVerificationMutation.isPending.value"
       >
-        <template #loading>Sending...</template>
+        <template #loading>Sedang mengirim...</template>
         <div class="flex items-center justify-center gap-2">
-          <span>Resend Verification Email</span>
+          <span>Kirim Ulang Email Verifikasi</span>
           <Send class="w-4 h-4" />
         </div>
       </BaseButton>
@@ -108,15 +109,15 @@ const handleResend = () => {
         class="w-full flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-primary-300 transition-colors duration-200"
       >
         <ArrowLeft class="w-4 h-4" />
-        Back to Sign In
+        Kembali ke Halaman Masuk
       </button>
     </form>
 
     <template #footer>
       <p class="text-xs text-gray-500">
-        Already verified?
-        <RouterLink to="/login" class="text-primary-300 font-semibold hover:underline">
-          Sign in
+        Sudah diverifikasi?
+        <RouterLink to="/login" class="text-primary-400 font-semibold hover:underline">
+          Masuk
         </RouterLink>
       </p>
     </template>

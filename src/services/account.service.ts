@@ -15,35 +15,47 @@ import type { ApiResponse } from '@/types/response'
 
 export const accountService = {
   getAccountList: async (params: AccountQueryParam): Promise<AccountListResponse> => {
-    const response = await api.get<AccountListResponse>(API.ACCOUNTS, { params })
+    const response = await api.get<AccountListResponse>(API.ACCOUNTS_SUPERADMIN, { params })
     return response.data
   },
 
-  getDetailAccount: async (accountId: string): Promise<AccountResponse> => {
-    const response = await api.get<AccountResponse>(`${API.ACCOUNTS}/${accountId}`)
+  getDriverAccountList: async (params: AccountQueryParam): Promise<AccountListResponse> => {
+    const response = await api.get<AccountListResponse>(`${API.ACCOUNTS}/drivers`, { params })
+    return response.data
+  },
+
+  getFosterParentAccountList: async (params: AccountQueryParam): Promise<AccountListResponse> => {
+    const response = await api.get<AccountListResponse>(`${API.ACCOUNTS}/foster-parents`, {
+      params,
+    })
+    return response.data
+  },
+
+  getDetailAccount: async (id: string): Promise<AccountResponse> => {
+    const response = await api.get<AccountResponse>(`${API.ACCOUNTS_SUPERADMIN}/${id}`)
     return response.data
   },
 
   setAccountBanStatus: async (
-    accountId: string,
+    id: string,
     data: SetAccountBanStatusRequest,
   ): Promise<ApiResponse> => {
-    const response = await api.patch<ApiResponse>(`${API.ACCOUNTS}/${accountId}/ban`, data)
+    const response = await api.patch<ApiResponse>(`${API.ACCOUNTS_SUPERADMIN}/${id}/ban`, data)
     return response.data
   },
 
-  addAccountRole: async (accountId: string, roleId: number): Promise<ApiResponse> => {
-    const response = await api.post<ApiResponse>(`${API.ACCOUNTS}/${accountId}/roles/${roleId}`)
+  addAccountRole: async (id: string, roleId: number): Promise<ApiResponse> => {
+    const response = await api.post<ApiResponse>(`${API.ACCOUNTS_SUPERADMIN}/${id}/roles/${roleId}`)
     return response.data
   },
 
   updateAccountRole: async (
-    accountId: string,
+    id: string,
     roleId: number,
     data: UpdateAccountRoleRequest,
   ): Promise<ApiResponse> => {
     const response = await api.patch<ApiResponse>(
-      `${API.ACCOUNTS}/${accountId}/roles/${roleId}`,
+      `${API.ACCOUNTS_SUPERADMIN}/${id}/roles/${roleId}`,
       data,
     )
     return response.data
@@ -57,7 +69,9 @@ export const accountService = {
   updateCurrentUserProfile: async (
     data: UpdateUserProfileRequest,
   ): Promise<UserProfileResponse> => {
-    const response = await api.patch<UserProfileResponse>(`${API.ME}/profile`, data)
+    const response = await api.patch<UserProfileResponse>(`${API.ME}/profile`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
     return response.data
   },
 
@@ -67,7 +81,7 @@ export const accountService = {
   },
 
   getRoles: async (): Promise<RolesResponse> => {
-    const response = await api.get<RolesResponse>(`${API.ACCOUNTS}/roles`)
+    const response = await api.get<RolesResponse>('/api/roles')
     return response.data
   },
 }

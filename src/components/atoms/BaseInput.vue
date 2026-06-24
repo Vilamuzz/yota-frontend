@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { Eye, EyeOff } from 'lucide-vue-next'
 
 interface Props {
-  modelValue: string
+  modelValue: string | number
   id: string
   type?: string
   label?: string
@@ -16,6 +16,9 @@ interface Props {
   size?: 'sm' | 'md' | 'lg'
   showPasswordToggle?: boolean
   showPasswordStrength?: boolean
+  min?: string | number
+  max?: string | number
+  inputClass?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -25,10 +28,13 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   showPasswordToggle: false,
   showPasswordStrength: false,
+  inputClass: '',
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string]
+  'update:modelValue': [value: string | number]
+  focus: [event: FocusEvent]
+  blur: [event: FocusEvent]
 }>()
 
 const showPassword = ref(false)
@@ -46,7 +52,7 @@ const passwordStrength = computed(() => {
     return { level: 0, text: '', color: '' }
   }
 
-  const password = props.modelValue
+  const password = String(props.modelValue)
   let strength = 0
 
   // Length check
@@ -74,7 +80,7 @@ const passwordStrength = computed(() => {
 
 const inputClasses = computed(() => {
   const base =
-    'w-full border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed'
+    'w-full border rounded-lg focus:ring-2 focus:ring-primary-500 transition-all duration-200 outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[#121212] border-gray-300 dark:border-gray-700'
 
   const sizes = {
     sm: 'px-3 py-1.5 text-xs',
@@ -95,7 +101,7 @@ const labelClasses = computed(() => {
     lg: 'text-sm',
   }
 
-  return `block font-medium text-gray-700 mb-1 ${sizes[props.size]}`
+  return `block font-medium text-gray-700 mb-1 dark:text-gray-200 ${sizes[props.size]}`
 })
 
 const handleInput = (event: Event) => {
@@ -132,12 +138,17 @@ const togglePasswordVisibility = () => {
         :required="required"
         :autocomplete="autocomplete"
         :disabled="disabled"
+        :min="min"
+        :max="max"
         :class="[
           inputClasses,
-          $slots.prefix ? 'pl-10' : '',
+          $slots.prefix ? (props.inputClass.includes('pl-') ? '' : 'pl-10') : '',
           $slots.suffix || (showPasswordToggle && type === 'password') ? 'pr-10' : '',
+          props.inputClass,
         ]"
         @input="handleInput"
+        @focus="$emit('focus', $event)"
+        @blur="$emit('blur', $event)"
       />
 
       <!-- Suffix Slot -->

@@ -1,45 +1,76 @@
 import type {
   CreateDonationProgramTransactionRequest,
   DonationProgramTransactionQueryParams,
+  MonthlyIncomeParams,
+  MonthlyIncomeResponse,
 } from '@/types/donationProgramTransaction'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
 
 export const donationProgramTransactionService = {
   createDonationProgramTransaction: async (
-    donationProgramSlug: string,
+    slug: string,
     data: CreateDonationProgramTransactionRequest,
   ) => {
-    const response = await api.post(
-      `${API.DONATION_PROGRAMS}/${donationProgramSlug}/transactions`,
-      data,
-    )
+    const response = await api.post(`${API.DONATION_PROGRAMS}/${slug}/transactions`, data)
     return response.data
   },
 
   createOfflineDonationProgramTransaction: async (
-    donationProgramId: string,
+    id: string,
     data: CreateDonationProgramTransactionRequest,
   ) => {
-    const response = await api.post(
-      `${API.DONATION_PROGRAMS}/${donationProgramId}/transactions`,
-      data,
-    )
+    const response = await api.post(`${API.DONATION_PROGRAMS_ADMIN}/${id}/transactions`, data)
     return response.data
   },
 
   getDonationProgramTransactions: async (
-    donationProgramId: string,
+    id: string,
     params: DonationProgramTransactionQueryParams,
   ) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS}/${donationProgramId}/transactions`, {
+    const response = await api.get(`${API.DONATION_PROGRAMS_ADMIN}/${id}/transactions`, {
       params,
     })
     return response.data
   },
 
-  getDonationProgramTransactionDetail: async (transactionId: string) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS}/transactions/${transactionId}`)
+  exportDonationProgramTransactionCSV: async (
+    id: string,
+    params: DonationProgramTransactionQueryParams,
+  ): Promise<Blob> => {
+    const response = await api.get(`${API.DONATION_PROGRAMS_ADMIN}/${id}/transactions/export`, {
+      params,
+      responseType: 'blob',
+    })
+    return response.data
+  },
+
+  cancelDonationProgramTransaction: async (id: string) => {
+    const response = await api.post(`${API.DONATION_PROGRAMS_ADMIN}/transactions/${id}/cancel`)
+    return response.data
+  },
+
+  getMyDonationProgramTransactions: async (params?: DonationProgramTransactionQueryParams) => {
+    const response = await api.get(`${API.DONATION_PROGRAMS}/transactions/me`, { params })
+    return response.data
+  },
+
+  getPublicDonationProgramTransactions: async (
+    slug: string,
+    params?: DonationProgramTransactionQueryParams,
+  ) => {
+    const response = await api.get(`${API.DONATION_PROGRAMS}/${slug}/transactions`, { params })
+    return response.data
+  },
+
+  getMonthlyIncome: async (
+    id: string,
+    params?: MonthlyIncomeParams,
+  ): Promise<MonthlyIncomeResponse> => {
+    const response = await api.get<MonthlyIncomeResponse>(
+      `${API.DONATION_PROGRAMS_ADMIN}/${id}/transactions/monthly-income`,
+      { params },
+    )
     return response.data
   },
 }

@@ -1,5 +1,5 @@
 import type { Media, MediaCategory, MediaStatus } from './media'
-import type { Pagination, Response } from './response'
+import type { Pagination, OffsetPagination, Response } from './response'
 
 export interface News {
   id: string
@@ -7,7 +7,7 @@ export interface News {
   title: string
   coverImage: string
   category: MediaCategory
-  medias: Media[]
+  media: Media[]
   content: string
   status: MediaStatus
   views: number
@@ -19,17 +19,38 @@ export interface NewsComment {
   id: string
   username: string
   content: string
+  replies?: NewsComment[]
   createdAt: string
+  reportCount?: number
 }
 
 export interface NewsList {
   news: News[]
-  pagination: Pagination
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
 export interface NewsCommentList {
-  newsComments: NewsComment[]
+  comments: NewsComment[]
   pagination: Pagination
+}
+
+export interface AdminNewsCommentList {
+  comments: NewsComment[]
+  pagination: OffsetPagination
+}
+
+export interface NewsQueryParams {
+  limit?: number
+  page?: number
+  search?: string
+  category?: MediaCategory
+  status?: MediaStatus
+  sortBy?: string
 }
 
 export interface CreateNewsRequest {
@@ -38,7 +59,8 @@ export interface CreateNewsRequest {
   content: string
   status: MediaStatus
   coverImage: File
-  medias?: File[]
+  mediaFiles: File[]
+  mediaAlts: string[]
 }
 
 export interface UpdateNewsRequest {
@@ -47,10 +69,16 @@ export interface UpdateNewsRequest {
   content?: string
   status?: MediaStatus
   coverImage?: File
-  medias?: File[]
+  mediaFiles?: File[]
+  mediaAlts?: string[]
+  mediaOrders?: number[]
+  mediaIds?: string[]
+  updateMediaAlts?: string[]
+  updateMediaOrders?: number[]
 }
 
 export interface CreateNewsCommentRequest {
+  parentCommentId?: string
   content: string
 }
 
@@ -58,3 +86,4 @@ export type NewsResponse = Response<News>
 export type NewsListResponse = Response<NewsList>
 export type NewsCommentResponse = Response<NewsComment>
 export type NewsCommentListResponse = Response<NewsCommentList>
+export type AdminNewsCommentListResponse = Response<AdminNewsCommentList>

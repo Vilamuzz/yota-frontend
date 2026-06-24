@@ -6,7 +6,14 @@ export interface Account {
   email: string
   isBanned: boolean
   roles: AccountRole[]
+  userProfile: UserProfile
   createdAt: string
+}
+
+export interface Driver {
+  id: string
+  username: string
+  phone: string
 }
 
 export interface AccountRole {
@@ -56,7 +63,7 @@ export interface UpdateUserProfileRequest {
   defaultAccountRoleId: number
   phone: string
   address: string
-  profilePicture: string
+  profilePicture: File
 }
 
 export interface UpdateUserPasswordRequest {

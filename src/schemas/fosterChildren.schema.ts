@@ -1,31 +1,44 @@
 import { z } from 'zod'
+import { Category, Gender } from '@/types/fosterChildren'
 
-export const createChildSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  age: z.coerce.number().positive('Age must be a positive number'),
-  birth_date: z.string().min(1, 'Birth date is required'),
-  address: z.string().min(1, 'Address is required'),
-  gender: z.enum(['laki-laki', 'perempuan'], 'Gender is required'),
-  category: z.enum(['yatim', 'piatu', 'yatim-piatu'], 'Category is required'),
-  status: z.boolean().refine((val) => val === true, { message: 'Status must be true' }),
-  image: z.instanceof(File, { message: 'Image file is required' }),
-  achievements: z.array(z.string()).optional(),
-  certificates: z.array(z.instanceof(File)).optional(),
+export const createFosterChildrenSchema = z.object({
+  name: z.string().min(1, 'Nama anak asuh wajib diisi'),
+  birthPlace: z.string().min(1, 'Tempat lahir wajib diisi'),
+  birthDate: z.string().min(1, 'Tanggal lahir wajib diisi'),
+  address: z.string().min(1, 'Alamat wajib diisi'),
+  gender: z.nativeEnum(Gender, { message: 'Jenis kelamin wajib diisi' }),
+  category: z.nativeEnum(Category, { message: 'Kategori wajib diisi' }),
+  isGraduated: z.boolean(),
+  schoolName: z.string().min(1, 'Nama sekolah/universitas wajib diisi'),
+  educationLevel: z
+    .number({ message: 'Tingkat pendidikan wajib diisi' })
+    .min(1, 'Tingkat pendidikan wajib diisi'),
+  profilePicture: z.instanceof(File, { message: 'Foto profil wajib diunggah' }),
+  familyCard: z.instanceof(File, { message: 'Kartu Keluarga wajib diunggah' }),
+  sktm: z.instanceof(File, { message: 'SKTM wajib diunggah' }),
+  achievements: z.array(z.instanceof(File)).default([]),
+  achivementNotes: z.array(z.string()).default([]),
 })
 
-export type CreateChildFormData = z.infer<typeof createChildSchema>
+export type CreateFosterChildrenFormData = z.infer<typeof createFosterChildrenSchema>
 
-export const updateChildSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  age: z.coerce.number().positive('Age must be a positive number'),
-  birth_date: z.string().min(1, 'Birth date is required'),
-  address: z.string().min(1, 'Address is required'),
-  gender: z.enum(['laki-laki', 'perempuan'], 'Gender is required'),
-  category: z.enum(['yatim', 'piatu', 'yatim-piatu'], 'Category is required'),
-  status: z.boolean(),
-  image: z.instanceof(File).optional(),
-  achievements: z.array(z.string()).optional(),
-  certificates: z.array(z.instanceof(File)).optional(),
+export const updateFosterChildrenSchema = z.object({
+  name: z.string().min(1, 'Nama anak asuh wajib diisi'),
+  birthPlace: z.string().min(1, 'Tempat lahir wajib diisi'),
+  birthDate: z.string().min(1, 'Tanggal lahir wajib diisi'),
+  address: z.string().min(1, 'Alamat wajib diisi'),
+  gender: z.nativeEnum(Gender, { message: 'Jenis kelamin wajib diisi' }),
+  category: z.nativeEnum(Category, { message: 'Kategori wajib diisi' }),
+  isGraduated: z.boolean(),
+  schoolName: z.string().min(1, 'Nama sekolah/universitas wajib diisi'),
+  educationLevel: z
+    .number({ message: 'Tingkat pendidikan wajib diisi' })
+    .min(1, 'Tingkat pendidikan wajib diisi'),
+  profilePicture: z.instanceof(File).optional(),
+  familyCard: z.instanceof(File).optional(),
+  sktm: z.instanceof(File).optional(),
+  achievements: z.array(z.instanceof(File)).optional(),
+  achivementNotes: z.array(z.string()).optional(),
 })
 
-export type UpdateChildFormData = z.infer<typeof updateChildSchema>
+export type FosterChildrenFormData = z.infer<typeof updateFosterChildrenSchema>

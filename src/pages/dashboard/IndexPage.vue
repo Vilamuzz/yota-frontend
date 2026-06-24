@@ -1,8 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import FinanceDashboard from '@/components/ui/FinanceDashboard.vue'
 import { useCurrentUser } from '@/composables/account/useCurrentUser'
+import { ROLES } from '@/const/roles'
+import { useAuthStore } from '@/stores/auth'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
+import AmbulanceManagerDashboard from '@/components/ui/AmbulanceManagerDashboard.vue'
+import AmbulanceDriverDashboard from '@/components/ui/AmbulanceDriverDashboard.vue'
 
+const authStore = useAuthStore()
 const { user } = useCurrentUser()
+const activeRole = computed(() => authStore.activeRole)
 </script>
 
 <template>
@@ -11,14 +19,18 @@ const { user } = useCurrentUser()
 
     <div class="space-y-6">
       <!-- Welcome Card -->
+      <FinanceDashboard v-if="activeRole === ROLES.FINANCE" />
+      <AmbulanceManagerDashboard v-else-if="activeRole === ROLES.AMBULANCE_MANAGER" />
+      <AmbulanceDriverDashboard v-else-if="activeRole === ROLES.AMBULANCE_DRIVER" />
       <div
+        v-else
         class="bg-white rounded-xl shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
       >
         <h2 class="text-3xl font-bold text-gray-900 mb-2 dark:text-white">
-          Welcome back, {{ user?.username }}! 👋
+          Selamat datang kembali, {{ user?.username }}! 👋
         </h2>
         <p class="text-gray-600 dark:text-gray-400">
-          Here's what's happening with your account today.
+          Berikut adalah aktivitas yang terjadi di akun Anda hari ini.
         </p>
       </div>
     </div>

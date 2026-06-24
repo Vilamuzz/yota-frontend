@@ -2,6 +2,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -26,13 +27,25 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    // Handle request timeout — give callers a clear rejection reason
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      return Promise.reject(new Error('Request timed out. Please try again.'))
+    }
+
     const isAuthRoute =
       window.location.pathname.includes('/auth') || window.location.pathname.includes('/login')
 
     if (error.response?.status === 401 && !isAuthRoute) {
-      localStorage.removeItem('token')
-      window.location.href = '/login?message=session_expired'
+      const token = localStorage.getItem('token')
+
+      if (token) {
+        localStorage.removeItem('token')
+        const currentPath = encodeURIComponent(window.location.pathname + window.location.search)
+        window.location.href = `/login?message=session_expired&redirect=${currentPath}`
+        return new Promise(() => {}) // halt the promise chain during redirect
+      }
     }
+
     return Promise.reject(error)
   },
 )

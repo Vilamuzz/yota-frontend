@@ -1,33 +1,54 @@
+import { computed } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { donationProgramService } from '@/services/donationProgram.service'
-import type { UpdateDonationProgramRequest } from '@/types/donationProgram'
+import type { UpdateDonationProgramRequest, DonationProgram } from '@/types/donationProgram'
+import type { ApiError, ApiResponse } from '@/types/response'
 
 export const useDonationProgramUpdate = () => {
   const queryClient = useQueryClient()
 
-  const updateDonationMutation = useMutation({
-    mutationFn: ({
-      donationId,
-      data,
-    }: {
-      donationId: string
-      data: UpdateDonationProgramRequest
-    }) => donationProgramService.updateDonationProgram(donationId, data),
+  const updateMutation = useMutation<
+    ApiResponse<DonationProgram>,
+    ApiError,
+    { id: string; data: UpdateDonationProgramRequest }
+  >({
+    mutationFn: ({ id, data }) => donationProgramService.updateDonationProgram(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
-      queryClient.invalidateQueries({ queryKey: ['donationDetail', variables.donationId] })
+      queryClient.invalidateQueries({ queryKey: ['adminDonationProgramDetail', variables.id] })
     },
   })
 
-  const deleteDonationMutation = useMutation({
-    mutationFn: (donationId: string) => donationProgramService.deleteDonationProgram(donationId),
+  const deleteMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => donationProgramService.deleteDonationProgram(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
     },
   })
 
+  const activeMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => donationProgramService.updateActiveDonationProgram(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
+    },
+  })
+
+  const archiveMutation = useMutation<ApiResponse<void>, ApiError, string>({
+    mutationFn: (id) => donationProgramService.updateArchiveDonationProgram(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['donationPrograms'] })
+    },
+  })
+
+  const validationErrors = computed(
+    () => updateMutation.error.value?.response?.data?.validation ?? null,
+  )
+
   return {
-    updateDonationMutation,
-    deleteDonationMutation,
+    updateMutation,
+    deleteMutation,
+    activeMutation,
+    archiveMutation,
+    validationErrors,
   }
 }

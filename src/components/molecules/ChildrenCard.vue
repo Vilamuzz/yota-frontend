@@ -1,25 +1,41 @@
 <script setup lang="ts">
-import type { Child } from '@/types/fosterChildren'
+import type { FosterChildren } from '@/types/fosterChildren'
+import { formatStatus } from '@/utils/format'
+import type { RouteLocationRaw } from 'vue-router'
 
 defineProps<{
-  children: Child
+  fosterChildren: FosterChildren
+  to?: RouteLocationRaw
 }>()
 
 const emit = defineEmits(['view'])
 
-const handleView = (child: Child) => {
-  emit('view', child)
+const handleView = (fosterChildren: FosterChildren) => {
+  emit('view', fosterChildren)
 }
 
 function calculateAge(birthDate: string): number {
   if (!birthDate) return 0
 
-  // Format: DD-MM-YYYY
-  const [dayStr, monthStr, yearStr] = birthDate.split('-')
+  // Expecting Format: YYYY-MM-DD
+  const parts = birthDate.split('-')
+  const [p1, p2, p3] = parts
 
-  const day = Number(dayStr)
-  const month = Number(monthStr)
-  const year = Number(yearStr)
+  if (!p1 || !p2 || !p3) return 0
+
+  let year: number, month: number, day: number
+
+  if (p1.length === 4) {
+    // YYYY-MM-DD
+    year = Number(p1)
+    month = Number(p2)
+    day = Number(p3)
+  } else {
+    // DD-MM-YYYY (legacy or alternative)
+    day = Number(p1)
+    month = Number(p2)
+    year = Number(p3)
+  }
 
   if (!day || !month || !year) return 0
 
@@ -30,8 +46,7 @@ function calculateAge(birthDate: string): number {
 
   const isBeforeBirthday =
     today.getMonth() < birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() &&
-      today.getDate() < birth.getDate())
+    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
 
   if (isBeforeBirthday) {
     age--
@@ -42,27 +57,40 @@ function calculateAge(birthDate: string): number {
 </script>
 
 <template>
-  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-37.5">
+  <component
+    :is="to ? 'router-link' : 'button'"
+    :to="to"
+    class="relative bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-37.5 w-full text-left cursor-pointer hover:shadow-md hover:border-primary-300 transition-all duration-200 group block overflow-hidden"
+    @click="!to && handleView(fosterChildren)"
+  >
+    <!-- Graduated Badge -->
     <div
-    class="flex flex-col items-center text-center space-y-1 hover:scale-105 transition"
+      v-if="fosterChildren.isGraduated"
+      class="absolute top-2 right-2 bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-lg z-10"
     >
-    <img
-      :src="children.image_url"
-      :alt="children.name"
-      class="w-20 h-20 rounded-full object-cover border-2 border-green-600"
-    />
-    <button
-      class="bg-primary-300 text-white text-md px-3 py-1 rounded-full font-medium"
-      @click="handleView(children)"
-    >
-      {{ children.name }}
-  </button>
-
-    <div class="flex text-sm divide-x">
-          <span class="font-bold px-1">{{ children.category }}</span>
-          <span class="font-normal px-1">{{ calculateAge(children.birth_date) }} Tahun</span>
+      Lulus
     </div>
 
+    <div
+      class="flex flex-col items-center text-center space-y-1 group-hover:scale-105 transition-transform duration-200"
+    >
+      <img
+        :src="fosterChildren.profilePicture"
+        :alt="fosterChildren.name"
+        class="w-20 h-20 rounded-full object-cover border-2 border-green-600"
+        :class="{ 'border-blue-500': fosterChildren.isGraduated }"
+      />
+      <span
+        class="bg-primary-300 text-white text-md px-3 py-1 rounded-full font-medium"
+        :class="{ '!bg-blue-500': fosterChildren.isGraduated }"
+      >
+        {{ fosterChildren.name }}
+      </span>
+
+      <div class="flex text-sm divide-x">
+        <span class="font-bold px-1">{{ formatStatus(fosterChildren.category) }}</span>
+        <span class="font-normal px-1">{{ calculateAge(fosterChildren.birthDate) }} Tahun</span>
+      </div>
     </div>
-  </div>
+  </component>
 </template>

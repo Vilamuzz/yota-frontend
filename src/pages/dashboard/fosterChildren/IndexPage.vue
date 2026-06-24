@@ -1,506 +1,284 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Eye, SquarePen, Trash2, Plus, Baby } from 'lucide-vue-next'
+import { Plus, Trash2, Edit, Baby, GraduationCap, User } from 'lucide-vue-next'
+import { useFosterChildrenFilters } from '@/composables/fosterChildren/useFosterChildrenFilters'
+import { useFosterChildrenDelete } from '@/composables/fosterChildren/useFosterChildrenDelete'
+import { useToast } from '@/composables/ui/useToast'
+import { formatDate, formatStatus } from '@/utils/format'
+import { extractError } from '@/utils/error'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import type { Child } from '@/types/fosterChildren'
+import { Category, Gender, type FosterChildren } from '@/types/fosterChildren'
+import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
-const router = useRouter()
+const { showToast } = useToast()
 
-const searchQuery = ref('')
-const selectedGender = ref('all')
-const selectedCategory = ref('all')
-const selectedStatus = ref('all')
+const {
+  queryParams,
+  limitOptions,
+  searchQuery,
+  pageOffset,
+  fosterChildren,
+  pagination,
+  isLoading,
+  hasActiveFilters,
+  handleNextPage,
+  handlePrevPage,
+} = useFosterChildrenFilters(true)
 
-const limit = ref(10)
-const limitOptions = [10, 25, 50, 100]
+const { deleteMutation } = useFosterChildrenDelete()
 
-const pageOffset = ref(0)
+const isDeleteModalOpen = ref(false)
+const selectedChild = ref<FosterChildren | null>(null)
 
-const children = ref<Child[]>([
-  {
-    id: '1',
-    name: 'Faris Ahad',
-    slug: 'faris-ahad',
-    gender: 'Laki-laki',
-    category: 'Yatim',
-    birthplace: 'Bandung',
-    birth_date: '2014-05-10',
-    address: 'Jl. Melati No. 12 Bandung',
-    image_url: 'https://i.pravatar.cc/150?img=1',
-    achievements: ['Juara 1 Lomba Menggambar 2023', 'Juara 2 Lomba Cerdas Cermat 2024'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-01',
-  },
-  {
-    id: '2',
-    name: 'Tia Mutiara',
-    slug: 'tia-mutiara',
-    gender: 'Perempuan',
-    category: 'Piatu',
-    birthplace: 'Garut',
-    birth_date: '2015-02-15',
-    address: 'Jl. Mawar No. 5 Garut',
-    image_url: 'https://i.pravatar.cc/150?img=2',
-    achievements: ['Juara 3 Lomba Menulis Cerpen 2023'],
-    certificates: [],
-    status: 'lulus',
-    created_at: '2024-01-02',
-  },
-  {
-    id: '3',
-    name: 'Ahmad Rizki',
-    slug: 'ahmad-rizki',
-    gender: 'Laki-laki',
-    category: 'Yatim Piatu',
-    birthplace: 'Tasikmalaya',
-    birth_date: '2013-08-20',
-    address: 'Jl. Anggrek No. 9 Tasikmalaya',
-    image_url: 'https://i.pravatar.cc/150?img=4',
-    achievements: ['Juara 1 Lomba Pidato 2023', 'Juara 2 Lomba Matematika 2024'],
-    certificates: [],
-    status: 'lulus',
-    created_at: '2024-01-03',
-  },
-  {
-    id: '4',
-    name: 'Siti Nurhaliza',
-    slug: 'siti-nurhaliza',
-    gender: 'Perempuan',
-    category: 'Yatim',
-    birthplace: 'Bogor',
-    birth_date: '2016-11-05',
-    address: 'Jl. Kenanga No. 7 Bogor',
-    image_url: 'https://i.pravatar.cc/150?img=3',
-    achievements: ['Juara 2 Lomba Menyanyi 2023'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-04',
-  },
-  {
-    id: '5',
-    name: 'Rizky Ramadhan',
-    slug: 'rizky-ramadhan',
-    gender: 'Laki-laki',
-    category: 'Piatu',
-    birthplace: 'Depok',
-    birth_date: '2012-09-12',
-    address: 'Jl. Melati No. 15 Depok',
-    image_url: 'https://i.pravatar.cc/150?img=5',
-    achievements: ['Juara 1 Lomba Sepak Bola 2023'],
-    certificates: [],
-    status: 'lulus',
-    created_at: '2024-01-05',
-  },
-  {
-    id: '6',
-    name: 'Dewi Sartika',
-    slug: 'dewi-sartika',
-    gender: 'Perempuan',
-    category: 'Yatim Piatu',
-    birthplace: 'Sukabumi',
-    birth_date: '2014-03-18',
-    address: 'Jl. Anggrek No. 12 Sukabumi',
-    image_url: 'https://i.pravatar.cc/150?img=6',
-    achievements: ['Juara 3 Lomba Tari 2023'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-06',
-  },
-  {
-    id: '7',
-    name: 'Budi Santoso',
-    slug: 'budi-santoso',
-    gender: 'Laki-laki',
-    category: 'Yatim',
-    birthplace: 'Cirebon',
-    birth_date: '2013-06-22',
-    address: 'Jl. Mawar No. 10 Cirebon',
-    image_url: 'https://i.pravatar.cc/150?img=7',
-    achievements: ['Juara 2 Lomba Lari 2023'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-07',
-  },
-  {
-    id: '8',
-    name: 'Ani Wulandari',
-    slug: 'ani-wulandari',
-    gender: 'Perempuan',
-    category: 'Piatu',
-    birthplace: 'Purwakarta',
-    birth_date: '2015-01-30',
-    address: 'Jl. Dahlia No. 8 Purwakarta',
-    image_url: 'https://i.pravatar.cc/150?img=8',
-    achievements: ['Juara 1 Lomba Membaca Puisi 2024'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-08',
-  },
-  {
-    id: '9',
-    name: 'Rina Kartika',
-    slug: 'rina-kartika',
-    gender: 'Perempuan',
-    category: 'Yatim Piatu',
-    birthplace: 'Majalengka',
-    birth_date: '2012-12-05',
-    address: 'Jl. Kenanga No. 6 Majalengka',
-    image_url: 'https://i.pravatar.cc/150?img=9',
-    achievements: ['Juara 2 Lomba Tari Tradisional 2023'],
-    certificates: [],
-    status: 'lulus',
-    created_at: '2024-01-09',
-  },
-  {
-    id: '10',
-    name: 'Rian Saputra',
-    slug: 'Rian-saputra',
-    gender: 'Laki-laki',
-    category: 'Yatim',
-    birthplace: 'Subang',
-    birth_date: '2013-04-17',
-    address: 'Jl. Melati No. 20 Subang',
-    image_url: 'https://i.pravatar.cc/150?img=10',
-    achievements: ['Juara 3 Lomba Catur 2024'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-10',
-  },
-  {
-    id: '11',
-    name: 'Putri Lestari',
-    slug: 'putri-lestari',
-    gender: 'Perempuan',
-    category: 'Piatu',
-    birthplace: 'Indramayu',
-    birth_date: '2014-10-09',
-    address: 'Jl. Anggrek No. 14 Indramayu',
-    image_url: 'https://i.pravatar.cc/150?img=11',
-    achievements: ['Juara 1 Lomba Menyanyi 2024'],
-    certificates: [],
-    status: 'aktif',
-    created_at: '2024-01-11',
-  }
-])
-
-const pagination = ref({
-  has_prev: false,
-  has_next: false
-})
-
-const filteredChildren = computed(() => {
-  return children.value.filter(child => {
-    const matchSearch =
-      child.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchGender =
-      selectedGender.value === 'all' ||
-      child.gender.toLowerCase() === selectedGender.value
-    const matchCategory =
-      selectedCategory.value === 'all' ||
-      child.category.toLowerCase() === selectedCategory.value
-
-    const matchStatus =
-      selectedStatus.value === 'all' ||
-      child.status.toLowerCase() === selectedStatus.value
-
-    return (
-      matchSearch &&
-      matchGender &&
-      matchCategory &&
-      matchStatus
-    )
-  })
-})
-
-const paginatedChildren = computed(() => {
-  const start = pageOffset.value * limit.value
-  const end = start + limit.value
-  return filteredChildren.value.slice(start, end)
-})
-
-watch([pageOffset, limit, filteredChildren], () => {
-  pagination.value.has_prev = pageOffset.value > 0
-  pagination.value.has_next =
-    (pageOffset.value + 1) * limit.value < filteredChildren.value.length
-}, { immediate: true })
-
-watch(limit, () => {
-  pageOffset.value = 0
-
-  pagination.value.has_prev = false
-  pagination.value.has_next =
-    limit.value < filteredChildren.value.length
-})
-
-watch(
-  [searchQuery, selectedGender, selectedCategory, selectedStatus],
-  () => {
-    pageOffset.value = 0
-  }
-)
-
-const handleNextPage = () => {
-  if (pagination.value.has_next) {
-    pageOffset.value++
-  }
-}
-
-const handlePrevPage = () => {
-  if (pagination.value.has_prev) {
-    pageOffset.value--
-  }
-}
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'aktif':
-      return 'bg-green-100 text-green-800'
-    default:
-      return 'bg-blue-100 text-blue-800'
-  }
-}
-
-const confirmShow = ref(false)
-const confirmChild = ref<Child | null>(null)
-
-const deleteChild = (child: Child) => {
-  confirmChild.value = child
-  confirmShow.value = true
+const openDeleteModal = (child: FosterChildren) => {
+  selectedChild.value = child
+  isDeleteModalOpen.value = true
 }
 
 const handleConfirmDelete = async () => {
-  if (!confirmChild.value) return
+  if (!selectedChild.value) return
 
-  const childId = confirmChild.value.id
-
-  const index = children.value.findIndex(
-    c => c.id === childId
-  )
-  if (index !== -1 && children.value[index]) {
-  children.value[index].status = 'nonaktif'
-}
-
-  confirmShow.value = false
-  confirmChild.value = null
-}
-
-const clearFilters = () => {
-  searchQuery.value = ''
-  selectedGender.value = 'all'
-  selectedCategory.value = 'all'
-  selectedStatus.value = 'all'
-}
-
-const genders = ['all', 'laki-laki', 'perempuan']
-const categories = ['all', 'yatim', 'piatu', 'yatim piatu']
-const statuses = ['all', 'aktif', 'lulus']
-
-const handleView = (child: Child) => {
-  router.push({ name: 'dashboard-foster-children-detail', params: { id: child.id } })
-}
-const handleCreate = () => {
-  router.push({ name: 'dashboard-foster-children-create' })
-}
-
-const handleEdit = (child: Child) => {
-  router.push({ name: 'dashboard-foster-children-edit', params: { id: child.id } })
+  deleteMutation.mutate(selectedChild.value.id, {
+    onSuccess: () => {
+      showToast('Data anak asuh berhasil dihapus', 'success')
+      isDeleteModalOpen.value = false
+      selectedChild.value = null
+    },
+    onError: (error) => {
+      showToast(extractError(error) || 'Gagal menghapus data anak asuh', 'error')
+    },
+  })
 }
 </script>
 
 <template>
   <DashboardLayout>
-    <template #title>Manajemen Anak Asuh </template>
+    <template #title>Manajemen Anak Asuh</template>
 
     <div class="space-y-6">
-      <div class="">
-        <div class="flex flex-col md:flex-col gap-4">
-          <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-            <BaseSearch v-model="searchQuery" placeholder="Cari anak asuh..." />
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <BaseFilter
-                :has-active-filters="
-                  selectedGender !== 'all' || selectedCategory !== 'all' || selectedStatus !== 'all'
-                "
-              >
-                <template #default="{ closeDropdown }">
-                  <div class="space-y-4">
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Jenis Kelamin</label>
-                      <select
-                        v-model="selectedGender"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="gender in genders" :key="gender" :value="gender">
-                          {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch v-model="searchQuery" placeholder="Cari nama anak..." class="flex-1 w-full" />
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
+              <div class="space-y-4 w-64">
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Jenis Kelamin
+                  </label>
+                  <select
+                    v-model="queryParams.gender"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Gender</option>
+                    <option :value="Gender.male">Laki-laki</option>
+                    <option :value="Gender.female">Perempuan</option>
+                  </select>
+                </div>
 
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Kategori</label>
-                      <select
-                        v-model="selectedCategory"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="category in categories" :key="category" :value="category">
-                          {{ category.charAt(0).toUpperCase() + category.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Kategori
+                  </label>
+                  <select
+                    v-model="queryParams.category"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Kategori</option>
+                    <option :value="Category.yatim">Yatim</option>
+                    <option :value="Category.piatu">Piatu</option>
+                    <option :value="Category.yatimPiatu">Yatim Piatu</option>
+                  </select>
+                </div>
 
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Status</label>
-                      <select
-                        v-model="selectedStatus"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="status in statuses" :key="status" :value="status">
-                          {{ status.charAt(0).toUpperCase() + status.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Status Kelulusan
+                  </label>
+                  <select
+                    v-model="queryParams.isGraduated"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Status</option>
+                    <option :value="true">Sudah Lulus</option>
+                    <option :value="false">Belum Lulus</option>
+                  </select>
+                </div>
 
-                    <div class="flex gap-2 pt-2">
-                      <button
-                        @click="clearFilters"
-                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
-                      >
-                        Clear
-                      </button>
-                      <button
-                        @click="closeDropdown"
-                        class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </div>
-                </template>
-              </BaseFilter>
-
-              <BaseButton variant="primary" @click="handleCreate">
-                <Plus :size="20" class="mr-1" />
-                Tambah Anak Asuh
-              </BaseButton>
-            </div>
-          </div>
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Urutkan
+                  </label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at asc">Terlama Terdaftar</option>
+                    <option value="name asc">Nama (A-Z)</option>
+                    <option value="name desc">Nama (Z-A)</option>
+                    <option value="birth_date asc">Umur Tertua</option>
+                    <option value="birth_date desc">Umur Termuda</option>
+                  </select>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
         </div>
+        <BaseButton
+          variant="primary"
+          :to="{ name: 'dashboard-foster-children-create' }"
+          class="w-full sm:w-auto justify-center"
+        >
+          <Plus :size="20" class="mr-1" />
+          Tambah Anak Asuh
+        </BaseButton>
       </div>
+
+      <BaseTable
+        :loading="isLoading"
+        loading-message="Memuat data anak asuh..."
+        :is-empty="fosterChildren.length === 0"
+        empty-message="Tidak ada data anak asuh"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
+        v-model:limit="queryParams.limit"
+        :limit-options="limitOptions"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
+      >
+        <template #empty-icon>
+          <Baby :size="96" class="mx-auto mb-2 text-gray-300" />
+        </template>
+
+        <template #headers>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Foto</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Nama Lengkap
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Gender</th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+            Kategori
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Terdaftar
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
+            Aksi
+          </th>
+        </template>
+
+        <template #rows>
+          <tr
+            v-for="(child, index) in fosterChildren"
+            :key="child.id"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
+          >
+            <td
+              class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200 text-sm"
+            >
+              {{ pageOffset * queryParams.limit! + index + 1 }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div
+                class="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border-2 border-white dark:border-gray-800 shadow-sm"
+              >
+                <img
+                  v-if="child.profilePicture"
+                  :src="child.profilePicture"
+                  class="w-full h-full object-cover"
+                  :alt="child.name"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                  <User :size="20" />
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white truncate max-w-xs">
+              {{ child.name }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+              <span
+                :class="[
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                  child.gender === Gender.male
+                    ? 'bg-blue-50 border-blue-100 text-blue-700 dark:bg-blue-900/20 dark:border-blue-900/30 dark:text-blue-400'
+                    : 'bg-pink-50 border-pink-100 text-pink-700 dark:bg-pink-900/20 dark:border-pink-900/30 dark:text-pink-400',
+                ]"
+              >
+                {{ child.gender === Gender.male ? 'Laki-laki' : 'Perempuan' }}
+              </span>
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300"
+            >
+              {{ formatStatus(child.category) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              <span
+                :class="[
+                  'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                  getStatusColor(child.isGraduated ? 'completed' : 'active'),
+                ]"
+              >
+                <GraduationCap v-if="child.isGraduated" :size="12" />
+                {{ child.isGraduated ? 'Lulus' : 'Aktif' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+              {{ formatDate(child.createdAt) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-center gap-2">
+                <BaseIconButton
+                  :to="{ name: 'dashboard-foster-children-edit', params: { id: child.id } }"
+                  title="Edit Anak Asuh"
+                  variant="primary"
+                >
+                  <Edit :size="18" />
+                </BaseIconButton>
+                <BaseIconButton
+                  variant="danger"
+                  title="Hapus Anak Asuh"
+                  @click="openDeleteModal(child)"
+                >
+                  <Trash2 :size="18" />
+                </BaseIconButton>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </BaseTable>
     </div>
 
-    <BaseTable
-      class="mt-6"
-      :loading="false"
-      loading-message="Memuat data anak asuh..."
-      :is-empty="filteredChildren.length === 0"
-      empty-message="Tidak ada anak asuh yang ditemukan."
-      :has-prev="pagination?.has_prev"
-      :has-next="pagination?.has_next"
-      v-model.limit="limit"
-      :limit-options="limitOptions"
-      @prev="handlePrevPage"
-      @next="handleNextPage"
-    >
-      <template #empty-icon>
-        <Baby :size="64" class="text-gray-400" />
-      </template>
-
-      <template #headers>
-        <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">No</th>
-        <th class="px-6 py-2 text-center text-xs font-poppins uppercase tracking-wider">
-          Nama Anak Asuh
-        </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
-          Jenis Kelamin
-        </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Kategori</th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">
-          Tanggal Ditambahkan
-        </th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Status</th>
-        <th class="px-6 py-3 text-center text-xs font-poppins uppercase tracking-wider">Aksi</th>
-      </template>
-
-      <template #rows>
-        <tr
-          v-for="(child, index) in paginatedChildren"
-          :key="child.id"
-          class="bg-white hover:bg-gray-50 transition-colors duration-150"
-        >
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ pageOffset * limit + index + 1 }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins max-w-50 truncate">
-            {{ child.name }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ child.gender }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{ child.category.charAt(0).toUpperCase() + child.category.slice(1) }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap font-poppins">
-            {{
-              new Date(child.created_at).toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-              })
-            }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-center">
-            <span
-              :class="[
-                'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-poppins border',
-                getStatusColor(child.status),
-              ]"
-            >
-              {{ child.status.charAt(0).toUpperCase() + child.status.slice(1) }}
-            </span>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-center relative">
-            <button
-              @click="handleView(child)"
-              class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
-              title="Lihat Detail"
-            >
-              <Eye :size="18" />
-            </button>
-            <button
-              @click="handleEdit(child)"
-              class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
-              title="Edit Anak Asuh"
-            >
-              <SquarePen :size="18" />
-            </button>
-            <button
-              @click="deleteChild(child)"
-              class="p-1 text-red-600 hover:bg-gray-100 rounded transition-colors duration-150"
-              title="Delete Anak Asuh"
-            >
-              <Trash2 :size="18" />
-            </button>
-          </td>
-        </tr>
-      </template>
-    </BaseTable>
+    <!-- Delete Confirmation Modal -->
+    <ConfirmationModal
+      :show="isDeleteModalOpen"
+      :title="`Hapus ${selectedChild?.name}?`"
+      message="Apakah Anda yakin ingin menghapus data ini? Semua informasi terkait anak asuh ini akan dihapus permanen."
+      danger-button-text="Hapus"
+      secondary-button-text="Batal"
+      :danger-button-loading="deleteMutation.isPending.value"
+      @danger="handleConfirmDelete"
+      @secondary="isDeleteModalOpen = false"
+      @close="isDeleteModalOpen = false"
+    />
   </DashboardLayout>
-
-  <ConfirmationModal
-    :show="confirmShow"
-    :title="`Delete ${confirmChild?.name}?`"
-    :message="`Anak asuh akan dihapus secara permanen dan tidak dapat dipulihkan.`"
-    primary-button-text="Delete"
-    secondary-button-text="Cancel"
-    @primary="handleConfirmDelete"
-    @secondary="confirmShow = false"
-    @close="confirmShow = false"
-  />
 </template>

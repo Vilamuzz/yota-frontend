@@ -4,13 +4,19 @@ import { useMutation } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
 import { extractError } from '@/utils/error'
 import type { ApiError } from '@/types/response'
+import { ROLES } from '@/const/roles'
+
+interface OAuthCallbackParams {
+  token: string | undefined
+  setupPassword?: boolean
+}
 
 export const useOAuthCallback = () => {
   const authStore = useAuthStore()
   const router = useRouter()
 
-  const oAuthMutation = useMutation<void, ApiError | Error, string | undefined>({
-    mutationFn: async (token) => {
+  const oAuthMutation = useMutation<void, ApiError | Error, OAuthCallbackParams>({
+    mutationFn: async ({ token }) => {
       if (!token) {
         throw new Error('Authentication failed. No token received.')
       }
@@ -22,8 +28,16 @@ export const useOAuthCallback = () => {
         throw new Error('Failed to fetch user data after authentication.')
       }
     },
-    onSuccess: () => {
-      router.push('/dashboard')
+    onSuccess: (_, variables) => {
+      if (variables.setupPassword) {
+        router.push('/auth/setup-password')
+        return
+      }
+      if (authStore.activeRole === ROLES.ORANG_TUA_ASUH) {
+        router.push('/')
+      } else {
+        router.push('/dashboard')
+      }
     },
     onError: () => {
       setTimeout(() => router.push('/login'), 3000)

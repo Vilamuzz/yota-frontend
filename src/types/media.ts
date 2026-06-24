@@ -14,15 +14,20 @@ export enum MediaType {
 }
 
 export enum MediaCategory {
-  SocialEvent = 'social-event',
-  Disaster = 'disaster',
-  Health = 'health',
-  Environment = 'environment',
-  Others = 'others',
+  SocialEvent = 'kegiatan sosial',
+  Disaster = 'bencana alam',
+  Health = 'kesehatan',
+  Environment = 'lingkungan',
+  Others = 'lainnya',
 }
 
 export enum MediaStatus {
-  Draft = 'draft',
-  Published = 'published',
-  Archived = 'archived',
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
+  ARCHIVED = 'archived',
+}
+
+export interface MediaRequest {
+  file: File
+  alt: string
 }

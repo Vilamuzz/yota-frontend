@@ -1,4 +1,4 @@
-import type { Pagination, Response } from './response'
+import type { Pagination, PaginationParams, Response } from './response'
 
 export interface SocialProgramExpense {
   id: string
@@ -15,12 +15,21 @@ export interface SocialProgramExpenseList {
   pagination: Pagination
 }
 
+export interface SocialProgramExpenseQueryParams extends PaginationParams {
+  sortBy?: string
+}
+
 export interface CreateSocialProgramExpenseRequest {
   title: string
   amount: number
   expenseDate: string
   proofFile?: File
   note?: string
+}
+
+export interface SocialProgramExpenseExportRequest {
+  startDate: string
+  endDate: string
 }
 
 export type SocialProgramExpenseResponse = Response<SocialProgramExpense>

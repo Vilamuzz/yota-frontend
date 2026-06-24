@@ -5,6 +5,17 @@ import { accountService } from '@/services/account.service'
 import type { UserJWTClaims } from '@/types/auth'
 import type { UserProfile } from '@/types/account'
 
+const USER_CACHE_KEY = 'yota_user_profile'
+
+const readUserCache = (): UserProfile | null => {
+  try {
+    const raw = localStorage.getItem(USER_CACHE_KEY)
+    return raw ? (JSON.parse(raw) as UserProfile) : null
+  } catch {
+    return null
+  }
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('token'))
   const user = ref<UserProfile | null>(null)
@@ -36,12 +47,18 @@ export const useAuthStore = defineStore('auth', () => {
 
   const setUser = (userData: UserProfile) => {
     user.value = userData
+    try {
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(userData))
+    } catch {
+      // quota exceeded — ignore
+    }
   }
 
   const clearAuth = () => {
     token.value = null
     user.value = null
     localStorage.removeItem('token')
+    localStorage.removeItem(USER_CACHE_KEY)
   }
 
   const isInitialized = ref(false)
@@ -51,10 +68,29 @@ export const useAuthStore = defineStore('auth', () => {
       isInitialized.value = true
       return
     }
+
+    // Restore from cache SYNCHRONOUSLY so the router guard resolves instantly
+    const cached = readUserCache()
+    if (cached) {
+      user.value = cached
+      isInitialized.value = true
+      // Silently refresh in the background to keep data current
+      accountService
+        .getCurrentUserProfile()
+        .then((response) => {
+          if (response.data) setUser(response.data)
+        })
+        .catch(() => {
+          /* ignore background refresh errors */
+        })
+      return
+    }
+
+    // No cache — must await the API (first login or cleared storage)
     try {
       const response = await accountService.getCurrentUserProfile()
       if (response.data) {
-        user.value = response.data
+        setUser(response.data)
       }
     } catch {
       clearAuth()

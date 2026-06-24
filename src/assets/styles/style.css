@@ -7,6 +7,9 @@
   src: url('../fonts/poppins.medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
+  /* swap: show system fallback immediately, swap to custom font when loaded */
+  /* This prevents FOIT (Flash of Invisible Text) which blocks FCP */
+  font-display: swap;
 }
 
 @font-face {
@@ -14,6 +17,7 @@
   src: url('../fonts/SFPRODISPLAYMEDIUM.OTF') format('opentype');
   font-weight: 500;
   font-style: normal;
+  font-display: swap;
 }
 
 @theme {

@@ -3,13 +3,25 @@ import { superadminRoutes } from './superadmin'
 import { financeRoutes } from './finance'
 import { publicationManagerRoutes } from './publicationManager'
 import { socialManagerRoutes } from './socialManager'
-import { chairmanRoutes } from './chairman'
+import { chairmanSocialManagerRoutes } from './chairman'
+import { ambulanceManagerRoutes } from './ambulanceManager'
+import { ROLES } from '@/const/roles'
 
 export const dashboardRoutes: RouteRecordRaw[] = [
   {
     path: '/dashboard',
     component: RouterView,
-    meta: { requiresAuth: true },
+    meta: {
+      roles: [
+        ROLES.SUPERADMIN,
+        ROLES.CHAIRMAN,
+        ROLES.FINANCE,
+        ROLES.SOCIAL_MANAGER,
+        ROLES.PUBLICATION_MANAGER,
+        ROLES.AMBULANCE_MANAGER,
+        ROLES.AMBULANCE_DRIVER,
+      ],
+    },
     children: [
       {
         path: '',
@@ -21,16 +33,13 @@ export const dashboardRoutes: RouteRecordRaw[] = [
       ...publicationManagerRoutes,
       ...financeRoutes,
       ...socialManagerRoutes,
-      ...chairmanRoutes,
+      ...chairmanSocialManagerRoutes,
+      ...ambulanceManagerRoutes,
       {
         path: 'profile',
         name: 'profile',
         component: () => import('@/pages/dashboard/ProfilePage.vue'),
-      },
-      {
-        path: 'settings',
-        name: 'settings',
-        component: () => import('@/pages/dashboard/SettingsPage.vue'),
+        meta: { title: 'Profile' },
       },
     ],
   },

@@ -7,11 +7,31 @@ import { ROLES } from '@/const/roles'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [...publicRoutes, ...authRoutes, ...dashboardRoutes],
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  },
+  routes: [
+    ...publicRoutes,
+    ...authRoutes,
+    ...dashboardRoutes,
+    {
+      path: '/access-denied',
+      name: 'access-denied',
+      component: () => import('@/pages/AccessDeniedPage.vue'),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/pages/NotFoundPage.vue'),
+    },
+  ],
 })
 
 router.beforeEach(async (to, _from, next) => {
-  console.time('RouterGuard')
   const authStore = useAuthStore()
 
   if (!authStore.isInitialized) {
@@ -28,7 +48,7 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.path.startsWith('/dashboard')) {
-    if (role === ROLES.ORANG_TUA_ASUH) return next('/')
+    if (role === ROLES.ORANG_TUA_ASUH) return next('/access-denied')
 
     const requiredRole = to.matched
       .map((record) => record.meta.role)
@@ -37,12 +57,24 @@ router.beforeEach(async (to, _from, next) => {
 
     if (requiredRole) {
       const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole]
-      if (!allowedRoles.includes(role)) return next('/dashboard')
+      if (!allowedRoles.includes(role)) return next('/access-denied')
     }
   }
 
-  console.timeEnd('RouterGuard')
   next()
+})
+
+router.onError((error, to) => {
+  const errors = [
+    'Failed to fetch dynamically imported module',
+    'error loading dynamically imported module',
+  ]
+
+  const isChunkLoadFailed = errors.some((msg) => error.message?.includes(msg))
+
+  if (isChunkLoadFailed) {
+    window.location.href = to.fullPath
+  }
 })
 
 export default router

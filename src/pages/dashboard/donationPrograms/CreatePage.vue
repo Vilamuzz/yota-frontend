@@ -1,41 +1,90 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Upload, X } from 'lucide-vue-next'
-import { createDonationSchema } from '@/schemas/donation.schema'
-import { DonationProgramStatusEnum, type DonationProgramCategoryEnum } from '@/types/donationProgram'
+import { Camera, HandHeart, CalendarDays, Tag, X } from 'lucide-vue-next'
+import { createDonationSchema } from '@/schemas/donationProgram.schema'
+import { DonationProgramCategoryEnum, DonationProgramStatusEnum } from '@/types/donationProgram'
 import { useDonationProgramCreate } from '@/composables/donationProgram/useDonationProgramCreate'
 import { useToast } from '@/composables/ui/useToast'
 import { getZodErrors } from '@/utils/zodError'
+import { extractError } from '@/utils/error'
+import { formatCurrency } from '@/utils/format'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 
 const router = useRouter()
-const { createMutation } = useDonationProgramCreate()
+const { createMutation, validationErrors } = useDonationProgramCreate()
 const { showToast } = useToast()
 
-// Form fields
-const title = ref('')
-const description = ref('')
-const category = ref('')
-const fundTarget = ref('')
-const dateEnd = ref('')
-const imageFile = ref<File | null>(null)
-const imagePreview = ref<string | null>(null)
+const todayStr = new Date().toISOString().split('T')[0]
+const categories = Object.values(DonationProgramCategoryEnum)
 
-// Validation errors – field names match schema keys + 'image'
+const coverImageInputRef = ref<HTMLInputElement | null>(null)
 const errors = ref<Record<string, string>>({})
-
-const categories = ['education', 'health', 'environment', 'social', 'disaster']
+const form = reactive({
+  title: '',
+  description: '',
+  category: '',
+  fundTarget: '',
+  startDate: todayStr,
+  dateEnd: '',
+  coverImageFile: null as File | null,
+  coverImagePreview: null as string | null,
+})
 
 const isLoading = computed(() => createMutation.isPending.value)
-const isSuccess = computed(() => createMutation.isSuccess.value)
 
-const imageInputRef = ref<HTMLInputElement | null>(null)
+const formatCurrencyPreview = computed(() => {
+  const num = Number(form.fundTarget)
+  if (!num || isNaN(num)) return ''
+  return formatCurrency(num)
+})
+
+const titleError = computed(() => errors.value.title || validationErrors.value?.title || '')
+const descriptionError = computed(
+  () => errors.value.description || validationErrors.value?.description || '',
+)
+const categoryError = computed(
+  () => errors.value.category || validationErrors.value?.category || '',
+)
+const fundTargetError = computed(
+  () => errors.value.fund_target || validationErrors.value?.fundTarget || '',
+)
+const startDateError = computed(
+  () => errors.value.date_start || validationErrors.value?.startDate || '',
+)
+const dateEndError = computed(() => errors.value.date_end || validationErrors.value?.endDate || '')
+const coverImageFileError = computed(
+  () => errors.value.cover_image || validationErrors.value?.coverImage || '',
+)
+
+const formatCategory = (cat: DonationProgramCategoryEnum) => {
+  if (cat === DonationProgramCategoryEnum.EDUCATION) return 'Pendidikan'
+  if (cat === DonationProgramCategoryEnum.HEALTH) return 'Kesehatan'
+  if (cat === DonationProgramCategoryEnum.ENVIRONMENT) return 'Lingkungan'
+  if (cat === DonationProgramCategoryEnum.SOCIAL) return 'Sosial'
+  if (cat === DonationProgramCategoryEnum.DISASTER) return 'Bencana'
+  if (cat === DonationProgramCategoryEnum.HUMANITY) return 'Kemanusiaan'
+  if (cat === DonationProgramCategoryEnum.OTHER) return 'Lainnya'
+  return cat
+}
+
+watch(
+  () => form,
+  () => {
+    if (Object.keys(errors.value).length > 0) {
+      errors.value = {}
+    }
+    if (createMutation.isError.value) {
+      createMutation.reset()
+    }
+  },
+  { deep: true },
+)
 
 const triggerImageInput = () => {
-  imageInputRef.value?.click()
+  coverImageInputRef.value?.click()
 }
 
 const handleImageChange = (event: Event) => {
@@ -44,287 +93,336 @@ const handleImageChange = (event: Event) => {
 
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
-    errors.value = { ...errors.value, image: 'Only JPG, PNG, or WebP images are allowed.' }
+    errors.value.cover_image = 'Hanya file JPG, PNG, atau WebP yang diperbolehkan.'
     return
   }
   if (file.size > 5 * 1024 * 1024) {
-    errors.value = { ...errors.value, image: 'Image must be smaller than 5 MB.' }
+    errors.value.cover_image = 'Ukuran gambar maksimal 5 MB.'
     return
   }
 
-  const { image: _, ...rest } = errors.value
-  void _
-  errors.value = rest
-  imageFile.value = file
-  imagePreview.value = URL.createObjectURL(file)
+  form.coverImageFile = file
+  form.coverImagePreview = URL.createObjectURL(file)
 }
 
 const removeImage = () => {
-  imageFile.value = null
-  imagePreview.value = null
-  if (imageInputRef.value) imageInputRef.value.value = ''
+  form.coverImageFile = null
+  form.coverImagePreview = null
+  if (coverImageInputRef.value) coverImageInputRef.value.value = ''
 }
 
-const validate = (): boolean => {
-  const result = createDonationSchema.safeParse({
-    title: title.value.trim(),
-    description: description.value.trim(),
-    category: category.value,
-    fund_target: Number(fundTarget.value),
-    date_end: dateEnd.value,
-  })
+const handleSubmit = (status: 'active' | 'draft' = 'active') => {
+  if (status === 'draft') {
+    if (!form.title.trim()) {
+      errors.value = { title: 'Judul wajib diisi untuk draf' }
+      return
+    }
 
-  const zodErrors = getZodErrors(result as Parameters<typeof getZodErrors>[0])
-
-  // Image is a File (not in Zod schema), validate separately
-  const imageError: Record<string, string> = imageFile.value
-    ? {}
-    : { image: 'Please upload a campaign image.' }
-
-  errors.value = { ...zodErrors, ...imageError }
-  return Object.keys(errors.value).length === 0
-}
-
-const handleSubmit = async (status: 'active' | 'draft' = 'active') => {
-  if (!validate()) return
-
-  await createMutation.mutateAsync({
-    title: title.value.trim(),
-    description: description.value.trim(),
-    category: category.value as DonationProgramCategoryEnum,
-    fundTarget: Number(fundTarget.value),
-    startDate: todayStr!,
-    endDate: dateEnd.value,
-    coverImage: imageFile.value!,
-    status: status === 'draft' ? DonationProgramStatusEnum.DRAFT : DonationProgramStatusEnum.ACTIVE,
-  })
-
-  if (createMutation.isSuccess.value) {
-    showToast('Donation campaign created successfully!', 'success')
-    router.push({ name: 'dashboard-donations' })
+    createMutation.mutate(
+      {
+        title: form.title.trim(),
+        status: DonationProgramStatusEnum.DRAFT,
+        description: form.description.trim() || undefined,
+        category: (form.category as DonationProgramCategoryEnum) || undefined,
+        fundTarget: form.fundTarget ? Number(form.fundTarget) : undefined,
+        startDate: form.startDate || undefined,
+        endDate: form.dateEnd || undefined,
+        coverImage: form.coverImageFile || undefined,
+      },
+      {
+        onSuccess: () => {
+          showToast('Draf berhasil disimpan!', 'success')
+          router.push({ name: 'dashboard-donation-programs' })
+        },
+        onError: (err) => {
+          showToast(extractError(err, 'Gagal menyimpan draf.'), 'error')
+        },
+      },
+    )
+    return
   }
+
+  // Full validation for active status
+  const result = createDonationSchema.safeParse({
+    title: form.title.trim(),
+    description: form.description.trim(),
+    category: form.category,
+    fundTarget: Number(form.fundTarget),
+    startDate: form.startDate,
+    endDate: form.dateEnd,
+  })
+
+  const zodErrors = getZodErrors(result)
+  const coverImageValidation: Record<string, string> = form.coverImageFile
+    ? {}
+    : { cover_image: 'Foto sampul wajib diunggah.' }
+
+  errors.value = { ...zodErrors, ...coverImageValidation }
+  if (!result.success || Object.keys(coverImageValidation).length > 0) {
+    showToast('Mohon lengkapi semua field yang wajib diisi', 'error')
+    return
+  }
+
+  createMutation.mutate(
+    {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      category: form.category as DonationProgramCategoryEnum,
+      fundTarget: Number(form.fundTarget),
+      startDate: form.startDate!,
+      endDate: form.dateEnd,
+      coverImage: form.coverImageFile!,
+      status: DonationProgramStatusEnum.ACTIVE,
+    },
+    {
+      onSuccess: () => {
+        showToast('Program donasi berhasil dibuat!', 'success')
+        router.push({ name: 'dashboard-donation-programs' })
+      },
+      onError: (err) => {
+        showToast(extractError(err, 'Gagal membuat program donasi.'), 'error')
+      },
+    },
+  )
 }
-
-const handleSaveDraft = () => handleSubmit('draft')
-
-// Today's date string for min date constraint
-const todayStr = new Date().toISOString().split('T')[0]
-
-const formatCurrencyPreview = computed(() => {
-  const num = Number(fundTarget.value)
-  if (!num || isNaN(num)) return ''
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(num)
-})
 </script>
 
 <template>
   <DashboardLayout>
+    <template #title>Tambah Program Donasi</template>
+
     <div class="max-w-full mx-auto space-y-6">
-      <!-- API Error Banner -->
-      <div
-        v-if="createMutation.error.value"
-        class="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
-      >
-        <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-            clip-rule="evenodd"
-          />
-        </svg>
-        {{ createMutation.error.value.message }}
-      </div>
+      <form @submit.prevent="handleSubmit('active')" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Primary Information -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Basic Information Card -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
+          >
+            <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
+              <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300">
+                <HandHeart :size="20" />
+              </div>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Informasi Program
+              </h3>
+            </div>
 
-      <!-- Form Card -->
-      <form
-        @submit.prevent="() => handleSubmit('active')"
-        class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-      >
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div class="p-6 space-y-5">
-            <!-- Campaign Image Upload -->
-            <div>
-              <p class="text-xs font-medium text-gray-700 mb-3">
-                Campaign Image <span class="text-red-500">*</span>
-              </p>
+            <BaseInput
+              id="title"
+              v-model="form.title"
+              label="Judul Program"
+              placeholder="mis. Bantu Bangun Sekolah di Lombok"
+              :error="titleError"
+              required
+            />
 
-              <!-- Preview area -->
-              <div
-                v-if="imagePreview"
-                class="relative w-full h-52 rounded-lg overflow-hidden group"
+            <div class="space-y-1.5">
+              <label
+                class="block text-xs font-medium text-gray-700 dark:text-gray-200 tracking-wider"
               >
-                <img :src="imagePreview" alt="Preview" class="w-full h-full object-cover" />
+                Deskripsi Program <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                id="description"
+                v-model="form.description"
+                rows="6"
+                placeholder="Jelaskan tujuan dan detail kampanye donasi ini…"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 transition-all outline-none resize-none"
+                :class="{ 'border-red-500': descriptionError }"
+              ></textarea>
+              <p v-if="descriptionError" class="mt-1 text-xs text-red-600">
+                {{ descriptionError }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Category & Financial Details Card -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
+          >
+            <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
+              <div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-500">
+                <Tag :size="20" />
+              </div>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Kategori & Target Dana
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Category -->
+              <div class="space-y-1.5">
+                <label
+                  for="category"
+                  class="block text-xs font-medium text-gray-700 dark:text-gray-200 tracking-wider"
+                >
+                  Kategori <span class="text-red-500">*</span>
+                </label>
+                <select
+                  id="category"
+                  v-model="form.category"
+                  class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-[#121212] text-gray-900 dark:text-gray-200 dark:border-gray-700"
+                  :class="categoryError ? 'border-red-500' : 'border-gray-300'"
+                >
+                  <option value="" disabled>Pilih kategori</option>
+                  <option v-for="cat in categories" :key="cat" :value="cat">
+                    {{ formatCategory(cat) }}
+                  </option>
+                </select>
+                <p v-if="categoryError" class="mt-1 text-xs text-red-600">{{ categoryError }}</p>
+              </div>
+
+              <!-- Fund Target -->
+              <BaseInput
+                id="fundTarget"
+                v-model="form.fundTarget"
+                type="number"
+                label="Target Dana (IDR)"
+                required
+                placeholder="mis. 50000000"
+                :error="fundTargetError"
+                :hint="formatCurrencyPreview ? `≈ ${formatCurrencyPreview}` : undefined"
+              />
+            </div>
+          </div>
+
+          <!-- Timeline Card -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
+          >
+            <div class="flex items-center gap-3 pb-4 border-b border-gray-50 dark:border-gray-700">
+              <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-500">
+                <CalendarDays :size="20" />
+              </div>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Timeline Kampanye
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <BaseInput
+                id="startDate"
+                v-model="form.startDate!"
+                type="date"
+                label="Tanggal Mulai"
+                required
+                :error="startDateError"
+              />
+              <BaseInput
+                id="dateEnd"
+                v-model="form.dateEnd"
+                type="date"
+                label="Tanggal Selesai"
+                required
+                :min="form.startDate || todayStr"
+                :error="dateEndError"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Cover Image & Actions -->
+        <div class="space-y-6">
+          <!-- Cover Image Card -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+          >
+            <h3
+              class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider text-center"
+            >
+              Foto Sampul Program
+            </h3>
+
+            <div class="flex justify-center">
+              <div
+                v-if="form.coverImagePreview"
+                class="relative w-full aspect-video rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden group shadow-sm"
+              >
+                <img
+                  :src="form.coverImagePreview"
+                  class="w-full h-full object-cover"
+                  alt="Preview"
+                />
                 <div
-                  class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center"
+                  class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center"
                 >
                   <button
                     type="button"
                     @click="removeImage"
-                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white rounded-full shadow-md text-red-500 hover:text-red-600"
-                    title="Remove image"
+                    class="opacity-0 group-hover:opacity-100 p-2 bg-white rounded-full shadow-lg text-red-500 hover:scale-110 transition-all duration-200"
                   >
-                    <X :size="18" />
+                    <X :size="20" />
                   </button>
                 </div>
               </div>
 
-              <!-- Upload dropzone -->
               <div
                 v-else
                 @click="triggerImageInput"
-                class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150"
-                :class="
-                  errors.image
-                    ? 'border-red-300 bg-red-50 hover:bg-red-50/70'
-                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-                "
+                class="relative w-full aspect-video rounded-xl border-2 border-dashed overflow-hidden transition-all duration-200 cursor-pointer flex flex-col items-center justify-center p-4 text-center bg-gray-50 dark:bg-gray-900/50"
+                :class="[
+                  coverImageFileError
+                    ? 'border-red-400 bg-red-50/50'
+                    : 'border-gray-300 dark:border-gray-700 hover:border-primary-400 hover:bg-gray-100/50',
+                ]"
               >
-                <Upload :size="28" class="text-gray-400 mb-2" />
-                <p class="text-sm font-medium text-gray-600">Click to upload image</p>
-                <p class="text-xs text-gray-400 mt-1">JPG, PNG, WebP &bull; Max 5 MB</p>
+                <Camera class="text-gray-300 mb-2" :size="32" />
+                <p class="text-[10px] font-medium text-gray-500 uppercase tracking-widest">
+                  Pilih Foto Sampul
+                </p>
+                <p class="text-[8px] text-gray-400 mt-1">
+                  Rekomendasi 16:9 (JPG, PNG, WebP &bull; Maks 5 MB)
+                </p>
               </div>
 
               <input
-                ref="imageInputRef"
+                ref="coverImageInputRef"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 class="hidden"
                 @change="handleImageChange"
               />
-              <p v-if="errors.image" class="mt-1 text-xs text-red-600">{{ errors.image }}</p>
             </div>
-
-            <!-- Title -->
-            <BaseInput
-              id="title"
-              v-model="title"
-              label="Title"
-              placeholder="e.g. Help Build a School in Lombok"
-              :required="true"
-              :error="errors.title"
-            />
+            <p v-if="coverImageFileError" class="text-center text-[10px] text-red-600 mt-2">
+              {{ coverImageFileError }}
+            </p>
           </div>
-          <div>
-            <!-- Form Fields -->
-            <div class="p-6 space-y-5">
-              <!-- Description -->
-              <div>
-                <label for="description" class="block text-xs font-medium text-gray-700 mb-1">
-                  Description <span class="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="description"
-                  v-model="description"
-                  rows="5"
-                  placeholder="Describe the goal of this donation campaign…"
-                  class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                  :class="
-                    errors.description ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
-                  "
-                />
-                <p v-if="errors.description" class="mt-1 text-xs text-red-600">
-                  {{ errors.description }}
-                </p>
-              </div>
 
-              <!-- Category + Fund Target (side by side on md+) -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <!-- Category -->
-                <div>
-                  <label for="category" class="block text-xs font-medium text-gray-700 mb-1">
-                    Category <span class="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="category"
-                    v-model="category"
-                    class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    :class="
-                      errors.category ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
-                    "
-                  >
-                    <option value="" disabled>Select a category</option>
-                    <option v-for="cat in categories" :key="cat" :value="cat">
-                      {{ cat.charAt(0).toUpperCase() + cat.slice(1) }}
-                    </option>
-                  </select>
-                  <p v-if="errors.category" class="mt-1 text-xs text-red-600">
-                    {{ errors.category }}
-                  </p>
-                </div>
-
-                <!-- Fund Target -->
-                <div>
-                  <label for="fund-target" class="block text-xs font-medium text-gray-700 mb-1">
-                    Fund Target (IDR) <span class="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="fund-target"
-                    v-model="fundTarget"
-                    type="number"
-                    min="1"
-                    placeholder="e.g. 50000000"
-                    class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    :class="
-                      errors.fund_target ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
-                    "
-                  />
-                  <p v-if="formatCurrencyPreview" class="mt-1 text-xs text-gray-500">
-                    ≈ {{ formatCurrencyPreview }}
-                  </p>
-                  <p v-if="errors.fund_target" class="mt-1 text-xs text-red-600">
-                    {{ errors.fund_target }}
-                  </p>
-                </div>
-              </div>
-
-              <!-- End Date -->
-              <div>
-                <label for="date-end" class="block text-xs font-medium text-gray-700 mb-1">
-                  Campaign End Date <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="date-end"
-                  v-model="dateEnd"
-                  type="date"
-                  :min="todayStr"
-                  class="w-full px-3 py-2 text-sm border rounded-lg transition duration-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  :class="errors.date_end ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'"
-                />
-                <p v-if="errors.date_end" class="mt-1 text-xs text-red-600">
-                  {{ errors.date_end }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="px-6 pb-4 flex items-center justify-between gap-3">
-          <BaseButton
-            type="button"
-            variant="danger"
-            :to="{ name: 'dashboard-donations' }"
-            :disabled="isLoading"
+          <!-- Actions Card -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
           >
-            Cancel
-          </BaseButton>
-          <div class="flex items-center gap-3">
-            <BaseButton
-              type="button"
-              variant="outline"
-              @click="handleSaveDraft"
-              :disabled="isLoading"
-            >
-              Save Draft
-            </BaseButton>
-            <BaseButton type="submit" variant="primary" :loading="isLoading" :disabled="isSuccess">
-              <template #loading>Creating…</template>
-              Create Campaign
-            </BaseButton>
+            <div class="flex flex-col gap-3">
+              <BaseButton
+                type="submit"
+                variant="primary"
+                :loading="isLoading"
+                :disabled="createMutation.isSuccess.value"
+                class="w-full"
+              >
+                <template #loading>Menyimpan…</template>
+                Publikasikan
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="outline"
+                @click="handleSubmit('draft')"
+                :disabled="isLoading"
+                class="w-full"
+              >
+                Simpan Draf
+              </BaseButton>
+              <BaseButton
+                type="button"
+                variant="danger"
+                :to="{ name: 'dashboard-donation-programs' }"
+                :disabled="isLoading"
+                class="w-full"
+              >
+                Batal
+              </BaseButton>
+            </div>
           </div>
         </div>
       </form>

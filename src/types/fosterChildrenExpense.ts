@@ -1,7 +1,8 @@
-import type { Pagination, Response } from './response'
+import type { Pagination, PaginationParams, Response } from './response'
 
 export interface FosterChildrenExpense {
   id: string
+  fosterChildrenId: string
   title: string
   amount: number
   expenseDate: string
@@ -15,12 +16,21 @@ export interface FosterChildrenExpenseList {
   pagination: Pagination
 }
 
+export interface FosterChildrenExpenseQueryParams extends PaginationParams {
+  sortBy?: string
+}
+
 export interface CreateFosterChildrenExpenseRequest {
   title: string
   amount: number
   expenseDate: string
   proofFile?: File
   note?: string
+}
+
+export interface FosterChildrenExpenseExportRequest {
+  startDate: string
+  endDate: string
 }
 
 export type FosterChildrenExpenseResponse = Response<FosterChildrenExpense>

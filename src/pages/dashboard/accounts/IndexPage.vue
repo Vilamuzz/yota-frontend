@@ -2,14 +2,17 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { UserCheck, SquarePen, Ban, UserRound, Eye } from 'lucide-vue-next'
 import { useAccountList, useAccountUpdate, useRoles } from '@/composables/account'
+import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useQueryClient } from '@tanstack/vue-query'
 import type { Account, AccountQueryParam } from '@/types/account'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import AccountModal from '@/components/molecules/AccountModal.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import AccountModal from '@/components/organisms/AccountModal.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
+import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
 const queryParams = reactive<AccountQueryParam>({
   limit: 10,
@@ -36,51 +39,17 @@ watch(
   () => resetPagination(),
 )
 
-const pageOffset = ref(0)
-
-function resetPagination() {
-  queryParams.nextCursor = undefined
-  queryParams.prevCursor = undefined
-  pageOffset.value = 0
-}
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
+  useCursorPagination(queryParams)
 
 const { accounts, pagination, isLoading } = useAccountList(queryParams)
 const { roles } = useRoles()
 const queryClient = useQueryClient()
 const { updateBanStatusMutation } = useAccountUpdate()
 
-function handleNextPage() {
-  if (pagination.value?.nextCursor) {
-    queryParams.nextCursor = pagination.value.nextCursor
-    queryParams.prevCursor = undefined
-    pageOffset.value += 1
-  }
-}
-
-function handlePrevPage() {
-  if (pagination.value?.prevCursor) {
-    queryParams.prevCursor = pagination.value.prevCursor
-    queryParams.nextCursor = undefined
-    pageOffset.value -= 1
-  }
-}
-
 const hasActiveFilters = computed(
   () => queryParams.roleId !== undefined || queryParams.isBanned !== undefined,
 )
-
-function clearFilters() {
-  searchQuery.value = ''
-  queryParams.roleId = undefined
-  queryParams.isBanned = undefined
-  resetPagination()
-}
-
-function getStatusColor(isBanned: boolean) {
-  return isBanned
-    ? 'bg-red-100 text-red-700 border-red-200'
-    : 'bg-green-100 text-green-700 border-green-200'
-}
 
 const modalShow = ref(false)
 const modalAccount = ref<Account | null>(null)
@@ -154,12 +123,15 @@ function handleConfirmAction() {
 
     <div class="space-y-6">
       <!-- Search and Filter Controls -->
-      <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-        <BaseSearch v-model="searchQuery" placeholder="Search accounts..." />
-
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-          <BaseFilter :has-active-filters="hasActiveFilters">
-            <template #default="{ closeDropdown }">
+      <div class="flex flex-col md:flex-row gap-4 justify-end items-start md:items-center">
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch
+            v-model="searchQuery"
+            placeholder="Search accounts..."
+            class="flex-1 w-full"
+          />
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
               <div class="space-y-4">
                 <!-- Role filter -->
                 <div>
@@ -168,7 +140,7 @@ function handleConfirmAction() {
                     v-model="queryParams.roleId"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option :value="undefined">All</option>
+                    <option :value="undefined">Semua</option>
                     <option v-for="role in roles" :key="role.id" :value="role.id">
                       {{ role.name.charAt(0).toUpperCase() + role.name.slice(1) }}
                     </option>
@@ -182,25 +154,10 @@ function handleConfirmAction() {
                     v-model="queryParams.isBanned"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option :value="undefined">All</option>
-                    <option :value="false">Active</option>
-                    <option :value="true">Banned</option>
+                    <option :value="undefined">Semua</option>
+                    <option :value="false">Aktif</option>
+                    <option :value="true">Diblokir</option>
                   </select>
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                  <button
-                    @click="clearFilters"
-                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    Clear
-                  </button>
-                  <button
-                    @click="closeDropdown"
-                    class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150"
-                  >
-                    Apply
-                  </button>
                 </div>
               </div>
             </template>
@@ -218,8 +175,8 @@ function handleConfirmAction() {
         :has-next="!!pagination?.nextCursor"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage"
-        @next="handleNextPage"
+        @prev="handlePrevPage(pagination)"
+        @next="handleNextPage(pagination)"
       >
         <template #empty-icon>
           <UserRound :size="96" class="mx-auto mb-2" />
@@ -227,7 +184,6 @@ function handleConfirmAction() {
 
         <template #headers>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Username</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
             Default Role
@@ -250,7 +206,6 @@ function handleConfirmAction() {
             <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-500 dark:text-gray-200">
               {{ pageOffset * (queryParams.limit || 10) + index + 1 }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">{{ account.username }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-200">
               {{ account.email }}
             </td>
@@ -261,46 +216,38 @@ function handleConfirmAction() {
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                  getStatusColor(account.isBanned),
+                  getStatusColor(account.isBanned ? 'banned' : 'active'),
                 ]"
               >
-                {{ account.isBanned ? 'Banned' : 'Active' }}
+                {{ account.isBanned ? 'Nonaktif' : 'Aktif' }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-200">
               {{ new Date(account.createdAt).toLocaleDateString() }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
-              <button
-                @click="openViewModal(account)"
-                class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
-                title="View details"
-              >
+              <BaseIconButton @click="openViewModal(account)" variant="info" title="Lihat Detail">
                 <Eye :size="18" />
-              </button>
-              <button
-                @click="openEditModal(account)"
-                class="p-1 hover:bg-gray-100 rounded transition-colors duration-150 dark:hover:bg-gray-700 dark:text-gray-200"
-                title="Edit account"
-              >
+              </BaseIconButton>
+              <BaseIconButton @click="openEditModal(account)" variant="primary" title="Edit Akun">
                 <SquarePen :size="18" />
-              </button>
-              <button
+              </BaseIconButton>
+              <BaseIconButton
                 v-if="!account.isBanned"
                 @click="openBanConfirm(account)"
-                class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
-                title="Ban account"
+                variant="danger"
+                title="Ban Akun"
               >
                 <Ban :size="18" />
-              </button>
-              <button
+              </BaseIconButton>
+              <BaseIconButton
                 v-else
                 @click="openUnbanConfirm(account)"
-                class="p-1 text-green-600 hover:bg-green-50 rounded transition-colors duration-150 dark:hover:bg-gray-700"
-                title="Unban account"
+                variant="success"
+                title="Unban Akun"
               >
                 <UserCheck :size="18" />
-              </button>
+              </BaseIconButton>
             </td>
           </tr>
         </template>

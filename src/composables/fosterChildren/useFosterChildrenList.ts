@@ -1,23 +1,31 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fosterChildrenService } from '@/services/fosterChildren.service'
-import type { FosterChildrenParams, FosterChildrenListResponse } from '@/types/fosterChildren'
+import type { FosterChildrenQueryParams, FosterChildrenListResponse } from '@/types/fosterChildren'
 import type { ApiError } from '@/types/response'
 
-export const useFosterChildrenList = (params: MaybeRefOrGetter<FosterChildrenParams>) => {
-  const fosterChildrenListQuery = useQuery<FosterChildrenListResponse, ApiError>({
-    queryKey: ['fosterChildren', params],
-    queryFn: () => fosterChildrenService.getFosterChildrenList(toValue(params)),
+export const useFosterChildrenList = (
+  params: MaybeRefOrGetter<FosterChildrenQueryParams>,
+  isAdmin: boolean = false,
+  options?: { enabled?: MaybeRefOrGetter<boolean> },
+) => {
+  const listQuery = useQuery<FosterChildrenListResponse, ApiError>({
+    queryKey: isAdmin ? ['adminFosterChildren', params] : ['fosterChildren', params],
+    queryFn: () =>
+      isAdmin
+        ? fosterChildrenService.getAdminFosterChildren(toValue(params))
+        : fosterChildrenService.getFosterChildrenList(toValue(params)),
     retry: 1,
+    ...options,
   })
 
-  const fosterChildren = computed(() => fosterChildrenListQuery.data.value?.data?.fosterChildren || [])
-  const pagination = computed(() => fosterChildrenListQuery.data.value?.data?.pagination)
+  const fosterChildren = computed(() => listQuery.data.value?.data?.fosterChildren || [])
+  const pagination = computed(() => listQuery.data.value?.data?.pagination)
 
   return {
-    fosterChildrenListQuery,
+    listQuery,
     fosterChildren,
     pagination,
-    isLoading: fosterChildrenListQuery.isPending,
+    isLoading: listQuery.isPending,
   }
 }

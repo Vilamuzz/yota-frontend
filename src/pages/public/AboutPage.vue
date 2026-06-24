@@ -1,41 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
+import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import PublicLayout from '@/layouts/PublicLayout.vue'
+import { useFoundationProfileStore } from '@/stores/foundationProfile'
 
-// Hero carousel
-const currentSlide = ref(0)
-const slides = [
-  {
-    image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&h=600&fit=crop',
-    title: 'Build Your Future',
-    subtitle: 'Transform your ideas into reality with our powerful platform',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&h=600&fit=crop',
-    title: 'Connect & Collaborate',
-    subtitle: 'Join a community of innovators and creators',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&h=600&fit=crop',
-    title: 'Grow Together',
-    subtitle: 'Scale your projects with cutting-edge tools and support',
-  },
-]
+const foundationProfileStore = useFoundationProfileStore()
 
-let slideInterval: number | null = null
-
-const nextSlide = () => {
-  currentSlide.value = (currentSlide.value + 1) % slides.length
-}
-
-onMounted(() => {
-  slideInterval = window.setInterval(nextSlide, 5000)
-})
-
-onUnmounted(() => {
-  if (slideInterval) {
-    clearInterval(slideInterval)
+const mapSrc = computed(() => {
+  const address = foundationProfileStore.embeddedAddress
+  if (!address) return ''
+  if (address.includes('<iframe')) {
+    const match = address.match(/src="([^"]+)"/)
+    return match ? match[1] : address
   }
+  return address
 })
 </script>
 
@@ -48,12 +26,26 @@ onUnmounted(() => {
         <div class="absolute inset-0">
           <!-- Background Image -->
           <img
-            src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&h=600&fit=crop"
+            :src="foundationProfileStore.heroImages[3]"
+            :alt="foundationProfileStore.foundationName"
             class="w-full h-full object-cover"
           />
 
           <!-- Overlay -->
           <div class="absolute inset-0 bg-black opacity-40"></div>
+        </div>
+
+        <!-- Text Content -->
+        <div
+          class="absolute inset-0 flex flex-col items-center justify-center text-white px-4 z-10"
+        >
+          <h1 class="text-5xl md:text-6xl font-bold mb-6 text-center drop-shadow-lg">
+            Tentang Kami
+          </h1>
+          <p class="text-xl md:text-2xl text-center max-w-3xl drop-shadow-md">
+            Mengenal lebih dekat visi, misi, dan perjalanan
+            {{ foundationProfileStore.foundationName }}.
+          </p>
         </div>
       </div>
     </div>
@@ -61,16 +53,22 @@ onUnmounted(() => {
     <!-- Vision & Mission Section -->
     <section class="w-full">
       <div class="max-w-7xl mx-auto mt-12 px-6 md:px-12 lg:px-24">
-        <div class="flex flex-col md:flex-row items-center gap-32">
-          <div class="h-full w-1/4 shrink-0">
+        <div class="flex flex-col md:flex-row items-center gap-12 md:gap-20 lg:gap-32">
+          <div class="h-full w-48 md:w-1/4 shrink-0 text-center">
             <img
-              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop"
-              alt="Welcome"
+              v-if="foundationProfileStore.founderPicture"
+              :src="foundationProfileStore.founderPicture"
+              :alt="foundationProfileStore.founderName"
               class="w-full h-full object-cover rounded-full shadow-md mb-4"
             />
+            <BaseSkeleton
+              v-else
+              variant="image"
+              class="w-full h-full object-cover rounded-full shadow-md"
+            />
             <div class="bg-primary-500 rounded-lg text-white text-center py-2 px-4">
-              <h2>Pendiri Yayasan OTA</h2>
-              <h3 class="font-bold">Mulyadi Dwi Haryanto, S.Pd</h3>
+              <h2>Pendiri {{ foundationProfileStore.foundationName }}</h2>
+              <h3 class="font-bold">{{ foundationProfileStore.founderName }}</h3>
             </div>
           </div>
 
@@ -100,8 +98,8 @@ onUnmounted(() => {
     </section>
 
     <!-- Organizational Structure Section -->
-    <section class="w-full">
-      <div class="max-w-7xl mx-auto mt-36 px-6 md:px-12 lg:px-24">
+    <section class="w-full px-6">
+      <div class="max-w-7xl mx-auto mt-12 md:mt-36 md:px-12 lg:px-24">
         <div class="mb-8 space-y-4">
           <h2 class="text-xl font-bold text-gray-900">Struktur Organisasi</h2>
           <p class="text-gray-600">
@@ -112,8 +110,8 @@ onUnmounted(() => {
 
         <div class="flex justify-center">
           <img
-            src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&h=600&fit=crop"
-            alt="Struktur Organisasi"
+            :src="foundationProfileStore.organizationStructure"
+            :alt="foundationProfileStore.foundationName"
             class="w-full max-w-5xl rounded-lg shadow-md"
           />
         </div>
@@ -121,20 +119,23 @@ onUnmounted(() => {
     </section>
 
     <!-- Location Section -->
-    <section class="w-full">
-      <div class="max-w-7xl mx-auto mt-36 px-6 md:px-12 lg:px-24">
+    <section class="w-full px-6 mb-20">
+      <div class="max-w-7xl mx-auto mt-12 md:mt-36 md:px-12 lg:px-24">
         <div class="mb-8 space-y-4">
-          <h2 class="text-xl font-bold text-gray-900">Lokasi Posko OTA</h2>
+          <h2 class="text-xl font-bold text-gray-900">
+            Lokasi Posko {{ foundationProfileStore.foundationName }}
+          </h2>
           <p class="text-gray-600">
-            Posko Orang Tua Asuh beralamatkan pada Bulusari, Kelurahan Sukoharjo, Kecamatan
-            Sukoharjo, Kabupaten Sukoharjo, Jawa Tengah 57512
+            {{ foundationProfileStore.foundationAddress }}
           </p>
-          <p class="text-gray-600 mt-10">Koordinat:</p>
         </div>
 
         <div class="flex justify-center">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3954.04203287725!2d110.83104877419785!3d-7.678630392338282!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a3c6d121162bf%3A0x9aee413079da81cd!2sBulusari%2C%20Sukoharjo%2C%20Kec.%20Sukoharjo%2C%20Kabupaten%20Sukoharjo%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1772423957794!5m2!1sid!2sid"
+            :src="
+              mapSrc ||
+              'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3954.04203287725!2d110.83104877419785!3d-7.678630392338282!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a3c6d121162bf%3A0x9aee413079da81cd!2sBulusari%2C%20Sukoharjo%2C%20Kec.%20Sukoharjo%2C%20Kabupaten%20Sukoharjo%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1772423957794!5m2!1sid!2sid'
+            "
             width="95%"
             height="450"
             style="border: 0"

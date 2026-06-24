@@ -1,136 +1,111 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { SquarePen, Trash2, HandHeart, Plus } from 'lucide-vue-next'
-
-import { useDonationProgramList } from '@/composables/donationProgram/useDonationProgramList'
-import { useQueryClient } from '@tanstack/vue-query'
+import { SquarePen, Trash2, HandHeart, Plus, Archive, Play, Eye } from 'lucide-vue-next'
+import { useDonationProgramFilters } from '@/composables/donationProgram/useDonationProgramFilters'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
-import BaseTable from '@/components/molecules/BaseTable.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
-import { type DonationProgram, type DonationProgramQueryParams, DonationProgramCategoryEnum, DonationProgramStatusEnum } from '@/types/donationProgram'
-import { formatCurrency, formatDate } from '@/utils/format'
+import { useDonationProgramUpdate } from '@/composables/donationProgram/useDonationProgramUpdate'
+import { useToast } from '@/composables/ui/useToast'
+import { extractError } from '@/utils/error'
+import {
+  type DonationProgram,
+  DonationProgramStatusEnum,
+  donationProgramCategoryOptions,
+  donationProgramStatusOptions,
+  formatDonationProgramCategory,
+} from '@/types/donationProgram'
+import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
+import { getStatusColor } from '@/utils/statusColor'
+import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 
-const searchQuery = ref('')
-const debouncedSearchQuery = ref('')
-const selectedCategory = ref('all')
-const selectedStatus = ref('all')
-const limit = ref(10)
-const limitOptions = [10, 25, 50, 100]
+const {
+  queryParams,
+  limitOptions,
+  searchQuery,
+  pageOffset,
+  donationPrograms,
+  pagination,
+  isLoading,
+  hasActiveFilters,
+  handleNextPage,
+  handlePrevPage,
+} = useDonationProgramFilters()
 
-let searchTimeout: ReturnType<typeof setTimeout>
-watch(searchQuery, (newVal) => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    debouncedSearchQuery.value = newVal
-  }, 500)
-})
+const { deleteMutation, activeMutation, archiveMutation } = useDonationProgramUpdate()
+const { showToast } = useToast()
 
-// Cursor pagination state
-const currentNextCursor = ref<string | undefined>(undefined)
-const currentPrevCursor = ref<string | undefined>(undefined)
-const direction = ref<'next' | 'prev' | undefined>(undefined)
-const pageOffset = ref(0)
-
-const queryParams = computed<DonationProgramQueryParams>(() => {
-  const params: DonationProgramQueryParams = { limit: limit.value }
-
-  if (direction.value === 'next' && currentNextCursor.value) {
-    params.nextCursor = currentNextCursor.value
-  } else if (direction.value === 'prev' && currentPrevCursor.value) {
-    params.prevCursor = currentPrevCursor.value
-  }
-
-  if (debouncedSearchQuery.value) {
-    params.search = debouncedSearchQuery.value
-  }
-
-  if (selectedCategory.value !== 'all') {
-    params.category = selectedCategory.value as DonationProgramCategoryEnum
-  }
-
-  if (selectedStatus.value !== 'all') {
-    params.status = selectedStatus.value as DonationProgramStatusEnum
-  }
-
-  return params
-})
-
-const resetPagination = () => {
-  currentNextCursor.value = undefined
-  currentPrevCursor.value = undefined
-  direction.value = undefined
-  pageOffset.value = 0
-}
-
-watch([debouncedSearchQuery, selectedCategory, selectedStatus, limit], () => {
-  resetPagination()
-})
-
-const queryClient = useQueryClient()
-
-// Fetch donations via composable
-const { donationPrograms, pagination, isLoading } = useDonationProgramList(queryParams)
-
-const handleNextPage = () => {
-  if (pagination.value?.nextCursor) {
-    currentNextCursor.value = pagination.value.nextCursor
-    direction.value = 'next'
-    pageOffset.value += 1
-  }
-}
-
-const handlePrevPage = () => {
-  if (pagination.value?.prevCursor) {
-    currentPrevCursor.value = pagination.value.prevCursor
-    direction.value = 'prev'
-    pageOffset.value -= 1
-  }
-}
-
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'bg-green-100 text-green-700 border-green-200'
-    case 'completed':
-      return 'bg-blue-100 text-blue-700 border-blue-200'
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-    case 'closed':
-      return 'bg-red-100 text-red-700 border-red-200'
-    default:
-      return 'bg-gray-100 text-gray-700 border-gray-200'
-  }
-}
-
-// Delete confirmation modal
 const confirmShow = ref(false)
-const confirmDonation = ref<DonationProgram | null>(null)
+const confirmDonationProgram = ref<DonationProgram | null>(null)
 
-const deleteDonation = (donation: DonationProgram) => {
-  confirmDonation.value = donation
+const archiveConfirmShow = ref(false)
+const archiveDonationProgram = ref<DonationProgram | null>(null)
+
+const activeConfirmShow = ref(false)
+const activeDonationProgram = ref<DonationProgram | null>(null)
+
+function deleteDonationProgram(donationProgram: DonationProgram) {
+  confirmDonationProgram.value = donationProgram
   confirmShow.value = true
 }
 
-const handleConfirmDelete = async () => {
-  if (!confirmDonation.value) return
-  // TODO: implement delete mutation
-  queryClient.invalidateQueries({ queryKey: ['donations'] })
-  confirmShow.value = false
-  confirmDonation.value = null
+function handleConfirmDelete() {
+  if (!confirmDonationProgram.value) return
+
+  deleteMutation.mutate(confirmDonationProgram.value.id, {
+    onSuccess: () => {
+      showToast('Program donasi berhasil dihapus!', 'success')
+      confirmShow.value = false
+      confirmDonationProgram.value = null
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Gagal menghapus program donasi.'), 'error')
+    },
+  })
 }
 
-const clearFilters = () => {
-  searchQuery.value = ''
-  debouncedSearchQuery.value = ''
-  selectedCategory.value = 'all'
-  selectedStatus.value = 'all'
+function handleActive(donationProgram: DonationProgram) {
+  activeDonationProgram.value = donationProgram
+  activeConfirmShow.value = true
 }
 
-const categories = ['all', 'education', 'health', 'environment', 'social', 'disaster']
-const statuses = ['all', 'active', 'pending', 'completed', 'closed']
+function handleConfirmActive() {
+  if (!activeDonationProgram.value) return
+
+  activeMutation.mutate(activeDonationProgram.value.id, {
+    onSuccess: () => {
+      showToast('Program donasi berhasil diaktifkan!', 'success')
+      activeConfirmShow.value = false
+      activeDonationProgram.value = null
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Gagal mengaktifkan program donasi.'), 'error')
+    },
+  })
+}
+
+function handleArchive(donationProgram: DonationProgram) {
+  archiveDonationProgram.value = donationProgram
+  archiveConfirmShow.value = true
+}
+
+function handleConfirmArchive() {
+  if (!archiveDonationProgram.value) return
+
+  archiveMutation.mutate(archiveDonationProgram.value.id, {
+    onSuccess: () => {
+      showToast('Program donasi berhasil diarsipkan!', 'success')
+      archiveConfirmShow.value = false
+      archiveDonationProgram.value = null
+    },
+    onError: (err) => {
+      showToast(extractError(err, 'Gagal mengarsipkan program donasi.'), 'error')
+    },
+  })
+}
 </script>
 
 <template>
@@ -139,77 +114,106 @@ const statuses = ['all', 'active', 'pending', 'completed', 'closed']
 
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="">
-        <div class="flex flex-col md:flex-col gap-4">
-          <!-- Search and Filter Controls -->
-          <div class="flex flex-col sm:flex-row gap-3 justify-end items-start sm:items-center">
-            <BaseSearch v-model="searchQuery" placeholder="Search donations..." />
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <BaseFilter
-                :has-active-filters="selectedCategory !== 'all' || selectedStatus !== 'all'"
-              >
-                <template #default="{ closeDropdown }">
-                  <div class="space-y-4">
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Category</label>
-                      <select
-                        v-model="selectedCategory"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="category in categories" :key="category" :value="category">
-                          {{ category.charAt(0).toUpperCase() + category.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
+      <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+        <div class="flex flex-row gap-3 w-full md:w-auto">
+          <BaseSearch
+            v-model="searchQuery"
+            placeholder="Cari program donasi..."
+            class="flex-1 w-full"
+          />
+          <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
+            <template #default>
+              <div class="space-y-4 w-64">
+                <!-- Category filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Kategori
+                  </label>
+                  <select
+                    v-model="queryParams.category"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Kategori</option>
+                    <option
+                      v-for="category in donationProgramCategoryOptions"
+                      :key="category.value"
+                      :value="category.value"
+                    >
+                      {{ category.label }}
+                    </option>
+                  </select>
+                </div>
 
-                    <div>
-                      <label class="block text-xs text-gray-700 mb-2">Status</label>
-                      <select
-                        v-model="selectedStatus"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option v-for="status in statuses" :key="status" :value="status">
-                          {{ status.charAt(0).toUpperCase() + status.slice(1) }}
-                        </option>
-                      </select>
-                    </div>
+                <!-- Status filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Status
+                  </label>
+                  <select
+                    v-model="queryParams.status"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Semua Status</option>
+                    <option
+                      v-for="status in donationProgramStatusOptions"
+                      :key="status.value"
+                      :value="status.value"
+                    >
+                      {{ status.label }}
+                    </option>
+                  </select>
+                </div>
 
-                    <div class="flex gap-2 pt-2">
-                      <button
-                        @click="clearFilters"
-                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150"
-                      >
-                        Clear
-                      </button>
-                      <button
-                        @click="closeDropdown"
-                        class="flex-1 px-3 py-2 text-sm bg-primary-300 text-white rounded-lg hover:bg-primary-400 transition-colors duration-150"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </div>
-                </template>
-              </BaseFilter>
-
-              <BaseButton variant="primary" :to="{ name: 'dashboard-donations-create' }">
-                <Plus :size="20" class="mr-1" />
-                Create Donation
-              </BaseButton>
-            </div>
-          </div>
+                <!-- Sort filter -->
+                <div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 tracking-wider"
+                  >
+                    Urutkan
+                  </label>
+                  <select
+                    v-model="queryParams.sortBy"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option :value="undefined">Bawaan (Terbaru)</option>
+                    <option value="created_at asc">Terlama</option>
+                    <option value="title asc">Judul (A-Z)</option>
+                    <option value="title desc">Judul (Z-A)</option>
+                    <option value="fund_target desc">Target Dana Tertinggi</option>
+                    <option value="fund_target asc">Target Dana Terendah</option>
+                    <option value="start_date desc">Tanggal Mulai (Terbaru)</option>
+                    <option value="start_date asc">Tanggal Mulai (Terlama)</option>
+                    <option value="end_date asc">Tanggal Selesai (Terdekat)</option>
+                    <option value="end_date desc">Tanggal Selesai (Terlama)</option>
+                  </select>
+                </div>
+              </div>
+            </template>
+          </BaseFilter>
         </div>
+        <BaseButton
+          variant="primary"
+          :to="{ name: 'dashboard-donation-programs-create' }"
+          class="w-full md:w-auto justify-center"
+        >
+          <Plus :size="20" class="mr-1" />
+          Buat Program Donasi
+        </BaseButton>
       </div>
 
       <!-- Donations Table -->
       <BaseTable
         :loading="isLoading"
         loading-message="Loading donations..."
-        :is-empty="donationPrograms.length === 0"
+        :is-empty="donationPrograms.length === 0 && !isLoading"
         empty-message="No donations available"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
-        v-model:limit="limit"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
+        v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
         @prev="handlePrevPage"
         @next="handleNextPage"
@@ -219,78 +223,122 @@ const statuses = ['all', 'active', 'pending', 'completed', 'closed']
         </template>
 
         <template #headers>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Title</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Category</th>
-          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
-            Fund Target
+          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">No</th>
+          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+            Program Donasi
           </th>
-          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">End Date</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-            Created At
-          </th>
-          <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
-            Actions
-          </th>
+          <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider">Target</th>
+          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
+          <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Timeline</th>
+          <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Aksi</th>
         </template>
 
         <template #rows>
           <tr
             v-for="(donation, index) in donationPrograms"
             :key="donation.id"
-            class="hover:bg-gray-50 transition-colors duration-150"
+            class="hover:bg-gray-50 transition-colors duration-150 dark:hover:bg-gray-700"
           >
-            <td class="px-6 py-4 whitespace-nowrap font-medium">
-              {{ pageOffset * limit + index + 1 }}
+            <td class="px-4 py-4 whitespace-nowrap font-medium text-gray-500 dark:text-gray-200">
+              {{ pageOffset * (queryParams.limit || 10) + index + 1 }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium max-w-50 truncate">
-              {{ donation.title }}
+            <td class="px-4 py-4 whitespace-nowrap max-w-64">
+              <div class="flex flex-col">
+                <span
+                  class="font-semibold text-gray-900 dark:text-white truncate"
+                  :title="donation.title"
+                >
+                  {{ donation.title }}
+                </span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                  {{ formatDonationProgramCategory(donation.category) }}
+                </span>
+              </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">
-              {{ donation.category.charAt(0).toUpperCase() + donation.category.slice(1) }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-right">
+            <td class="px-4 py-4 whitespace-nowrap font-medium text-right dark:text-gray-200">
               {{ formatCurrency(donation.fundTarget) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">
+            <td class="px-4 py-4 whitespace-nowrap text-center">
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
                   getStatusColor(donation.status),
                 ]"
               >
-                {{ donation.status.charAt(0).toUpperCase() + donation.status.slice(1) }}
+                {{ formatStatus(donation.status) }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">
-              {{ formatDate(donation.endDate) }}
+            <td class="px-4 py-4 whitespace-nowrap">
+              <div class="flex flex-col text-xs space-y-1">
+                <div class="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+                  <span class="font-medium">Berakhir:</span>
+                  <span>{{ formatDate(donation.endDate) }}</span>
+                </div>
+                <div class="flex items-center gap-1 text-gray-400 dark:text-gray-500">
+                  <span>Dibuat:</span>
+                  <span>{{ formatDate(donation.createdAt) }}</span>
+                </div>
+              </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">
-              {{ formatDate(donation.createdAt) }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap flex flex-row justify-center gap-2 relative">
-              <!-- <router-link
-                :to="{ name: 'dashboard-donations-edit', params: { id: donation.id } }"
-                class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
-                title="View details"
-              >
-                <Eye :size="18" />
-              </router-link> -->
-              <router-link
-                :to="{ name: 'dashboard-donations-edit', params: { id: donation.id } }"
-                class="p-1 hover:bg-gray-100 rounded transition-colors duration-150"
-                title="Edit donation"
-              >
-                <SquarePen :size="18" />
-              </router-link>
-              <button
-                @click="deleteDonation(donation)"
-                class="p-1 text-red-600 hover:bg-gray-100 rounded transition-colors duration-150"
-                title="Delete donation"
-              >
-                <Trash2 :size="18" />
-              </button>
+            <td class="px-4 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-left gap-2">
+                <BaseIconButton
+                  v-if="donation.status === DonationProgramStatusEnum.DRAFT"
+                  @click="handleActive(donation)"
+                  title="Aktifkan program donasi"
+                  variant="success"
+                  :disabled="activeMutation.isPending.value"
+                >
+                  <Play :size="18" />
+                </BaseIconButton>
+                <BaseIconButton
+                  v-if="donation.status === DonationProgramStatusEnum.ACTIVE"
+                  @click="handleArchive(donation)"
+                  title="Arsipkan program donasi"
+                  variant="warning"
+                  :disabled="archiveMutation.isPending.value"
+                >
+                  <Archive :size="18" />
+                </BaseIconButton>
+                <BaseIconButton
+                  v-if="
+                    donation.status === DonationProgramStatusEnum.COMPLETED ||
+                    donation.status === DonationProgramStatusEnum.EXPIRED ||
+                    donation.status === DonationProgramStatusEnum.ARCHIVED ||
+                    donation.status === DonationProgramStatusEnum.ACTIVE
+                  "
+                  :to="{
+                    name: 'dashboard-donation-programs-detail',
+                    params: { id: donation.id },
+                  }"
+                  title="Lihat detail program donasi"
+                  variant="info"
+                >
+                  <Eye :size="18" />
+                </BaseIconButton>
+                <BaseIconButton
+                  v-if="
+                    donation.status !== DonationProgramStatusEnum.COMPLETED &&
+                    donation.status !== DonationProgramStatusEnum.EXPIRED &&
+                    donation.status !== DonationProgramStatusEnum.ARCHIVED
+                  "
+                  :to="{
+                    name: 'dashboard-donation-programs-edit',
+                    params: { id: donation.id },
+                  }"
+                  title="Edit program donasi"
+                >
+                  <SquarePen :size="18" />
+                </BaseIconButton>
+                <BaseIconButton
+                  v-if="donation.status === DonationProgramStatusEnum.DRAFT"
+                  @click="deleteDonationProgram(donation)"
+                  title="Hapus program donasi"
+                  variant="danger"
+                >
+                  <Trash2 :size="18" />
+                </BaseIconButton>
+              </div>
             </td>
           </tr>
         </template>
@@ -301,12 +349,39 @@ const statuses = ['all', 'active', 'pending', 'completed', 'closed']
   <!-- Delete Confirmation Modal -->
   <ConfirmationModal
     :show="confirmShow"
-    :title="`Delete ${confirmDonation?.title}?`"
-    :message="`This donation will be permanently deleted. This action cannot be undone.`"
-    primary-button-text="Delete"
-    secondary-button-text="Cancel"
-    @primary="handleConfirmDelete"
+    :title="`Hapus ${confirmDonationProgram?.title}?`"
+    :message="`Program donasi ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.`"
+    danger-button-text="Hapus"
+    secondary-button-text="Batal"
+    :danger-button-loading="deleteMutation.isPending.value"
+    @danger="handleConfirmDelete"
     @secondary="confirmShow = false"
     @close="confirmShow = false"
+  />
+
+  <!-- Archive Confirmation Modal -->
+  <ConfirmationModal
+    :show="archiveConfirmShow"
+    :title="`Arsipkan ${archiveDonationProgram?.title}?`"
+    :message="`Program donasi ini akan diarsipkan dan tidak akan lagi terlihat oleh publik. Anda masih dapat mengaksesnya dari admin dashboard.`"
+    primary-button-text="Arsipkan"
+    secondary-button-text="Batal"
+    :primary-button-loading="archiveMutation.isPending.value"
+    @primary="handleConfirmArchive"
+    @secondary="archiveConfirmShow = false"
+    @close="archiveConfirmShow = false"
+  />
+
+  <!-- Active Confirmation Modal -->
+  <ConfirmationModal
+    :show="activeConfirmShow"
+    :title="`Aktifkan ${activeDonationProgram?.title}?`"
+    :message="`Program donasi ini akan diaktifkan dan akan terlihat oleh publik. Pastikan semua detail dan gambar sampul sudah benar.`"
+    primary-button-text="Aktifkan"
+    secondary-button-text="Batal"
+    :primary-button-loading="activeMutation.isPending.value"
+    @primary="handleConfirmActive"
+    @secondary="activeConfirmShow = false"
+    @close="activeConfirmShow = false"
   />
 </template>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Child } from '@/types/fosterChildren'
+import type { FosterChildren } from '@/types/fosterChildren'
 
 const { child } = defineProps<{
-  child: Child | null
+  child: FosterChildren | null
 }>()
 
 function calculateAge(birthDate: string): number {
@@ -24,8 +24,7 @@ function calculateAge(birthDate: string): number {
 
   const isBeforeBirthday =
     today.getMonth() < birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() &&
-      today.getDate() < birth.getDate())
+    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
 
   if (isBeforeBirthday) {
     age--
@@ -39,7 +38,7 @@ function calculateAge(birthDate: string): number {
   <div v-if="child" class="bg-white p-6 max-w-sm w-full">
     <div class="flex items-center text-center space-x-4">
       <img
-        :src="child.image_url"
+        :src="child.profilePicture"
         :alt="child.name"
         class="w-28 h-28 rounded-full object-cover border-2 border-green-600"
       />
@@ -49,7 +48,7 @@ function calculateAge(birthDate: string): number {
         </h2>
         <div class="flex text-md divide-x">
           <span class="font-bold px-1">{{ child.category }}</span>
-          <span class="font-normal px-1">{{ calculateAge(child.birth_date) }} Tahun</span>
+          <span class="font-normal px-1">{{ calculateAge(child.birthDate) }} Tahun</span>
         </div>
       </div>
     </div>

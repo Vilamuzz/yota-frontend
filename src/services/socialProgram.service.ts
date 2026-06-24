@@ -1,33 +1,73 @@
-import type { SocialProgramListResponse, SocialProgramParams } from '@/types/socialProgram'
+import { API } from '@/const/api'
+import type {
+  CreateSocialProgramRequest,
+  SocialProgramListResponse,
+  SocialProgramQueryParams,
+  SocialProgramResponse,
+  UpdateSocialProgramRequest,
+} from '@/types/socialProgram'
+import { api } from '@/utils/api'
 
 export const socialProgramService = {
-  getSocialProgramList: async (params: SocialProgramParams): Promise<SocialProgramListResponse> => {
-    // simulasi delay biar berasa API 😏
-    await new Promise((resolve) => setTimeout(resolve, 500))
+  getPublishedSocialProgramList: async (
+    params: SocialProgramQueryParams,
+  ): Promise<SocialProgramListResponse> => {
+    const response = await api.get<SocialProgramListResponse>(API.SOCIAL_PROGRAMS, {
+      params,
+    })
+    return response.data
+  },
 
-    return {
-      data: {
-        programs: [
-          {
-            id: 1,
-            name: 'Program Anak Hebat',
-            total_subscriber: 120,
-            status: 'active',
-            created_at: '2025-01-01',
-          },
-          {
-            id: 2,
-            name: 'Program Peduli Lingkungan',
-            total_subscriber: 80,
-            status: 'pending',
-            created_at: '2025-02-01',
-          },
-        ],
-        pagination: {
-          has_next: false,
-          has_prev: false,
-        },
-      },
-    }
+  getPublishedSocialProgramDetail: async (slug: string): Promise<SocialProgramResponse> => {
+    const response = await api.get<SocialProgramResponse>(`${API.SOCIAL_PROGRAMS}/${slug}`)
+    return response.data
+  },
+
+  getSocialProgramList: async (
+    params: SocialProgramQueryParams,
+  ): Promise<SocialProgramListResponse> => {
+    const response = await api.get<SocialProgramListResponse>(API.SOCIAL_PROGRAMS_ADMIN, {
+      params,
+    })
+    return response.data
+  },
+
+  getSocialProgramDetail: async (id: string): Promise<SocialProgramResponse> => {
+    const response = await api.get<SocialProgramResponse>(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}`)
+    return response.data
+  },
+
+  createSocialProgram: async (data: CreateSocialProgramRequest) => {
+    const response = await api.post(`${API.SOCIAL_PROGRAMS_ADMIN}`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+
+  updateSocialProgram: async (id: string, data: UpdateSocialProgramRequest) => {
+    const response = await api.put(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+
+  deleteSocialProgram: async (id: string) => {
+    const response = await api.delete(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}`)
+    return response.data
+  },
+
+  approveSocialProgram: async (id: string) => {
+    const response = await api.patch(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}/approve`)
+    return response.data
+  },
+
+  rejectSocialProgram: async (id: string, data: { reason: string }) => {
+    const response = await api.patch(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}/reject`, data)
+    return response.data
+  },
+
+  completeSocialProgram: async (id: string) => {
+    const response = await api.patch(`${API.SOCIAL_PROGRAMS_ADMIN}/${id}/complete`)
+    return response.data
   },
 }

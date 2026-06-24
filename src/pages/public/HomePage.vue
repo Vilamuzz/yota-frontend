@@ -1,34 +1,50 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import PublicLayout from '@/layouts/PublicLayout.vue'
+import { formatCurrency, formatDate } from '@/utils/format'
+import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
+import { useDonationProgramList } from '@/composables/donationProgram/useDonationProgramList'
+import { usePublishedNewsList } from '@/composables/news/useNewsList'
+import { usePublishedGalleryList } from '@/composables/gallery/useGalleryList'
+import { useFoundationProfileStore } from '@/stores/foundationProfile'
 
+const foundationProfileStore = useFoundationProfileStore()
 const router = useRouter()
 
 // Hero carousel
 const currentSlide = ref(0)
-const slides = [
+const slides = computed(() => [
   {
-    image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&h=600&fit=crop',
-    title: 'Build Your Future',
-    subtitle: 'Transform your ideas into reality with our powerful platform',
+    image: foundationProfileStore.heroImages[0],
+    title: 'Selamat Datang di Yayasan Orang Tua Asuh',
+    subtitle:
+      'Menghadirkan kepedulian yang berkelanjutan bagi masa depan anak-anak kurang mampu di pelosok negeri.',
+    buttonText: 'Tentang Kami',
+    buttonLink: '/about',
   },
   {
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&h=600&fit=crop',
-    title: 'Connect & Collaborate',
-    subtitle: 'Join a community of innovators and creators',
+    image: foundationProfileStore.heroImages[1],
+    title: 'Rekomendasikan Calon Anak Asuh',
+    subtitle:
+      'Bantu anak kurang mampu di sekitar Anda mendapatkan bantuan pendidikan dengan merekomendasikan mereka sebagai anak asuh.',
+    buttonText: 'Ajukan Calon Anak Asuh',
+    buttonLink: '/foster-children/submission',
   },
   {
-    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&h=600&fit=crop',
-    title: 'Grow Together',
-    subtitle: 'Scale your projects with cutting-edge tools and support',
+    image: foundationProfileStore.heroImages[2],
+    title: 'Layanan Ambulans Gratis 24 Jam',
+    subtitle:
+      'Butuh armada darurat medis? Yayasan Orang Tua Asuh menyediakan peminjaman mobil ambulans gratis bagi masyarakat yang membutuhkan.',
+    buttonText: 'Ajukan Peminjaman Ambulans',
+    buttonLink: '/ambulance/submission',
   },
-]
+])
 
 let slideInterval: number | null = null
 
 const nextSlide = () => {
-  currentSlide.value = (currentSlide.value + 1) % slides.length
+  currentSlide.value = (currentSlide.value + 1) % slides.value.length
 }
 
 const goToSlide = (index: number) => {
@@ -45,61 +61,9 @@ onUnmounted(() => {
   }
 })
 
-const featuredDonations = [
-  {
-    title: 'Bantu Pendidikan Anak Kurang Mampu di Pelosok Negeri',
-    image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop',
-    collected: 14500000,
-    target: 25000000,
-  },
-  {
-    title: 'Pengadaan Ambulans untuk Daerah Terpencil',
-    image: 'https://images.unsplash.com/photo-1587745416684-47953f16f02f?w=600&h=400&fit=crop',
-    collected: 38000000,
-    target: 50000000,
-  },
-  {
-    title: 'Bantuan Sembako untuk Korban Bencana Alam',
-    image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&h=400&fit=crop',
-    collected: 9200000,
-    target: 20000000,
-  },
-]
-
-const formatFund = (amount: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-const galleryImages = [
-  'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=800&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1547683905-f686c993aae5?w=600&h=400&fit=crop',
-]
-
-const latestNews = [
-  {
-    title: 'Yota Salurkan Bantuan kepada 500 Keluarga Terdampak Banjir di Kalimantan',
-    image: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?w=400&h=300&fit=crop',
-    date: '28 Februari 2026',
-  },
-  {
-    title: 'Program Beasiswa Yota Buka Pendaftaran untuk Tahun Ajaran 2026/2027',
-    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop',
-    date: '20 Februari 2026',
-  },
-  {
-    title: 'Ambulans Baru Siap Beroperasi di Wilayah Terpencil Nusa Tenggara',
-    image: 'https://images.unsplash.com/photo-1587745416684-47953f16f02f?w=400&h=300&fit=crop',
-    date: '10 Februari 2026',
-  },
-]
+const { donationPrograms, isLoading: isDonationLoading } = useDonationProgramList({ limit: 3 })
+const { news: latestNews, isLoading: isNewsLoading } = usePublishedNewsList({ limit: 3 })
+const { galleries, isLoading: isGalleryLoading } = usePublishedGalleryList({ limit: 5 })
 </script>
 
 <template>
@@ -112,13 +76,61 @@ const latestNews = [
           v-for="(slide, index) in slides"
           :key="index"
           class="absolute inset-0 transition-opacity duration-1000"
-          :class="currentSlide === index ? 'opacity-100' : 'opacity-0'"
+          :class="
+            currentSlide === index
+              ? 'opacity-100 pointer-events-auto z-10'
+              : 'opacity-0 pointer-events-none z-0'
+          "
         >
           <!-- Background Image -->
-          <img :src="slide.image" :alt="slide.title" class="w-full h-full object-cover" />
+          <template v-if="slide.image">
+            <!-- First slide: eager load with high fetch priority (this IS the LCP element) -->
+            <img
+              v-if="index === 0"
+              :src="slide.image"
+              :alt="slide.title"
+              class="w-full h-full object-cover"
+              fetchpriority="high"
+            />
+            <!-- Other slides: lazy is fine — they're hidden behind opacity:0 -->
+            <img
+              v-else
+              :src="slide.image"
+              :alt="slide.title"
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </template>
+          <!-- Fallback Skeleton -->
+          <div v-else class="w-full h-full bg-gray-200 animate-pulse"></div>
 
           <!-- Overlay -->
-          <div class="absolute inset-0 bg-black opacity-40"></div>
+          <div class="absolute inset-0 bg-black opacity-50"></div>
+
+          <!-- Slide Content (Centered on Screen) -->
+          <div
+            class="absolute inset-0 flex flex-col justify-center items-center text-center px-6 md:px-12 lg:px-24"
+          >
+            <h1
+              class="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-4 uppercase tracking-wide drop-shadow-md"
+            >
+              {{ slide.title }}
+            </h1>
+            <p
+              class="text-base md:text-xl lg:text-2xl text-white opacity-90 max-w-3xl mb-8 leading-relaxed drop-shadow-sm"
+            >
+              {{ slide.subtitle }}
+            </p>
+
+            <div v-if="slide.buttonText">
+              <RouterLink
+                :to="slide.buttonLink"
+                class="inline-flex items-center gap-2 bg-primary-500 text-white font-bold text-sm md:text-base px-6 py-3 md:px-8 md:py-4 rounded-full shadow-lg transition-all duration-300"
+              >
+                {{ slide.buttonText }}
+              </RouterLink>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -152,10 +164,17 @@ const latestNews = [
             </p>
           </div>
 
-          <div class="w-40 h-40 md:w-56 md:h-56 shrink-0">
+          <div class="w-40 h-40 md:w-56 md:h-56 shrink-0 mx-auto md:mx-0">
             <img
-              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop"
-              alt="Welcome"
+              v-if="foundationProfileStore.founderPicture"
+              :src="foundationProfileStore.founderPicture"
+              :alt="foundationProfileStore.founderName"
+              class="w-full h-full object-cover rounded-full shadow-md"
+              loading="lazy"
+            />
+            <BaseSkeleton
+              v-else
+              variant="image"
               class="w-full h-full object-cover rounded-full shadow-md"
             />
           </div>
@@ -164,24 +183,51 @@ const latestNews = [
     </section>
 
     <!-- Donation Section -->
-    <section class="w-full py-16">
+    <section class="w-full pt-16">
       <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">
-          Donasi Berjalan
+          Program Donasi Berjalan
         </h2>
         <p class="text-gray-600 leading-relaxed mb-6">
-          Donasi yang sedang berlangsung pada Yayasan Orang Tua Asuh.
+          Program Donasi yang sedang berlangsung pada Yayasan Orang Tua Asuh.
         </p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Loading Skeletons -->
+        <div v-if="isDonationLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div
-            v-for="donation in featuredDonations"
-            :key="donation.title"
+            v-for="i in 3"
+            :key="i"
+            class="bg-white rounded-xl overflow-hidden flex flex-col p-4 gap-4 border border-gray-100 shadow-sm"
+          >
+            <BaseSkeleton variant="image" class="h-48 w-full rounded-lg" />
+            <BaseSkeleton variant="text-lg" class="w-3/4" />
+            <div class="space-y-2 mt-auto">
+              <BaseSkeleton variant="text-sm" class="w-1/2" />
+              <BaseSkeleton class="h-2 w-full rounded-full" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="donationPrograms.length === 0" class="text-center py-12 text-gray-500">
+          Belum ada program donasi berjalan saat ini.
+        </div>
+
+        <!-- Donation Cards -->
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            v-for="donation in donationPrograms"
+            :key="donation.id"
             class="bg-white rounded-xl overflow-hidden flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200"
-            @click="router.push('/donate')"
+            @click="router.push('/donation-programs/' + donation.slug)"
           >
             <!-- Image: top 50% -->
             <div class="h-48 shrink-0">
-              <img :src="donation.image" :alt="donation.title" class="w-full h-full object-cover" />
+              <img
+                :src="donation.coverImage"
+                :alt="donation.title"
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
             </div>
 
             <!-- Content -->
@@ -193,16 +239,16 @@ const latestNews = [
                 <p class="text-sm text-gray-500">
                   Terkumpul:
                   <span class="font-semibold text-primary-500">{{
-                    formatFund(donation.collected)
+                    formatCurrency(donation.collectedFund)
                   }}</span>
-                  <span class="text-gray-400"> / {{ formatFund(donation.target) }}</span>
+                  <span class="text-gray-400"> / {{ formatCurrency(donation.fundTarget) }}</span>
                 </p>
                 <!-- Progress Bar -->
                 <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div
                     class="h-full bg-primary-400 rounded-full transition-all duration-500"
                     :style="{
-                      width: `${Math.min((donation.collected / donation.target) * 100, 100)}%`,
+                      width: `${Math.min((donation.collectedFund / donation.fundTarget) * 100, 100)}%`,
                     }"
                   />
                 </div>
@@ -210,55 +256,79 @@ const latestNews = [
             </div>
           </div>
         </div>
-        <router-link
-          to="/donation"
+        <RouterLink
+          to="/donation-programs"
           class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
-          >Selengkapnya >></router-link
+          >Selengkapnya >></RouterLink
         >
       </div>
     </section>
 
     <!-- News Section -->
-    <section class="w-full py-16">
+    <section class="w-full pt-16">
       <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">Berita Terbaru</h2>
         <p class="text-gray-600 leading-relaxed mb-6">
           Berita dan kegiatan terkini Yayasan Orang Tua Asuh.
         </p>
-        <div class="flex flex-col gap-6 ml-15">
+        <!-- Loading Skeletons -->
+        <div v-if="isNewsLoading" class="flex flex-col gap-6">
+          <div
+            v-for="i in 3"
+            :key="i"
+            class="bg-white rounded-xl overflow-hidden flex flex-col sm:flex-row gap-4 p-5 border border-gray-100 shadow-sm"
+          >
+            <BaseSkeleton class="w-full sm:w-[40%] h-48 sm:h-64 shrink-0 rounded-lg" />
+            <div class="flex flex-col justify-center gap-3 flex-1">
+              <BaseSkeleton variant="text-xs" class="w-24" />
+              <BaseSkeleton variant="text-lg" class="w-3/4" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="latestNews.length === 0" class="text-center py-12 text-gray-500">
+          Belum ada berita terbaru saat ini.
+        </div>
+
+        <!-- News Cards -->
+        <div v-else class="flex flex-col gap-6">
           <div
             v-for="news in latestNews"
-            :key="news.title"
-            class="bg-white rounded-xl hover:shadow-lg transition-shadow duration-200 overflow-hidden flex cursor-pointer"
-            @click="router.push('/news')"
+            :key="news.id"
+            class="bg-white rounded-xl hover:shadow-lg transition-shadow duration-200 overflow-hidden flex flex-col sm:flex-row cursor-pointer"
+            @click="router.push('/news/' + news.slug)"
           >
-            <!-- Image: left ~30% -->
-            <div class="w-[40%] h-64 shrink-0">
+            <!-- Image: left ~30% on larger screens -->
+            <div class="w-full sm:w-[40%] h-48 sm:h-64 shrink-0">
               <img
-                :src="news.image"
+                :src="news.coverImage"
                 :alt="news.title"
-                class="w-full h-full object-cover rounded-l-lg"
+                class="w-full h-full object-cover rounded-t-lg sm:rounded-l-lg sm:rounded-t-none"
+                loading="lazy"
               />
             </div>
 
             <!-- Content -->
-            <div class="flex flex-col justify-center gap-2 p-5">
-              <p class="text-xs text-gray-400">{{ news.date }}</p>
+            <div class="flex flex-col justify-center gap-2 p-5 flex-1">
+              <p class="text-xs text-gray-400">
+                {{ formatDate(news.publishedAt || news.createdAt) }}
+              </p>
               <h3 class="font-semibold text-gray-900 text-base leading-snug">{{ news.title }}</h3>
             </div>
           </div>
         </div>
-        <router-link
+        <RouterLink
           to="/news"
           class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
-          >Selengkapnya >></router-link
+          >Selengkapnya >></RouterLink
         >
       </div>
     </section>
 
     <!-- Gallery Section -->
     <section class="w-full mt-16">
-      <div class="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
+      <div class="max-w-7xl mx-auto py-8 px-6 md:px-12 lg:px-24">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-left">
           Galeri Yayasan OTA
         </h2>
@@ -266,40 +336,60 @@ const latestNews = [
           Dokumentasi kegiatan sosial, penyaluran donasi, serta momen kebersamaan Yayasan Orang Tua
           Asuh bersama anak asuh dan masyarakat.
         </p>
-        <div class="flex flex-col gap-4">
+        <!-- Loading Skeletons -->
+        <div v-if="isGalleryLoading" class="flex flex-col gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <BaseSkeleton class="h-72 w-full rounded-xl" v-for="i in 2" :key="i" />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <BaseSkeleton class="h-56 w-full rounded-xl" v-for="i in 3" :key="i" />
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="galleries.length === 0" class="text-center py-12 text-gray-500">
+          Belum ada galeri dokumentasi saat ini.
+        </div>
+
+        <!-- Gallery Grid -->
+        <div v-else class="flex flex-col gap-4">
           <!-- Row 1: 2 images -->
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div
-              v-for="img in galleryImages.slice(0, 2)"
-              :key="img"
+              v-for="item in galleries.slice(0, 2)"
+              :key="item.id"
               class="overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer h-72"
+              @click="router.push('/gallery/' + item.slug)"
             >
               <img
-                :src="img"
-                alt="Gallery"
+                :src="item.coverImage"
+                :alt="item.title"
                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                loading="lazy"
               />
             </div>
           </div>
           <!-- Row 2: 3 images -->
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div
-              v-for="img in galleryImages.slice(2, 5)"
-              :key="img"
+              v-for="item in galleries.slice(2, 5)"
+              :key="item.id"
               class="overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer h-56"
+              @click="router.push('/gallery/' + item.slug)"
             >
               <img
-                :src="img"
-                alt="Gallery"
+                :src="item.coverImage"
+                :alt="item.title"
                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                loading="lazy"
               />
             </div>
           </div>
         </div>
-        <router-link
+        <RouterLink
           to="/gallery"
           class="text-primary-500 hover:text-primary-600 mt-10 text-right flex justify-end"
-          >Selengkapnya >></router-link
+          >Selengkapnya >></RouterLink
         >
       </div>
     </section>

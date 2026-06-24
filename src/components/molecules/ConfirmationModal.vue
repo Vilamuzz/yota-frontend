@@ -1,19 +1,22 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 
 interface Props {
   show: boolean
   title: string
   message: string
-  icon?: any
+  icon?: Component
   primaryButtonText?: string
   secondaryButtonText?: string
+  dangerButtonText?: string
   primaryButtonLoading?: boolean
+  dangerButtonLoading?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
-  primaryButtonText: 'Confirm',
   secondaryButtonText: 'Cancel',
+  dangerButtonLoading: false,
   primaryButtonLoading: false,
 })
 
@@ -21,6 +24,7 @@ const emit = defineEmits<{
   close: []
   primary: []
   secondary: []
+  danger: []
 }>()
 </script>
 
@@ -36,7 +40,7 @@ const emit = defineEmits<{
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      class="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/50"
       @click.self="emit('close')"
     >
       <!-- Modal Content -->
@@ -48,7 +52,10 @@ const emit = defineEmits<{
         leave-from-class="opacity-100 scale-100"
         leave-to-class="opacity-0 scale-95"
       >
-        <div v-if="show" class="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 relative">
+        <div
+          v-if="show"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full p-6 relative"
+        >
           <!-- Modal Content -->
           <div class="text-center py-4">
             <!-- Icon -->
@@ -57,10 +64,12 @@ const emit = defineEmits<{
             </div>
 
             <!-- Title -->
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ title }}</h2>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">{{ title }}</h2>
 
             <!-- Message -->
-            <p class="text-gray-600 text-sm mb-6 whitespace-pre-line text-center leading-relaxed">
+            <p
+              class="text-gray-600 dark:text-gray-300 text-sm mb-6 whitespace-pre-line text-center leading-relaxed"
+            >
               {{ message }}
             </p>
 
@@ -81,6 +90,7 @@ const emit = defineEmits<{
               </BaseButton>
 
               <BaseButton
+                v-if="primaryButtonText"
                 variant="primary"
                 full-width
                 :loading="primaryButtonLoading"
@@ -88,6 +98,17 @@ const emit = defineEmits<{
               >
                 <template #loading>Loading...</template>
                 {{ primaryButtonText }}
+              </BaseButton>
+
+              <BaseButton
+                v-if="dangerButtonText"
+                variant="danger"
+                full-width
+                :loading="dangerButtonLoading"
+                @click="emit('danger')"
+              >
+                <template #loading>Loading...</template>
+                {{ dangerButtonText }}
               </BaseButton>
             </div>
           </div>

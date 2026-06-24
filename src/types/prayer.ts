@@ -1,21 +1,24 @@
-import type { Pagination, Response } from './response'
+import type { OffsetPagination, Response } from './response'
 
 export interface Prayer {
   id: string
   username: string
   content: string
   amenCount: number
+  reportCount: number
   isAmen: boolean
   createdAt: string
 }
 
 export interface PrayerList {
   prayers: Prayer[]
-  pagination: Pagination
+  pagination: OffsetPagination
 }
 
-export interface ReportPrayer {
-  reason: string
+export interface PrayerQueryParams {
+  page?: number
+  limit?: number
+  sortBy?: string
 }
 
 export type PrayerResponse = Response<Prayer>
