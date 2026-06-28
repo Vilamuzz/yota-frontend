@@ -227,10 +227,11 @@ function handleConfirmDelete() {
       :show="isDeleteModalOpen"
       title="Hapus Ambulans"
       message="Apakah Anda yakin ingin menghapus data ambulans ini? Tindakan ini tidak dapat dibatalkan."
-      variant="danger"
-      :primary-button-loading="deleteMutation.isPending.value"
+      danger-button-text="Hapus"
+      :danger-button-loading="deleteMutation.isPending.value"
       @close="isDeleteModalOpen = false"
-      @confirm="handleConfirmDelete"
+      @danger="handleConfirmDelete"
+      @secondary="isDeleteModalOpen = false"
     />
   </DashboardLayout>
 </template>
