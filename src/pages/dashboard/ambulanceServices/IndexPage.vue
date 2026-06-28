@@ -12,13 +12,14 @@ import {
   type AmbulanceServiceQueryParams,
   type AmbulanceService,
   AmbulanceServiceStatus,
+  formatAmbulanceServiceStatus,
 } from '@/types/ambulanceService'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatStatus, getCategoryLabel } from '@/utils/format'
+import { getCategoryLabel } from '@/utils/format'
 import { ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
@@ -28,6 +29,7 @@ import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
 import { useAmbulanceDetail } from '@/composables/ambulance/useAmbulanceDetail'
+import { formatAmbulanceStatus } from '@/types/ambulance'
 
 const { showToast } = useToast()
 const authStore = useAuthStore()
@@ -262,7 +264,7 @@ function handleConfirmCancel() {
           class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
         >
           <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
-            {{ formatStatus(ambulance.status) }}
+            {{ formatAmbulanceStatus(ambulance.status) }}
           </h3>
           <p class="text-sm text-gray-400 mt-1">Status</p>
         </div>
@@ -387,7 +389,7 @@ function handleConfirmCancel() {
                   getStatusColor(service.status),
                 ]"
               >
-                {{ formatStatus(service.status) }}
+                {{ formatAmbulanceServiceStatus(service.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
