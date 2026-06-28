@@ -146,9 +146,7 @@ const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
   useCursorPagination(queryParams)
 
 const hasActiveFilters = computed(
-  () =>
-    queryParams.sortBy !== undefined ||
-    queryParams.status !== undefined,
+  () => queryParams.sortBy !== undefined || queryParams.status !== undefined,
 )
 
 watch(
@@ -443,11 +441,19 @@ const incomeChartOption = computed(() => {
           </BaseFilter>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <BaseButton variant="outline" class="w-full sm:w-auto justify-center" @click="showExportModal = true">
+          <BaseButton
+            variant="outline"
+            class="w-full sm:w-auto justify-center"
+            @click="showExportModal = true"
+          >
             <Download :size="20" class="mr-1" />
             Ekspor CSV
           </BaseButton>
-          <BaseButton variant="primary" class="w-full sm:w-auto justify-center" @click="isCreateModalOpen = true">
+          <BaseButton
+            variant="primary"
+            class="w-full sm:w-auto justify-center"
+            @click="isCreateModalOpen = true"
+          >
             <Plus :size="20" class="mr-1" />
             Tambah Transaksi Donasi
           </BaseButton>
@@ -568,7 +574,7 @@ const incomeChartOption = computed(() => {
                 for="gross-amount"
                 class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1"
               >
-                Amount (IDR) <span class="text-red-500">*</span>
+                Nominal (IDR) <span class="text-red-500">*</span>
               </label>
               <input
                 id="gross-amount"

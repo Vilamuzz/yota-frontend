@@ -358,7 +358,7 @@ function handleConfirmDelete() {
                 for="gross-amount"
                 class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1"
               >
-                Amount (IDR) <span class="text-red-500">*</span>
+                Nominal (IDR) <span class="text-red-500">*</span>
               </label>
               <input
                 id="gross-amount"
