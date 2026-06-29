@@ -59,6 +59,15 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
         path: 'social-programs',
         children: [
           {
+            path: ':id',
+            name: 'dashboard-social-programs-detail',
+            component: () => import('@/pages/dashboard/socialPrograms/DetailPage.vue'),
+            meta: {
+              title: 'Detail Program Sosial',
+              activeMenu: 'dashboard-social-programs',
+            },
+          },
+          {
             path: 'create',
             name: 'dashboard-social-programs-create',
             component: () => import('@/pages/dashboard/socialPrograms/CreatePage.vue'),
