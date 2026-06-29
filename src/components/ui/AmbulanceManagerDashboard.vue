@@ -25,8 +25,15 @@ import {
   ClipboardList,
   Siren,
   HeartPulse,
+  Check,
 } from 'lucide-vue-next'
 import { useAllAmbulanceHistorySummary } from '@/composables/ambulanceHistory/useAllAmbulanceHistorySummary'
+import { useQueryClient } from '@tanstack/vue-query'
+import { useToast } from '@/composables/ui/useToast'
+import { useAmbulanceServiceList } from '@/composables/ambulanceService/useAmbulanceServiceList'
+import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
+import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
+import { formatPhoneWithDashes } from '@/utils/phone'
 
 // Register ECharts modules
 use([CanvasRenderer, BarChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent])
@@ -205,8 +212,60 @@ const isAnyError = computed(
     summaryQuery.isError.value ||
     availableQuery.isError.value ||
     inUseQuery.isError.value ||
-    maintenanceQuery.isError.value,
+    maintenanceQuery.isError.value ||
+    emergencyRequestsQuery.isError.value,
 )
+
+// Dispatch Emergency Requests
+const { showToast } = useToast()
+const queryClient = useQueryClient()
+
+const emergencyParams = ref({
+  limit: 5,
+  status: 'pending',
+  serviceCategory: AmbulanceServiceCategory.EMERGENCY_SERVICE,
+})
+
+const {
+  ambulanceServices: emergencyRequests,
+  isLoading: isEmergencyLoading,
+  listQuery: emergencyRequestsQuery,
+} = useAmbulanceServiceList(emergencyParams)
+
+const { acceptMutation } = useAmbulanceServiceUpdate()
+
+const isAssignModalOpen = ref(false)
+const selectedRequestId = ref<string | null>(null)
+const selectedAmbulanceId = ref('')
+
+function openAssignModal(requestId: string) {
+  selectedRequestId.value = requestId
+  selectedAmbulanceId.value = ''
+  isAssignModalOpen.value = true
+}
+
+function handleConfirmAssign() {
+  if (!selectedRequestId.value || !selectedAmbulanceId.value) return
+  acceptMutation.mutate(
+    {
+      id: selectedRequestId.value,
+      payload: { ambulanceId: selectedAmbulanceId.value },
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['ambulances'] })
+        queryClient.invalidateQueries({ queryKey: ['allAmbulanceHistorySummary'] })
+        queryClient.invalidateQueries({ queryKey: ['ambulanceHistoryMonthlyTrend'] })
+        showToast('Ambulans berhasil ditugaskan', 'success')
+        isAssignModalOpen.value = false
+        selectedRequestId.value = null
+      },
+      onError: () => {
+        showToast('Gagal menugaskan ambulans', 'error')
+      },
+    },
+  )
+}
 </script>
 
 <template>
@@ -478,6 +537,116 @@ const isAnyError = computed(
       </div>
     </div>
 
+    <!-- Emergency Requests Dispatch Section -->
+    <div class="space-y-4">
+      <div class="flex flex-col items-start">
+        <h3 class="text-lg font-bold text-gray-955 dark:text-white">
+          Permintaan Darurat Menunggu Penugasan
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          Daftar permintaan darurat aktif yang membutuhkan armada segera
+        </p>
+      </div>
+
+      <!-- Loading State -->
+      <div
+        v-if="isEmergencyLoading"
+        class="border border-red-100 dark:border-red-900/30 bg-white dark:bg-gray-800/40 rounded-2xl shadow-sm p-5 space-y-4 animate-pulse"
+      >
+        <div v-for="i in 3" :key="i" class="flex justify-between gap-4">
+          <BaseSkeleton variant="text-sm" class="w-1/12" />
+          <BaseSkeleton variant="text-sm" class="w-2/12" />
+          <BaseSkeleton variant="text-sm" class="w-5/12" />
+          <BaseSkeleton variant="text-sm" class="w-2/12" />
+          <BaseSkeleton variant="text-sm" class="w-2/12" />
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div
+        v-else-if="emergencyRequests.length === 0"
+        class="border border-dashed border-red-100 dark:border-red-900/30 bg-red-50/10 dark:bg-red-950/5 rounded-2xl p-8 text-center"
+      >
+        <AlertCircle class="w-8 h-8 text-red-400 dark:text-red-500/60 mx-auto mb-2" />
+        <p class="text-sm text-red-700 dark:text-red-400 font-semibold">
+          Tidak ada permintaan layanan darurat yang masuk.
+        </p>
+        <p class="text-xs text-gray-450 mt-0.5">
+          Semua permintaan darurat telah berhasil ditugaskan.
+        </p>
+      </div>
+
+      <!-- Table State -->
+      <div
+        v-else
+        class="border border-red-100 dark:border-red-900/30 bg-white dark:bg-gray-800/40 rounded-2xl shadow-sm overflow-hidden"
+      >
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr
+                class="text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700/40 bg-red-50/20 dark:bg-red-950/5"
+              >
+                <th class="px-5 py-3.5 w-16 text-center">No</th>
+                <th class="px-5 py-3.5">Pemohon</th>
+                <th class="px-5 py-3.5">Alamat Penjemputan</th>
+                <th class="px-5 py-3.5">Waktu Pengajuan</th>
+                <th class="px-5 py-3.5 text-center w-40">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-700/30">
+              <tr
+                v-for="(req, index) in emergencyRequests"
+                :key="req.id"
+                class="hover:bg-red-50/10 dark:hover:bg-red-950/5 transition-colors duration-150"
+              >
+                <td
+                  class="px-5 py-4 text-center font-mono text-sm text-gray-600 dark:text-gray-400"
+                >
+                  {{ index + 1 }}
+                </td>
+                <td class="px-5 py-4">
+                  <div class="font-bold text-gray-950 dark:text-white text-sm">
+                    {{ req.submitterName }}
+                  </div>
+                  <a
+                    :href="`https://wa.me/62${req.submitterPhone.replace(/^(\+62|62|0)/, '')}`"
+                    target="_blank"
+                    class="text-xs text-primary-200 hover:underline font-semibold"
+                  >
+                    {{ formatPhoneWithDashes(req.submitterPhone) }}
+                  </a>
+                </td>
+                <td
+                  class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate"
+                  :title="req.patientAddress"
+                >
+                  {{ req.patientAddress }}
+                </td>
+                <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                  {{
+                    new Date(req.createdAt).toLocaleString('id-ID', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })
+                  }}
+                </td>
+                <td class="px-5 py-4 text-center">
+                  <button
+                    @click="openAssignModal(req.id)"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-150 shadow-sm cursor-pointer"
+                  >
+                    <Siren class="w-3.5 h-3.5 animate-pulse" />
+                    Tugaskan
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Ambulance Status Tables -->
     <div class="space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -511,9 +680,6 @@ const isAnyError = computed(
             </div>
             <div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white">Tersedia</h3>
-              <p class="text-xs text-gray-400 dark:text-gray-500">
-                {{ availableAmbulances.length }} unit
-              </p>
             </div>
           </div>
         </div>
@@ -584,9 +750,6 @@ const isAnyError = computed(
             </div>
             <div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white">Sedang Digunakan</h3>
-              <p class="text-xs text-gray-400 dark:text-gray-500">
-                {{ inUseAmbulances.length }} unit
-              </p>
             </div>
           </div>
         </div>
@@ -657,9 +820,6 @@ const isAnyError = computed(
             </div>
             <div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white">Pemeliharaan</h3>
-              <p class="text-xs text-gray-400 dark:text-gray-500">
-                {{ maintenanceAmbulances.length }} unit
-              </p>
             </div>
           </div>
         </div>
@@ -717,5 +877,46 @@ const isAnyError = computed(
         </div>
       </div>
     </div>
+
+    <!-- Assign Ambulance Modal -->
+    <ConfirmationModal
+      :show="isAssignModalOpen"
+      title="Tugaskan Ambulans"
+      message="Pilih ambulans yang akan ditugaskan untuk melayani permintaan darurat ini:"
+      primary-button-text="Tugaskan Sekarang"
+      secondary-button-text="Batal"
+      :icon="Check"
+      :primary-button-loading="acceptMutation.isPending.value"
+      @primary="handleConfirmAssign"
+      @secondary="isAssignModalOpen = false"
+      @close="isAssignModalOpen = false"
+    >
+      <div class="mt-4 text-left">
+        <label
+          for="assign-ambulance-select"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Pilih Ambulans Tersedia
+        </label>
+        <select
+          id="assign-ambulance-select"
+          v-model="selectedAmbulanceId"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm"
+        >
+          <option value="" disabled>-- Pilih Ambulans --</option>
+          <option
+            v-for="ambulance in availableAmbulances"
+            :key="ambulance.id"
+            :value="ambulance.id"
+          >
+            {{ ambulance.plateNumber }} - {{ ambulance.driver?.username || 'Tanpa Sopir' }}
+          </option>
+        </select>
+        <p v-if="availableAmbulances.length === 0" class="text-xs text-red-650 mt-2 font-medium">
+          Tidak ada ambulans yang berstatus "Tersedia" saat ini! Silakan ubah status ambulans
+          terlebih dahulu.
+        </p>
+      </div>
+    </ConfirmationModal>
   </div>
 </template>

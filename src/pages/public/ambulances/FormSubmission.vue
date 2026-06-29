@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft } from 'lucide-vue-next'
+import { ArrowLeft, Phone } from 'lucide-vue-next'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
@@ -30,6 +30,12 @@ const form = reactive({
 
 const isMortuary = computed(
   () => form.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE,
+)
+
+const isSocial = computed(() => form.serviceCategory === AmbulanceServiceCategory.SOCIAL_SERVICE)
+
+const isEmergency = computed(
+  () => form.serviceCategory === AmbulanceServiceCategory.EMERGENCY_SERVICE,
 )
 
 const errors = ref<Record<string, string>>({})
@@ -65,14 +71,32 @@ const validate = (): boolean => {
     newErrors.submitterPhone = 'Nomor telepon tidak valid'
   }
   if (!form.submitterIdCard) newErrors.submitterIdCard = 'Unggah foto KTP pengaju wajib diisi'
-  if (!form.patientName.trim()) {
-    newErrors.patientName = isMortuary.value
-      ? 'Nama almarhum wajib diisi'
-      : 'Nama pasien wajib diisi'
+  if (!isEmergency.value && !form.patientName.trim()) {
+    newErrors.patientName = isSocial.value
+      ? 'Nama lembaga wajib diisi'
+      : isMortuary.value
+        ? 'Nama almarhum wajib diisi'
+        : 'Nama pasien wajib diisi'
   }
-  if (!form.pickupDate) newErrors.pickupDate = 'Tanggal penjemputan wajib diisi'
-  if (!form.pickupTime) newErrors.pickupTime = 'Waktu penjemputan wajib diisi'
-  if (!form.destination.trim()) newErrors.destination = 'Tujuan wajib diisi'
+  if (isEmergency.value && !form.patientAddress.trim()) {
+    newErrors.patientAddress = 'Alamat penjemputan wajib diisi'
+  }
+  if (!isEmergency.value && !form.pickupDate) {
+    newErrors.pickupDate = isSocial.value
+      ? 'Tanggal acara wajib diisi'
+      : 'Tanggal penjemputan wajib diisi'
+  }
+  if (!isEmergency.value && !form.pickupTime) {
+    newErrors.pickupTime = isSocial.value
+      ? 'Waktu acara wajib diisi'
+      : 'Waktu penjemputan wajib diisi'
+  }
+  if (!isSocial.value && !isEmergency.value && !form.destination.trim()) {
+    newErrors.destination = 'Tujuan wajib diisi'
+  }
+  if (isSocial.value && !form.note.trim()) {
+    newErrors.note = 'Detail acara wajib diisi untuk menjelaskan acara'
+  }
   if (!form.serviceCategory) newErrors.serviceCategory = 'Kategori layanan wajib diisi'
 
   errors.value = newErrors
@@ -85,9 +109,26 @@ const handleSubmit = () => {
     return
   }
 
+  const now = new Date()
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  const currentDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+  const currentTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`
+
   const payload = {
     ...form,
-    patientAge: form.patientAge ? Number(form.patientAge) : undefined,
+    patientAge:
+      isSocial.value || isEmergency.value
+        ? undefined
+        : form.patientAge
+          ? Number(form.patientAge)
+          : undefined,
+    destination: isSocial.value
+      ? 'Layanan Sosial / Acara'
+      : isEmergency.value
+        ? 'Layanan Darurat'
+        : form.destination,
+    pickupDate: isEmergency.value ? currentDate : form.pickupDate,
+    pickupTime: isEmergency.value ? currentTime : form.pickupTime,
   }
 
   createMutation.mutate(payload, {
@@ -167,15 +208,29 @@ const handleSubmit = () => {
               <label class="block text-sm font-medium text-slate-700 mb-2"
                 >Nomor Telepon <span class="text-red-500">*</span></label
               >
-              <input
-                v-model="form.submitterPhone"
-                type="text"
-                inputmode="numeric"
-                placeholder="Masukkan nomor telepon"
-                class="w-full px-4 py-3 text-sm border rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                :class="errors.submitterPhone ? 'border-red-300 bg-red-50' : 'border-slate-300'"
-                @input="form.submitterPhone = form.submitterPhone.replace(/[^0-9]/g, '')"
-              />
+              <div class="relative flex items-center">
+                <!-- Prefix Container -->
+                <div
+                  class="absolute left-4 flex items-center gap-1.5 text-slate-400 select-none pointer-events-none"
+                >
+                  <Phone :size="16" />
+                  <span class="text-sm font-medium border-r border-slate-300 pr-1.5">+62</span>
+                </div>
+                <!-- Input field -->
+                <input
+                  v-model="form.submitterPhone"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="8123456789"
+                  class="w-full pl-20 pr-4 py-3 text-sm border rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  :class="errors.submitterPhone ? 'border-red-300 bg-red-50' : 'border-slate-300'"
+                  @input="
+                    form.submitterPhone = form.submitterPhone
+                      .replace(/^(\+62|62|0)/, '')
+                      .replace(/[^0-9]/g, '')
+                  "
+                />
+              </div>
               <p v-if="errors.submitterPhone" class="mt-1 text-xs text-red-600">
                 {{ errors.submitterPhone }}
               </p>
@@ -201,74 +256,130 @@ const handleSubmit = () => {
             </p>
           </div>
 
-          <!-- ── Patient Info ── -->
+          <!-- Kategori Layanan -->
           <div class="border-t border-slate-100 pt-4">
-            <h3 class="text-lg font-semibold text-slate-800">
-              {{ isMortuary ? 'Informasi Almarhum' : 'Informasi Pasien' }}
-            </h3>
-            <p class="text-sm text-slate-500 mt-1">
-              {{
-                isMortuary
-                  ? 'Data diri almarhum yang membutuhkan ambulans'
-                  : 'Data diri pasien yang membutuhkan ambulans'
-              }}
+            <label for="serviceCategory" class="block text-sm font-medium text-slate-700 mb-2"
+              >Kategori Layanan <span class="text-red-500">*</span></label
+            >
+            <select
+              id="serviceCategory"
+              v-model="form.serviceCategory"
+              class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+              :class="errors.serviceCategory ? 'border-red-300 bg-red-50' : 'border-slate-300'"
+            >
+              <option value="" disabled>Pilih kategori layanan</option>
+              <option
+                v-for="cat in ambulanceServiceCategoryOptions"
+                :key="cat.value"
+                :value="cat.value"
+              >
+                {{ cat.label }}
+              </option>
+            </select>
+            <p v-if="errors.serviceCategory" class="mt-1 text-xs text-red-600">
+              {{ errors.serviceCategory }}
             </p>
           </div>
 
-          <!-- Patient Name & Age -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2"
-                >{{ isMortuary ? 'Nama Almarhum' : 'Nama Pasien' }}
-                <span class="text-red-500">*</span></label
-              >
-              <input
-                v-model="form.patientName"
-                type="text"
-                :placeholder="
-                  isMortuary ? 'Masukkan nama lengkap almarhum' : 'Masukkan nama lengkap pasien'
-                "
-                class="w-full px-4 py-3 text-sm border rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                :class="errors.patientName ? 'border-red-300 bg-red-50' : 'border-slate-300'"
-              />
-              <p v-if="errors.patientName" class="mt-1 text-xs text-red-600">
-                {{ errors.patientName }}
-              </p>
-            </div>
+          <!-- ── Patient Info ── -->
+          <div class="border-t border-slate-100 pt-4">
+            <h3 class="text-lg font-semibold text-slate-800">
+              {{
+                isSocial
+                  ? 'Informasi Lembaga'
+                  : isMortuary
+                    ? 'Informasi Almarhum'
+                    : 'Informasi Pasien'
+              }}
+            </h3>
+            <p class="text-sm text-slate-500 mt-1">
+              {{
+                isSocial
+                  ? 'Data diri lembaga yang membutuhkan ambulans'
+                  : isMortuary
+                    ? 'Data diri almarhum yang membutuhkan ambulans'
+                    : 'Data diri pasien yang membutuhkan ambulans'
+              }}
+            </p>
+            <div
+              :class="['grid grid-cols-1 gap-5', !isSocial && !isEmergency ? 'md:grid-cols-2' : '']"
+            >
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2"
+                  >{{ isSocial ? 'Nama Lembaga' : isMortuary ? 'Nama Almarhum' : 'Nama Pasien' }}
+                  <span v-if="!isEmergency" class="text-red-500">*</span></label
+                >
+                <input
+                  v-model="form.patientName"
+                  type="text"
+                  :placeholder="
+                    isSocial
+                      ? 'Masukkan nama lengkap lembaga'
+                      : isMortuary
+                        ? 'Masukkan nama lengkap almarhum'
+                        : isEmergency
+                          ? 'Masukkan nama lengkap pasien (opsional)'
+                          : 'Masukkan nama lengkap pasien'
+                  "
+                  class="w-full px-4 py-3 text-sm border rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  :class="errors.patientName ? 'border-red-300 bg-red-50' : 'border-slate-300'"
+                />
+                <p v-if="errors.patientName" class="mt-1 text-xs text-red-600">
+                  {{ errors.patientName }}
+                </p>
+              </div>
 
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">
-                {{ isMortuary ? 'Usia Almarhum' : 'Usia Pasien' }}
-              </label>
-              <input
-                v-model="form.patientAge"
-                type="number"
-                inputmode="numeric"
-                min="0"
-                max="150"
-                :placeholder="isMortuary ? 'Masukkan usia almarhum' : 'Masukkan usia pasien'"
-                class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-              />
+              <div v-if="!isSocial && !isEmergency">
+                <label class="block text-sm font-medium text-slate-700 mb-2">
+                  {{ isMortuary ? 'Usia Almarhum' : 'Usia Pasien' }}
+                </label>
+                <input
+                  v-model="form.patientAge"
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  max="150"
+                  :placeholder="isMortuary ? 'Masukkan usia almarhum' : 'Masukkan usia pasien'"
+                  class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                />
+              </div>
             </div>
           </div>
 
-          <!-- Patient Address -->
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">
-              {{ isMortuary ? 'Alamat Almarhum' : 'Alamat Pasien' }}
+              {{
+                isSocial
+                  ? 'Alamat Acara'
+                  : isEmergency
+                    ? 'Alamat Penjemputan'
+                    : isMortuary
+                      ? 'Alamat Almarhum'
+                      : 'Alamat Pasien'
+              }}
+              <span v-if="isEmergency" class="text-red-500">*</span>
             </label>
             <textarea
               v-model="form.patientAddress"
               rows="3"
               :placeholder="
-                isMortuary ? 'Masukkan alamat lengkap almarhum' : 'Masukkan alamat lengkap pasien'
+                isSocial
+                  ? 'Masukkan alamat lengkap acara'
+                  : isEmergency
+                    ? 'Masukkan alamat lengkap penjemputan'
+                    : isMortuary
+                      ? 'Masukkan alamat lengkap almarhum'
+                      : 'Masukkan alamat lengkap pasien'
               "
-              class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-white transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
+              class="w-full px-4 py-3 text-sm border rounded-xl bg-white transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
+              :class="errors.patientAddress ? 'border-red-300 bg-red-50' : 'border-slate-300'"
             ></textarea>
+            <p v-if="errors.patientAddress" class="mt-1 text-xs text-red-600">
+              {{ errors.patientAddress }}
+            </p>
           </div>
 
-          <!-- Disease -->
-          <div>
+          <div v-if="!isSocial && !isEmergency">
             <label class="block text-sm font-medium text-slate-700 mb-2">Penyakit / Kondisi</label>
             <input
               v-model="form.disease"
@@ -282,8 +393,7 @@ const handleSubmit = () => {
             />
           </div>
 
-          <!-- Infectious & Able to Sit -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div v-if="!isSocial && !isEmergency" class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="flex items-center gap-3 p-4 border border-slate-200 rounded-xl">
               <input
                 id="isInfectious"
@@ -316,18 +426,25 @@ const handleSubmit = () => {
             </div>
           </div>
 
-          <!-- ── Pickup & Service Details ── -->
-          <div class="border-t border-slate-100 pt-4">
-            <h3 class="text-lg font-semibold text-slate-800">Detail Penjemputan</h3>
-            <p class="text-sm text-slate-500 mt-1">Informasi waktu dan tujuan ambulans</p>
+          <div v-if="!isEmergency" class="border-t border-slate-100 pt-4">
+            <h3 class="text-lg font-semibold text-slate-800">
+              {{ isSocial ? 'Detail Acara' : 'Detail Penjemputan' }}
+            </h3>
+            <p class="text-sm text-slate-500 mt-1">
+              {{
+                isSocial
+                  ? 'Informasi waktu dan lokasi acara'
+                  : 'Informasi waktu dan tujuan ambulans'
+              }}
+            </p>
           </div>
 
-          <!-- Pickup Date, Time & Category -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div v-if="!isEmergency" class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label for="pickupDate" class="block text-sm font-medium text-slate-700 mb-2"
-                >Tanggal Penjemputan <span class="text-red-500">*</span></label
-              >
+              <label for="pickupDate" class="block text-sm font-medium text-slate-700 mb-2">
+                {{ isSocial ? 'Tanggal Acara' : 'Tanggal Penjemputan' }}
+                <span class="text-red-500">*</span>
+              </label>
               <input
                 id="pickupDate"
                 v-model="form.pickupDate"
@@ -343,9 +460,10 @@ const handleSubmit = () => {
             </div>
 
             <div>
-              <label for="pickupTime" class="block text-sm font-medium text-slate-700 mb-2"
-                >Waktu Penjemputan <span class="text-red-500">*</span></label
-              >
+              <label for="pickupTime" class="block text-sm font-medium text-slate-700 mb-2">
+                {{ isSocial ? 'Waktu Acara' : 'Waktu Penjemputan' }}
+                <span class="text-red-500">*</span>
+              </label>
               <input
                 id="pickupTime"
                 v-model="form.pickupTime"
@@ -359,36 +477,9 @@ const handleSubmit = () => {
                 {{ errors.pickupTime }}
               </p>
             </div>
-
-            <div>
-              <label for="serviceCategory" class="block text-sm font-medium text-slate-700 mb-2"
-                >Kategori Layanan <span class="text-red-500">*</span></label
-              >
-              <select
-                id="serviceCategory"
-                v-model="form.serviceCategory"
-                class="w-full px-4 py-3 text-sm border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                :class="
-                  errors.serviceCategory ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white'
-                "
-              >
-                <option value="" disabled>Pilih kategori layanan</option>
-                <option
-                  v-for="cat in ambulanceServiceCategoryOptions"
-                  :key="cat.value"
-                  :value="cat.value"
-                >
-                  {{ cat.label }}
-                </option>
-              </select>
-              <p v-if="errors.serviceCategory" class="mt-1 text-xs text-red-600">
-                {{ errors.serviceCategory }}
-              </p>
-            </div>
           </div>
 
-          <!-- Destination -->
-          <div>
+          <div v-if="!isSocial && !isEmergency">
             <label class="block text-sm font-medium text-slate-700 mb-2"
               >Tujuan <span class="text-red-500">*</span></label
             >
@@ -404,15 +495,25 @@ const handleSubmit = () => {
             </p>
           </div>
 
-          <!-- Note -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Catatan Tambahan</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">
+              {{ isSocial ? 'Detail Acara' : 'Catatan Tambahan' }}
+              <span v-if="isSocial" class="text-red-500">*</span>
+            </label>
             <textarea
               v-model="form.note"
               rows="3"
-              placeholder="Informasi tambahan yang perlu disampaikan (opsional)"
-              class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-white transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
+              :placeholder="
+                isSocial
+                  ? 'Jelaskan detail acara (wajib)'
+                  : 'Informasi tambahan yang perlu disampaikan (opsional)'
+              "
+              class="w-full px-4 py-3 text-sm border rounded-xl bg-white transition-all duration-200 focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
+              :class="errors.note ? 'border-red-300 bg-red-50' : 'border-slate-300'"
             ></textarea>
+            <p v-if="errors.note" class="mt-1 text-xs text-red-600">
+              {{ errors.note }}
+            </p>
           </div>
         </div>
 

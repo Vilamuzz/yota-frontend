@@ -23,8 +23,8 @@ import { useAssignedAmbulanceServiceDetail } from '@/composables/ambulanceServic
 import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
 import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
 import { useToast } from '@/composables/ui/useToast'
-import { getStatusColor } from '@/utils/statusColor'
-import { formatDate, formatStatus, getCategoryLabel } from '@/utils/format'
+import { getStatusColor, getCategoryColor } from '@/utils/statusColor'
+import { formatDate, getCategoryLabel } from '@/utils/format'
 import { AmbulanceServiceCategory, ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
@@ -34,7 +34,8 @@ import FilePreviewModal from '@/components/molecules/FilePreviewModal.vue'
 import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
-import { AmbulanceServiceStatus } from '@/types/ambulanceService'
+import { AmbulanceServiceStatus, formatAmbulanceServiceStatus } from '@/types/ambulanceService'
+import { formatPhoneWithDashes } from '@/utils/phone'
 
 const route = useRoute()
 const id = (route.params.serviceId || route.params.id) as string
@@ -54,6 +55,15 @@ const driverDetail = useAssignedAmbulanceServiceDetail(
 
 const ambulanceService = computed(() =>
   isDriver.value ? driverDetail.ambulanceService.value : managerDetail.ambulanceService.value,
+)
+const isSocial = computed(
+  () => ambulanceService.value?.serviceCategory === AmbulanceServiceCategory.SOCIAL_SERVICE,
+)
+const isEmergency = computed(
+  () => ambulanceService.value?.serviceCategory === AmbulanceServiceCategory.EMERGENCY_SERVICE,
+)
+const isMortuary = computed(
+  () => ambulanceService.value?.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE,
 )
 const isLoading = computed(() =>
   isDriver.value ? driverDetail.isLoading.value : managerDetail.isLoading.value,
@@ -211,7 +221,7 @@ const handleConfirmCancel = () => {
           class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between"
         >
           <div class="flex items-center gap-3">
-            <div class="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-500">
+            <div class="p-2.5 bg-primary-50 dark:bg-primary-900/20 rounded-xl text-primary-200">
               <Ambulance :size="22" />
             </div>
             <div>
@@ -226,7 +236,7 @@ const handleConfirmCancel = () => {
               getStatusColor(ambulanceService.status),
             ]"
           >
-            {{ formatStatus(ambulanceService.status) }}
+            {{ formatAmbulanceServiceStatus(ambulanceService.status) }}
           </span>
         </div>
 
@@ -237,7 +247,7 @@ const handleConfirmCancel = () => {
             <h3
               class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
             >
-              <User :size="18" class="text-blue-500" />
+              <User :size="18" class="text-primary-200" />
               Informasi Pengaju
             </h3>
             <div class="space-y-5 mb-8">
@@ -265,9 +275,13 @@ const handleConfirmCancel = () => {
                   <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
                     Nomor Telepon
                   </p>
-                  <p class="text-sm text-gray-900 dark:text-gray-200">
-                    {{ ambulanceService.submitterPhone }}
-                  </p>
+                  <a
+                    :href="`https://wa.me/62${ambulanceService.submitterPhone.replace(/^(\+62|62|0)/, '')}`"
+                    target="_blank"
+                    class="text-sm text-primary-200 hover:underline inline-flex items-center font-medium"
+                  >
+                    {{ formatPhoneWithDashes(ambulanceService.submitterPhone) }}
+                  </a>
                 </div>
               </div>
 
@@ -283,7 +297,7 @@ const handleConfirmCancel = () => {
                   <button
                     v-if="ambulanceService.submitterIdCard"
                     @click="showKtpModal = true"
-                    class="text-sm text-blue-500 hover:underline cursor-pointer"
+                    class="text-sm text-primary-200 hover:underline cursor-pointer font-medium"
                   >
                     Lihat KTP
                   </button>
@@ -292,19 +306,21 @@ const handleConfirmCancel = () => {
               </div>
             </div>
 
-            <!-- Patient Information -->
+            <!-- Patient / Institution Information -->
             <h3
               class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
             >
-              <UserCircle :size="18" class="text-blue-500" />
+              <UserCircle :size="18" class="text-primary-200" />
               {{
-                ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE
-                  ? 'Informasi Almarhum'
-                  : 'Informasi Pasien'
+                isSocial
+                  ? 'Informasi Lembaga'
+                  : isMortuary
+                    ? 'Informasi Almarhum'
+                    : 'Informasi Pasien'
               }}
             </h3>
             <div class="space-y-5 mb-8">
-              <!-- Patient Name & Age -->
+              <!-- Patient / Institution Name & Age -->
               <div class="flex gap-3">
                 <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
                   <User :size="16" />
@@ -312,14 +328,18 @@ const handleConfirmCancel = () => {
                 <div>
                   <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
                     {{
-                      ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE
-                        ? 'Nama & Usia Almarhum'
-                        : 'Nama & Usia Pasien'
+                      isSocial
+                        ? 'Nama Lembaga'
+                        : isEmergency
+                          ? 'Nama Pasien'
+                          : isMortuary
+                            ? 'Nama & Usia Almarhum'
+                            : 'Nama & Usia Pasien'
                     }}
                   </p>
                   <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                    {{ ambulanceService.patientName }}
-                    <span v-if="ambulanceService.patientAge"
+                    {{ ambulanceService.patientName || '-' }}
+                    <span v-if="!isSocial && !isEmergency && ambulanceService.patientAge"
                       >({{ ambulanceService.patientAge }} tahun)</span
                     >
                   </p>
@@ -334,9 +354,13 @@ const handleConfirmCancel = () => {
                 <div>
                   <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
                     {{
-                      ambulanceService.serviceCategory === AmbulanceServiceCategory.MORTUARY_SERVICE
-                        ? 'Alamat Almarhum'
-                        : 'Alamat Pasien'
+                      isSocial
+                        ? 'Alamat Acara'
+                        : isEmergency
+                          ? 'Alamat Penjemputan'
+                          : isMortuary
+                            ? 'Alamat Almarhum'
+                            : 'Alamat Pasien'
                     }}
                   </p>
                   <p class="text-sm text-gray-900 dark:text-gray-200">
@@ -346,7 +370,7 @@ const handleConfirmCancel = () => {
               </div>
 
               <!-- Disease -->
-              <div class="flex gap-3">
+              <div v-if="!isSocial && !isEmergency" class="flex gap-3">
                 <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
                   <AlertCircle :size="16" />
                 </div>
@@ -361,7 +385,7 @@ const handleConfirmCancel = () => {
               </div>
 
               <!-- Patient Conditions -->
-              <div class="flex gap-3">
+              <div v-if="!isSocial && !isEmergency" class="flex gap-3">
                 <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
                   <ShieldCheck :size="16" />
                 </div>
@@ -414,14 +438,7 @@ const handleConfirmCancel = () => {
           <!-- Right: Request Details -->
           <div class="p-8 space-y-6 bg-gray-50/50 dark:bg-gray-800/30">
             <div>
-              <h3
-                class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"
-              >
-                <FileText :size="18" class="text-blue-500" />
-                Detail Penjemputan
-              </h3>
-
-              <!-- Category -->
+              <!-- Kategori Layanan (Always shown at the top) -->
               <div class="space-y-2 mb-6">
                 <p
                   class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
@@ -430,7 +447,10 @@ const handleConfirmCancel = () => {
                 </p>
                 <div class="flex">
                   <span
-                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"
+                    :class="[
+                      'inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border',
+                      getCategoryColor(ambulanceService.serviceCategory),
+                    ]"
                   >
                     {{
                       getCategoryLabel(
@@ -442,13 +462,22 @@ const handleConfirmCancel = () => {
                 </div>
               </div>
 
+              <!-- Header -->
+              <h3
+                v-if="!isEmergency"
+                class="text-base font-bold text-gray-900 dark:text-white mb-6 mt-6 flex items-center gap-2 border-t border-gray-100 dark:border-gray-700 pt-4"
+              >
+                <FileText :size="18" class="text-primary-200" />
+                {{ isSocial ? 'Detail Acara' : 'Detail Penjemputan' }}
+              </h3>
+
               <!-- Date and Time -->
-              <div class="space-y-2 mb-6 grid grid-cols-2 gap-4">
+              <div v-if="!isEmergency" class="space-y-2 mb-6 grid grid-cols-2 gap-4">
                 <div>
                   <p
                     class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                   >
-                    Tanggal Penjemputan
+                    {{ isSocial ? 'Tanggal Acara' : 'Tanggal Penjemputan' }}
                   </p>
                   <div
                     class="mt-1 flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
@@ -461,7 +490,7 @@ const handleConfirmCancel = () => {
                   <p
                     class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                   >
-                    Waktu Penjemputan
+                    {{ isSocial ? 'Waktu Acara' : 'Waktu Penjemputan' }}
                   </p>
                   <div
                     class="mt-1 flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
@@ -473,7 +502,7 @@ const handleConfirmCancel = () => {
               </div>
 
               <!-- Destination -->
-              <div class="space-y-2 mb-6">
+              <div v-if="!isSocial && !isEmergency" class="space-y-2 mb-6">
                 <p
                   class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                 >
@@ -491,7 +520,7 @@ const handleConfirmCancel = () => {
                 <p
                   class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                 >
-                  Catatan Tambahan
+                  {{ isSocial ? 'Detail Acara' : 'Catatan Tambahan' }}
                 </p>
                 <div
                   class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 leading-relaxed"
@@ -514,12 +543,12 @@ const handleConfirmCancel = () => {
                 <!-- Rich card when full object is available -->
                 <div
                   v-if="ambulanceService.assignedAmbulance"
-                  class="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl overflow-hidden"
+                  class="bg-primary-50/10 border border-primary-200 rounded-xl overflow-hidden"
                 >
                   <!-- Header row -->
-                  <div class="flex items-center gap-3 px-4 py-3 bg-blue-100/60 dark:bg-blue-900/20">
-                    <Ambulance :size="18" class="text-blue-600 dark:text-blue-400 shrink-0" />
-                    <span class="text-sm font-bold text-blue-700 dark:text-blue-300 tracking-wide">
+                  <div class="flex items-center gap-3 px-4 py-3 bg-primary-50/50">
+                    <Ambulance :size="18" class="text-primary-200 shrink-0" />
+                    <span class="text-sm font-bold text-primary-200 tracking-wide">
                       {{ ambulanceService.assignedAmbulance.plateNumber }}
                     </span>
                     <span
@@ -539,7 +568,7 @@ const handleConfirmCancel = () => {
                   <!-- Driver details -->
                   <div class="px-4 py-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="flex items-center gap-2">
-                      <UserCircle :size="15" class="text-blue-400 shrink-0" />
+                      <UserCircle :size="15" class="text-primary-200 shrink-0" />
                       <div>
                         <p
                           class="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
@@ -552,16 +581,22 @@ const handleConfirmCancel = () => {
                       </div>
                     </div>
                     <div class="flex items-center gap-2">
-                      <Phone :size="15" class="text-blue-400 shrink-0" />
+                      <Phone :size="15" class="text-primary-200 shrink-0" />
                       <div>
                         <p
                           class="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                         >
                           Telepon Pengemudi
                         </p>
-                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                          {{ ambulanceService.assignedAmbulance.driver.phone }}
-                        </p>
+                        <a
+                          :href="`https://wa.me/62${ambulanceService.assignedAmbulance.driver.phone.replace(/^(\+62|62|0)/, '')}`"
+                          target="_blank"
+                          class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"
+                        >
+                          {{
+                            formatPhoneWithDashes(ambulanceService.assignedAmbulance.driver.phone)
+                          }}
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -570,10 +605,10 @@ const handleConfirmCancel = () => {
                 <!-- Fallback: only ambulanceId available -->
                 <div
                   v-else
-                  class="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-lg"
+                  class="flex items-center gap-3 p-3 bg-primary-50/10 border border-primary-200 rounded-lg"
                 >
-                  <Ambulance :size="18" class="text-blue-500 shrink-0" />
-                  <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                  <Ambulance :size="18" class="text-primary-200 shrink-0" />
+                  <span class="text-sm font-semibold text-primary-200">
                     {{ ambulanceService.ambulanceId }}
                   </span>
                 </div>
