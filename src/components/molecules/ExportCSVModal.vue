@@ -19,7 +19,7 @@ const props = withDefaults(
       { value: 'amount desc', label: 'Nominal Pengeluaran (Tertinggi)' },
       { value: 'amount asc', label: 'Nominal Pengeluaran (Terendah)' },
     ],
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -106,12 +106,16 @@ const handleExportSubmit = () => {
           <!-- Header -->
           <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950/20 rounded-xl flex items-center justify-center">
+              <div
+                class="w-10 h-10 bg-primary-50 dark:bg-primary-950/20 rounded-xl flex items-center justify-center"
+              >
                 <Download :size="20" class="text-primary-500" />
               </div>
               <div class="min-w-0">
                 <h2 class="text-lg font-bold text-gray-900 dark:text-white">Ekspor CSV</h2>
-                <p v-if="title" class="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{{ title }}</p>
+                <p v-if="title" class="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">
+                  {{ title }}
+                </p>
               </div>
             </div>
             <button
@@ -213,11 +217,7 @@ const handleExportSubmit = () => {
               v-model="exportSortBy"
               class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-300 focus:border-transparent focus:outline-none"
             >
-              <option
-                v-for="opt in sortByOptions"
-                :key="opt.value"
-                :value="opt.value"
-              >
+              <option v-for="opt in sortByOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </option>
             </select>
@@ -225,11 +225,7 @@ const handleExportSubmit = () => {
 
           <!-- Actions -->
           <div class="flex gap-3">
-            <BaseButton
-              variant="outline"
-              @click="emit('close')"
-              class="flex-1 font-semibold"
-            >
+            <BaseButton variant="outline" @click="emit('close')" class="flex-1 font-semibold">
               Batal
             </BaseButton>
             <BaseButton

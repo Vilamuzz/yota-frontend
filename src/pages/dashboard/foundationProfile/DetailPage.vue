@@ -25,11 +25,8 @@ import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
 
 const { foundationProfileDetailQuery } = useFoundationProfileDetail()
-const {
-  createFoundationProfileMutation,
-  updateFoundationProfileMutation,
-  validationErrors,
-} = useFoundationProfileUpdate()
+const { createFoundationProfileMutation, updateFoundationProfileMutation, validationErrors } =
+  useFoundationProfileUpdate()
 const foundationProfileStore = useFoundationProfileStore()
 const { showToast } = useToast()
 

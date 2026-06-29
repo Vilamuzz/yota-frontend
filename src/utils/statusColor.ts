@@ -6,6 +6,22 @@ import { SocialProgramSubscriptionStatus } from '@/types/socialProgramSubscripti
 import { AmbulanceStatus } from '@/types/ambulance'
 import { FosterChildrenCandidateStatus } from '@/types/fosterChildrenCandidate'
 import { AmbulanceServiceStatus } from '@/types/ambulanceService'
+import { AmbulanceServiceCategory } from '@/types/ambulanceHistory'
+
+export const getCategoryColor = (category: string) => {
+  switch (category) {
+    case AmbulanceServiceCategory.EMERGENCY_SERVICE:
+      return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+    case AmbulanceServiceCategory.PATIENT_SERVICE:
+      return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
+    case AmbulanceServiceCategory.MORTUARY_SERVICE:
+      return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
+    case AmbulanceServiceCategory.SOCIAL_SERVICE:
+      return 'bg-primary-50 text-primary-200 border-primary-200 dark:bg-primary-900/20 dark:text-primary-300 dark:border-primary-500'
+    default:
+      return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
+  }
+}
 
 export const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {

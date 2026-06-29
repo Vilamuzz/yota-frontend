@@ -76,7 +76,7 @@ const selectSort = (val: string) => {
   if (sortBy.value !== newVal) {
     sortBy.value = newVal
     fosterCursor.value = undefined
-    ambulanceCursor.value = undefined
+    ambulancePage.value = 1
     accumulatedFoster.value = []
     accumulatedAmbulance.value = []
   }
@@ -147,7 +147,7 @@ watch(fosterSearchQuery, (val) => {
 
 const ambulanceSearchQuery = ref('')
 const debouncedAmbulanceSearchQuery = ref('')
-const ambulanceCursor = ref<string | undefined>(undefined)
+const ambulancePage = ref(1)
 
 const ambulanceQueryParams = computed<AmbulanceServiceQueryParams>(() => {
   let sortVal = sortBy.value
@@ -159,7 +159,7 @@ const ambulanceQueryParams = computed<AmbulanceServiceQueryParams>(() => {
   return {
     limit: 10,
     search: debouncedAmbulanceSearchQuery.value || undefined,
-    nextCursor: ambulanceCursor.value,
+    page: ambulancePage.value,
     status: filterStatus.value,
     sortBy: sortVal,
   }
@@ -179,7 +179,7 @@ watch(ambulanceSearchQuery, (val) => {
   clearTimeout(ambulanceSearchTimeout)
   ambulanceSearchTimeout = setTimeout(() => {
     if (debouncedAmbulanceSearchQuery.value !== val) {
-      ambulanceCursor.value = undefined
+      ambulancePage.value = 1
       accumulatedAmbulance.value = []
       debouncedAmbulanceSearchQuery.value = val
     }
@@ -209,10 +209,10 @@ watch(
 )
 
 watch(
-  [() => ambulanceListQuery.data.value, activeTab, ambulanceCursor],
-  ([newData, tab, cursor]) => {
+  [() => ambulanceListQuery.data.value, activeTab, ambulancePage],
+  ([newData, tab, page]) => {
     if (tab === 'ambulance' && newData?.data?.requests) {
-      if (cursor) {
+      if (page > 1) {
         const existingIds = new Set(accumulatedAmbulance.value.map((s) => s.id))
         const newItems = newData.data.requests.filter((s) => !existingIds.has(s.id))
         accumulatedAmbulance.value.push(...newItems)
@@ -238,7 +238,8 @@ const hasNextPage = computed(() => {
   if (activeTab.value === 'foster') {
     return !!fosterListQuery.data.value?.data?.pagination?.nextCursor
   }
-  return !!ambulanceListQuery.data.value?.data?.pagination?.nextCursor
+  const pg = ambulanceListQuery.data.value?.data?.pagination
+  return pg ? ambulancePage.value < pg.totalPages : false
 })
 
 const loadNextPage = () => {
@@ -250,9 +251,9 @@ const loadNextPage = () => {
       fosterCursor.value = next
     }
   } else {
-    const next = ambulanceListQuery.data.value?.data?.pagination?.nextCursor
-    if (next && next !== ambulanceCursor.value) {
-      ambulanceCursor.value = next
+    const pg = ambulanceListQuery.data.value?.data?.pagination
+    if (pg && ambulancePage.value < pg.totalPages) {
+      ambulancePage.value++
     }
   }
 }
@@ -323,7 +324,7 @@ const confirmCancel = () => {
       fosterCursor.value = undefined
       accumulatedFoster.value = []
     } else {
-      ambulanceCursor.value = undefined
+      ambulancePage.value = 1
       accumulatedAmbulance.value = []
     }
   }
@@ -432,7 +433,7 @@ const getStatusConfig = (status: string) => {
                   Jenis Pengajuan
                 </p>
                 <h3 class="text-sm font-black text-gray-900">
-                  {{ tabs.find((t) => t.key === activeTab)!.label }}
+                  {{ tabs.find((t) => t.key === activeTab)!.label }}+62
                 </h3>
               </div>
             </div>
@@ -503,7 +504,7 @@ const getStatusConfig = (status: string) => {
                           () => {
                             filterStatus = filterStatus === status ? undefined : status
                             fosterCursor = undefined
-                            ambulanceCursor = undefined
+                            ambulancePage = 1
                             accumulatedFoster = []
                             accumulatedAmbulance = []
                           }
@@ -565,9 +566,7 @@ const getStatusConfig = (status: string) => {
                     ? ((filterStatus = undefined),
                       (fosterCursor = undefined),
                       (accumulatedFoster = []))
-                    : ((filterStatus = undefined),
-                      (ambulanceCursor = undefined),
-                      (accumulatedAmbulance = []))
+                    : ((filterStatus = undefined), (ambulancePage = 1), (accumulatedAmbulance = []))
                 "
                 class="hover:text-primary-800 focus:outline-none"
               >

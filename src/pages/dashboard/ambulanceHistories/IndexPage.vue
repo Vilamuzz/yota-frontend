@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Plus, Trash2, Edit, History, RotateCcw, SquarePen } from 'lucide-vue-next'
+import { Plus, Trash2, Edit, History, RotateCcw, SquarePen, Eye } from 'lucide-vue-next'
 import { useAmbulanceHistoryCreate } from '@/composables/ambulanceHistory/useAmbulanceHistoryCreate'
 import { useAmbulanceHistoryUpdate } from '@/composables/ambulanceHistory/useAmbulanceHistoryUpdate'
 import { useAmbulanceHistoryDelete } from '@/composables/ambulanceHistory/useAmbulanceHistoryDelete'
@@ -20,8 +20,9 @@ import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
-import { getStatusColor } from '@/utils/statusColor'
+import { getCategoryColor } from '@/utils/statusColor'
 import { getCategoryLabel } from '@/utils/format'
+import { formatPhoneWithDashes } from '@/utils/phone'
 import { useRoute } from 'vue-router'
 import { useAmbulanceDetail } from '@/composables/ambulance/useAmbulanceDetail'
 import { useAdminAmbulanceHistoryList } from '@/composables/ambulanceHistory/useAdminAmbulanceHistoryList'
@@ -224,6 +225,14 @@ function handleConfirmCreate() {
       },
     },
   )
+}
+
+const isDetailModalOpen = ref(false)
+const selectedHistory = ref<AmbulanceHistory | null>(null)
+
+function openDetailModal(history: AmbulanceHistory) {
+  selectedHistory.value = history
+  isDetailModalOpen.value = true
 }
 
 const isEditModalOpen = ref(false)
@@ -442,13 +451,19 @@ function handleConfirmEdit() {
               {{ history.driver.username }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ history.driver.phone }}
+              <a
+                :href="`https://wa.me/62${history.driver.phone.replace(/^(\+62|62|0)/, '')}`"
+                target="_blank"
+                class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"
+              >
+                {{ formatPhoneWithDashes(history.driver.phone) }}
+              </a>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
                 :class="[
                   'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                  getStatusColor(history.serviceCategory),
+                  getCategoryColor(history.serviceCategory),
                 ]"
               >
                 {{ getCategoryLabel(history.serviceCategory, ambulanceServiceCategoryOptions) }}
@@ -459,6 +474,13 @@ function handleConfirmEdit() {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
+                <BaseIconButton
+                  variant="info"
+                  title="Lihat Detail"
+                  @click="openDetailModal(history)"
+                >
+                  <Eye :size="18" />
+                </BaseIconButton>
                 <BaseIconButton
                   variant="primary"
                   title="Edit Riwayat"
@@ -595,6 +617,52 @@ function handleConfirmEdit() {
             placeholder="Catatan tambahan (opsional)"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm resize-none"
           />
+        </div>
+      </div>
+    </ConfirmationModal>
+
+    <!-- Detail Modal -->
+    <ConfirmationModal
+      :show="isDetailModalOpen"
+      title="Detail Riwayat Ambulans"
+      message=""
+      secondary-button-text="Tutup"
+      :icon="History"
+      @secondary="isDetailModalOpen = false"
+      @close="isDetailModalOpen = false"
+    >
+      <div class="mt-4 text-left space-y-4">
+        <div>
+          <p
+            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5"
+          >
+            Kategori Layanan
+          </p>
+          <span
+            :class="[
+              'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+              getCategoryColor(selectedHistory?.serviceCategory || ''),
+            ]"
+          >
+            {{
+              getCategoryLabel(
+                selectedHistory?.serviceCategory || '',
+                ambulanceServiceCategoryOptions,
+              )
+            }}
+          </span>
+        </div>
+        <div>
+          <p
+            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5"
+          >
+            Catatan
+          </p>
+          <div
+            class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 border border-gray-150 dark:border-gray-700 whitespace-pre-wrap min-h-[5rem]"
+          >
+            {{ selectedHistory?.note || '-' }}
+          </div>
         </div>
       </div>
     </ConfirmationModal>
