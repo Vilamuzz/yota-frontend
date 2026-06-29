@@ -551,7 +551,10 @@ const categoryBarClass = (value: string) => {
             </div>
 
             <!-- History Loading -->
-            <div v-if="isHistoryLoading && accumulatedHistories.length === 0" class="flex flex-col items-center justify-center py-16">
+            <div
+              v-if="isHistoryLoading && accumulatedHistories.length === 0"
+              class="flex flex-col items-center justify-center py-16"
+            >
               <Loader2 class="w-10 h-10 text-primary-500 animate-spin mb-3" />
               <p class="text-gray-400 text-sm animate-pulse">Memuat riwayat layanan...</p>
             </div>
@@ -618,10 +621,7 @@ const categoryBarClass = (value: string) => {
                         </span>
                       </td>
                       <td class="px-6 py-4 text-gray-700">
-                        <div class="flex items-center gap-2">
-                          <UserCircle :size="14" class="text-gray-400 shrink-0" />
-                          {{ history.driver.username }}
-                        </div>
+                        {{ history.driver.username }}
                       </td>
                     </tr>
                   </tbody>
@@ -630,7 +630,11 @@ const categoryBarClass = (value: string) => {
 
               <!-- Mobile Cards -->
               <div class="sm:hidden divide-y divide-gray-100">
-                <div v-for="(history, index) in accumulatedHistories" :key="index" class="px-5 py-4 space-y-2">
+                <div
+                  v-for="(history, index) in accumulatedHistories"
+                  :key="index"
+                  class="px-5 py-4 space-y-2"
+                >
                   <div class="flex items-center justify-between">
                     <span
                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"

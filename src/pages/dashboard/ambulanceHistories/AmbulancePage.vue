@@ -6,6 +6,7 @@ import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { getStatusColor } from '@/utils/statusColor'
 import { type AmbulanceQueryParams, AmbulanceStatus } from '@/types/ambulance'
+import { formatPhoneWithDashes } from '@/utils/phone'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -157,7 +158,13 @@ function getStatusLabel(status: string) {
               {{ ambulance.driver.username }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ ambulance.driver.phone }}
+              <a
+                :href="`https://wa.me/62${ambulance.driver.phone.replace(/^(\+62|62|0)/, '')}`"
+                target="_blank"
+                class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"
+              >
+                {{ formatPhoneWithDashes(ambulance.driver.phone) }}
+              </a>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span

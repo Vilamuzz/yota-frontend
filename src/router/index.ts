@@ -24,6 +24,11 @@ const router = createRouter({
       component: () => import('@/pages/AccessDeniedPage.vue'),
     },
     {
+      path: '/unauthorized',
+      name: 'unauthorized',
+      component: () => import('@/pages/UnauthorizedPage.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/pages/NotFoundPage.vue'),
@@ -40,7 +45,7 @@ router.beforeEach(async (to, _from, next) => {
 
   const role = authStore.activeRole || ''
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return next('/login')
+    return next({ name: 'unauthorized', query: { redirect: to.fullPath } })
   }
 
   if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {

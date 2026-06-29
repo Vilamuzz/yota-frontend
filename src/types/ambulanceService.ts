@@ -1,6 +1,6 @@
 import type { Ambulance } from './ambulance'
 import type { AmbulanceServiceCategory } from './ambulanceHistory'
-import type { Pagination, PaginationParams, Response } from './response'
+import type { OffsetPagination, PaginationParams, Response } from './response'
 
 export enum AmbulanceServiceStatus {
   PENDING = 'pending',
@@ -52,7 +52,7 @@ export interface AmbulanceService {
 
 export interface AmbulanceServiceList {
   requests: AmbulanceService[]
-  pagination: Pagination
+  pagination: OffsetPagination
 }
 
 export interface AmbulanceServiceQueryParams extends PaginationParams {
@@ -60,6 +60,7 @@ export interface AmbulanceServiceQueryParams extends PaginationParams {
   search?: string
   sortBy?: string
   serviceCategory?: string
+  page?: number
 }
 
 export interface CreateAmbulanceServiceRequest {

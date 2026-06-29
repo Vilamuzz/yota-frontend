@@ -11,6 +11,7 @@ import { usePrayerReport } from '@/composables/prayer/usePrayerReport'
 import { formatDate } from '@/utils/format'
 import type { Prayer } from '@/types/prayer'
 import { useAuthStore } from '@/stores/auth'
+import AuthRequiredModal from '@/components/organisms/AuthRequiredModal.vue'
 
 const route = useRoute()
 const donationSlug = computed(() => route.params.slug as string)
@@ -78,6 +79,7 @@ const { createMutation: amenMutation } = usePrayerAmen()
 const { createMutation: reportMutation } = usePrayerReport()
 
 const showReportModal = ref(false)
+const showAuthModal = ref(false)
 const reportPrayerId = ref<string>('')
 
 const prays = computed(() => {
@@ -108,6 +110,11 @@ const getPrayerAmenCount = (pray: Prayer) => {
 }
 
 const handleAmenPrayer = async (pray: Prayer) => {
+  if (!authStore.isAuthenticated) {
+    showAuthModal.value = true
+    return
+  }
+
   const previousState = isPrayerAmened(pray)
   const previousCount = getPrayerAmenCount(pray)
 
@@ -117,17 +124,19 @@ const handleAmenPrayer = async (pray: Prayer) => {
   amenStateOverrides.value[pray.id] = nextState
   amenCountOverrides.value[pray.id] = nextCount
 
-  if (authStore.isAuthenticated) {
-    try {
-      await amenMutation.mutateAsync(pray.id)
-    } catch {
-      amenStateOverrides.value[pray.id] = previousState
-      amenCountOverrides.value[pray.id] = previousCount
-    }
+  try {
+    await amenMutation.mutateAsync(pray.id)
+  } catch {
+    amenStateOverrides.value[pray.id] = previousState
+    amenCountOverrides.value[pray.id] = previousCount
   }
 }
 
 const openReportModal = (prayerId: string) => {
+  if (!authStore.isAuthenticated) {
+    showAuthModal.value = true
+    return
+  }
   reportPrayerId.value = prayerId
   showReportModal.value = true
 }
@@ -313,4 +322,12 @@ const handleShare = (pray: Prayer) => {
       <p class="text-red-500 text-sm">Gagal mengirim laporan</p>
     </div>
   </PublicConfirmationModal>
+
+  <!-- Auth Required Modal -->
+  <AuthRequiredModal
+    :show="showAuthModal"
+    @close="showAuthModal = false"
+    title="Akses Terbatas"
+    message="Silakan masuk ke akun Anda terlebih dahulu untuk memberikan Amen atau melaporkan doa."
+  />
 </template>

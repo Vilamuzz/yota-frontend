@@ -93,9 +93,19 @@ const MONTH_TABS: { key: FinanceModuleType; label: string; color: string }[] = [
 
 const activeModule = ref<FinanceModuleType>('donation_program')
 
+const currentYear = new Date().getFullYear()
+const selectedYear = ref(currentYear)
+const availableYears = computed(() => {
+  const years = []
+  for (let y = currentYear; y >= currentYear - 5; y--) {
+    years.push(y)
+  }
+  return years
+})
+
 const trendParams = computed(() => ({
   module: activeModule.value,
-  year: new Date().getFullYear(),
+  year: selectedYear.value,
 }))
 
 const { trendQuery, trendItems } = useAdminFinanceMonthlyTrend(trendParams)
@@ -309,7 +319,7 @@ const monthlyChartOption = computed(() => {
             <span
               class="px-2.5 py-1 text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-full border border-emerald-100/50 dark:border-emerald-800/30"
             >
-              Pilar 1: Donasi
+              Program Donasi
             </span>
             <div
               class="p-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl"
@@ -364,7 +374,7 @@ const monthlyChartOption = computed(() => {
             <span
               class="px-2.5 py-1 text-xs font-semibold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-full border border-blue-100/50 dark:border-blue-800/30"
             >
-              Pilar 2: Sosial
+              Program Berkelanjutan
             </span>
             <div
               class="p-2 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl"
@@ -376,7 +386,7 @@ const monthlyChartOption = computed(() => {
           <h3
             class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider"
           >
-            Net Saldo Program Sosial
+            Net Saldo Program Berkelanjutan
           </h3>
           <p
             class="text-2xl font-extrabold text-gray-950 dark:text-white mt-1.5 select-all font-mono"
@@ -419,7 +429,7 @@ const monthlyChartOption = computed(() => {
             <span
               class="px-2.5 py-1 text-xs font-semibold bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 rounded-full border border-violet-100/50 dark:border-violet-800/30"
             >
-              Pilar 3: Anak Asuh
+              Anak Asuh
             </span>
             <div
               class="p-2 bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400 rounded-xl"
@@ -468,32 +478,59 @@ const monthlyChartOption = computed(() => {
       class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-6 rounded-2xl shadow-sm flex flex-col gap-4"
     >
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h3 class="text-lg font-bold text-gray-950 dark:text-white">Pendapatan vs Pengeluaran</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Perbandingan per bulan · {{ new Date().getFullYear() }}
+            Perbandingan per bulan · {{ selectedYear }}
           </p>
         </div>
 
-        <!-- Module Tabs -->
-        <div
-          class="flex flex-col md:flex-row w-full sm:w-auto items-stretch sm:items-center gap-1 p-1 bg-gray-100/80 dark:bg-gray-700/40 rounded-xl self-start sm:self-auto"
-        >
-          <button
-            v-for="tab in MONTH_TABS"
-            :key="tab.key"
-            :id="`chart-tab-${tab.key}`"
-            @click="activeModule = tab.key"
-            :class="[
-              'w-full sm:w-auto text-center px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 whitespace-nowrap',
-              activeModule === tab.key
-                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
-            ]"
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+          <!-- Module Tabs -->
+          <div
+            class="flex flex-col md:flex-row w-full sm:w-auto items-stretch sm:items-center gap-1 p-1 bg-gray-100/80 dark:bg-gray-700/40 rounded-xl self-start sm:self-auto"
           >
-            {{ tab.label }}
-          </button>
+            <button
+              v-for="tab in MONTH_TABS"
+              :key="tab.key"
+              :id="`chart-tab-${tab.key}`"
+              @click="activeModule = tab.key"
+              :class="[
+                'w-full sm:w-auto text-center px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 whitespace-nowrap',
+                activeModule === tab.key
+                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
+              ]"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+
+          <!-- Year Filter -->
+          <div class="relative w-full sm:w-28 shrink-0">
+            <select
+              v-model="selectedYear"
+              class="w-full pl-3 pr-2 py-1.5 text-xs font-semibold border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/80 appearance-none cursor-pointer shadow-sm transition-all"
+            >
+              <option v-for="year in availableYears" :key="year" :value="year">
+                Tahun {{ year }}
+              </option>
+            </select>
+            <div
+              class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-500 dark:text-gray-400"
+            >
+              <svg
+                class="fill-current h-3.5 w-3.5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
+                />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 

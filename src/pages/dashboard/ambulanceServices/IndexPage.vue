@@ -6,7 +6,7 @@ import { Check, X as XIcon, ClipboardList, AlertCircle, Eye, Play } from 'lucide
 import { useAmbulanceServiceList } from '@/composables/ambulanceService/useAmbulanceServiceList'
 import { useAssignedAmbulanceServiceList } from '@/composables/ambulanceService/useAssignedAmbulanceServiceList'
 import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
-import { useCursorPagination } from '@/composables/ui/usePagination'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import { useToast } from '@/composables/ui/useToast'
 import {
   type AmbulanceServiceQueryParams,
@@ -18,8 +18,9 @@ import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
 import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
-import { getStatusColor } from '@/utils/statusColor'
+import { getStatusColor, getCategoryColor } from '@/utils/statusColor'
 import { getCategoryLabel } from '@/utils/format'
+import { formatPhoneWithDashes } from '@/utils/phone'
 import { ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
@@ -42,12 +43,11 @@ const { detailQuery, isAmbulanceLoading } = useAmbulanceDetail(ambulanceId)
 const ambulance = computed(() => detailQuery.data.value?.data)
 
 const queryParams = reactive<AmbulanceServiceQueryParams>({
+  page: 1,
   limit: 10,
   search: undefined,
   status: undefined,
   serviceCategory: undefined,
-  nextCursor: undefined,
-  prevCursor: undefined,
 })
 
 const limitOptions = [10, 25, 50, 100]
@@ -81,8 +81,10 @@ const isLoading = computed(() =>
   isDriver.value ? driverList.isLoading.value : managerList.isLoading.value,
 )
 
-const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-  useCursorPagination(queryParams)
+const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
+  queryParams,
+  pagination,
+)
 
 const hasActiveFilters = computed(
   () =>
@@ -330,12 +332,12 @@ function handleConfirmCancel() {
         loading-message="Memuat data permintaan ambulans..."
         :is-empty="ambulanceServices.length === 0"
         empty-message="Tidak ada data permintaan"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :has-prev="(queryParams.page ?? 1) > 1"
+        :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
+        @prev="handlePrevPage"
+        @next="handleNextPage"
       >
         <template #empty-icon>
           <ClipboardList :size="96" class="mx-auto mb-2 text-gray-300" />
@@ -370,11 +372,20 @@ function handleConfirmCancel() {
               {{ service.submitterName }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ service.submitterPhone }}
+              <a
+                :href="`https://wa.me/62${service.submitterPhone.replace(/^(\+62|62|0)/, '')}`"
+                target="_blank"
+                class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"
+              >
+                {{ formatPhoneWithDashes(service.submitterPhone) }}
+              </a>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm">
               <span
-                class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30"
+                :class="[
+                  'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border',
+                  getCategoryColor(service.serviceCategory),
+                ]"
               >
                 {{ getCategoryLabel(service.serviceCategory, ambulanceServiceCategoryOptions) }}
               </span>

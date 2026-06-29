@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import PublicLayout from '@/layouts/PublicLayout.vue'
 import BasePublicSearch from '@/components/atoms/BasePublicSearch.vue'
+import { useAuthStore } from '@/stores/auth'
+import AuthRequiredModal from '@/components/organisms/AuthRequiredModal.vue'
 import {
   Ambulance as AmbulanceIcon,
   Phone,
@@ -15,7 +18,11 @@ import {
 } from 'lucide-vue-next'
 import { usePublicAmbulanceList } from '@/composables/ambulance/usePublicAmbulanceList'
 import { useCursorPagination } from '@/composables/ui/usePagination'
-import { type AmbulanceQueryParams, AmbulanceStatus } from '@/types/ambulance'
+import {
+  type AmbulanceQueryParams,
+  AmbulanceStatus,
+  formatAmbulanceStatus,
+} from '@/types/ambulance'
 import { formatPhoneWithDashes } from '@/utils/phone'
 
 const searchQuery = ref('')
@@ -55,19 +62,6 @@ watch(selectedStatus, (val) => {
   resetPagination()
 })
 
-const statusLabel = (status: AmbulanceStatus) => {
-  switch (status) {
-    case AmbulanceStatus.Available:
-      return 'Tersedia'
-    case AmbulanceStatus.InUse:
-      return 'Sedang Digunakan'
-    case AmbulanceStatus.Maintenance:
-      return 'Pemeliharaan'
-    default:
-      return status
-  }
-}
-
 const statusBadgeClass = (status: AmbulanceStatus) => {
   switch (status) {
     case AmbulanceStatus.Available:
@@ -91,6 +85,18 @@ const statusDotClass = (status: AmbulanceStatus) => {
       return 'bg-yellow-500'
     default:
       return 'bg-gray-500'
+  }
+}
+
+const authStore = useAuthStore()
+const router = useRouter()
+const showAuthModal = ref(false)
+
+const handleRequestClick = () => {
+  if (!authStore.isAuthenticated) {
+    showAuthModal.value = true
+  } else {
+    router.push({ name: 'ambulance-submission' })
   }
 }
 </script>
@@ -185,7 +191,7 @@ const statusDotClass = (status: AmbulanceStatus) => {
                       class="w-1.5 h-1.5 rounded-full"
                       :class="statusDotClass(ambulance.status)"
                     ></span>
-                    {{ statusLabel(ambulance.status) }}
+                    {{ formatAmbulanceStatus(ambulance.status) }}
                   </span>
                 </div>
 
@@ -325,19 +331,27 @@ const statusDotClass = (status: AmbulanceStatus) => {
               </p>
             </div>
 
-            <RouterLink
-              :to="{ name: 'ambulance-submission' }"
-              class="relative z-10 inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-black text-sm bg-primary-500 hover:bg-primary-600 text-white shadow-xl shadow-primary-500/30 transition-all duration-300 active:scale-95 group/btn"
+            <button
+              @click="handleRequestClick"
+              class="relative z-10 inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-black text-sm bg-primary-500 hover:bg-primary-600 text-white shadow-xl shadow-primary-500/30 transition-all duration-300 active:scale-95 group/btn cursor-pointer"
             >
               AJUKAN PERMINTAAN
               <ArrowUpRight
                 :size="20"
                 class="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform"
               />
-            </RouterLink>
+            </button>
           </div>
         </template>
       </div>
     </div>
+
+    <!-- Auth Required Modal -->
+    <AuthRequiredModal
+      :show="showAuthModal"
+      @close="showAuthModal = false"
+      title="Login Diperlukan"
+      message="Silakan masuk ke akun Anda terlebih dahulu untuk mengajukan permintaan layanan ambulans."
+    />
   </PublicLayout>
 </template>
