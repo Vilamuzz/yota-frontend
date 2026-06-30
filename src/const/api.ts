@@ -21,4 +21,5 @@ export const API = {
   FOUNDATION_PROFILE: '/api/foundation-profile',
   FOUNDATION_PROFILE_ADMIN: '/api/admin/foundation-profile',
   BACKUP: '/api/admin/backups',
+  LOGS: '/api/logs',
 }

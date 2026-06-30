@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import PublicConfirmationModal from '@/components/organisms/PublicConfirmationModal.vue'
-import { Share2, Flag, Heart, ArrowLeft } from 'lucide-vue-next'
+import { Flag, Heart, ArrowLeft } from 'lucide-vue-next'
 import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
@@ -152,15 +152,6 @@ const handleReportPrayer = async () => {
   })
   closeReportModal()
 }
-
-const handleShare = (pray: Prayer) => {
-  const shareTitle = `Doa dari ${pray.username}`
-  if (navigator.share) {
-    navigator.share({ title: shareTitle, text: pray.content, url: window.location.href })
-  } else {
-    navigator.clipboard.writeText(`"${pray.content}" - oleh ${pray.username}`)
-  }
-}
 </script>
 
 <template>
@@ -273,13 +264,6 @@ const handleShare = (pray: Prayer) => {
               >
                 <Heart :size="16" :fill="isPrayerAmened(pray) ? 'currentColor' : 'none'" />
                 <span>{{ getPrayerAmenCount(pray) }} Amen</span>
-              </button>
-              <button
-                class="flex items-center gap-2 text-xs text-gray-400 hover:text-primary-500 transition-colors"
-                @click="handleShare(pray)"
-              >
-                <Share2 :size="16" />
-                <span>Bagikan</span>
               </button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { News } from '@/types/news'
 import { formatDate } from '@/utils/format'
-import { Calendar, ArrowRight, Eye } from 'lucide-vue-next'
+import { Calendar, ArrowRight, Eye, Image as ImageIcon } from 'lucide-vue-next'
 
 defineProps<{
   news: News

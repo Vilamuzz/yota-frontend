@@ -7,6 +7,8 @@ import { useAuthStore } from '@/stores/auth'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import AmbulanceManagerDashboard from '@/components/ui/AmbulanceManagerDashboard.vue'
 import AmbulanceDriverDashboard from '@/components/ui/AmbulanceDriverDashboard.vue'
+import PublicationManagerDashboard from '@/components/ui/PublicationManagerDashboard.vue'
+import SuperadminDashboard from '@/components/ui/SuperadminDashboard.vue'
 import ChairmanDashboard from '@/components/ui/ChairmanDashboard.vue'
 
 const authStore = useAuthStore()
@@ -23,6 +25,8 @@ const activeRole = computed(() => authStore.activeRole)
       <FinanceDashboard v-if="activeRole === ROLES.FINANCE" />
       <AmbulanceManagerDashboard v-else-if="activeRole === ROLES.AMBULANCE_MANAGER" />
       <AmbulanceDriverDashboard v-else-if="activeRole === ROLES.AMBULANCE_DRIVER" />
+      <PublicationManagerDashboard v-else-if="activeRole === ROLES.PUBLICATION_MANAGER" />
+      <SuperadminDashboard v-else-if="activeRole === ROLES.SUPERADMIN" />
       <ChairmanDashboard v-else-if="activeRole === ROLES.CHAIRMAN" />
       <div
         v-else

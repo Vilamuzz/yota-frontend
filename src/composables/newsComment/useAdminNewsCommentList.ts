@@ -1,4 +1,4 @@
-import { computed } from 'vue'
+import { computed, toValue } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { newsCommentService } from '@/services/newsComment.service'
 import type { AdminNewsCommentListResponse } from '@/types/news'
@@ -7,7 +7,7 @@ import type { ApiError } from '@/types/response'
 export const useAdminNewsCommentList = (queryParams?: any) => {
   const listQuery = useQuery<AdminNewsCommentListResponse, ApiError>({
     queryKey: ['admin-news-comments', queryParams],
-    queryFn: () => newsCommentService.getAdminNewsComments(queryParams),
+    queryFn: () => newsCommentService.getAdminNewsComments(queryParams ? toValue(queryParams) : undefined),
     retry: 1,
   })
 
