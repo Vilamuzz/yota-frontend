@@ -20,6 +20,10 @@ import {
   User,
   Flag,
   Loader2,
+  X,
+  MessageCircle,
+  Twitter,
+  Facebook,
 } from 'lucide-vue-next'
 import { useToast } from '@/composables/ui/useToast'
 import { useNewsCommentCreate } from '@/composables/newsComment/useNewsCommentCreate'
@@ -140,20 +144,47 @@ const estimatedReadingTime = computed(() => {
   return Math.max(1, Math.ceil(wordCount / 200))
 })
 
-const handleShare = async () => {
+const showShareModal = ref(false)
+const currentUrl = computed(() => window.location.href)
+
+const handleShare = () => {
+  const shareTitle = news.value?.title || 'Berita'
   if (navigator.share) {
-    await navigator.share({
-      title: news.value?.title,
-      url: window.location.href,
+    navigator.share({ title: shareTitle, url: currentUrl.value }).catch(() => {
+      showShareModal.value = true
     })
   } else {
-    handleCopyLink()
+    showShareModal.value = true
   }
 }
 
+const shareTo = (platform: 'whatsapp' | 'twitter' | 'facebook' | 'telegram') => {
+  const url = currentUrl.value
+  const text = `Baca berita terbaru: "${news.value?.title}". Selengkapnya silakan kunjungi:`
+
+  let shareUrl = ''
+  switch (platform) {
+    case 'whatsapp':
+      shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`
+      break
+    case 'twitter':
+      shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
+      break
+    case 'facebook':
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+      break
+    case 'telegram':
+      shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`
+      break
+  }
+
+  window.open(shareUrl, '_blank', 'noopener,noreferrer')
+}
+
 const handleCopyLink = async () => {
-  await navigator.clipboard.writeText(window.location.href)
+  await navigator.clipboard.writeText(currentUrl.value)
   showToast('Tautan berhasil disalin!', 'success')
+  showShareModal.value = false
 }
 
 const formatCategory = (cat: string) => {
@@ -309,13 +340,6 @@ const filteredRelatedNews = computed(() => {
             >
               <Share2 :size="14" />
               Bagikan
-            </button>
-            <button
-              @click="handleCopyLink"
-              class="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 hover:border-primary-400 hover:text-primary-500 rounded-full transition-all text-sm font-semibold"
-            >
-              <Link2 :size="14" />
-              Salin Tautan
             </button>
           </div>
         </div>
@@ -653,5 +677,205 @@ const filteredRelatedNews = computed(() => {
       @primary="submitReport"
       @close="closeReportModal"
     />
+
+    <!-- Share Modal Overlay -->
+    <div
+      v-if="showShareModal"
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative border border-gray-100 dark:border-gray-700 transition-all duration-300"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Bagikan Berita</h3>
+          <button
+            @click="showShareModal = false"
+            class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-400 cursor-pointer"
+          >
+            <X :size="20" />
+          </button>
+        </div>
+
+        <!-- Social Grid -->
+        <div class="grid grid-cols-4 gap-4 mb-6 text-center">
+          <!-- WhatsApp -->
+          <button
+            @click="shareTo('whatsapp')"
+            class="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-0"
+          >
+            <div
+              class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-100 transition-colors"
+            >
+              <MessageCircle :size="24" />
+            </div>
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">WhatsApp</span>
+          </button>
+
+          <!-- Twitter/X -->
+          <button
+            @click="shareTo('twitter')"
+            class="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-0"
+          >
+            <div
+              class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center text-gray-900 dark:text-white group-hover:bg-gray-200 transition-colors"
+            >
+              <Twitter :size="22" />
+            </div>
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Twitter</span>
+          </button>
+
+          <!-- Telegram -->
+          <button
+            @click="shareTo('telegram')"
+            class="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-0"
+          >
+            <div
+              class="w-12 h-12 rounded-full bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center text-sky-500 group-hover:bg-sky-100 transition-colors"
+            >
+              <Send :size="20" />
+            </div>
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Telegram</span>
+          </button>
+
+          <!-- Facebook -->
+          <button
+            @click="shareTo('facebook')"
+            class="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-0"
+          >
+            <div
+              class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors"
+            >
+              <Facebook :size="22" />
+            </div>
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Facebook</span>
+          </button>
+        </div>
+
+        <!-- Copy Link Row -->
+        <div
+          class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700"
+        >
+          <input
+            type="text"
+            readonly
+            :value="currentUrl"
+            class="flex-1 bg-transparent text-xs text-gray-500 truncate outline-none select-all"
+          />
+          <button
+            @click="handleCopyLink"
+            class="flex items-center gap-1.5 px-3 py-1.5 bg-primary-400 text-white rounded-xl text-xs font-bold hover:bg-primary-500 transition-colors cursor-pointer"
+          >
+            <Link2 :size="14" />
+            SALIN
+          </button>
+        </div>
+      </div>
+    </div>
   </PublicLayout>
 </template>
+
+<style scoped>
+.prose :deep(h1) {
+  font-size: 2.25rem;
+  font-weight: 900;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: rgb(17 24 39);
+}
+.prose :deep(h2) {
+  font-size: 1.75rem;
+  font-weight: 900;
+  margin-top: 1.75rem;
+  margin-bottom: 0.875rem;
+  color: rgb(17 24 39);
+}
+.prose :deep(h3) {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: rgb(17 24 39);
+}
+.prose :deep(p) {
+  margin-bottom: 1.25rem;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: rgb(55 65 81);
+}
+.prose :deep(ul) {
+  list-style-type: disc !important;
+  padding-left: 1.75rem;
+  margin-bottom: 1.25rem;
+}
+.prose :deep(ol) {
+  list-style-type: decimal !important;
+  padding-left: 1.75rem;
+  margin-bottom: 1.25rem;
+}
+.prose :deep(li) {
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: rgb(55 65 81);
+}
+.prose :deep(blockquote) {
+  border-left: 4px solid #0e733b;
+  padding-left: 1.5rem;
+  margin: 1.75rem 0;
+  color: rgb(75 85 99);
+  font-style: italic;
+  background-color: rgba(14, 115, 59, 0.05);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+.prose :deep(hr) {
+  border: none;
+  border-top: 2px solid rgb(229 231 235);
+  margin: 2rem 0;
+}
+.prose :deep(code) {
+  background: rgb(243 244 246);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+.prose :deep(pre) {
+  background: rgb(17 24 39);
+  color: rgb(229 231 235);
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
+}
+.prose :deep(pre code) {
+  background: none;
+  padding: 0;
+  font-size: 0.875rem;
+}
+.prose :deep(a) {
+  color: #0e733b;
+  text-decoration: underline;
+}
+.prose :deep(a:hover) {
+  color: #0b5c2f;
+}
+.prose :deep(img) {
+  max-width: 100%;
+  border-radius: 1rem;
+  margin: 1.5rem 0;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+.prose :deep(mark) {
+  background-color: #fef08a;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.prose :deep(u) {
+  text-decoration: underline;
+}
+</style>

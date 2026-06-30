@@ -9,7 +9,8 @@ This document defines the strict visual design tokens, custom color mapping para
 Our project leverages custom styling variables defined via the native Tailwind v4 `@theme` configuration layer. AI agents must exclusively prioritize these specific variables over general Tailwind defaults for branding elements.
 
 ### A. Branding Color Tokens
-- **Primary Accent 300:** `var(--color-primary-300)` $\rightarrow$ `#0e733b` (Light backgrounds, hover states, accents)
+- **Primary Accent 200:** `var(--color-primary-200)` $\rightarrow$ `#0eb95b` (Lighter accents, hover states)
+- **Primary Accent 300:** `var(--color-primary-300)` $\rightarrow$ `#0e733b` (Base light variant, hover states, accents)
 - **Primary Accent 400:** `var(--color-primary-400)` $\rightarrow$ `#0b5c2f` (Standard active elements, links, primary text weights)
 - **Primary Accent 500:** `var(--color-primary-500)` $\rightarrow$ `#062e18` (Deep contrast components, heavy headers)
 - **System Danger 500:** `var(--color-danger-500)`  $\rightarrow$ `#f43f5e` (Destructive action button elements, validation errors)

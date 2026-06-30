@@ -23,6 +23,7 @@ import { useAssignedAmbulanceServiceDetail } from '@/composables/ambulanceServic
 import { useAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAmbulanceServiceUpdate'
 import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
 import { useToast } from '@/composables/ui/useToast'
+import { extractError } from '@/utils/error'
 import { getStatusColor, getCategoryColor } from '@/utils/statusColor'
 import { formatDate, getCategoryLabel } from '@/utils/format'
 import { AmbulanceServiceCategory, ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
@@ -139,8 +140,8 @@ const handleConfirmStart = () => {
       showToast('Layanan ambulans berhasil dimulai', 'success')
       confirmStart.value = false
     },
-    onError: () => {
-      showToast('Gagal memulai layanan ambulans', 'error')
+    onError: (err) => {
+      showToast(extractError(err, 'Gagal memulai layanan ambulans'), 'error')
     },
   })
 }

@@ -17,21 +17,20 @@ const handleView = (fosterChildren: FosterChildren) => {
 function calculateAge(birthDate: string): number {
   if (!birthDate) return 0
 
-  // Expecting Format: YYYY-MM-DD
   const parts = birthDate.split('-')
   const [p1, p2, p3] = parts
 
   if (!p1 || !p2 || !p3) return 0
 
-  let year: number, month: number, day: number
+  let year: number
+  let month: number
+  let day: number
 
   if (p1.length === 4) {
-    // YYYY-MM-DD
     year = Number(p1)
     month = Number(p2)
     day = Number(p3)
   } else {
-    // DD-MM-YYYY (legacy or alternative)
     day = Number(p1)
     month = Number(p2)
     year = Number(p3)
@@ -46,13 +45,25 @@ function calculateAge(birthDate: string): number {
 
   const isBeforeBirthday =
     today.getMonth() < birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
+    (today.getMonth() === birth.getMonth() &&
+      today.getDate() < birth.getDate())
 
-  if (isBeforeBirthday) {
-    age--
-  }
+  if (isBeforeBirthday) age--
 
   return age
+}
+
+function isMale(gender?: string) {
+  if (!gender) return true
+
+  const value = gender.toLowerCase()
+
+  return (
+    value === 'male' ||
+    value === 'laki-laki' ||
+    value === 'l' ||
+    value === 'pria'
+  )
 }
 </script>
 
@@ -60,36 +71,60 @@ function calculateAge(birthDate: string): number {
   <component
     :is="to ? 'router-link' : 'button'"
     :to="to"
-    class="relative bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-37.5 w-full text-left cursor-pointer hover:shadow-md hover:border-primary-300 transition-all duration-200 group block overflow-hidden"
     @click="!to && handleView(fosterChildren)"
+    class="relative rounded-xl border shadow-sm p-4 min-w-[150px] w-full text-left cursor-pointer transition-all duration-300 group block overflow-hidden hover:shadow-lg hover:-translate-y-1"
+    :class="
+      isMale(fosterChildren.gender)
+        ? 'bg-blue-50/40 border-blue-200 hover:border-blue-400'
+        : 'bg-pink-50/40 border-pink-200 hover:border-pink-400'
+    "
   >
-    <!-- Graduated Badge -->
+    <!-- Badge Lulus -->
     <div
       v-if="fosterChildren.isGraduated"
-      class="absolute top-2 right-2 bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-lg z-10"
+      class="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow"
     >
-      Lulus
+      🎓 Lulus
     </div>
 
     <div
-      class="flex flex-col items-center text-center space-y-1 group-hover:scale-105 transition-transform duration-200"
+      class="flex flex-col items-center text-center gap-2 group-hover:scale-105 transition-transform duration-300"
     >
+      <!-- Foto -->
       <img
         :src="fosterChildren.profilePicture"
         :alt="fosterChildren.name"
-        class="w-20 h-20 rounded-full object-cover border-2 border-green-600"
-        :class="{ 'border-blue-500': fosterChildren.isGraduated }"
+        class="w-20 h-20 rounded-full object-cover border-[3px] shadow-md"
+        :class="
+          isMale(fosterChildren.gender)
+            ? 'border-blue-500'
+            : 'border-pink-500'
+        "
       />
+
+      <!-- Nama -->
       <span
-        class="bg-primary-300 text-white text-md px-3 py-1 rounded-full font-medium"
-        :class="{ '!bg-blue-500': fosterChildren.isGraduated }"
+        class="text-white text-sm px-4 py-1 rounded-full font-semibold shadow"
+        :class="
+          isMale(fosterChildren.gender)
+            ? 'bg-blue-500'
+            : 'bg-pink-500'
+        "
       >
         {{ fosterChildren.name }}
       </span>
 
-      <div class="flex text-sm divide-x">
-        <span class="font-bold px-1">{{ formatStatus(fosterChildren.category) }}</span>
-        <span class="font-normal px-1">{{ calculateAge(fosterChildren.birthDate) }} Tahun</span>
+      <!-- Informasi -->
+      <div
+        class="flex divide-x rounded-lg bg-white/80 backdrop-blur shadow-sm text-sm overflow-hidden"
+      >
+        <span class="px-3 py-1 font-semibold">
+          {{ formatStatus(fosterChildren.category) }}
+        </span>
+
+        <span class="px-3 py-1 text-gray-600">
+          {{ calculateAge(fosterChildren.birthDate) }} Tahun
+        </span>
       </div>
     </div>
   </component>

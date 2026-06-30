@@ -5,6 +5,7 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Check, X as XIcon, ClipboardList, AlertCircle, Eye, Play } from 'lucide-vue-next'
 import { useAmbulanceServiceList } from '@/composables/ambulanceService/useAmbulanceServiceList'
 import { useAssignedAmbulanceServiceList } from '@/composables/ambulanceService/useAssignedAmbulanceServiceList'
+import { extractError } from '@/utils/error'
 import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
 import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import { useToast } from '@/composables/ui/useToast'
@@ -13,6 +14,7 @@ import {
   type AmbulanceService,
   AmbulanceServiceStatus,
   formatAmbulanceServiceStatus,
+  ambulanceServiceStatusOptions,
 } from '@/types/ambulanceService'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
@@ -51,14 +53,6 @@ const queryParams = reactive<AmbulanceServiceQueryParams>({
 })
 
 const limitOptions = [10, 25, 50, 100]
-const statuses = [
-  { label: 'Tertunda', value: 'pending' },
-  { label: 'Disetujui', value: 'approved' },
-  { label: 'Dalam Layanan', value: 'in_service' },
-  { label: 'Selesai', value: 'done' },
-  { label: 'Ditolak', value: 'rejected' },
-  { label: 'Dibatalkan', value: 'cancelled' },
-]
 const searchQuery = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
 
@@ -187,8 +181,8 @@ function handleConfirmStart() {
       startModalShow.value = false
       actionServiceId.value = null
     },
-    onError: () => {
-      showToast('Gagal memulai layanan ambulans', 'error')
+    onError: (err) => {
+      showToast(extractError(err, 'Gagal memulai layanan ambulans'), 'error')
     },
   })
 }
@@ -294,7 +288,11 @@ function handleConfirmCancel() {
                     class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
                   >
                     <option :value="undefined">Semua Status</option>
-                    <option v-for="status in statuses" :key="status.value" :value="status.value">
+                    <option
+                      v-for="status in ambulanceServiceStatusOptions"
+                      :key="status.value"
+                      :value="status.value"
+                    >
                       {{ status.label }}
                     </option>
                   </select>

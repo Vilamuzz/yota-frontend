@@ -3,7 +3,6 @@ import { ref, reactive, watch } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Trash2, CheckCircle, Eye, MessageSquare, X } from 'lucide-vue-next'
 import BaseTable from '@/components/organisms/BaseTable.vue'
-import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import { useAdminNewsCommentList } from '@/composables/newsComment/useAdminNewsCommentList'
 import { useNewsCommentDelete } from '@/composables/newsComment/useNewsCommentDelete'
@@ -35,7 +34,7 @@ const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffse
 )
 
 watch(
-  () => [queryParams.limit, queryParams.sortBy],
+  () => queryParams.limit,
   () => resetPagination(),
 )
 
@@ -87,32 +86,6 @@ function truncate(text: string, max = 80) {
     <template #title>Moderasi Komentar</template>
 
     <div class="space-y-6">
-      <!-- Filters Section -->
-      <div class="flex justify-end">
-        <BaseFilter :has-active-filters="queryParams.sortBy !== 'reportCount'">
-          <template #default>
-            <div class="space-y-4 w-64">
-              <!-- Sort filter -->
-              <div>
-                <label
-                  class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
-                >
-                  Urutkan
-                </label>
-                <select
-                  v-model="queryParams.sortBy"
-                  class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="reportCount">Jumlah Laporan (Tertinggi)</option>
-                  <option value="createdAt desc">Terbaru</option>
-                  <option value="createdAt asc">Terlama</option>
-                </select>
-              </div>
-            </div>
-          </template>
-        </BaseFilter>
-      </div>
-
       <!-- Comments table -->
       <div class="overflow-hidden">
         <BaseTable

@@ -2,8 +2,9 @@
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import PublicConfirmationModal from '@/components/organisms/PublicConfirmationModal.vue'
-import { Share2, Flag, Heart, ArrowLeft } from 'lucide-vue-next'
+import { Share2, Flag, Heart, ArrowLeft, X, MessageCircle, Twitter, Facebook, Send, Link2 } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
+import { useToast } from '@/composables/ui/useToast'
 import { useRoute } from 'vue-router'
 import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
 import { usePrayerList } from '@/composables/prayer/usePrayerList'
@@ -137,13 +138,48 @@ const handleReportPrayer = async () => {
   closeReportModal()
 }
 
+const { showToast } = useToast()
+const showShareModal = ref(false)
+const currentUrl = computed(() => window.location.href)
+
 const handleShare = () => {
-  const shareTitle = program.value?.title ?? 'Donasi'
+  const shareTitle = program.value?.title || 'Donasi'
   if (navigator.share) {
-    navigator.share({ title: shareTitle, url: window.location.href })
+    navigator.share({ title: shareTitle, url: currentUrl.value }).catch(() => {
+      showShareModal.value = true
+    })
   } else {
-    navigator.clipboard.writeText(window.location.href)
+    showShareModal.value = true
   }
+}
+
+const shareTo = (platform: 'whatsapp' | 'twitter' | 'facebook' | 'telegram') => {
+  const url = currentUrl.value
+  const text = `Mari dukung program donasi: "${program.value?.title}". Selengkapnya silakan kunjungi:`
+  
+  let shareUrl = ''
+  switch (platform) {
+    case 'whatsapp':
+      shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`
+      break
+    case 'twitter':
+      shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
+      break
+    case 'facebook':
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+      break
+    case 'telegram':
+      shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`
+      break
+  }
+  
+  window.open(shareUrl, '_blank', 'noopener,noreferrer')
+}
+
+const copyLink = async () => {
+  await navigator.clipboard.writeText(currentUrl.value)
+  showToast('Tautan berhasil disalin!', 'success')
+  showShareModal.value = false
 }
 </script>
 
@@ -414,18 +450,12 @@ const handleShare = () => {
                       :class="
                         isPrayerAmened(pray)
                           ? 'bg-primary-50 text-primary-500 font-bold'
-                          : 'text-gray-400 hover:bg-gray-50 hover:text-primary-500'
+                          : 'text-gray-400 hover:bg-gray-55 hover:text-primary-500'
                       "
                       @click="handleAmenPrayer(pray)"
                     >
                       <Heart :size="16" :fill="isPrayerAmened(pray) ? 'currentColor' : 'none'" />
                       <span>{{ getPrayerAmenCount(pray) }} Amen</span>
-                    </button>
-                    <button
-                      class="flex items-center gap-2 text-xs text-gray-400 hover:text-primary-500 transition-colors"
-                    >
-                      <Share2 :size="16" />
-                      <span>Bagikan</span>
                     </button>
                   </div>
                 </div>
@@ -463,7 +493,7 @@ const handleShare = () => {
                   >
                     Donasi Sekarang
                   </BaseButton>
-                  <BaseButton
+                 <BaseButton
                     variant="outline"
                     size="lg"
                     full-width
@@ -532,4 +562,99 @@ const handleShare = () => {
     title="Akses Terbatas"
     message="Silakan masuk ke akun Anda terlebih dahulu untuk memberikan Amen atau melaporkan doa."
   />
+
+  <!-- Share Modal Overlay -->
+  <div
+    v-if="showShareModal"
+    class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity"
+  >
+    <div
+      class="bg-white dark:bg-gray-800 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative border border-gray-100 dark:border-gray-700 transition-all duration-300"
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Bagikan Program</h3>
+        <button
+          @click="showShareModal = false"
+          class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-400 cursor-pointer"
+        >
+          <X :size="20" />
+        </button>
+      </div>
+
+      <!-- Social Grid -->
+      <div class="grid grid-cols-4 gap-4 mb-6 text-center">
+        <!-- WhatsApp -->
+        <button
+          @click="shareTo('whatsapp')"
+          class="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-0"
+        >
+          <div
+            class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-100 transition-colors"
+          >
+            <MessageCircle :size="24" />
+          </div>
+          <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">WhatsApp</span>
+        </button>
+
+        <!-- Twitter/X -->
+        <button
+          @click="shareTo('twitter')"
+          class="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-0"
+        >
+          <div
+            class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center text-gray-900 dark:text-white group-hover:bg-gray-200 transition-colors"
+          >
+            <Twitter :size="22" />
+          </div>
+          <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Twitter</span>
+        </button>
+
+        <!-- Telegram -->
+        <button
+          @click="shareTo('telegram')"
+          class="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-0"
+        >
+          <div
+            class="w-12 h-12 rounded-full bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center text-sky-500 group-hover:bg-sky-100 transition-colors"
+          >
+            <Send :size="20" />
+          </div>
+          <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Telegram</span>
+        </button>
+
+        <!-- Facebook -->
+        <button
+          @click="shareTo('facebook')"
+          class="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-0"
+        >
+          <div
+            class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors"
+          >
+            <Facebook :size="22" />
+          </div>
+          <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Facebook</span>
+        </button>
+      </div>
+
+      <!-- Copy Link Row -->
+      <div
+        class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700"
+      >
+        <input
+          type="text"
+          readonly
+          :value="currentUrl"
+          class="flex-1 bg-transparent text-xs text-gray-500 truncate outline-none select-all"
+        />
+        <button
+          @click="copyLink"
+          class="flex items-center gap-1.5 px-3 py-1.5 bg-primary-400 text-white rounded-xl text-xs font-bold hover:bg-primary-500 transition-colors cursor-pointer"
+        >
+          <Link2 :size="14" />
+          SALIN
+        </button>
+      </div>
+    </div>
+  </div>
 </template>

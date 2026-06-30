@@ -126,6 +126,7 @@ export const financeRoutes: RouteRecordRaw[] = [
           },
           {
             path: 'foster-children',
+            meta: { role: [ROLES.FINANCE, ROLES.SOCIAL_MANAGER] },
             children: [
               {
                 path: '',
@@ -152,6 +153,7 @@ export const financeRoutes: RouteRecordRaw[] = [
                 meta: {
                   title: 'Tambah Transaksi Pengeluaran Anak Asuh',
                   activeMenu: 'dashboard-foster-children-expense',
+                  role: ROLES.FINANCE,
                 },
               },
             ],
