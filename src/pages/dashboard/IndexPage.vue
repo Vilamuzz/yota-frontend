@@ -10,6 +10,7 @@ import AmbulanceDriverDashboard from '@/components/ui/AmbulanceDriverDashboard.v
 import PublicationManagerDashboard from '@/components/ui/PublicationManagerDashboard.vue'
 import SuperadminDashboard from '@/components/ui/SuperadminDashboard.vue'
 import ChairmanDashboard from '@/components/ui/ChairmanDashboard.vue'
+import SocialManagerDashboard from '@/components/ui/SocialManagerDashboard.vue'
 
 const authStore = useAuthStore()
 const { user } = useCurrentUser()
@@ -28,6 +29,7 @@ const activeRole = computed(() => authStore.activeRole)
       <PublicationManagerDashboard v-else-if="activeRole === ROLES.PUBLICATION_MANAGER" />
       <SuperadminDashboard v-else-if="activeRole === ROLES.SUPERADMIN" />
       <ChairmanDashboard v-else-if="activeRole === ROLES.CHAIRMAN" />
+      <SocialManagerDashboard v-else-if="activeRole === ROLES.SOCIAL_MANAGER" />
       <div
         v-else
         class="bg-white rounded-xl shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
