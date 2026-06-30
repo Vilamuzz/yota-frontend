@@ -16,6 +16,7 @@ import { useDriverMonthlyTrend } from '@/composables/ambulanceHistory/useDriverM
 import { useAssignedAmbulanceServiceList } from '@/composables/ambulanceService/useAssignedAmbulanceServiceList'
 import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceService/useAssignedAmbulanceServiceUpdate'
 import { useToast } from '@/composables/ui/useToast'
+import { extractError } from '@/utils/error'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import { Motion } from 'motion-v'
 import { AmbulanceServiceCategory, formatAmbulanceServiceCategory } from '@/types/ambulanceHistory'
@@ -233,8 +234,8 @@ function handleConfirmStart() {
       startModalShow.value = false
       actionServiceId.value = null
     },
-    onError: () => {
-      showToast('Gagal memulai layanan ambulans', 'error')
+    onError: (err) => {
+      showToast(extractError(err, 'Gagal memulai layanan ambulans'), 'error')
     },
   })
 }
@@ -799,7 +800,6 @@ function handleConfirmCancel() {
       </div>
       <template #footer>
         <div class="flex justify-end gap-3">
-          <BaseButton variant="outline" @click="startModalShow = false">Batal</BaseButton>
           <BaseButton
             variant="primary"
             @click="handleConfirmStart"
@@ -825,7 +825,6 @@ function handleConfirmCancel() {
       </div>
       <template #footer>
         <div class="flex justify-end gap-3">
-          <BaseButton variant="outline" @click="completeModalShow = false">Batal</BaseButton>
           <BaseButton
             variant="primary"
             @click="handleConfirmComplete"
@@ -863,7 +862,6 @@ function handleConfirmCancel() {
       </div>
       <template #footer>
         <div class="flex justify-end gap-3">
-          <BaseButton variant="outline" @click="cancelModalShow = false">Batal</BaseButton>
           <BaseButton
             variant="danger"
             @click="handleConfirmCancel"

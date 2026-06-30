@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { Camera, Upload, X, FileImage, Newspaper, Loader2 } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
+import TiptapEditor from '@/components/atoms/TiptapEditor.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { useNewsDetail } from '@/composables/news/useNewsDetail'
 import { useNewsUpdate } from '@/composables/news/useNewsUpdate'
@@ -267,26 +268,13 @@ const handleSaveDraft = () => handleSubmit(MediaStatus.DRAFT)
               </p>
             </div>
 
-            <div>
-              <label
-                class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 tracking-wider"
-              >
-                Isi Berita <span class="text-red-500">*</span>
-              </label>
-              <textarea
-                v-model="form.content"
-                rows="12"
-                placeholder="Tuliskan isi berita secara lengkap di sini..."
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500 transition-all duration-200 outline-none resize-none"
-                :class="{ 'border-red-500': errors.content || validationErrors?.content }"
-              ></textarea>
-              <p
-                v-if="errors.content || validationErrors?.content"
-                class="mt-1 text-xs text-red-600"
-              >
-                {{ errors.content || validationErrors?.content }}
-              </p>
-            </div>
+            <TiptapEditor
+              v-model="form.content"
+              label="Isi Berita"
+              placeholder="Tuliskan isi berita secara lengkap di sini..."
+              :error="errors.content || validationErrors?.content"
+              required
+            />
           </div>
 
           <!-- Multi Media Upload -->
