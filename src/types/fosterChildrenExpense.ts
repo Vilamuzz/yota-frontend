@@ -18,6 +18,8 @@ export interface FosterChildrenExpenseList {
 
 export interface FosterChildrenExpenseQueryParams extends PaginationParams {
   sortBy?: string
+  startDate?: string
+  endDate?: string
 }
 
 export interface CreateFosterChildrenExpenseRequest {
@@ -35,3 +37,19 @@ export interface FosterChildrenExpenseExportRequest {
 
 export type FosterChildrenExpenseResponse = Response<FosterChildrenExpense>
 export type FosterChildrenExpenseListResponse = Response<FosterChildrenExpenseList>
+
+export interface MonthlyExpenseItem {
+  month: string // e.g. "2025-01"
+  expense: number
+}
+
+export interface MonthlyExpenseRecord {
+  fosterChildrenId: string
+  items: MonthlyExpenseItem[]
+}
+
+export interface MonthlyExpenseParams {
+  year?: number
+}
+
+export type MonthlyExpenseResponse = Response<MonthlyExpenseRecord>

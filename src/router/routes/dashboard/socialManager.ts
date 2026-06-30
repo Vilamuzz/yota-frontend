@@ -22,6 +22,12 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
             meta: { title: ' Tambah Data Anak Asuh', activeMenu: 'dashboard-foster-children' },
           },
           {
+            path: ':id',
+            name: 'dashboard-foster-children-detail',
+            component: () => import('@/pages/dashboard/fosterChildren/DetailPage.vue'),
+            meta: { title: 'Detail Anak Asuh', activeMenu: 'dashboard-foster-children' },
+          },
+          {
             path: ':id/edit',
             name: 'dashboard-foster-children-edit',
             component: () => import('@/pages/dashboard/fosterChildren/EditPage.vue'),
@@ -31,6 +37,31 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
       },
 
       {
+        path: 'foster-children/expense',
+        children: [
+          {
+            path: '',
+            name: 'dashboard-foster-children-expenses',
+            component: () =>
+              import('@/pages/dashboard/expenses/fosterChildrenExpenses/FosterChildrenPage.vue'),
+            meta: {
+              title: 'Pengeluaran Anak Asuh',
+            },
+          },
+          {
+            path: ':id',
+            name: 'dashboard-foster-children-expenses-detail',
+            component: () =>
+              import('@/pages/dashboard/expenses/fosterChildrenExpenses/IndexPage.vue'),
+            meta: {
+              title: 'Detail Pengeluaran Anak Asuh',
+              activeMenu: 'dashboard-foster-children-expenses',
+            },
+          },
+        ],
+      },
+
+       {
         path: 'foster-children/income',
         children: [
           {

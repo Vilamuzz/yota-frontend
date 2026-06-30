@@ -4,6 +4,8 @@ import type {
   FosterChildrenExpenseResponse,
   FosterChildrenExpenseExportRequest,
   FosterChildrenExpenseQueryParams,
+  MonthlyExpenseParams,
+  MonthlyExpenseResponse,
 } from '@/types/fosterChildrenExpense'
 import { API } from '@/const/api'
 import { api } from '@/utils/api'
@@ -35,6 +37,21 @@ export const fosterChildrenExpenseService = {
         params,
       },
     )
+    return response.data
+  },
+
+  exportAdminFosterChildrenExpenseCSV: async (
+    id: string,
+    params: FosterChildrenExpenseQueryParams,
+  ): Promise<Blob> => {
+    const response = await api.get(`${API.FOSTER_CHILDREN_ADMIN}/${id}/expenses/export`, {
+      params: {
+        ...(params.sortBy ? { sort_by: params.sortBy } : {}),
+        ...(params.startDate ? { start_date: params.startDate } : {}),
+        ...(params.endDate ? { end_date: params.endDate } : {}),
+      },
+      responseType: 'blob',
+    })
     return response.data
   },
 
@@ -76,6 +93,19 @@ export const fosterChildrenExpenseService = {
       },
       responseType: 'blob',
     })
+    return response.data
+  },
+
+  getMonthlyExpense: async (
+    id: string,
+    params?: MonthlyExpenseParams,
+  ): Promise<MonthlyExpenseResponse> => {
+    const response = await api.get<MonthlyExpenseResponse>(
+      `${API.FOSTER_CHILDREN_ADMIN}/${id}/expenses/monthly`,
+      {
+        params,
+      },
+    )
     return response.data
   },
 }
