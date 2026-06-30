@@ -158,6 +158,38 @@ export const financeRoutes: RouteRecordRaw[] = [
           },
         ],
       },
+      {
+        path: 'income/social-programs',
+        children: [
+          {
+            path: '',
+            name: 'dashboard-social-programs-income',
+            component: () =>
+              import('@/pages/dashboard/income/socialProgramTransactions/SocialProgramPage.vue'),
+            meta: { title: 'Pemasukan Program Sosial' },
+          },
+          {
+            path: ':id',
+            name: 'dashboard-social-programs-income-detail',
+            component: () =>
+              import('@/pages/dashboard/income/socialProgramTransactions/DetailPage.vue'),
+            meta: {
+              title: 'Detail Pemasukan Program Sosial',
+              activeMenu: 'dashboard-social-programs-income',
+            },
+          },
+          {
+            path: ':id/subscriptions/:subscriptionId',
+            name: 'dashboard-social-programs-income-invoices',
+            component: () =>
+              import('@/pages/dashboard/income/socialProgramTransactions/InvoiceListPage.vue'),
+            meta: {
+              title: 'Daftar Tagihan',
+              activeMenu: 'dashboard-social-programs-income',
+            },
+          },
+        ],
+      },
     ],
   },
 ]

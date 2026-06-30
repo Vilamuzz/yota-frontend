@@ -52,6 +52,12 @@ export const dashboardNavigation: NavItem[] = [
     route: '/dashboard/donation-programs/income',
   },
   {
+  icon: CirclePoundSterling,
+  label: 'Pemasukan Program Sosial',
+  roles: [ROLES.FINANCE],
+  route: '/dashboard/income/social-programs',
+  },
+  {
     icon: CirclePoundSterling,
     label: 'Pengeluaran',
     roles: [ROLES.FINANCE],
