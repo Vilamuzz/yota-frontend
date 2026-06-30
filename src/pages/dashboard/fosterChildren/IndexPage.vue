@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Plus, Trash2, Edit, Baby, GraduationCap, User } from 'lucide-vue-next'
+import { Plus, Trash2, Edit, Eye, Baby, GraduationCap, User } from 'lucide-vue-next'
 import { useFosterChildrenFilters } from '@/composables/fosterChildren/useFosterChildrenFilters'
 import { useFosterChildrenDelete } from '@/composables/fosterChildren/useFosterChildrenDelete'
 import { useToast } from '@/composables/ui/useToast'
@@ -247,6 +247,13 @@ const handleConfirmDelete = async () => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center gap-2">
+                <BaseIconButton
+                  :to="{ name: 'dashboard-foster-children-detail', params: { id: child.id } }"
+                  title="Lihat Anak Asuh"
+                  variant="primary"
+                >
+                  <Eye :size="18" />
+                </BaseIconButton>
                 <BaseIconButton
                   :to="{ name: 'dashboard-foster-children-edit', params: { id: child.id } }"
                   title="Edit Anak Asuh"

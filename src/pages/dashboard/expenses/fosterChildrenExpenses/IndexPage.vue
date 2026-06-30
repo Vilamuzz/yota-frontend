@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { ROLES } from '@/const/roles'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { Trash2, Receipt, Plus, File, Eye } from 'lucide-vue-next'
+import { Trash2, Receipt, Plus, File, Eye, Download } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useFosterChildrenExpenseList } from '@/composables/fosterChildrenExpense/useFosterChildrenExpenseList'
 import { useFosterChildrenExpenseDelete } from '@/composables/fosterChildrenExpense/useFosterChildrenExpenseDelete'
@@ -16,6 +18,21 @@ import BaseTable from '@/components/organisms/BaseTable.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import ExpenseDetailModal from '@/components/molecules/ExpenseDetailModal.vue'
 import FilePreviewModal from '@/components/molecules/FilePreviewModal.vue'
+import ExportCSVModal from '@/components/molecules/ExportCSVModal.vue'
+import { useTheme } from '@/composables/ui/useTheme'
+import { useFosterChildrenMonthlyExpense } from '@/composables/fosterChildrenExpense/useFosterChildrenMonthlyExpense'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { LineChart } from 'echarts/charts'
+import {
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  TitleComponent,
+} from 'echarts/components'
+import VChart from 'vue-echarts'
+use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent])
+import { fosterChildrenExpenseService } from '@/services/fosterChildrenExpense.service'
 import type {
   FosterChildrenExpense,
   FosterChildrenExpenseQueryParams,
@@ -44,6 +61,8 @@ const limitOptions = [10, 25, 50, 100]
 const isDeleteModalOpen = ref(false)
 const isDetailModalOpen = ref(false)
 const isFilePreviewModalOpen = ref(false)
+const showExportModal = ref(false)
+const isExporting = ref(false)
 const selectedFileUrl = ref<string | null>(null)
 const selectedExpenseId = ref<string | null>(null)
 const selectedExpenseDetail = ref<FosterChildrenExpense | null>(null)
@@ -61,6 +80,9 @@ const { fosterChildrenExpenses, pagination, isLoading } = useFosterChildrenExpen
   childId,
   queryParams,
 )
+
+const authStore = useAuthStore()
+const canCreate = computed(() => authStore.activeRole === ROLES.FINANCE)
 
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
   useCursorPagination(queryParams)
@@ -119,6 +141,167 @@ function handleConfirmDelete() {
     })
   }
 }
+
+const handleExport = async (payload: {
+  startDate: string
+  endDate: string
+  sortBy: string
+}) => {
+  isExporting.value = true
+
+  try {
+    const blob =
+      await fosterChildrenExpenseService.exportAdminFosterChildrenExpenseCSV(
+        childId,
+        {
+          startDate: payload.startDate,
+          endDate: payload.endDate,
+          sortBy: payload.sortBy,
+        },
+      )
+
+    const url = window.URL.createObjectURL(blob)
+
+    const link = document.createElement('a')
+    link.href = url
+
+    const nameSlug =
+      child.value?.name?.replace(/\s+/g, '_').toLowerCase() || childId
+
+    link.setAttribute(
+      'download',
+      `expenses_${nameSlug}_${payload.startDate}_to_${payload.endDate}.csv`,
+    )
+
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+
+    window.URL.revokeObjectURL(url)
+
+    showExportModal.value = false
+    showToast('Laporan berhasil diunduh', 'success')
+  } catch {
+    showToast('Gagal mengunduh laporan', 'error')
+  } finally {
+    isExporting.value = false
+  }
+}
+
+const { isDark } = useTheme()
+const chartTheme = computed(() => (isDark.value ? 'dark' : 'light'))
+
+const { expenseQuery, expenseItems } = useFosterChildrenMonthlyExpense(childId)
+const isChartLoading = computed(() => expenseQuery.isPending.value)
+
+const MONTH_LABELS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'Mei',
+  'Jun',
+  'Jul',
+  'Agu',
+  'Sep',
+  'Okt',
+  'Nov',
+  'Des',
+]
+
+const expenseChartOption = computed(() => {
+  const isDarkMode = isDark.value
+  const c = {
+    expense: isDarkMode ? '#fb7185' : '#f43f5e',
+    text: isDarkMode ? '#9ca3af' : '#374151',
+    gridLine: isDarkMode ? '#374151' : '#e5e7eb',
+    bg: isDarkMode ? '#1f2937' : '#ffffff',
+    border: isDarkMode ? '#374151' : '#e5e7eb',
+    tooltip: isDarkMode ? '#f3f4f6' : '#1f2937',
+  }
+
+  const data = Array(12).fill(0)
+  expenseItems.value.forEach((item) => {
+    const idx = parseInt(item.month.split('-')[1] || '', 10) - 1
+    if (idx >= 0 && idx < 12) data[idx] = item.expense
+  })
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: c.bg,
+      borderColor: c.border,
+      textStyle: { color: c.tooltip },
+      formatter: (params: any) => {
+        const p = params[0]
+        return `<div style="font-size:12px;padding:4px">
+          <b style="display:block;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid ${c.border}">${p.name}</b>
+          <div style="display:flex;justify-content:space-between;gap:16px">
+            <span>${p.marker} Pengeluaran</span>
+            <b style="font-family:monospace">${formatCurrency(p.value)}</b>
+          </div></div>`
+      },
+    },
+    grid: { left: '2%', right: '2%', bottom: '4%', top: '8%', containLabel: true },
+    xAxis: [
+      {
+        type: 'category',
+        data: MONTH_LABELS,
+        boundaryGap: false,
+        axisLabel: { color: c.text, fontFamily: 'system-ui, sans-serif', fontSize: 11 },
+        axisLine: { lineStyle: { color: c.gridLine } },
+        axisTick: { show: false },
+      },
+    ],
+    yAxis: [
+      {
+        type: 'value',
+        axisLabel: {
+          color: c.text,
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: 11,
+          formatter: (v: number) => {
+            if (v >= 1e9) return `${(v / 1e9).toFixed(1)}M`
+            if (v >= 1e6) return `${(v / 1e6).toFixed(1)}jt`
+            if (v >= 1e3) return `${(v / 1e3).toFixed(0)}rb`
+            return `${v}`
+          },
+        },
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: c.gridLine, type: 'dashed' } },
+      },
+    ],
+    series: [
+      {
+        name: 'Pengeluaran',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        data,
+        lineStyle: { color: c.expense, width: 2.5 },
+        itemStyle: { color: c.expense },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              {
+                offset: 0,
+                color: isDarkMode ? 'rgba(251,113,133,0.28)' : 'rgba(244,63,94,0.18)',
+              },
+              { offset: 1, color: 'rgba(0,0,0,0)' },
+            ],
+          },
+        },
+      },
+    ],
+  }
+})
 </script>
 
 <template>
@@ -128,27 +311,97 @@ function handleConfirmDelete() {
     <div class="space-y-6">
       <div
         v-if="child"
-        class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm mb-6"
+        class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6"
       >
-        <div class="flex flex-col">
-          <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Anak Asuh</span>
-          <span
-            class="text-lg font-semibold text-gray-900 dark:text-white truncate"
-            :title="child.name"
-            >{{ child.name }}</span
+        <!-- Card Anak Asuh -->
+        <div
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center gap-4"
+        >
+          <img
+            :src="child.profilePicture"
+            :alt="child.name"
+            class="w-14 h-14 rounded-full object-cover border border-gray-200 dark:border-gray-700 shadow-sm"
+            @error="($event.target as HTMLImageElement).src = '/images/default-avatar.png'"
+          />
+
+          <div class="min-w-0">
+            <p
+              class="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 font-medium"
+            >
+              Anak Asuh
+            </p>
+
+            <h3
+              class="text-lg font-bold text-gray-900 dark:text-white truncate"
+              :title="child.name"
+            >
+              {{ child.name }}
+            </h3>
+          </div>
+        </div>
+
+        <!-- Card Dana Terkumpul -->
+        <div
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-green-100 dark:border-green-900 shadow-sm p-5"
+        >
+          <p
+            class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 font-medium"
           >
+            Dana Terkumpul
+          </p>
+
+          <h2 class="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
+            {{ formatCurrency(child.collectedFund!) }}
+          </h2>
+
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Total dana yang telah diterima.
+          </p>
         </div>
-        <div class="flex flex-col">
-          <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Dana Terkumpul</span>
-          <span class="text-lg font-semibold text-green-600 dark:text-green-400">{{
-            formatCurrency(child.collectedFund!)
-          }}</span>
+
+        <!-- Card Dana Tersisa -->
+        <div
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-red-100 dark:border-red-900 shadow-sm p-5"
+        >
+          <p
+            class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 font-medium"
+          >
+            Dana Tersisa
+          </p>
+
+          <h2 class="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">
+            {{ formatCurrency(child.collectedFund! - (child.totalExpense || 0)) }}
+          </h2>
+
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Sisa dana setelah seluruh pengeluaran.
+          </p>
         </div>
-        <div class="flex flex-col">
-          <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Dana Tersisa</span>
-          <span class="text-lg font-semibold text-red-600 dark:text-red-400">{{
-            formatCurrency(child.collectedFund! - (child.totalExpense || 0))
-          }}</span>
+      </div>
+
+      <div
+        class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-6 rounded-2xl shadow-sm flex flex-col gap-3"
+      >
+        <div>
+          <h3 class="text-base font-bold text-gray-950 dark:text-white">Pengeluaran Bulanan</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            Total pengeluaran per bulan · {{ new Date().getFullYear() }}
+          </p>
+        </div>
+
+        <div class="h-60 w-full">
+          <VChart
+            v-if="!isChartLoading"
+            class="w-full h-full"
+            :option="expenseChartOption"
+            :theme="chartTheme"
+            autoresize
+          />
+          <div v-else class="h-full flex items-center justify-center rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+            <span class="text-sm text-gray-500 dark:text-gray-400">
+              Memuat grafik...
+            </span>
+          </div>
         </div>
       </div>
 
@@ -203,17 +456,28 @@ function handleConfirmDelete() {
             </template>
           </BaseFilter>
         </div>
-        <BaseButton
-          variant="primary"
-          :to="{
-            name: 'dashboard-foster-children-expense-transaction-create',
-            params: { id: childId },
-          }"
-          class="w-full sm:w-auto justify-center"
-        >
-          <Plus :size="20" class="mr-1" />
-          Tambah Pengeluaran
-        </BaseButton>
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <BaseButton
+            variant="outline"
+            @click="showExportModal = true"
+            class="w-full sm:w-auto justify-center"
+          >
+            <Download :size="18" class="mr-2" />
+            Ekspor CSV
+          </BaseButton>
+          <BaseButton
+            v-if="canCreate"
+            variant="primary"
+            :to="{
+              name: 'dashboard-foster-children-expense-transaction-create',
+              params: { id: childId },
+            }"
+            class="w-full sm:w-auto justify-center"
+          >
+            <Plus :size="18" class="mr-2" />
+            Tambah Pengeluaran
+          </BaseButton>
+        </div>
       </div>
 
       <!-- Table Section -->
@@ -332,6 +596,14 @@ function handleConfirmDelete() {
       :show="isFilePreviewModalOpen"
       :file-url="selectedFileUrl"
       @close="isFilePreviewModalOpen = false"
+    />
+
+    <ExportCSVModal
+      :show="showExportModal"
+      :title="child?.name"
+      :is-exporting="isExporting"
+      @close="showExportModal = false"
+      @export="handleExport"
     />
   </DashboardLayout>
 </template>
