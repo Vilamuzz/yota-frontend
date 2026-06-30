@@ -190,7 +190,7 @@ export const dashboardNavigation: NavItem[] = [
   },
   {
     icon: NotepadText,
-    label: 'Program Ketua',
+    label: 'Manajemen Program',
     roles: [ROLES.CHAIRMAN],
     route: '/dashboard/social-programs',
   },
