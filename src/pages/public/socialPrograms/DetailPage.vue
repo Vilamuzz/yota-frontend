@@ -191,7 +191,7 @@ const handleLogin = () => {
       :show="showUnsubscribeModal"
       title="Berhenti Berlangganan?"
       message="Apakah kamu yakin ingin berhenti berlangganan program ini? Kamu tidak akan lagi menerima tagihan bulanan untuk program ini."
-      primaryButtonText="Ya, Berhenti"
+      dangerButtonText="Ya, Berhenti"
       secondaryButtonText="Batal"
       variant="danger"
       :loading="unsubscribeMutation.isPending.value"
