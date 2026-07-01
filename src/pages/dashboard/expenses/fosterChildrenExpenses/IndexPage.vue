@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { ROLES } from '@/const/roles'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { Trash2, Receipt, Plus, File, Eye, Download } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
@@ -80,9 +78,6 @@ const { fosterChildrenExpenses, pagination, isLoading } = useFosterChildrenExpen
   childId,
   queryParams,
 )
-
-const authStore = useAuthStore()
-const canCreate = computed(() => authStore.activeRole === ROLES.FINANCE)
 
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
   useCursorPagination(queryParams)
@@ -466,7 +461,6 @@ const expenseChartOption = computed(() => {
             Ekspor CSV
           </BaseButton>
           <BaseButton
-            v-if="canCreate"
             variant="primary"
             :to="{
               name: 'dashboard-foster-children-expense-transaction-create',
