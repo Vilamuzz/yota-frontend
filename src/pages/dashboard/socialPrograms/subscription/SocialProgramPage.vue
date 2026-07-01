@@ -53,7 +53,7 @@ const hasActiveFilters = computed(
 
 <template>
   <DashboardLayout>
-    <template #title>Data Program Sosial</template>
+    <template #title>Data Program Berkelanjutan</template>
 
     <div class="space-y-6">
       <!-- Header Section -->

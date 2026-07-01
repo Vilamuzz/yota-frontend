@@ -142,7 +142,7 @@ const navLinks = [
   { label: 'Beranda', to: '/' },
   { label: 'Tentang', to: '/about' },
   { label: 'Program Donasi', to: '/donation-programs' },
-  { label: 'Program Sosial', to: '/social-programs' },
+  { label: 'Program Berkelanjutan', to: '/social-programs' },
   { label: 'Anak Asuh', to: '/foster-children' },
 ]
 
@@ -529,7 +529,7 @@ const dropdownLinks = [
                 </li>
                 <li>
                   <RouterLink to="/social-programs" class="hover:text-primary-300"
-                    >Program Sosial</RouterLink
+                    >Program Berkelanjutan</RouterLink
                   >
                 </li>
                 <li>

@@ -122,7 +122,7 @@ function handleConfirmDelete() {
 
 <template>
   <DashboardLayout>
-    <template #title>Manajemen Pengeluaran Program Sosial</template>
+    <template #title>Manajemen Pengeluaran Program Berkelanjutan</template>
 
     <div class="space-y-6">
       <!-- Stats Grid -->
@@ -225,9 +225,9 @@ function handleConfirmDelete() {
       <!-- Table Section -->
       <BaseTable
         :loading="isLoading"
-        loading-message="Memuat pengeluaran program sosial..."
+        loading-message="Memuat pengeluaran program berkelanjutan..."
         :is-empty="socialProgramExpenses.length === 0"
-        empty-message="Tidak ada data pengeluaran program sosial"
+        empty-message="Tidak ada data pengeluaran program berkelanjutan"
         :has-prev="!!pagination?.prevCursor"
         :has-next="!!pagination?.nextCursor"
         v-model:limit="queryParams.limit"

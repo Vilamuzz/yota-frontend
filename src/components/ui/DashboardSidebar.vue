@@ -69,7 +69,7 @@ const toggleDropdown = (label: string) => {
     openDropdowns.value.add(label)
   }
 }
-const isOpen = (label: string) => openDropdowns.value.has(label)
+const isDropdownOpen = (label: string) => openDropdowns.value.has(label)
 
 if (!isInitialized.value) {
   visibleMenu.value.forEach((item) => {
@@ -147,13 +147,13 @@ const initiallyOpen = new Set(openDropdowns.value)
             <ChevronDown
               :size="16"
               class="transition-transform duration-200"
-              :class="{ 'rotate-180': isOpen(item.label) }"
+              :class="{ 'rotate-180': isDropdownOpen(item.label) }"
             />
           </button>
 
           <AnimatePresence>
             <Motion
-              v-if="isOpen(item.label)"
+              v-if="isDropdownOpen(item.label)"
               :initial="initiallyOpen.has(item.label) ? false : { height: 0, opacity: 0 }"
               :animate="{ height: 'auto', opacity: 1 }"
               :exit="{ height: 0, opacity: 0 }"

@@ -76,7 +76,7 @@ const { isLoading: isLoadingFoster, query: fosterQuery } = useMyFosterChildrenTr
 const { isLoading: isLoadingSocial, query: socialQuery } = useMySocialProgramInvoices(
   socialParams,
   {
-    enabled: computed(() => activeCategory.value === 'Program Sosial' && authStore.isAuthenticated),
+    enabled: computed(() => activeCategory.value === 'Program Berkelanjutan' && authStore.isAuthenticated),
   },
 )
 
@@ -148,14 +148,14 @@ watch(
 const isAnyLoading = computed(() => {
   if (activeCategory.value === 'Program Donasi') return isLoadingDonations.value
   if (activeCategory.value === 'Donasi Anak Asuh') return isLoadingFoster.value
-  if (activeCategory.value === 'Program Sosial') return isLoadingSocial.value
+  if (activeCategory.value === 'Program Berkelanjutan') return isLoadingSocial.value
   return false
 })
 
 const isAnyFetching = computed(() => {
   if (activeCategory.value === 'Program Donasi') return donationQuery.isFetching.value
   if (activeCategory.value === 'Donasi Anak Asuh') return fosterQuery.isFetching.value
-  if (activeCategory.value === 'Program Sosial') return socialQuery.isFetching.value
+  if (activeCategory.value === 'Program Berkelanjutan') return socialQuery.isFetching.value
   return false
 })
 
@@ -166,7 +166,7 @@ const hasNextPage = computed(() => {
   if (activeCategory.value === 'Donasi Anak Asuh') {
     return !!fosterQuery.data.value?.data?.pagination?.nextCursor
   }
-  if (activeCategory.value === 'Program Sosial') {
+  if (activeCategory.value === 'Program Berkelanjutan') {
     return !!socialQuery.data.value?.data?.pagination?.nextCursor
   }
   return false
@@ -185,7 +185,7 @@ const loadNextPage = () => {
     if (next && next !== fosterCursor.value) {
       fosterCursor.value = next
     }
-  } else if (activeCategory.value === 'Program Sosial') {
+  } else if (activeCategory.value === 'Program Berkelanjutan') {
     const next = socialQuery.data.value?.data?.pagination?.nextCursor
     if (next && next !== socialCursor.value) {
       socialCursor.value = next
@@ -224,14 +224,14 @@ onUnmounted(() => {
 const isError = computed(() => {
   if (activeCategory.value === 'Program Donasi') return donationQuery.isError.value
   if (activeCategory.value === 'Donasi Anak Asuh') return fosterQuery.isError.value
-  if (activeCategory.value === 'Program Sosial') return socialQuery.isError.value
+  if (activeCategory.value === 'Program Berkelanjutan') return socialQuery.isError.value
   return false
 })
 
 const errorValue = computed(() => {
   if (activeCategory.value === 'Program Donasi') return donationQuery.error.value
   if (activeCategory.value === 'Donasi Anak Asuh') return fosterQuery.error.value
-  if (activeCategory.value === 'Program Sosial') return socialQuery.error.value
+  if (activeCategory.value === 'Program Berkelanjutan') return socialQuery.error.value
   return null
 })
 
@@ -247,21 +247,21 @@ const handleSnapPayment = (token: string) => {
         showToast('Pembayaran berhasil', 'success')
         if (activeCategory.value === 'Program Donasi') donationQuery.refetch()
         if (activeCategory.value === 'Donasi Anak Asuh') fosterQuery.refetch()
-        if (activeCategory.value === 'Program Sosial') socialQuery.refetch()
+        if (activeCategory.value === 'Program Berkelanjutan') socialQuery.refetch()
         router.replace({ path: '/invoices' })
       },
       onPending: function () {
         showToast('Menunggu pembayaran', 'warning')
         if (activeCategory.value === 'Program Donasi') donationQuery.refetch()
         if (activeCategory.value === 'Donasi Anak Asuh') fosterQuery.refetch()
-        if (activeCategory.value === 'Program Sosial') socialQuery.refetch()
+        if (activeCategory.value === 'Program Berkelanjutan') socialQuery.refetch()
         router.replace({ path: '/invoices' })
       },
       onError: function () {
         showToast('Pembayaran gagal', 'error')
         if (activeCategory.value === 'Program Donasi') donationQuery.refetch()
         if (activeCategory.value === 'Donasi Anak Asuh') fosterQuery.refetch()
-        if (activeCategory.value === 'Program Sosial') socialQuery.refetch()
+        if (activeCategory.value === 'Program Berkelanjutan') socialQuery.refetch()
         router.replace({ path: '/invoices' })
       },
       onClose: function () {
@@ -287,7 +287,7 @@ watch(
 )
 
 const handlePay = (invoice: any) => {
-  if (invoice.type === 'Program Sosial') {
+  if (invoice.type === 'Program Berkelanjutan') {
     if (invoice.snapToken) {
       handleSnapPayment(invoice.snapToken)
     } else {
@@ -300,7 +300,7 @@ const handlePay = (invoice: any) => {
 
 const categories = [
   { name: 'Program Donasi', icon: Heart },
-  { name: 'Program Sosial', icon: HandHeart },
+  { name: 'Program Berkelanjutan', icon: HandHeart },
   { name: 'Donasi Anak Asuh', icon: Users },
 ]
 
@@ -329,12 +329,12 @@ const invoices = computed(() => {
 
   const mappedSocial = accumulatedSocial.value.map((i) => ({
     id: i.id,
-    programName: i.socialProgramTitle || 'Program Sosial',
+    programName: i.socialProgramTitle || 'Program Berkelanjutan',
     amount: i.minimumAmount,
     date: i.createdAt,
     status: i.status === InvoiceStatus.PAID ? 'PAID' : 'WAITING',
     paymentMethod: 'Online Payment',
-    type: 'Program Sosial',
+    type: 'Program Berkelanjutan',
     snapToken: i.snapToken,
   }))
 

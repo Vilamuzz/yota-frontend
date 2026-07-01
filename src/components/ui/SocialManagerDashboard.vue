@@ -69,7 +69,7 @@ const isLoading = computed(() => summaryQuery.isPending.value || isProgramsLoadi
 
 // Monthly Trend Chart
 const MONTH_TABS: { key: FinanceModuleType; label: string }[] = [
-  { key: 'social_program', label: 'Program Sosial' },
+  { key: 'social_program', label: 'Program Berkelanjutan' },
   { key: 'foster_children', label: 'Anak Asuh' },
 ]
 
@@ -204,7 +204,7 @@ const monthlyChartOption = computed(() => {
 <template>
   <div class="space-y-8 font-poppins">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-      <h2 class="text-xl font-bold text-gray-950 dark:text-white">Ringkasan Program Sosial</h2>
+      <h2 class="text-xl font-bold text-gray-950 dark:text-white">Ringkasan Program Berkelanjutan</h2>
     </div>
 
     <!-- Error State -->
@@ -256,7 +256,7 @@ const monthlyChartOption = computed(() => {
               <Briefcase class="w-5 h-5" />
             </div>
           </div>
-          <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Net Saldo Program Sosial</h3>
+          <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Net Saldo Program Berkelanjutan</h3>
           <p class="text-2xl font-extrabold text-gray-950 dark:text-white mt-1.5 select-all font-mono">
             {{ formatCurrency(socialBalance) }}
           </p>
@@ -374,8 +374,8 @@ const monthlyChartOption = computed(() => {
     <div class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 rounded-2xl shadow-sm overflow-hidden">
       <div class="p-6 border-b border-gray-100 dark:border-gray-700/50 flex flex-wrap justify-between items-start gap-3">
         <div>
-          <h3 class="text-lg font-bold text-gray-950 dark:text-white">Program Sosial Terbaru</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Daftar program sosial yang berjalan di yayasan.</p>
+          <h3 class="text-lg font-bold text-gray-950 dark:text-white">Program Berkelanjutan Terbaru</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Daftar program berkelanjutan yang berjalan di yayasan.</p>
         </div>
         <RouterLink
           :to="{ name: 'dashboard-social-programs' }"
@@ -395,14 +395,14 @@ const monthlyChartOption = computed(() => {
 
       <div v-else-if="socialPrograms.length === 0" class="p-12 text-center text-gray-500 dark:text-gray-400">
         <Briefcase class="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-        <p class="font-medium">Tidak ada program sosial saat ini</p>
+        <p class="font-medium">Tidak ada program berkelanjutan saat ini</p>
       </div>
 
       <div v-else class="hidden sm:block overflow-x-auto">
         <table class="w-full border-collapse">
           <thead>
             <tr class="bg-gray-50/50 dark:bg-gray-800/20 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700/50">
-              <th class="px-6 py-4">Program Sosial</th>
+              <th class="px-6 py-4">Program Berkelanjutan</th>
               <th class="px-6 py-4">Status</th>
               <th class="px-6 py-4 text-right">Total Pemasukan</th>
               <th class="px-6 py-4 text-center">Pelanggan Aktif</th>

@@ -128,11 +128,11 @@ const handleSubmit = () => {
     },
     {
       onSuccess: () => {
-        showToast('Program sosial berhasil diperbarui!', 'success')
+        showToast('Program berkelanjutan berhasil diperbarui!', 'success')
         router.push({ name: 'dashboard-social-programs' })
       },
       onError: (err) => {
-        showToast(extractError(err, 'Gagal memperbarui program sosial'), 'error')
+        showToast(extractError(err, 'Gagal memperbarui program berkelanjutan'), 'error')
       },
     },
   )
@@ -141,7 +141,7 @@ const handleSubmit = () => {
 
 <template>
   <DashboardLayout>
-    <template #title>Edit Program Sosial</template>
+    <template #title>Edit Program Berkelanjutan</template>
 
     <div v-if="isFetching" class="flex flex-col items-center justify-center py-24">
       <Loader2 class="w-12 h-12 text-primary-500 animate-spin mb-4" />
@@ -170,7 +170,7 @@ const handleSubmit = () => {
               id="title"
               v-model="form.title"
               label="Judul Program"
-              placeholder="Masukkan judul program sosial"
+              placeholder="Masukkan judul program berkelanjutan"
               :error="errors.title || validationErrors?.title"
               required
             />
@@ -186,7 +186,7 @@ const handleSubmit = () => {
                 rows="6"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#121212] focus:ring-2 focus:ring-primary-500 transition-all outline-none"
                 :class="{ 'border-red-500': errors.description || validationErrors?.description }"
-                placeholder="Jelaskan detail mengenai program sosial ini..."
+                placeholder="Jelaskan detail mengenai program berkelanjutan ini..."
               ></textarea>
               <p
                 v-if="errors.description || validationErrors?.description"

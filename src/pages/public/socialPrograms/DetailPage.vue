@@ -45,7 +45,7 @@ const handleSubscribeClick = () => {
     { id: program.value.id },
     {
       onSuccess: () => {
-        showToast('Berhasil berlangganan program sosial!', 'success')
+        showToast('Berhasil berlangganan program berkelanjutan!', 'success')
       },
       onError: (error) => {
         showToast(extractError(error) || 'Gagal berlangganan.', 'error')
@@ -177,7 +177,7 @@ const handleLogin = () => {
     <PublicConfirmationModal
       :show="showLoginModal"
       title="Yuk, Masuk Dulu!"
-      message="Untuk bisa berlangganan program sosial ini, kamu perlu masuk ke akunmu terlebih dahulu."
+      message="Untuk bisa berlangganan program berkelanjutan ini, kamu perlu masuk ke akunmu terlebih dahulu."
       primaryButtonText="Masuk Sekarang"
       secondaryButtonText="Nanti Saja"
       :icon="LogIn"
