@@ -47,18 +47,6 @@ export const dashboardNavigation: NavItem[] = [
   },
   {
     icon: CirclePoundSterling,
-    label: 'Riwayat Donasi',
-    roles: [ROLES.FINANCE],
-    route: '/dashboard/donation-programs/income',
-  },
-  {
-  icon: CirclePoundSterling,
-  label: 'Pemasukan Program Sosial',
-  roles: [ROLES.FINANCE],
-  route: '/dashboard/income/social-programs',
-  },
-  {
-    icon: CirclePoundSterling,
     label: 'Pemasukkan',
     roles: [ROLES.FINANCE],
     children: [
