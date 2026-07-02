@@ -11,6 +11,10 @@ interface Props {
   hasNext?: boolean
   limit?: number
   limitOptions?: number[]
+
+  // Tambahan
+  showPagination?: boolean
+  showLimit?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
@@ -22,6 +26,10 @@ withDefaults(defineProps<Props>(), {
   hasNext: false,
   limit: 10,
   limitOptions: () => [10, 25, 50, 100],
+
+  // Default tetap tampil
+  showPagination: true,
+  showLimit: true,
 })
 
 defineEmits<{
@@ -33,17 +41,25 @@ defineEmits<{
 
 <template>
   <div class="bg-white overflow-hidden dark:bg-[#121212]">
-    <BaseLoading v-if="loading" :message="loadingMessage" />
+    <BaseLoading
+      v-if="loading"
+      :message="loadingMessage"
+    />
 
     <div
       v-else-if="isEmpty"
       class="p-6 text-center text-gray-500 min-h-[50vh] flex flex-col items-center justify-center"
     >
       <slot name="empty-icon" />
-      <p class="text-lg font-bold text-gray-700 dark:text-white">{{ emptyMessage }}</p>
+      <p class="text-lg font-bold text-gray-700 dark:text-white">
+        {{ emptyMessage }}
+      </p>
     </div>
 
-    <div v-else class="overflow-x-auto">
+    <div
+      v-else
+      class="overflow-x-auto"
+    >
       <table class="w-full">
         <thead
           class="bg-gray-100 border-b border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
@@ -52,6 +68,7 @@ defineEmits<{
             <slot name="headers" />
           </tr>
         </thead>
+
         <tbody
           class="divide-y divide-gray-200 text-gray-700 text-sm dark:text-white dark:divide-gray-500"
         >
@@ -60,12 +77,16 @@ defineEmits<{
       </table>
     </div>
 
-    <!-- Pagination -->
+    <!-- Footer -->
     <div
-      v-if="!loading && !isEmpty"
+      v-if="!loading && !isEmpty && (showPagination || showLimit)"
       class="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
     >
-      <div class="flex items-center gap-2">
+      <!-- Pagination -->
+      <div
+        v-if="showPagination"
+        class="flex items-center gap-2"
+      >
         <button
           @click="$emit('prev')"
           :disabled="!hasPrev"
@@ -73,6 +94,7 @@ defineEmits<{
         >
           <ChevronLeft :size="18" />
         </button>
+
         <button
           @click="$emit('next')"
           :disabled="!hasNext"
@@ -82,15 +104,33 @@ defineEmits<{
         </button>
       </div>
 
-      <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+      <!-- Spacer jika pagination disembunyikan -->
+      <div
+        v-else
+        class="flex-1"
+      />
+
+      <!-- Limit -->
+      <div
+        v-if="showLimit"
+        class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
+      >
         <span>Show</span>
+
         <select
           :value="limit"
           @change="$emit('update:limit', Number(($event.target as HTMLSelectElement).value))"
           class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-colors"
         >
-          <option v-for="opt in limitOptions" :key="opt" :value="opt">{{ opt }}</option>
+          <option
+            v-for="opt in limitOptions"
+            :key="opt"
+            :value="opt"
+          >
+            {{ opt }}
+          </option>
         </select>
+
         <span>per page</span>
       </div>
     </div>

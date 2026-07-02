@@ -4,6 +4,7 @@ export interface FosterChildren {
   id: string
   slug?: string
   name: string
+  nik: string
   profilePicture: string
   gender: Gender
   category: Category
@@ -68,6 +69,7 @@ export interface AchievementRequest {
 
 export interface CreateFosterChildrenRequest {
   name: string
+  nik: string
   gender: Gender
   isGraduated: boolean
   category: Category
@@ -85,6 +87,7 @@ export interface CreateFosterChildrenRequest {
 
 export interface UpdateFosterChildrenRequest {
   name?: string
+  nik?: string
   profilePicture?: File
   gender?: Gender
   address?: string

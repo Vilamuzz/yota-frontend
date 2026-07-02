@@ -24,6 +24,7 @@ const form = reactive({
   submitterIdCard: null as File | null,
   submitterIdCardPreview: null as string | null,
   name: '',
+  nik: '',
   gender: '' as Gender | '',
   category: '' as Category | '',
   birthPlace: '',
@@ -449,6 +450,21 @@ const handleSubmit = () => {
                 />
                 <p v-if="errors.name || validationErrors?.name" class="mt-1 text-xs text-red-600">
                   {{ errors.name || validationErrors?.name }}
+                </p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2"
+                  >NIK Anak Asuh <span class="text-red-500">*</span></label
+                >
+                <input
+                  v-model="form.nik"
+                  type="text"
+                  placeholder="Masukkan NIK anak asuh"
+                  class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-white text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+                <p v-if="errors.nik || validationErrors?.nik" class="mt-1 text-xs text-red-600">
+                  {{ errors.nik || validationErrors?.nik }}
                 </p>
               </div>
 

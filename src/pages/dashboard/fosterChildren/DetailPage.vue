@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   Loader2,
@@ -13,12 +13,18 @@ import {
   Tag,
   Pencil,
   TrendingUp,
-  TrendingDown,
+  TrendingDown
 } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
+import BaseTable from '@/components/organisms/BaseTable.vue'
 import { getStatusColor } from '@/utils/statusColor'
+import { formatCurrency, formatDate } from '@/utils/format'
 import { useAdminFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenAdminDetail'
+import { useFosterChildrenTransactionList } from '@/composables/fosterChildrenTransaction/useFosterChildrenTransactionList'
+import { useFosterChildrenExpenseList } from '@/composables/fosterChildrenExpense/useFosterChildrenExpenseList'
+import type { FosterChildrenExpenseQueryParams } from '@/types/fosterChildrenExpense'
+import type { FosterChildrenTransactionQueryParams } from '@/types/fosterChildrenTransaction'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,6 +34,18 @@ const fosterChildId = route.params.id as string
 const { detailQuery } = useAdminFosterChildrenDetail(fosterChildId)
 
 const child = computed(() => detailQuery.data.value?.data)
+
+const transactionParams = reactive<FosterChildrenTransactionQueryParams>({
+  limit: 5,
+})
+
+const expenseParams = reactive<FosterChildrenExpenseQueryParams>({
+  limit: 5,
+  sortBy: 'created_at desc',
+})
+
+const { fosterChildrenTransactions } = useFosterChildrenTransactionList(fosterChildId, transactionParams)
+const { fosterChildrenExpenses } = useFosterChildrenExpenseList(fosterChildId, expenseParams)
 
 const formatCategory = (value?: string) => {
   if (!value) return '-'
@@ -67,6 +85,11 @@ const educationLabel = computed(() => {
             <div>
               <p class="text-xs uppercase text-gray-400">Nama Lengkap</p>
               <p class="font-semibold mt-1">{{ child.name }}</p>
+            </div>
+
+            <div>
+              <p class="text-xs uppercase text-gray-400">NIK</p>
+              <p class="font-semibold mt-1">{{ child.nik }}</p>
             </div>
 
             <div>
@@ -115,18 +138,6 @@ const educationLabel = computed(() => {
                 />
                 <span class="font-semibold"> {{ educationLabel }}</span>
               </div>
-            </div>
-
-            <div>
-              <p class="text-xs uppercase text-gray-400"> Status</p>
-              <span
-                class="inline-flex mt-2 px-3 py-1 rounded-full text-xs font-bold"
-                :class="child.isGraduated
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-yellow-100 text-yellow-700'"
-              >
-                {{ child.isGraduated ? 'Lulus' : 'Masih Sekolah' }}
-              </span>
             </div>
           </div>
 
@@ -178,6 +189,96 @@ const educationLabel = computed(() => {
             Belum memiliki prestasi.
           </div>
         </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="p-2 rounded-lg bg-green-100 text-green-600">
+              <TrendingUp :size="20"/>
+            </div>
+            <div>
+              <h3 class="font-bold uppercase tracking-wider text-sm">Pemasukkan</h3>
+            </div>
+          </div>
+          <BaseTable
+              :loading="detailQuery.isPending.value"
+              loading-message="Memuat data pemasukkan..."
+              :is-empty="fosterChildrenTransactions.length === 0"
+              empty-message="Belum ada data pemasukkan."
+              :show-pagination="false"
+              :show-limit="false"
+            >
+              <template #headers>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Donatur</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Tanggal</th>
+                <th class="px-6 py-3 text-right text-xs font-medium uppercase">Nominal</th>
+              </template>
+
+              <template #rows>
+                <tr
+                  v-for="transaction in fosterChildrenTransactions"
+                  :key="transaction.id"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  <td class="px-6 py-4">
+                    {{ transaction.donorName || 'Anonim' }}
+                  </td>
+
+                  <td class="px-6 py-4">
+                    {{ formatDate(transaction.createdAt) }}
+                  </td>
+
+                  <td class="px-6 py-4 text-right font-semibold text-green-600">
+                    {{ formatCurrency(transaction.grossAmount) }}
+                  </td>
+                </tr>
+              </template>
+            </BaseTable>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="p-2 rounded-lg bg-red-100 text-red-600">
+              <TrendingDown :size="20"/>
+            </div>
+            <div>
+              <h3 class="font-bold uppercase tracking-wider text-sm">Pengeluaran</h3>
+            </div>
+          </div>
+          <BaseTable
+              :loading="detailQuery.isPending.value"
+              loading-message="Memuat data pengeluaran..."
+              :is-empty="fosterChildrenExpenses.length === 0"
+              empty-message="Belum ada data pengeluaran."
+              :show-pagination="false"
+              :show-limit="false"
+            >
+              <template #headers>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Judul</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Tanggal</th>
+                <th class="px-6 py-3 text-right text-xs font-medium uppercase">Nominal</th>
+              </template>
+
+              <template #rows>
+                <tr
+                  v-for="expense in fosterChildrenExpenses"
+                  :key="expense.id"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  <td class="px-6 py-4">
+                    {{ expense.title }}
+                  </td>
+
+                  <td class="px-6 py-4">
+                    {{ formatDate(expense.expenseDate) }}
+                  </td>
+
+                  <td class="px-6 py-4 text-right font-semibold text-red-600">
+                    -{{ formatCurrency(expense.amount) }}
+                  </td>
+                </tr>
+              </template>
+            </BaseTable>
+        </div>
       </div>
 
       <div class="space-y-6">
@@ -186,7 +287,7 @@ const educationLabel = computed(() => {
             <img
               v-if="child.profilePicture"
               :src="child.profilePicture"
-              class="w-44 h-44 rounded-full object-cover border-4 border-primary-100"
+              class="w-44 h-44 rounded-full object-cover"
             />
 
             <div v-else class="w-44 h-44 rounded-full bg-gray-100 flex items-center justify-center">
@@ -199,7 +300,6 @@ const educationLabel = computed(() => {
 
           <div class="text-center mt-5">
             <h2 class="text-xl font-bold">{{ child.name }}</h2>
-            <p class="text-gray-500 mt-1">{{ child.schoolName }}</p>
           </div>
         </div>
 
@@ -270,7 +370,7 @@ const educationLabel = computed(() => {
           <div class="space-y-3">
             <BaseButton variant="primary" class="w-full"
               @click="
-                router.push({name: 'dashboard-foster-children-edit',params: {id: child.id}})"
+                router.push({name: 'dashboard-foster-children-edit',params: {id: child?.id}})"
             >
               <Pencil
                 :size="18"
@@ -278,23 +378,6 @@ const educationLabel = computed(() => {
               />
               Edit Data
             </BaseButton>
-
-            <BaseButton
-                variant="outline"
-                class="w-full flex items-center justify-center gap-2"
-                @click="router.push({ name: 'dashboard-foster-children-transaction-detail',params: {id: child.id} })"
-              >
-                <TrendingUp :size="16" class="text-green-500" />
-                Lihat Pemasukan
-              </BaseButton>
-
-              <BaseButton
-                variant="outline"
-                class="w-full flex items-center justify-center gap-2"
-              >
-                <TrendingDown :size="16" class="text-red-500" />
-                Lihat Pengeluaran
-              </BaseButton>
 
             <BaseButton variant="outline" class="w-full" @click="router.back()">
               Kembali
