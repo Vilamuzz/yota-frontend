@@ -84,7 +84,7 @@ export const dashboardNavigation: NavItem[] = [
     ],
   },
   {
-    icon: CirclePoundSterling,
+    icon: NotepadText,
     label: 'Program Berkelanjutan',
     roles: [ROLES.SOCIAL_MANAGER],
     children: [

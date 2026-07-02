@@ -51,6 +51,7 @@ const educationLevels = [
 const errors = ref<Record<string, string>>({})
 const form = reactive({
   name: '',
+  nik: '',
   gender: '' as Gender | '',
   category: '' as Category | '',
   birthPlace: '',
@@ -81,6 +82,7 @@ watch(
     if (response?.data) {
       const child = response.data
       form.name = child.name
+      form.nik = child.nik
       form.gender = child.gender
       form.category = child.category
       form.birthPlace = child.birthPlace || ''
@@ -219,6 +221,15 @@ const handleSubmit = () => {
               label="Nama Lengkap"
               placeholder="Masukkan nama lengkap anak"
               :error="errors.name || validationErrors?.name"
+              required
+            />
+
+            <BaseInput
+              id="nik"
+              v-model="form.nik"
+              label="NIK"
+              placeholder="Masukkan NIK anak"
+              :error="errors.nik || validationErrors?.nik"
               required
             />
 

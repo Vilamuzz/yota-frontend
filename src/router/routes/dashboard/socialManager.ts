@@ -63,6 +63,7 @@ export const socialManagerRoutes: RouteRecordRaw[] = [
 
        {
         path: 'foster-children/income',
+        meta: { role: [ROLES.SOCIAL_MANAGER, ROLES.FINANCE] },
         children: [
           {
             path: '',

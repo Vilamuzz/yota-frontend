@@ -17,19 +17,6 @@ import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
 import ExpenseDetailModal from '@/components/molecules/ExpenseDetailModal.vue'
 import FilePreviewModal from '@/components/molecules/FilePreviewModal.vue'
 import ExportCSVModal from '@/components/molecules/ExportCSVModal.vue'
-import { useTheme } from '@/composables/ui/useTheme'
-import { useFosterChildrenMonthlyExpense } from '@/composables/fosterChildrenExpense/useFosterChildrenMonthlyExpense'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { LineChart } from 'echarts/charts'
-import {
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  TitleComponent,
-} from 'echarts/components'
-import VChart from 'vue-echarts'
-use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent])
 import { fosterChildrenExpenseService } from '@/services/fosterChildrenExpense.service'
 import type {
   FosterChildrenExpense,
@@ -182,121 +169,6 @@ const handleExport = async (payload: {
     isExporting.value = false
   }
 }
-
-const { isDark } = useTheme()
-const chartTheme = computed(() => (isDark.value ? 'dark' : 'light'))
-
-const { expenseQuery, expenseItems } = useFosterChildrenMonthlyExpense(childId)
-const isChartLoading = computed(() => expenseQuery.isPending.value)
-
-const MONTH_LABELS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'Mei',
-  'Jun',
-  'Jul',
-  'Agu',
-  'Sep',
-  'Okt',
-  'Nov',
-  'Des',
-]
-
-const expenseChartOption = computed(() => {
-  const isDarkMode = isDark.value
-  const c = {
-    expense: isDarkMode ? '#fb7185' : '#f43f5e',
-    text: isDarkMode ? '#9ca3af' : '#374151',
-    gridLine: isDarkMode ? '#374151' : '#e5e7eb',
-    bg: isDarkMode ? '#1f2937' : '#ffffff',
-    border: isDarkMode ? '#374151' : '#e5e7eb',
-    tooltip: isDarkMode ? '#f3f4f6' : '#1f2937',
-  }
-
-  const data = Array(12).fill(0)
-  expenseItems.value.forEach((item) => {
-    const idx = parseInt(item.month.split('-')[1] || '', 10) - 1
-    if (idx >= 0 && idx < 12) data[idx] = item.expense
-  })
-
-  return {
-    backgroundColor: 'transparent',
-    tooltip: {
-      trigger: 'axis',
-      backgroundColor: c.bg,
-      borderColor: c.border,
-      textStyle: { color: c.tooltip },
-      formatter: (params: any) => {
-        const p = params[0]
-        return `<div style="font-size:12px;padding:4px">
-          <b style="display:block;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid ${c.border}">${p.name}</b>
-          <div style="display:flex;justify-content:space-between;gap:16px">
-            <span>${p.marker} Pengeluaran</span>
-            <b style="font-family:monospace">${formatCurrency(p.value)}</b>
-          </div></div>`
-      },
-    },
-    grid: { left: '2%', right: '2%', bottom: '4%', top: '8%', containLabel: true },
-    xAxis: [
-      {
-        type: 'category',
-        data: MONTH_LABELS,
-        boundaryGap: false,
-        axisLabel: { color: c.text, fontFamily: 'system-ui, sans-serif', fontSize: 11 },
-        axisLine: { lineStyle: { color: c.gridLine } },
-        axisTick: { show: false },
-      },
-    ],
-    yAxis: [
-      {
-        type: 'value',
-        axisLabel: {
-          color: c.text,
-          fontFamily: 'system-ui, sans-serif',
-          fontSize: 11,
-          formatter: (v: number) => {
-            if (v >= 1e9) return `${(v / 1e9).toFixed(1)}M`
-            if (v >= 1e6) return `${(v / 1e6).toFixed(1)}jt`
-            if (v >= 1e3) return `${(v / 1e3).toFixed(0)}rb`
-            return `${v}`
-          },
-        },
-        axisLine: { show: false },
-        splitLine: { lineStyle: { color: c.gridLine, type: 'dashed' } },
-      },
-    ],
-    series: [
-      {
-        name: 'Pengeluaran',
-        type: 'line',
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 6,
-        data,
-        lineStyle: { color: c.expense, width: 2.5 },
-        itemStyle: { color: c.expense },
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              {
-                offset: 0,
-                color: isDarkMode ? 'rgba(251,113,133,0.28)' : 'rgba(244,63,94,0.18)',
-              },
-              { offset: 1, color: 'rgba(0,0,0,0)' },
-            ],
-          },
-        },
-      },
-    ],
-  }
-})
 </script>
 
 <template>
@@ -374,33 +246,6 @@ const expenseChartOption = computed(() => {
         </div>
       </div>
 
-      <div
-        class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-6 rounded-2xl shadow-sm flex flex-col gap-3"
-      >
-        <div>
-          <h3 class="text-base font-bold text-gray-950 dark:text-white">Pengeluaran Bulanan</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Total pengeluaran per bulan · {{ new Date().getFullYear() }}
-          </p>
-        </div>
-
-        <div class="h-60 w-full">
-          <VChart
-            v-if="!isChartLoading"
-            class="w-full h-full"
-            :option="expenseChartOption"
-            :theme="chartTheme"
-            autoresize
-          />
-          <div v-else class="h-full flex items-center justify-center rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
-            <span class="text-sm text-gray-500 dark:text-gray-400">
-              Memuat grafik...
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Header Section -->
       <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div class="flex flex-row gap-3 w-full md:w-auto">
           <BaseSearch

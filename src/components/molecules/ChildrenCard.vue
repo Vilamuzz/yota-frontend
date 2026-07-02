@@ -72,7 +72,7 @@ function isMale(gender?: string) {
     :is="to ? 'router-link' : 'button'"
     :to="to"
     @click="!to && handleView(fosterChildren)"
-    class="relative rounded-xl border shadow-sm p-4 min-w-[150px] w-full text-left cursor-pointer transition-all duration-300 group block overflow-hidden hover:shadow-lg hover:-translate-y-1"
+    class="relative rounded-xl border shadow-sm p-4 min-w-37.5 w-full text-left cursor-pointer transition-all duration-300 group block overflow-hidden hover:shadow-lg hover:-translate-y-1"
     :class="
       isMale(fosterChildren.gender)
         ? 'bg-blue-50/40 border-blue-200 hover:border-blue-400'

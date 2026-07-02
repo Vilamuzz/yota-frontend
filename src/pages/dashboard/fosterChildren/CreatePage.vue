@@ -36,6 +36,7 @@ const educationLevels = [
 const errors = ref<Record<string, string>>({})
 const form = reactive({
   name: '',
+  nik: '',
   birthPlace: '',
   birthDate: '',
   address: '',
@@ -170,6 +171,15 @@ const formatCategory = (cat: string) => {
               label="Nama Lengkap"
               placeholder="Masukkan nama lengkap anak"
               :error="errors.name || validationErrors?.name"
+              required
+            />
+
+            <BaseInput
+              id="nik"
+              v-model="form.nik"
+              label="NIK"
+              placeholder="Masukkan NIK anak"
+              :error="errors.nik || validationErrors?.nik"
               required
             />
 

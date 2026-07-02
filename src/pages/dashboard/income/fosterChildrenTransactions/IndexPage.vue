@@ -146,10 +146,37 @@ function handleConfirmDelete() {
         <div
           class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
         >
-          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-            {{ child.name }}
-          </h1>
-          <p class="text-sm text-gray-400 mt-1">Nama Anak Asuh</p>
+          <div class="flex items-center gap-5">
+            <div class="shrink-0">
+              <img
+                v-if="child.profilePicture"
+                :src="child.profilePicture"
+                :alt="child.name"
+                class="w-20 h-20 rounded-full object-cover"
+              />
+
+              <div
+                v-else
+                class="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-4 border-primary-100"
+              >
+                <User
+                  :size="42"
+                  class="text-gray-400"
+                />
+              </div>
+            </div>
+
+            <!-- Informasi -->
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                {{ child.name }}
+              </h1>
+
+              <p class="text-sm text-gray-400 mt-1">
+                Nama Anak Asuh
+              </p>
+            </div>
+          </div>
         </div>
 
         <div
