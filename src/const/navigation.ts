@@ -55,7 +55,7 @@ export const dashboardNavigation: NavItem[] = [
         route: '/dashboard/donation-programs/income',
       },
       {
-        label: 'Program Sosial',
+        label: 'Program Berkelanjutan',
         route: '/dashboard/income/social-programs',
       },
       {
@@ -74,7 +74,7 @@ export const dashboardNavigation: NavItem[] = [
         route: '/dashboard/expenses/donation-programs',
       },
       {
-        label: 'Program Sosial',
+        label: 'Program Bekelanjutan',
         route: '/dashboard/expenses/social-programs',
       },
       {
@@ -85,7 +85,7 @@ export const dashboardNavigation: NavItem[] = [
   },
   {
     icon: CirclePoundSterling,
-    label: 'Program Sosial',
+    label: 'Program Berkelanjutan',
     roles: [ROLES.SOCIAL_MANAGER],
     children: [
       {

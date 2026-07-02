@@ -142,10 +142,10 @@ onUnmounted(() => {
       <div class="max-w-7xl mx-auto">
         <!-- TITLE -->
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-primary-500 mb-3">PROGRAM SOSIAL</h1>
+          <h1 class="text-3xl font-bold text-primary-500 mb-3">PROGRAM BERKELANJUTAN</h1>
 
           <p class="text-gray-500 max-w-2xl mx-auto">
-            Mari berpartisipasi dalam berbagai program sosial untuk membantu saudara kita yang
+            Mari berpartisipasi dalam berbagai program berkelanjutan untuk membantu saudara kita yang
             membutuhkan. Sedekah Anda akan menjadi kebaikan yang terus mengalir.
           </p>
         </div>
@@ -298,7 +298,7 @@ onUnmounted(() => {
         <!-- Loading State -->
         <div v-if="isInitialLoading" class="flex flex-col items-center justify-center py-24">
           <Loader2 class="w-12 h-12 text-primary-500 animate-spin mb-4" />
-          <p class="text-gray-500 font-medium animate-pulse">Menyiapkan program sosial...</p>
+          <p class="text-gray-500 font-medium animate-pulse">Menyiapkan program berkelanjutan...</p>
         </div>
 
         <!-- Error State -->
@@ -315,7 +315,7 @@ onUnmounted(() => {
           <p class="text-gray-600 max-w-md mx-auto">
             {{
               listQuery.error.value?.message ||
-              'Terjadi kesalahan sistem saat mencoba mengambil daftar program sosial.'
+              'Terjadi kesalahan sistem saat mencoba mengambil daftar program berkelanjutan.'
             }}
           </p>
           <button
@@ -349,7 +349,7 @@ onUnmounted(() => {
             </div>
             <h3 class="text-xl font-bold text-gray-900 mb-2">Program Tidak Ditemukan</h3>
             <p class="text-gray-500 max-w-sm mx-auto">
-              Maaf, kami tidak dapat menemukan program sosial dengan kata kunci "{{ searchQuery }}".
+              Maaf, kami tidak dapat menemukan program berkelanjutan dengan kata kunci "{{ searchQuery }}".
             </p>
             <button
               class="mt-8 px-6 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
@@ -375,7 +375,7 @@ onUnmounted(() => {
     <PublicConfirmationModal
       :show="showLoginModal"
       title="Yuk, Masuk Dulu!"
-      message="Untuk bisa berlangganan program sosial ini, kamu perlu masuk ke akunmu terlebih dahulu."
+      message="Untuk bisa berlangganan program berkelanjutan ini, kamu perlu masuk ke akunmu terlebih dahulu."
       primaryButtonText="Masuk Sekarang"
       secondaryButtonText="Nanti Saja"
       :icon="LogIn"

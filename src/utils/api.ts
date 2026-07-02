@@ -26,7 +26,7 @@ api.interceptors.request.use(
 // Response Interceptor
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     // Handle request timeout — give callers a clear rejection reason
     if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
       return Promise.reject(new Error('Request timed out. Please try again.'))
@@ -40,9 +40,35 @@ api.interceptors.response.use(
 
       if (token) {
         localStorage.removeItem('token')
-        const currentPath = encodeURIComponent(window.location.pathname + window.location.search)
-        window.location.href = `/login?message=session_expired&redirect=${currentPath}`
-        return new Promise(() => {}) // halt the promise chain during redirect
+
+        try {
+          // Dynamically import router to prevent circular dependency issues
+          const router = (await import('@/router')).default
+          const resolvedRoute = router.resolve(window.location.pathname)
+
+          const requiresAuth =
+            resolvedRoute.meta.requiresAuth ||
+            window.location.pathname.startsWith('/dashboard')
+
+          if (requiresAuth) {
+            const currentPath = encodeURIComponent(window.location.pathname + window.location.search)
+            window.location.href = `/login?message=session_expired&redirect=${currentPath}`
+            return new Promise(() => {}) // halt the promise chain during redirect
+          } else {
+            // For public routes, retry the request without the Authorization header
+            const config = error.config
+            if (config && config.headers) {
+              delete config.headers.Authorization
+              delete config.headers.authorization
+              return api(config)
+            }
+          }
+        } catch {
+          // Fallback if router can't be imported or resolved
+          const currentPath = encodeURIComponent(window.location.pathname + window.location.search)
+          window.location.href = `/login?message=session_expired&redirect=${currentPath}`
+          return new Promise(() => {})
+        }
       }
     }
 

@@ -87,7 +87,7 @@ const getProgressPercentage = (target: number, collected: number) => {
 // ── Monthly Trend Chart ────────────────────────────────────────────────────────
 const MONTH_TABS: { key: FinanceModuleType; label: string; color: string }[] = [
   { key: 'donation_program', label: 'Program Donasi', color: 'emerald' },
-  { key: 'social_program', label: 'Program Sosial', color: 'blue' },
+  { key: 'social_program', label: 'Program Berkelanjutan', color: 'blue' },
   { key: 'foster_children', label: 'Anak Asuh', color: 'violet' },
 ]
 

@@ -40,8 +40,14 @@ import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
 import { SocialProgramStatusEnum } from '@/types/socialProgram'
 import { SocialProgramSubscriptionStatus } from '@/types/socialProgramSubscription'
-import type { SocialProgramSubscriptionQueryParams, CreateOfflineSocialProgramSubscriptionRequest } from '@/types/socialProgramSubscription'
-import type { SocialProgramExpense, SocialProgramExpenseQueryParams } from '@/types/socialProgramExpense'
+import type {
+  SocialProgramSubscriptionQueryParams,
+  CreateOfflineSocialProgramSubscriptionRequest,
+} from '@/types/socialProgramSubscription'
+import type {
+  SocialProgramExpense,
+  SocialProgramExpenseQueryParams,
+} from '@/types/socialProgramExpense'
 import { useSocialProgramStatus } from '@/composables/socialProgram/useSocialProgramStatus'
 import RejectConfirmationModal from '@/components/organisms/RejectConfirmationModal.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
@@ -70,8 +76,11 @@ const subParams = reactive<SocialProgramSubscriptionQueryParams>({
   sortBy: undefined,
 })
 
-const { subscriptions, pagination: subPagination, isLoading: subLoading } =
-  useSocialProgramSubscriptionList(programId, subParams)
+const {
+  subscriptions,
+  pagination: subPagination,
+  isLoading: subLoading,
+} = useSocialProgramSubscriptionList(programId, subParams)
 
 const {
   pageOffset: subPageOffset,
@@ -90,23 +99,33 @@ watch(subSearchQuery, (val) => {
     subResetPagination()
   }, 400)
 })
-watch(() => [subParams.status, subParams.sortBy, subParams.limit], () => subResetPagination())
-const hasSubFilters = computed(() => subParams.status !== undefined || subParams.sortBy !== undefined)
+watch(
+  () => [subParams.status, subParams.sortBy, subParams.limit],
+  () => subResetPagination(),
+)
+const hasSubFilters = computed(
+  () => subParams.status !== undefined || subParams.sortBy !== undefined,
+)
 
 // Add Subscription Modal
 const isAddModalOpen = ref(false)
 const { createMutation, validationErrors, reset } = useSocialProgramSubscriptionCreate()
-watch(isAddModalOpen, (val) => { if (val) reset() })
+watch(isAddModalOpen, (val) => {
+  if (val) reset()
+})
 const handleAddSubscription = (payload: CreateOfflineSocialProgramSubscriptionRequest) => {
-  createMutation.mutate({ programId, payload }, {
-    onSuccess: () => {
-      showToast('Pelanggan berhasil ditambahkan', 'success')
-      isAddModalOpen.value = false
+  createMutation.mutate(
+    { programId, payload },
+    {
+      onSuccess: () => {
+        showToast('Pelanggan berhasil ditambahkan', 'success')
+        isAddModalOpen.value = false
+      },
+      onError: (error) => {
+        showToast(extractError(error) || 'Gagal menambahkan pelanggan', 'error')
+      },
     },
-    onError: (error) => {
-      showToast(extractError(error) || 'Gagal menambahkan pelanggan', 'error')
-    },
-  })
+  )
 }
 
 // ── Expense table (read-only) ───────────────────────────────────
@@ -118,8 +137,11 @@ const expParams = reactive<SocialProgramExpenseQueryParams>({
   sortBy: undefined,
 })
 
-const { socialProgramExpenses, pagination: expPagination, isLoading: expLoading } =
-  useSocialProgramExpenseList(programId, expParams)
+const {
+  socialProgramExpenses,
+  pagination: expPagination,
+  isLoading: expLoading,
+} = useSocialProgramExpenseList(programId, expParams)
 
 const {
   pageOffset: expPageOffset,
@@ -138,8 +160,13 @@ watch(expSearchInput, (val) => {
     expResetPagination()
   }, 400)
 })
-watch(() => [expParams.limit, expParams.sortBy], () => expResetPagination())
-const hasExpFilters = computed(() => expParams.search !== undefined || expParams.sortBy !== undefined)
+watch(
+  () => [expParams.limit, expParams.sortBy],
+  () => expResetPagination(),
+)
+const hasExpFilters = computed(
+  () => expParams.search !== undefined || expParams.sortBy !== undefined,
+)
 
 // Expense detail & file preview modal
 const isDetailModalOpen = ref(false)
@@ -147,8 +174,12 @@ const isFilePreviewModalOpen = ref(false)
 const selectedFileUrl = ref<string | null>(null)
 const selectedExpenseDetail = ref<SocialProgramExpense | null>(null)
 const selectedExpenseIdForDetail = ref<string>('')
-const { detailQuery: expenseDetailQuery } = useSocialProgramExpenseDetail(selectedExpenseIdForDetail)
-const modalExpenseData = computed(() => expenseDetailQuery.data.value?.data || selectedExpenseDetail.value)
+const { detailQuery: expenseDetailQuery } = useSocialProgramExpenseDetail(
+  selectedExpenseIdForDetail,
+)
+const modalExpenseData = computed(
+  () => expenseDetailQuery.data.value?.data || selectedExpenseDetail.value,
+)
 
 function openDetailModal(expense: SocialProgramExpense) {
   selectedExpenseDetail.value = expense
@@ -167,44 +198,74 @@ const totalSubscribers = computed(() => program.value?.totalSubscribers ?? 0)
 
 // ── Program actions ─────────────────────────────────────────────
 const approveConfirmShow = ref(false)
-const handleApprove = () => { approveConfirmShow.value = true }
+const handleApprove = () => {
+  approveConfirmShow.value = true
+}
 const handleConfirmApprove = async () => {
   approveMutation.mutate(programId, {
-    onSuccess: () => { showToast('Program berhasil disetujui!', 'success'); approveConfirmShow.value = false },
-    onError: (err) => { showToast(err.response?.data?.message || 'Gagal menyetujui program', 'error') },
+    onSuccess: () => {
+      showToast('Program berhasil disetujui!', 'success')
+      approveConfirmShow.value = false
+    },
+    onError: (err) => {
+      showToast(err.response?.data?.message || 'Gagal menyetujui program', 'error')
+    },
   })
 }
 
 const rejectModalShow = ref(false)
-const handleReject = () => { rejectModalShow.value = true }
+const handleReject = () => {
+  rejectModalShow.value = true
+}
 const handleConfirmReject = async (reason: string) => {
-  rejectMutation.mutate({ id: programId, reason }, {
-    onSuccess: () => { showToast('Program berhasil ditolak', 'success'); rejectModalShow.value = false },
-    onError: (err) => { showToast(err.response?.data?.message || 'Gagal menolak program', 'error') },
-  })
+  rejectMutation.mutate(
+    { id: programId, reason },
+    {
+      onSuccess: () => {
+        showToast('Program berhasil ditolak', 'success')
+        rejectModalShow.value = false
+      },
+      onError: (err) => {
+        showToast(err.response?.data?.message || 'Gagal menolak program', 'error')
+      },
+    },
+  )
 }
 
 const completeConfirmShow = ref(false)
-const handleComplete = () => { completeConfirmShow.value = true }
+const handleComplete = () => {
+  completeConfirmShow.value = true
+}
 const handleConfirmComplete = async () => {
   completeMutation.mutate(programId, {
-    onSuccess: () => { showToast('Program berhasil diselesaikan!', 'success'); completeConfirmShow.value = false },
-    onError: (err) => { showToast(err.response?.data?.message || 'Gagal menyelesaikan program', 'error') },
+    onSuccess: () => {
+      showToast('Program berhasil diselesaikan!', 'success')
+      completeConfirmShow.value = false
+    },
+    onError: (err) => {
+      showToast(err.response?.data?.message || 'Gagal menyelesaikan program', 'error')
+    },
   })
 }
 
-const handleEdit = () => router.push({ name: 'dashboard-social-programs-edit', params: { id: programId } })
+const handleEdit = () =>
+  router.push({ name: 'dashboard-social-programs-edit', params: { id: programId } })
 const handleBack = () => router.push({ name: 'dashboard-social-programs' })
 </script>
 
 <template>
   <DashboardLayout>
-    <template #title>Detail Program Sosial</template>
+    <template #title>Detail Program Berkelanjutan</template>
 
     <div class="max-w-full mx-auto space-y-6">
       <!-- Loading -->
-      <div v-if="isLoading && !program" class="flex flex-col items-center justify-center py-20 space-y-4">
-        <div class="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      <div
+        v-if="isLoading && !program"
+        class="flex flex-col items-center justify-center py-20 space-y-4"
+      >
+        <div
+          class="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"
+        ></div>
         <p class="text-gray-500 text-sm animate-pulse">Memuat detail program...</p>
       </div>
 
@@ -213,89 +274,195 @@ const handleBack = () => router.push({ name: 'dashboard-social-programs' })
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="lg:col-span-2 space-y-6">
             <!-- Informasi Utama -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6">
-              <div class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300"><Layout :size="20" /></div>
-                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Informasi Program</h3>
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
+            >
+              <div
+                class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-700"
+              >
+                <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-primary-300">
+                  <Layout :size="20" />
+                </div>
+                <h3
+                  class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider"
+                >
+                  Informasi Program
+                </h3>
               </div>
               <div class="space-y-4">
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Judul Program</label>
-                  <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ program.title }}</p>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5"
+                    >Judul Program</label
+                  >
+                  <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                    {{ program.title }}
+                  </p>
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Status</label>
-                  <div :class="['px-3 py-1 rounded-full text-xs font-semibold border uppercase tracking-wider w-fit', getStatusColor(program.status)]">
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5"
+                    >Status</label
+                  >
+                  <div
+                    :class="[
+                      'px-3 py-1 rounded-full text-xs font-semibold border uppercase tracking-wider w-fit',
+                      getStatusColor(program.status),
+                    ]"
+                  >
                     {{ formatStatus(program.status) }}
                   </div>
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Deskripsi Program</label>
-                  <div class="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{{ program.description }}</div>
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5"
+                    >Deskripsi Program</label
+                  >
+                  <div
+                    class="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap"
+                  >
+                    {{ program.description }}
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Konfigurasi Pembayaran -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6">
-              <div class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-500"><CreditCard :size="20" /></div>
-                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Konfigurasi Pembayaran</h3>
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6"
+            >
+              <div
+                class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-700"
+              >
+                <div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-500">
+                  <CreditCard :size="20" />
+                </div>
+                <h3
+                  class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider"
+                >
+                  Konfigurasi Pembayaran
+                </h3>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="flex items-start gap-4">
-                  <div class="p-2.5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700"><CreditCard :size="20" class="text-gray-400" /></div>
+                  <div
+                    class="p-2.5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700"
+                  >
+                    <CreditCard :size="20" class="text-gray-400" />
+                  </div>
                   <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Minimal Nominal</label>
-                    <p class="text-xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(program.minimumAmount) }}</p>
+                    <label
+                      class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1"
+                      >Minimal Nominal</label
+                    >
+                    <p class="text-xl font-bold text-gray-900 dark:text-white">
+                      {{ formatCurrency(program.minimumAmount) }}
+                    </p>
                   </div>
                 </div>
                 <div class="flex items-start gap-4">
-                  <div class="p-2.5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700"><Calendar :size="20" class="text-gray-400" /></div>
+                  <div
+                    class="p-2.5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700"
+                  >
+                    <Calendar :size="20" class="text-gray-400" />
+                  </div>
                   <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Hari Penagihan</label>
-                    <p class="text-xl font-bold text-gray-900 dark:text-white">Setiap Tanggal {{ program.billingDay }}</p>
+                    <label
+                      class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1"
+                      >Hari Penagihan</label
+                    >
+                    <p class="text-xl font-bold text-gray-900 dark:text-white">
+                      Setiap Tanggal {{ program.billingDay }}
+                    </p>
                   </div>
                 </div>
               </div>
-              <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 flex gap-3">
+              <div
+                class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 flex gap-3"
+              >
                 <Info :size="20" class="text-blue-500 shrink-0" />
-                <p class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">Program ini ditambahkan pada {{ formatDate(program.createdAt) }}.</p>
+                <p class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                  Program ini ditambahkan pada {{ formatDate(program.createdAt) }}.
+                </p>
               </div>
             </div>
           </div>
 
           <!-- Right: Gambar + Aksi -->
           <div class="space-y-6">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
-              <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider text-center">Foto Sampul Program</h3>
-              <div class="relative w-full aspect-video rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm bg-gray-100 dark:bg-gray-900">
-                <img v-if="program.coverImage" :src="program.coverImage" :alt="program.title" class="w-full h-full object-cover" />
-                <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400">
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+            >
+              <h3
+                class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider text-center"
+              >
+                Foto Sampul Program
+              </h3>
+              <div
+                class="relative w-full aspect-video rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm bg-gray-100 dark:bg-gray-900"
+              >
+                <img
+                  v-if="program.coverImage"
+                  :src="program.coverImage"
+                  :alt="program.title"
+                  class="w-full h-full object-cover"
+                />
+                <div
+                  v-else
+                  class="w-full h-full flex flex-col items-center justify-center text-gray-400"
+                >
                   <Layout :size="48" class="mb-2 opacity-20" />
                   <span class="text-xs">Tidak ada foto sampul</span>
                 </div>
               </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6"
+            >
               <div class="flex flex-col gap-3">
                 <template v-if="isChairman && program.status === SocialProgramStatusEnum.PENDING">
-                  <BaseButton variant="primary" class="w-full flex items-center justify-center gap-2" :loading="approveMutation.isPending.value" @click="handleApprove">
+                  <BaseButton
+                    variant="primary"
+                    class="w-full flex items-center justify-center gap-2"
+                    :loading="approveMutation.isPending.value"
+                    @click="handleApprove"
+                  >
                     <Check :size="16" /> Terima Program
                   </BaseButton>
-                  <BaseButton variant="danger" class="w-full flex items-center justify-center gap-2" :loading="rejectMutation.isPending.value" @click="handleReject">
+                  <BaseButton
+                    variant="danger"
+                    class="w-full flex items-center justify-center gap-2"
+                    :loading="rejectMutation.isPending.value"
+                    @click="handleReject"
+                  >
                     <X :size="16" /> Tolak Program
                   </BaseButton>
                 </template>
                 <template v-else-if="!isChairman">
-                  <BaseButton v-if="program.status !== SocialProgramStatusEnum.COMPLETED && program.status !== SocialProgramStatusEnum.REJECTED" variant="primary" class="w-full flex items-center justify-center gap-2" @click="handleEdit">
+                  <BaseButton
+                    v-if="
+                      program.status !== SocialProgramStatusEnum.COMPLETED &&
+                      program.status !== SocialProgramStatusEnum.REJECTED
+                    "
+                    variant="primary"
+                    class="w-full flex items-center justify-center gap-2"
+                    @click="handleEdit"
+                  >
                     <Pencil :size="16" /> Edit Program
                   </BaseButton>
-                  <BaseButton v-if="program.status === SocialProgramStatusEnum.ACTIVE" variant="success" class="w-full flex items-center justify-center gap-2" :loading="completeMutation.isPending.value" @click="handleComplete">
+                  <BaseButton
+                    v-if="program.status === SocialProgramStatusEnum.ACTIVE"
+                    variant="primary"
+                    class="w-full flex items-center justify-center gap-2"
+                    :loading="completeMutation.isPending.value"
+                    @click="handleComplete"
+                  >
                     <CheckCircle :size="16" /> Selesaikan Program
                   </BaseButton>
                 </template>
-                <BaseButton variant="outline" class="w-full" @click="handleBack">Kembali</BaseButton>
+                <BaseButton variant="outline" class="w-full" @click="handleBack"
+                  >Kembali</BaseButton
+                >
               </div>
             </div>
           </div>
@@ -303,53 +470,101 @@ const handleBack = () => router.push({ name: 'dashboard-social-programs' })
 
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 flex items-center gap-4">
-            <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl"><TrendingUp :size="24" class="text-green-500" /></div>
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 flex items-center gap-4"
+          >
+            <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+              <TrendingUp :size="24" class="text-green-500" />
+            </div>
             <div>
-              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total Pemasukan</p>
-              <p class="text-xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(totalCollectedFund) }}</p>
+              <p
+                class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+              >
+                Total Pemasukan
+              </p>
+              <p class="text-xl font-bold text-gray-900 dark:text-white">
+                {{ formatCurrency(totalCollectedFund) }}
+              </p>
             </div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 flex items-center gap-4">
-            <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl"><TrendingDown :size="24" class="text-red-500" /></div>
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 flex items-center gap-4"
+          >
+            <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+              <TrendingDown :size="24" class="text-red-500" />
+            </div>
             <div>
-              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total Pengeluaran</p>
-              <p class="text-xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(totalExpense) }}</p>
+              <p
+                class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+              >
+                Total Pengeluaran
+              </p>
+              <p class="text-xl font-bold text-gray-900 dark:text-white">
+                {{ formatCurrency(totalExpense) }}
+              </p>
             </div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 flex items-center gap-4">
-            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl"><Users :size="24" class="text-blue-500" /></div>
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 flex items-center gap-4"
+          >
+            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+              <Users :size="24" class="text-blue-500" />
+            </div>
             <div>
-              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Pelanggan Aktif</p>
+              <p
+                class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+              >
+                Pelanggan Aktif
+              </p>
               <p class="text-xl font-bold text-gray-900 dark:text-white">{{ totalSubscribers }}</p>
             </div>
           </div>
         </div>
 
         <!-- Tabel Pelanggan -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+        >
           <div class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-700">
-            <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-500"><Users :size="20" /></div>
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Daftar Pelanggan</h3>
+            <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-500">
+              <Users :size="20" />
+            </div>
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+              Daftar Pelanggan
+            </h3>
           </div>
 
           <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
             <div class="flex flex-row gap-3 w-full md:w-auto">
-              <BaseSearch v-model="subSearchQuery" placeholder="Cari Pelanggan..." class="flex-1 w-full" />
+              <BaseSearch
+                v-model="subSearchQuery"
+                placeholder="Cari Pelanggan..."
+                class="flex-1 w-full"
+              />
               <BaseFilter :has-active-filters="hasSubFilters" class="w-auto shrink-0">
                 <template #default>
                   <div class="space-y-4">
                     <div>
-                      <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Status</label>
-                      <select v-model="subParams.status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800">
+                      <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
+                        >Status</label
+                      >
+                      <select
+                        v-model="subParams.status"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800"
+                      >
                         <option :value="undefined">Semua</option>
                         <option :value="SocialProgramSubscriptionStatus.ACTIVE">Aktif</option>
                         <option :value="SocialProgramSubscriptionStatus.INACTIVE">Berhenti</option>
                       </select>
                     </div>
                     <div>
-                      <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Urutkan</label>
-                      <select v-model="subParams.sortBy" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white">
+                      <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
+                        >Urutkan</label
+                      >
+                      <select
+                        v-model="subParams.sortBy"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                      >
                         <option :value="undefined">Bawaan (Terbaru)</option>
                         <option value="total_donation desc">Donasi Tertinggi</option>
                         <option value="total_donation asc">Donasi Terendah</option>
@@ -361,7 +576,12 @@ const handleBack = () => router.push({ name: 'dashboard-social-programs' })
                 </template>
               </BaseFilter>
             </div>
-            <BaseButton v-if="!isChairman" variant="primary" class="w-full sm:w-auto justify-center" @click="isAddModalOpen = true">
+            <BaseButton
+              v-if="!isChairman"
+              variant="primary"
+              class="w-full sm:w-auto justify-center"
+              @click="isAddModalOpen = true"
+            >
               <Plus :size="20" class="mr-1" /> Tambah Pelanggan
             </BaseButton>
           </div>
@@ -380,26 +600,68 @@ const handleBack = () => router.push({ name: 'dashboard-social-programs' })
           >
             <template #empty-icon><Users :size="96" class="mx-auto mb-2 text-gray-300" /></template>
             <template #headers>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nama Pelanggan</th>
-              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Lama Berlangganan</th>
-              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Total Donasi</th>
-              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">Aksi</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">
+                No
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Nama Pelanggan
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+                Status
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+                Lama Berlangganan
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+                Total Donasi
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
+                Aksi
+              </th>
             </template>
             <template #rows>
-              <tr v-for="(sub, index) in subscriptions" :key="sub.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
-                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">{{ subPageOffset * subParams.limit! + index + 1 }}</td>
-                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">{{ sub.username }}</td>
+              <tr
+                v-for="(sub, index) in subscriptions"
+                :key="sub.id"
+                class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
+              >
+                <td
+                  class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200"
+                >
+                  {{ subPageOffset * subParams.limit! + index + 1 }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                  {{ sub.username }}
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                  <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border uppercase tracking-wider', getStatusColor(sub.status)]">
+                  <span
+                    :class="[
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border uppercase tracking-wider',
+                      getStatusColor(sub.status),
+                    ]"
+                  >
                     {{ formatStatus(sub.status) }}
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300">{{ sub.totalPaidPeriods }} periode</td>
-                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300">{{ formatCurrency(sub.totalDonation) }}</td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300"
+                >
+                  {{ sub.totalPaidPeriods }} periode
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300"
+                >
+                  {{ formatCurrency(sub.totalDonation) }}
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                  <BaseIconButton :to="{ name: 'dashboard-social-program-subscription-invoices', params: { id: programId, subscriptionId: sub.id } }" title="Lihat riwayat tagihan" variant="info">
+                  <BaseIconButton
+                    :to="{
+                      name: 'dashboard-social-program-subscription-invoices',
+                      params: { id: programId, subscriptionId: sub.id },
+                    }"
+                    title="Lihat riwayat tagihan"
+                    variant="info"
+                  >
                     <Eye :size="18" />
                   </BaseIconButton>
                 </td>
@@ -409,20 +671,35 @@ const handleBack = () => router.push({ name: 'dashboard-social-programs' })
         </div>
 
         <!-- Tabel Pengeluaran (Read-Only) -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4"
+        >
           <div class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-700">
-            <div class="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-500"><Receipt :size="20" /></div>
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Rincian Pengeluaran</h3>
+            <div class="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-500">
+              <Receipt :size="20" />
+            </div>
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+              Rincian Pengeluaran
+            </h3>
           </div>
 
           <div class="flex flex-row gap-3 w-full md:w-auto">
-            <BaseSearch v-model="expSearchInput" placeholder="Cari pengeluaran..." class="flex-1 w-full" />
+            <BaseSearch
+              v-model="expSearchInput"
+              placeholder="Cari pengeluaran..."
+              class="flex-1 w-full"
+            />
             <BaseFilter :has-active-filters="hasExpFilters" class="w-auto shrink-0">
               <template #default>
                 <div class="space-y-4">
                   <div>
-                    <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2">Urutkan</label>
-                    <select v-model="expParams.sortBy" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white">
+                    <label class="block text-xs text-gray-700 dark:text-gray-200 mb-2"
+                      >Urutkan</label
+                    >
+                    <select
+                      v-model="expParams.sortBy"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                    >
                       <option :value="undefined">Bawaan (Terbaru)</option>
                       <option value="created_at asc">Terlama Dibuat</option>
                       <option value="title asc">Judul (A-Z)</option>
@@ -450,29 +727,72 @@ const handleBack = () => router.push({ name: 'dashboard-social-programs' })
             @prev="expPrevPage(expPagination)"
             @next="expNextPage(expPagination)"
           >
-            <template #empty-icon><Receipt :size="96" class="mx-auto mb-2 text-gray-300" /></template>
+            <template #empty-icon
+              ><Receipt :size="96" class="mx-auto mb-2 text-gray-300"
+            /></template>
             <template #headers>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Judul</th>
-              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Nominal</th>
-              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Tanggal Pengeluaran</th>
-              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Bukti</th>
-              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">Aksi</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">
+                No
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Judul
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+                Nominal
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+                Tanggal Pengeluaran
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+                Bukti
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
+                Aksi
+              </th>
             </template>
             <template #rows>
-              <tr v-for="(expense, index) in socialProgramExpenses" :key="expense.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
-                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200">{{ expPageOffset * expParams.limit! + index + 1 }}</td>
-                <td class="px-6 py-4 whitespace-nowrap font-medium max-w-xs truncate text-gray-600 dark:text-gray-200">{{ expense.title }}</td>
-                <td class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200">{{ formatCurrency(expense.amount) }}</td>
-                <td class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200">{{ formatDate(expense.expenseDate) }}</td>
+              <tr
+                v-for="(expense, index) in socialProgramExpenses"
+                :key="expense.id"
+                class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
+              >
+                <td
+                  class="px-6 py-4 whitespace-nowrap font-medium text-gray-600 dark:text-gray-200"
+                >
+                  {{ expPageOffset * expParams.limit! + index + 1 }}
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap font-medium max-w-xs truncate text-gray-600 dark:text-gray-200"
+                >
+                  {{ expense.title }}
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200"
+                >
+                  {{ formatCurrency(expense.amount) }}
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200"
+                >
+                  {{ formatDate(expense.expenseDate) }}
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                  <button v-if="expense.proofFile" @click="openFilePreviewModal(expense.proofFile)" class="p-1 hover:bg-green-50 text-green-500 rounded transition-colors duration-150 inline-block dark:hover:bg-green-900/20" title="Lihat bukti pengeluaran">
+                  <button
+                    v-if="expense.proofFile"
+                    @click="openFilePreviewModal(expense.proofFile)"
+                    class="p-1 hover:bg-green-50 text-green-500 rounded transition-colors duration-150 inline-block dark:hover:bg-green-900/20"
+                    title="Lihat bukti pengeluaran"
+                  >
                     <File :size="18" />
                   </button>
                   <span v-else class="text-gray-500 dark:text-gray-400">-</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                  <BaseIconButton @click="openDetailModal(expense)" title="Lihat detail pengeluaran" variant="primary">
+                  <BaseIconButton
+                    @click="openDetailModal(expense)"
+                    title="Lihat detail pengeluaran"
+                    variant="primary"
+                  >
                     <Eye :size="18" />
                   </BaseIconButton>
                 </td>
@@ -483,9 +803,16 @@ const handleBack = () => router.push({ name: 'dashboard-social-programs' })
       </template>
 
       <!-- Not Found -->
-      <div v-else class="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
-        <p class="text-gray-500">Program tidak ditemukan atau terjadi kesalahan saat memuat data.</p>
-        <BaseButton variant="primary" class="mt-4" @click="handleBack">Kembali ke Daftar</BaseButton>
+      <div
+        v-else
+        class="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700"
+      >
+        <p class="text-gray-500">
+          Program tidak ditemukan atau terjadi kesalahan saat memuat data.
+        </p>
+        <BaseButton variant="primary" class="mt-4" @click="handleBack"
+          >Kembali ke Daftar</BaseButton
+        >
       </div>
     </div>
 

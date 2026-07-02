@@ -44,7 +44,7 @@ const hasActiveFilters = computed(() => queryParams.sortBy !== undefined)
 
 <template>
   <DashboardLayout>
-    <template #title>Pelanggan Program Sosial</template>
+    <template #title>Pelanggan Program Berkelanjutan</template>
 
     <div class="space-y-6">
       <!-- Header Section -->
