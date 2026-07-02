@@ -27,14 +27,14 @@ export const chairmanSocialManagerRoutes: RouteRecordRaw[] = [
         path: 'social-programs',
         name: 'dashboard-social-programs',
         component: () => import('@/pages/dashboard/socialPrograms/IndexPage.vue'),
-        meta: { title: 'Program Sosial' },
+        meta: { title: 'Program Berkelanjutan' },
       },
       {
         path: 'social-programs/:id/detail',
         name: 'dashboard-social-programs-detail',
         component: () => import('@/pages/dashboard/socialPrograms/DetailPage.vue'),
         meta: {
-          title: 'Detail Program Sosial',
+          title: 'Detail Program Berkelanjutan',
           activeMenu: 'dashboard-social-programs',
         },
       },

@@ -219,7 +219,7 @@ const hasActiveFilters = computed(
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center gap-3">
                 <div
-                  class="w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0"
+                  class="w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0"
                 >
                   <img
                     v-if="child.profilePicture"

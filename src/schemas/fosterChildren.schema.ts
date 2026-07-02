@@ -3,6 +3,7 @@ import { Category, Gender } from '@/types/fosterChildren'
 
 export const createFosterChildrenSchema = z.object({
   name: z.string().min(1, 'Nama anak asuh wajib diisi'),
+  nik: z.string().min(1, 'NIK wajib diisi'),
   birthPlace: z.string().min(1, 'Tempat lahir wajib diisi'),
   birthDate: z.string().min(1, 'Tanggal lahir wajib diisi'),
   address: z.string().min(1, 'Alamat wajib diisi'),
@@ -24,6 +25,7 @@ export type CreateFosterChildrenFormData = z.infer<typeof createFosterChildrenSc
 
 export const updateFosterChildrenSchema = z.object({
   name: z.string().min(1, 'Nama anak asuh wajib diisi'),
+  nik: z.string().min(1, 'NIK wajib diisi'),
   birthPlace: z.string().min(1, 'Tempat lahir wajib diisi'),
   birthDate: z.string().min(1, 'Tanggal lahir wajib diisi'),
   address: z.string().min(1, 'Alamat wajib diisi'),
