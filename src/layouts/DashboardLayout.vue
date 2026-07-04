@@ -107,7 +107,7 @@ const handleRoleSwitch = (role: Role) => {
 
     <div class="flex-1 flex flex-col overflow-hidden">
       <header
-        class="bg-white dark:bg-gray-800 z-10 font-sf-pro border-b border-gray-200 dark:border-gray-700"
+        class="bg-white dark:bg-gray-800 z-10 font-plus-jakarta-sans border-b border-gray-200 dark:border-gray-700"
       >
         <div class="flex items-center justify-between px-4 sm:px-6 py-4">
           <div class="flex items-center gap-3 min-w-0">
@@ -274,7 +274,7 @@ const handleRoleSwitch = (role: Role) => {
       </header>
 
       <main
-        class="flex-1 overflow-y-auto bg-transparent dark:bg-[#121212] font-sf-pro text-gray-900 dark:text-white"
+        class="flex-1 overflow-y-auto bg-transparent dark:bg-[#121212] font-plus-jakarta-sans text-gray-900 dark:text-white"
       >
         <div class="p-4 sm:p-6">
           <slot />

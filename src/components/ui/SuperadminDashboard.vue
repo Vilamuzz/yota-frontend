@@ -156,7 +156,7 @@ const copyToClipboard = async (text: string, type: string) => {
 </script>
 
 <template>
-  <div class="space-y-8 font-sf-pro">
+  <div class="space-y-8 font-plus-jakarta-sans">
     <!-- Logs Filter and Table Section -->
     <div class="space-y-4">
       <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

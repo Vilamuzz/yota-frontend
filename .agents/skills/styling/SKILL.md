@@ -24,7 +24,7 @@ Class References:
 
 ### B. Font Families
 
-* **System Interface Text:** `font-sf-pro` (SF Pro Display) $\rightarrow$ Used for tables, analytical numbers, layouts, dashboard navigation items.
+* **System Interface Text:** `font-plus-jakarta-sans` (Plus Jakarta Sans Display) $\rightarrow$ Used for tables, analytical numbers, layouts, dashboard navigation items.
 * **Headings & Core Copy:** `font-poppins` (Poppins) $\rightarrow$ Used for major cards, titles, headers, authentication layouts.
 
 ---
@@ -50,7 +50,7 @@ When assembling dashboard modules, write explicit paired variants ensuring seaml
 ```vue
 <!-- src/components/molecules/SubscriptionInfo.vue -->
 <template>
-  <div class="p-6 rounded-xl border font-sf-pro transition-colors duration-200 bg-white border-slate-200 text-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
+  <div class="p-6 rounded-xl border font-plus-jakarta-sans transition-colors duration-200 bg-white border-slate-200 text-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
     <h4 class="font-poppins text-lg font-medium text-primary-400 dark:text-primary-300 mb-1">
       Detail Langganan Aktif
     </h4>

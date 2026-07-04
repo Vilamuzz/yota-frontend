@@ -153,7 +153,9 @@ const formatDate = (dateStr: string) =>
         >
           <!-- Header -->
           <div class="flex flex-col items-center px-4 sm:px-6 py-4 text-center">
-            <h1 class="text-lg text-gray-900 font-sf-pro dark:text-white">Edit Peran Pengguna</h1>
+            <h1 class="text-lg text-gray-900 font-plus-jakarta-sans dark:text-white">
+              Edit Peran Pengguna
+            </h1>
             <p class="text-xs text-gray-500 dark:text-gray-400">
               {{
                 isEdit

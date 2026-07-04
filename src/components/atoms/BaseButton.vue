@@ -23,7 +23,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const buttonClasses = computed(() => {
   const base =
-    'font-sf-pro rounded-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center'
+    'font-plus-jakarta-sans rounded-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center'
 
   const variants = {
     primary: 'bg-primary-300 text-white hover:bg-primary-400 focus:ring-primary-300',

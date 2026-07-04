@@ -12,14 +12,6 @@
   font-display: swap;
 }
 
-@font-face {
-  font-family: 'SF Pro';
-  src: url('../fonts/SFPRODISPLAYMEDIUM.OTF') format('opentype');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
 @theme {
   --color-primary-200: #0eb95b;
   --color-primary-300: #0e733b;
@@ -28,5 +20,5 @@
   --color-danger-500: #f43f5e;
 
   --font-poppins: 'Poppins', sans-serif;
-  --font-sf-pro: 'SF Pro', sans-serif;
+  --font-plus-jakarta-sans: 'Plus Jakarta Sans', sans-serif;
 }

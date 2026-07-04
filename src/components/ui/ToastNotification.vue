@@ -63,7 +63,9 @@ const getIconClasses = (type: string) => {
           :is="getIcon(toast.type)"
           :class="['shrink-0 w-5 h-5 mt-0.5', getIconClasses(toast.type)]"
         />
-        <p class="flex-1 text-sm font-medium leading-relaxed font-sf-pro">{{ toast.message }}</p>
+        <p class="flex-1 text-sm font-medium leading-relaxed font-plus-jakarta-sans">
+          {{ toast.message }}
+        </p>
         <button
           @click="removeToast(toast.id)"
           class="shrink-0 text-gray-400 hover:text-gray-600 transition-colors bg-black/5 hover:bg-black/10 rounded-full p-1"

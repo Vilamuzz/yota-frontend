@@ -171,7 +171,7 @@ const dropdownLinks = [
           </div>
 
           <div class="flex items-center gap-8">
-            <div class="hidden md:flex items-center gap-6 font-sf-pro">
+            <div class="hidden md:flex items-center gap-6 font-plus-jakarta-sans">
               <RouterLink
                 v-for="link in navLinks"
                 :key="link.to"
@@ -403,7 +403,7 @@ const dropdownLinks = [
         >
           <div
             v-if="isMobileMenuOpen"
-            class="md:hidden mt-4 pt-4 border-t border-white/10 flex flex-col gap-4 font-sf-pro"
+            class="md:hidden mt-4 pt-4 border-t border-white/10 flex flex-col gap-4 font-plus-jakarta-sans"
           >
             <RouterLink
               v-for="link in navLinks"

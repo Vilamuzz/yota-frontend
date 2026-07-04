@@ -180,7 +180,7 @@ const chartOption = computed(() => {
       {
         type: 'category',
         data: ['Draft', 'Terbit (Published)', 'Arsip (Archived)'],
-        axisLabel: { color: c.text, fontFamily: 'sf-pro, sans-serif', fontSize: 11 },
+        axisLabel: { color: c.text, fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 11 },
         axisLine: { lineStyle: { color: c.gridLine } },
       },
     ],
@@ -188,7 +188,7 @@ const chartOption = computed(() => {
       {
         type: 'value',
         minInterval: 1,
-        axisLabel: { color: c.text, fontFamily: 'sf-pro, sans-serif', fontSize: 11 },
+        axisLabel: { color: c.text, fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 11 },
         splitLine: { lineStyle: { color: c.gridLine, type: 'dashed' } },
       },
     ],
@@ -214,7 +214,14 @@ const chartOption = computed(() => {
 const confirmShow = ref(false)
 const confirmTitle = ref('')
 const confirmMessage = ref('')
-const confirmType = ref<'allow-prayer' | 'delete-prayer' | 'allow-comment' | 'delete-comment' | 'delete-news' | 'delete-gallery'>('allow-prayer')
+const confirmType = ref<
+  | 'allow-prayer'
+  | 'delete-prayer'
+  | 'allow-comment'
+  | 'delete-comment'
+  | 'delete-news'
+  | 'delete-gallery'
+>('allow-prayer')
 const confirmTargetId = ref<string>('')
 const confirmLoading = ref(false)
 
@@ -222,7 +229,7 @@ function triggerConfirm(
   type: typeof confirmType.value,
   id: string,
   title: string,
-  message: string
+  message: string,
 ) {
   confirmType.value = type
   confirmTargetId.value = id
@@ -315,7 +322,8 @@ async function handleArchiveGallery(id: string) {
           Publikasi & Moderasi Workspace
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Kelola berita yayasan, dokumentasi galeri kegiatan, serta moderasi laporan doa dan komentar di satu tempat.
+          Kelola berita yayasan, dokumentasi galeri kegiatan, serta moderasi laporan doa dan
+          komentar di satu tempat.
         </p>
       </div>
 
@@ -339,16 +347,26 @@ async function handleArchiveGallery(id: string) {
       </div>
     </div>
 
-    <!-- Navigation Tabs (SF Pro Display font for navigational items) -->
-    <div class="border-b border-gray-200 dark:border-gray-700 font-sf-pro">
+    <!-- Navigation Tabs (Plus Jakarta Sans Display font for navigational items) -->
+    <div class="border-b border-gray-200 dark:border-gray-700 font-plus-jakarta-sans">
       <nav class="flex space-x-6 overflow-x-auto pb-px">
         <button
           v-for="tab in [
             { id: 'overview', label: 'Ringkasan', icon: TrendingUp, badge: undefined },
             { id: 'news', label: 'Daftar Berita', icon: Newspaper, badge: undefined },
             { id: 'galleries', label: 'Daftar Galeri', icon: ImageIcon, badge: undefined },
-            { id: 'prayers', label: 'Moderasi Doa', icon: HeartHandshake, badge: stats?.reportedPrayers },
-            { id: 'comments', label: 'Moderasi Komentar', icon: MessageSquare, badge: stats?.reportedComments }
+            {
+              id: 'prayers',
+              label: 'Moderasi Doa',
+              icon: HeartHandshake,
+              badge: stats?.reportedPrayers,
+            },
+            {
+              id: 'comments',
+              label: 'Moderasi Komentar',
+              icon: MessageSquare,
+              badge: stats?.reportedComments,
+            },
           ]"
           :key="tab.id"
           @click="activeTab = tab.id as any"
@@ -356,7 +374,7 @@ async function handleArchiveGallery(id: string) {
             'pb-3 text-sm font-medium flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors duration-200 cursor-pointer',
             activeTab === tab.id
               ? 'border-primary-300 text-primary-400 dark:text-primary-300 font-semibold'
-              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
           ]"
         >
           <component :is="tab.icon" class="w-4 h-4" />
@@ -387,7 +405,10 @@ async function handleArchiveGallery(id: string) {
         </div>
       </div>
 
-      <div v-else-if="isStatsError" class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 p-4 rounded-xl text-red-800 dark:text-red-300">
+      <div
+        v-else-if="isStatsError"
+        class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 p-4 rounded-xl text-red-800 dark:text-red-300"
+      >
         <AlertTriangle class="w-5 h-5 inline mr-2 text-danger-500" />
         Gagal memuat ringkasan data statistik. Silakan muat ulang halaman.
       </div>
@@ -400,28 +421,46 @@ async function handleArchiveGallery(id: string) {
         >
           <div>
             <div class="flex justify-between items-start mb-4">
-              <span class="px-2.5 py-1 text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-full border border-emerald-100/50 dark:border-emerald-800/30">
+              <span
+                class="px-2.5 py-1 text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-full border border-emerald-100/50 dark:border-emerald-800/30"
+              >
                 Berita Yayasan
               </span>
-              <div class="p-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-lg">
+              <div
+                class="p-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-lg"
+              >
                 <Newspaper class="w-5 h-5" />
               </div>
             </div>
-            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Artikel</h3>
-            <p class="text-3xl font-extrabold text-gray-950 dark:text-white mt-1 font-sf-pro">{{ stats?.news.total }}</p>
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Total Artikel
+            </h3>
+            <p
+              class="text-3xl font-extrabold text-gray-950 dark:text-white mt-1 font-plus-jakarta-sans"
+            >
+              {{ stats?.news.total }}
+            </p>
           </div>
-          <div class="mt-4 pt-3 border-t border-emerald-50 dark:border-emerald-900/30 grid grid-cols-3 gap-2 text-center text-xs">
+          <div
+            class="mt-4 pt-3 border-t border-emerald-50 dark:border-emerald-900/30 grid grid-cols-3 gap-2 text-center text-xs"
+          >
             <div>
               <p class="text-gray-400">Terbit</p>
-              <p class="font-bold text-emerald-600 dark:text-emerald-400 font-sf-pro">{{ stats?.news.published }}</p>
+              <p class="font-bold text-emerald-600 dark:text-emerald-400 font-plus-jakarta-sans">
+                {{ stats?.news.published }}
+              </p>
             </div>
             <div>
               <p class="text-gray-400">Draft</p>
-              <p class="font-bold text-gray-600 dark:text-gray-300 font-sf-pro">{{ stats?.news.draft }}</p>
+              <p class="font-bold text-gray-600 dark:text-gray-300 font-plus-jakarta-sans">
+                {{ stats?.news.draft }}
+              </p>
             </div>
             <div>
               <p class="text-gray-400">Arsip</p>
-              <p class="font-bold text-danger-500 font-sf-pro">{{ stats?.news.archived }}</p>
+              <p class="font-bold text-danger-500 font-plus-jakarta-sans">
+                {{ stats?.news.archived }}
+              </p>
             </div>
           </div>
         </div>
@@ -433,28 +472,46 @@ async function handleArchiveGallery(id: string) {
         >
           <div>
             <div class="flex justify-between items-start mb-4">
-              <span class="px-2.5 py-1 text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 rounded-full border border-indigo-100/50 dark:border-indigo-800/30">
+              <span
+                class="px-2.5 py-1 text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 rounded-full border border-indigo-100/50 dark:border-indigo-800/30"
+              >
                 Galeri Foto
               </span>
-              <div class="p-2 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-lg">
+              <div
+                class="p-2 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-lg"
+              >
                 <ImageIcon class="w-5 h-5" />
               </div>
             </div>
-            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Album</h3>
-            <p class="text-3xl font-extrabold text-gray-950 dark:text-white mt-1 font-sf-pro">{{ stats?.gallery.total }}</p>
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Total Album
+            </h3>
+            <p
+              class="text-3xl font-extrabold text-gray-950 dark:text-white mt-1 font-plus-jakarta-sans"
+            >
+              {{ stats?.gallery.total }}
+            </p>
           </div>
-          <div class="mt-4 pt-3 border-t border-indigo-50 dark:border-indigo-900/30 grid grid-cols-3 gap-2 text-center text-xs">
+          <div
+            class="mt-4 pt-3 border-t border-indigo-50 dark:border-indigo-900/30 grid grid-cols-3 gap-2 text-center text-xs"
+          >
             <div>
               <p class="text-gray-400">Terbit</p>
-              <p class="font-bold text-indigo-600 dark:text-indigo-400 font-sf-pro">{{ stats?.gallery.published }}</p>
+              <p class="font-bold text-indigo-600 dark:text-indigo-400 font-plus-jakarta-sans">
+                {{ stats?.gallery.published }}
+              </p>
             </div>
             <div>
               <p class="text-gray-400">Draft</p>
-              <p class="font-bold text-gray-600 dark:text-gray-300 font-sf-pro">{{ stats?.gallery.draft }}</p>
+              <p class="font-bold text-gray-600 dark:text-gray-300 font-plus-jakarta-sans">
+                {{ stats?.gallery.draft }}
+              </p>
             </div>
             <div>
               <p class="text-gray-400">Arsip</p>
-              <p class="font-bold text-danger-500 font-sf-pro">{{ stats?.gallery.archived }}</p>
+              <p class="font-bold text-danger-500 font-plus-jakarta-sans">
+                {{ stats?.gallery.archived }}
+              </p>
             </div>
           </div>
         </div>
@@ -466,17 +523,29 @@ async function handleArchiveGallery(id: string) {
         >
           <div>
             <div class="flex justify-between items-start mb-4">
-              <span class="px-2.5 py-1 text-xs font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-full border border-amber-100/50 dark:border-amber-800/30">
+              <span
+                class="px-2.5 py-1 text-xs font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-full border border-amber-100/50 dark:border-amber-800/30"
+              >
                 Moderasi Doa
               </span>
-              <div class="p-2 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-lg">
+              <div
+                class="p-2 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-lg"
+              >
                 <HeartHandshake class="w-5 h-5" />
               </div>
             </div>
-            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Doa Dilaporkan</h3>
-            <p class="text-3xl font-extrabold text-gray-950 dark:text-white mt-1 font-sf-pro">{{ stats?.reportedPrayers }}</p>
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Doa Dilaporkan
+            </h3>
+            <p
+              class="text-3xl font-extrabold text-gray-950 dark:text-white mt-1 font-plus-jakarta-sans"
+            >
+              {{ stats?.reportedPrayers }}
+            </p>
           </div>
-          <div class="mt-4 pt-3 border-t border-amber-50 dark:border-amber-900/30 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div
+            class="mt-4 pt-3 border-t border-amber-50 dark:border-amber-900/30 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"
+          >
             <span>Butuh tinjauan segera</span>
             <ArrowRight class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -489,17 +558,29 @@ async function handleArchiveGallery(id: string) {
         >
           <div>
             <div class="flex justify-between items-start mb-4">
-              <span class="px-2.5 py-1 text-xs font-semibold bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 rounded-full border border-rose-100/50 dark:border-rose-800/30">
+              <span
+                class="px-2.5 py-1 text-xs font-semibold bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 rounded-full border border-rose-100/50 dark:border-rose-800/30"
+              >
                 Moderasi Komentar
               </span>
-              <div class="p-2 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-lg">
+              <div
+                class="p-2 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-lg"
+              >
                 <MessageSquare class="w-5 h-5" />
               </div>
             </div>
-            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Komentar Dilaporkan</h3>
-            <p class="text-3xl font-extrabold text-gray-950 dark:text-white mt-1 font-sf-pro">{{ stats?.reportedComments }}</p>
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Komentar Dilaporkan
+            </h3>
+            <p
+              class="text-3xl font-extrabold text-gray-950 dark:text-white mt-1 font-plus-jakarta-sans"
+            >
+              {{ stats?.reportedComments }}
+            </p>
           </div>
-          <div class="mt-4 pt-3 border-t border-rose-50 dark:border-rose-900/30 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div
+            class="mt-4 pt-3 border-t border-rose-50 dark:border-rose-900/30 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"
+          >
             <span>Butuh tinjauan segera</span>
             <ArrowRight class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -507,19 +588,21 @@ async function handleArchiveGallery(id: string) {
       </div>
 
       <!-- Chart Panel -->
-      <div v-if="!isStatsLoading && !isStatsError" class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-6 rounded-2xl shadow-sm flex flex-col gap-4">
+      <div
+        v-if="!isStatsLoading && !isStatsError"
+        class="border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800/40 p-6 rounded-2xl shadow-sm flex flex-col gap-4"
+      >
         <div>
-          <h3 class="text-lg font-bold text-gray-950 dark:text-white">Status Distribusi Publikasi</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Perbandingan status penyusunan berita dan galeri foto yayasan</p>
+          <h3 class="text-lg font-bold text-gray-950 dark:text-white">
+            Status Distribusi Publikasi
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Perbandingan status penyusunan berita dan galeri foto yayasan
+          </p>
         </div>
 
         <div class="h-80 w-full">
-          <VChart
-            class="w-full h-full"
-            :option="chartOption"
-            :theme="chartTheme"
-            autoresize
-          />
+          <VChart class="w-full h-full" :option="chartOption" :theme="chartTheme" autoresize />
         </div>
       </div>
     </div>
@@ -570,12 +653,16 @@ async function handleArchiveGallery(id: string) {
         </div>
       </div>
 
-      <!-- News Table (SF Pro Text Font) -->
-      <div class="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden font-sf-pro">
+      <!-- News Table (Plus Jakarta Sans Text Font) -->
+      <div
+        class="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden font-plus-jakarta-sans"
+      >
         <div class="overflow-x-auto">
           <table class="w-full border-collapse">
             <thead>
-              <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
+              <tr
+                class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30"
+              >
                 <th class="px-5 py-3 w-16 text-center">No</th>
                 <th class="px-5 py-3">Sampul</th>
                 <th class="px-5 py-3">Judul Berita</th>
@@ -592,24 +679,44 @@ async function handleArchiveGallery(id: string) {
               </tr>
             </tbody>
 
-            <tbody v-else-if="news.length === 0" class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody
+              v-else-if="news.length === 0"
+              class="divide-y divide-gray-100 dark:divide-gray-700"
+            >
               <tr>
-                <td colspan="7" class="px-5 py-8 text-center text-gray-400">Tidak ada berita ditemukan.</td>
+                <td colspan="7" class="px-5 py-8 text-center text-gray-400">
+                  Tidak ada berita ditemukan.
+                </td>
               </tr>
             </tbody>
 
             <tbody v-else class="divide-y divide-gray-100 dark:divide-gray-700">
-              <tr v-for="(item, idx) in news" :key="item.id" class="hover:bg-gray-50/40 dark:hover:bg-gray-900/10">
-                <td class="px-5 py-4 text-center text-sm font-mono text-gray-500">{{ (newsPage - 1) * 5 + idx + 1 }}</td>
+              <tr
+                v-for="(item, idx) in news"
+                :key="item.id"
+                class="hover:bg-gray-50/40 dark:hover:bg-gray-900/10"
+              >
+                <td class="px-5 py-4 text-center text-sm font-mono text-gray-500">
+                  {{ (newsPage - 1) * 5 + idx + 1 }}
+                </td>
                 <td class="px-5 py-4">
-                  <img :src="item.coverImage" class="w-12 h-8 object-cover rounded-lg border border-gray-100 dark:border-gray-700" alt="Sampul" />
+                  <img
+                    :src="item.coverImage"
+                    class="w-12 h-8 object-cover rounded-lg border border-gray-100 dark:border-gray-700"
+                    alt="Sampul"
+                  />
                 </td>
                 <td class="px-5 py-4 text-sm font-bold text-gray-900 dark:text-white">
-                  <RouterLink :to="{ name: 'dashboard-news-edit', params: { id: item.id } }" class="hover:text-primary-300 transition-colors">
+                  <RouterLink
+                    :to="{ name: 'dashboard-news-edit', params: { id: item.id } }"
+                    class="hover:text-primary-300 transition-colors"
+                  >
                     {{ item.title }}
                   </RouterLink>
                 </td>
-                <td class="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <td
+                  class="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                >
                   {{ item.category }}
                 </td>
                 <td class="px-5 py-4 text-sm font-mono text-gray-600 dark:text-gray-300">
@@ -623,7 +730,7 @@ async function handleArchiveGallery(id: string) {
                         ? 'bg-emerald-50 border-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400'
                         : item.status === 'archived'
                           ? 'bg-rose-50 border-rose-100 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400'
-                          : 'bg-gray-100 border-gray-200 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300'
+                          : 'bg-gray-100 border-gray-200 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300',
                     ]"
                   >
                     {{ item.status }}
@@ -658,7 +765,14 @@ async function handleArchiveGallery(id: string) {
                   </button>
 
                   <button
-                    @click="triggerConfirm('delete-news', item.id, 'Hapus Berita', 'Apakah Anda yakin ingin menghapus berita ini secara permanen?')"
+                    @click="
+                      triggerConfirm(
+                        'delete-news',
+                        item.id,
+                        'Hapus Berita',
+                        'Apakah Anda yakin ingin menghapus berita ini secara permanen?',
+                      )
+                    "
                     class="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-danger-500 rounded-lg transition cursor-pointer"
                     title="Hapus"
                   >
@@ -670,9 +784,15 @@ async function handleArchiveGallery(id: string) {
           </table>
         </div>
 
-        <!-- Pagination (SF Pro font) -->
-        <div v-if="newsPagination && newsPagination.totalPages > 1" class="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm font-sf-pro">
-          <p class="text-gray-500">Halaman {{ newsPage }} dari {{ newsPagination.totalPages }} (Total {{ newsPagination.total }} Berita)</p>
+        <!-- Pagination (Plus Jakarta Sans font) -->
+        <div
+          v-if="newsPagination && newsPagination.totalPages > 1"
+          class="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm font-plus-jakarta-sans"
+        >
+          <p class="text-gray-500">
+            Halaman {{ newsPage }} dari {{ newsPagination.totalPages }} (Total
+            {{ newsPagination.total }} Berita)
+          </p>
           <div class="flex gap-2">
             <button
               :disabled="newsPage === 1"
@@ -736,12 +856,16 @@ async function handleArchiveGallery(id: string) {
         </div>
       </div>
 
-      <!-- Galleries Table (SF Pro Text Font) -->
-      <div class="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden font-sf-pro">
+      <!-- Galleries Table (Plus Jakarta Sans Text Font) -->
+      <div
+        class="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden font-plus-jakarta-sans"
+      >
         <div class="overflow-x-auto">
           <table class="w-full border-collapse">
             <thead>
-              <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
+              <tr
+                class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30"
+              >
                 <th class="px-5 py-3 w-16 text-center">No</th>
                 <th class="px-5 py-3">Sampul</th>
                 <th class="px-5 py-3">Judul Galeri</th>
@@ -758,24 +882,44 @@ async function handleArchiveGallery(id: string) {
               </tr>
             </tbody>
 
-            <tbody v-else-if="galleries.length === 0" class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody
+              v-else-if="galleries.length === 0"
+              class="divide-y divide-gray-100 dark:divide-gray-700"
+            >
               <tr>
-                <td colspan="7" class="px-5 py-8 text-center text-gray-400">Tidak ada galeri ditemukan.</td>
+                <td colspan="7" class="px-5 py-8 text-center text-gray-400">
+                  Tidak ada galeri ditemukan.
+                </td>
               </tr>
             </tbody>
 
             <tbody v-else class="divide-y divide-gray-100 dark:divide-gray-700">
-              <tr v-for="(item, idx) in galleries" :key="item.id" class="hover:bg-gray-50/40 dark:hover:bg-gray-900/10">
-                <td class="px-5 py-4 text-center text-sm font-mono text-gray-500">{{ (galleryPage - 1) * 5 + idx + 1 }}</td>
+              <tr
+                v-for="(item, idx) in galleries"
+                :key="item.id"
+                class="hover:bg-gray-50/40 dark:hover:bg-gray-900/10"
+              >
+                <td class="px-5 py-4 text-center text-sm font-mono text-gray-500">
+                  {{ (galleryPage - 1) * 5 + idx + 1 }}
+                </td>
                 <td class="px-5 py-4">
-                  <img :src="item.coverImage" class="w-12 h-8 object-cover rounded-lg border border-gray-100 dark:border-gray-700" alt="Sampul" />
+                  <img
+                    :src="item.coverImage"
+                    class="w-12 h-8 object-cover rounded-lg border border-gray-100 dark:border-gray-700"
+                    alt="Sampul"
+                  />
                 </td>
                 <td class="px-5 py-4 text-sm font-bold text-gray-900 dark:text-white">
-                  <RouterLink :to="{ name: 'dashboard-galleries-edit', params: { id: item.id } }" class="hover:text-primary-300 transition-colors">
+                  <RouterLink
+                    :to="{ name: 'dashboard-galleries-edit', params: { id: item.id } }"
+                    class="hover:text-primary-300 transition-colors"
+                  >
                     {{ item.title }}
                   </RouterLink>
                 </td>
-                <td class="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <td
+                  class="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                >
                   {{ item.category }}
                 </td>
                 <td class="px-5 py-4 text-sm font-mono text-gray-600 dark:text-gray-300">
@@ -789,7 +933,7 @@ async function handleArchiveGallery(id: string) {
                         ? 'bg-emerald-50 border-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400'
                         : item.status === 'archived'
                           ? 'bg-rose-50 border-rose-100 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400'
-                          : 'bg-gray-100 border-gray-200 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300'
+                          : 'bg-gray-100 border-gray-200 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300',
                     ]"
                   >
                     {{ item.status }}
@@ -823,7 +967,14 @@ async function handleArchiveGallery(id: string) {
                   </button>
 
                   <button
-                    @click="triggerConfirm('delete-gallery', item.id, 'Hapus Galeri', 'Apakah Anda yakin ingin menghapus galeri foto ini secara permanen?')"
+                    @click="
+                      triggerConfirm(
+                        'delete-gallery',
+                        item.id,
+                        'Hapus Galeri',
+                        'Apakah Anda yakin ingin menghapus galeri foto ini secara permanen?',
+                      )
+                    "
                     class="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-danger-500 rounded-lg transition cursor-pointer"
                     title="Hapus"
                   >
@@ -836,8 +987,14 @@ async function handleArchiveGallery(id: string) {
         </div>
 
         <!-- Pagination -->
-        <div v-if="galleryPagination && galleryPagination.totalPages > 1" class="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm font-sf-pro">
-          <p class="text-gray-500">Halaman {{ galleryPage }} dari {{ galleryPagination.totalPages }} (Total {{ galleryPagination.total }} Galeri)</p>
+        <div
+          v-if="galleryPagination && galleryPagination.totalPages > 1"
+          class="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm font-plus-jakarta-sans"
+        >
+          <p class="text-gray-500">
+            Halaman {{ galleryPage }} dari {{ galleryPagination.totalPages }} (Total
+            {{ galleryPagination.total }} Galeri)
+          </p>
           <div class="flex gap-2">
             <button
               :disabled="galleryPage === 1"
@@ -861,17 +1018,25 @@ async function handleArchiveGallery(id: string) {
     <!-- Prayer Moderation Tab -->
     <div v-if="activeTab === 'prayers'" class="space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Moderasi Laporan Doa Donatur</h3>
-        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+          Moderasi Laporan Doa Donatur
+        </h3>
+        <span
+          class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30"
+        >
           Halaman Tinjauan Doa Terlapor
         </span>
       </div>
 
-      <div class="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden font-sf-pro">
+      <div
+        class="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden font-plus-jakarta-sans"
+      >
         <div class="overflow-x-auto">
           <table class="w-full border-collapse">
             <thead>
-              <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
+              <tr
+                class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30"
+              >
                 <th class="px-5 py-3 w-16 text-center">No</th>
                 <th class="px-5 py-3 w-40">Pengirim</th>
                 <th class="px-5 py-3">Isi Doa</th>
@@ -887,36 +1052,74 @@ async function handleArchiveGallery(id: string) {
               </tr>
             </tbody>
 
-            <tbody v-else-if="prayers.length === 0" class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody
+              v-else-if="prayers.length === 0"
+              class="divide-y divide-gray-100 dark:divide-gray-700"
+            >
               <tr>
-                <td colspan="6" class="px-5 py-8 text-center text-gray-400">Tidak ada laporan doa yang masuk.</td>
+                <td colspan="6" class="px-5 py-8 text-center text-gray-400">
+                  Tidak ada laporan doa yang masuk.
+                </td>
               </tr>
             </tbody>
 
             <tbody v-else class="divide-y divide-gray-100 dark:divide-gray-700">
-              <tr v-for="(item, idx) in prayers" :key="item.id" class="hover:bg-gray-50/40 dark:hover:bg-gray-900/10">
-                <td class="px-5 py-4 text-center text-sm font-mono text-gray-500">{{ (prayerPage - 1) * 5 + idx + 1 }}</td>
-                <td class="px-5 py-4 text-sm font-bold text-gray-950 dark:text-white">{{ item.username }}</td>
-                <td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{{ item.content }}</td>
+              <tr
+                v-for="(item, idx) in prayers"
+                :key="item.id"
+                class="hover:bg-gray-50/40 dark:hover:bg-gray-900/10"
+              >
+                <td class="px-5 py-4 text-center text-sm font-mono text-gray-500">
+                  {{ (prayerPage - 1) * 5 + idx + 1 }}
+                </td>
+                <td class="px-5 py-4 text-sm font-bold text-gray-950 dark:text-white">
+                  {{ item.username }}
+                </td>
+                <td
+                  class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed"
+                >
+                  {{ item.content }}
+                </td>
                 <td class="px-5 py-4 text-center">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
+                  <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400"
+                  >
                     <AlertTriangle class="w-3.5 h-3.5" />
                     {{ item.reportCount }} Laporan
                   </span>
                 </td>
                 <td class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">
-                  {{ new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) }}
+                  {{
+                    new Date(item.createdAt).toLocaleString('id-ID', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })
+                  }}
                 </td>
                 <td class="px-5 py-4 text-center">
                   <div class="flex items-center justify-center gap-2">
                     <button
-                      @click="triggerConfirm('allow-prayer', item.id, 'Pulihkan Doa', 'Apakah Anda yakin doa ini aman dan ingin mengabaikan seluruh laporan flags yang ada? Doa akan ditampilkan kembali ke publik.')"
+                      @click="
+                        triggerConfirm(
+                          'allow-prayer',
+                          item.id,
+                          'Pulihkan Doa',
+                          'Apakah Anda yakin doa ini aman dan ingin mengabaikan seluruh laporan flags yang ada? Doa akan ditampilkan kembali ke publik.',
+                        )
+                      "
                       class="px-2.5 py-1.5 text-xs font-semibold text-white bg-primary-300 hover:bg-primary-400 rounded-lg shadow-sm transition cursor-pointer"
                     >
                       Aman
                     </button>
                     <button
-                      @click="triggerConfirm('delete-prayer', item.id, 'Hapus Doa', 'Apakah Anda yakin ingin menghapus doa ini secara permanen karena melanggar ketentuan yayasan?')"
+                      @click="
+                        triggerConfirm(
+                          'delete-prayer',
+                          item.id,
+                          'Hapus Doa',
+                          'Apakah Anda yakin ingin menghapus doa ini secara permanen karena melanggar ketentuan yayasan?',
+                        )
+                      "
                       class="px-2.5 py-1.5 text-xs font-semibold text-white bg-danger-500 hover:bg-red-700 rounded-lg shadow-sm transition cursor-pointer"
                     >
                       Hapus
@@ -929,8 +1132,14 @@ async function handleArchiveGallery(id: string) {
         </div>
 
         <!-- Pagination -->
-        <div v-if="prayerPagination && prayerPagination.totalPages > 1" class="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm font-sf-pro">
-          <p class="text-gray-500">Halaman {{ prayerPage }} dari {{ prayerPagination.totalPages }} (Total {{ prayerPagination.total }} Doa Terlapor)</p>
+        <div
+          v-if="prayerPagination && prayerPagination.totalPages > 1"
+          class="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm font-plus-jakarta-sans"
+        >
+          <p class="text-gray-500">
+            Halaman {{ prayerPage }} dari {{ prayerPagination.totalPages }} (Total
+            {{ prayerPagination.total }} Doa Terlapor)
+          </p>
           <div class="flex gap-2">
             <button
               :disabled="prayerPage === 1"
@@ -954,17 +1163,25 @@ async function handleArchiveGallery(id: string) {
     <!-- Comment Moderation Tab -->
     <div v-if="activeTab === 'comments'" class="space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Moderasi Laporan Komentar Berita</h3>
-        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-250 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900/30">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+          Moderasi Laporan Komentar Berita
+        </h3>
+        <span
+          class="px-3 py-1 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-250 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900/30"
+        >
           Halaman Tinjauan Komentar Terlapor
         </span>
       </div>
 
-      <div class="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden font-sf-pro">
+      <div
+        class="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden font-plus-jakarta-sans"
+      >
         <div class="overflow-x-auto">
           <table class="w-full border-collapse">
             <thead>
-              <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
+              <tr
+                class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30"
+              >
                 <th class="px-5 py-3 w-16 text-center">No</th>
                 <th class="px-5 py-3 w-40">Pengirim</th>
                 <th class="px-5 py-3">Isi Komentar</th>
@@ -980,36 +1197,74 @@ async function handleArchiveGallery(id: string) {
               </tr>
             </tbody>
 
-            <tbody v-else-if="comments.length === 0" class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody
+              v-else-if="comments.length === 0"
+              class="divide-y divide-gray-100 dark:divide-gray-700"
+            >
               <tr>
-                <td colspan="6" class="px-5 py-8 text-center text-gray-400">Tidak ada laporan komentar yang masuk.</td>
+                <td colspan="6" class="px-5 py-8 text-center text-gray-400">
+                  Tidak ada laporan komentar yang masuk.
+                </td>
               </tr>
             </tbody>
 
             <tbody v-else class="divide-y divide-gray-100 dark:divide-gray-700">
-              <tr v-for="(item, idx) in comments" :key="item.id" class="hover:bg-gray-50/40 dark:hover:bg-gray-900/10">
-                <td class="px-5 py-4 text-center text-sm font-mono text-gray-500">{{ (commentPage - 1) * 5 + idx + 1 }}</td>
-                <td class="px-5 py-4 text-sm font-bold text-gray-950 dark:text-white">{{ item.username }}</td>
-                <td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{{ item.content }}</td>
+              <tr
+                v-for="(item, idx) in comments"
+                :key="item.id"
+                class="hover:bg-gray-50/40 dark:hover:bg-gray-900/10"
+              >
+                <td class="px-5 py-4 text-center text-sm font-mono text-gray-500">
+                  {{ (commentPage - 1) * 5 + idx + 1 }}
+                </td>
+                <td class="px-5 py-4 text-sm font-bold text-gray-950 dark:text-white">
+                  {{ item.username }}
+                </td>
+                <td
+                  class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed"
+                >
+                  {{ item.content }}
+                </td>
                 <td class="px-5 py-4 text-center">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
+                  <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400"
+                  >
                     <AlertTriangle class="w-3.5 h-3.5" />
                     {{ item.reportCount }} Laporan
                   </span>
                 </td>
                 <td class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">
-                  {{ new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) }}
+                  {{
+                    new Date(item.createdAt).toLocaleString('id-ID', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })
+                  }}
                 </td>
                 <td class="px-5 py-4 text-center">
                   <div class="flex items-center justify-center gap-2">
                     <button
-                      @click="triggerConfirm('allow-comment', item.id, 'Pulihkan Komentar', 'Apakah Anda yakin komentar ini aman dan ingin mengabaikan seluruh laporan flags yang ada? Komentar akan ditampilkan kembali ke publik.')"
+                      @click="
+                        triggerConfirm(
+                          'allow-comment',
+                          item.id,
+                          'Pulihkan Komentar',
+                          'Apakah Anda yakin komentar ini aman dan ingin mengabaikan seluruh laporan flags yang ada? Komentar akan ditampilkan kembali ke publik.',
+                        )
+                      "
                       class="px-2.5 py-1.5 text-xs font-semibold text-white bg-primary-300 hover:bg-primary-400 rounded-lg shadow-sm transition cursor-pointer"
                     >
                       Aman
                     </button>
                     <button
-                      @click="triggerConfirm('delete-comment', item.id, 'Hapus Komentar', 'Apakah Anda yakin ingin menghapus komentar ini secara permanen karena melanggar ketentuan yayasan?')"
+                      @click="
+                        triggerConfirm(
+                          'delete-comment',
+                          item.id,
+                          'Hapus Komentar',
+                          'Apakah Anda yakin ingin menghapus komentar ini secara permanen karena melanggar ketentuan yayasan?',
+                        )
+                      "
                       class="px-2.5 py-1.5 text-xs font-semibold text-white bg-danger-500 hover:bg-red-700 rounded-lg shadow-sm transition cursor-pointer"
                     >
                       Hapus
@@ -1022,8 +1277,14 @@ async function handleArchiveGallery(id: string) {
         </div>
 
         <!-- Pagination -->
-        <div v-if="commentPagination && commentPagination.totalPages > 1" class="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm font-sf-pro">
-          <p class="text-gray-500">Halaman {{ commentPage }} dari {{ commentPagination.totalPages }} (Total {{ commentPagination.total }} Komentar Terlapor)</p>
+        <div
+          v-if="commentPagination && commentPagination.totalPages > 1"
+          class="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm font-plus-jakarta-sans"
+        >
+          <p class="text-gray-500">
+            Halaman {{ commentPage }} dari {{ commentPagination.totalPages }} (Total
+            {{ commentPagination.total }} Komentar Terlapor)
+          </p>
           <div class="flex gap-2">
             <button
               :disabled="commentPage === 1"
