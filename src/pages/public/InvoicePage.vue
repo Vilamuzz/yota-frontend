@@ -28,11 +28,13 @@ import { InvoiceStatus, type SocialProgramInvoice } from '@/types/socialProgramI
 import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransaction'
 import { Loader2 } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
+import { useSnap } from '@/composables/snap/useSnap'
 
 const route = useRoute()
 const router = useRouter()
 const { showToast } = useToast()
 const authStore = useAuthStore()
+const { pay } = useSnap()
 
 const activeCategory = ref('Program Donasi')
 const activeStatus = ref('WAITING')
@@ -240,9 +242,9 @@ const is403 = computed(() => {
   return err?.response?.status === 403 || err?.status === 403
 })
 
-const handleSnapPayment = (token: string) => {
-  if (window.snap) {
-    window.snap.pay(token, {
+const handleSnapPayment = async (token: string) => {
+  try {
+    await pay(token, {
       onSuccess: function () {
         showToast('Pembayaran berhasil', 'success')
         if (activeCategory.value === 'Program Donasi') donationQuery.refetch()
@@ -268,6 +270,9 @@ const handleSnapPayment = (token: string) => {
         router.replace({ path: '/invoices' })
       },
     })
+  } catch (error) {
+    showToast('Gagal memuat sistem pembayaran', 'error')
+    console.error('Failed to load Snap SDK:', error)
   }
 }
 
