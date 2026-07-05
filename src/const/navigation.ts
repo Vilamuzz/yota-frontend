@@ -93,10 +93,6 @@ export const dashboardNavigation: NavItem[] = [
         route: '/dashboard/social-programs',
       },
       {
-        label: 'Daftar Program Langganan',
-        route: '/dashboard/social-programs/subscriptions',
-      },
-      {
         label: 'Daftar Pelanggan',
         route: '/dashboard/social-programs/subscribers',
       },
