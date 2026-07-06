@@ -93,6 +93,8 @@ const onFileChange = (event: Event) => {
 }
 
 const updateProfile = () => {
+  const isEmailChanged = profileForm.email !== user.value?.email
+
   updateCurrentUserProfileMutation.mutate(
     {
       ...profileForm,
@@ -101,7 +103,15 @@ const updateProfile = () => {
     },
     {
       onSuccess: () => {
-        showToast('Profil berhasil diperbarui!', 'success')
+        if (isEmailChanged) {
+          showToast(
+            'Profil berhasil diperbarui! Silakan periksa email baru Anda untuk konfirmasi perubahan email.',
+            'success',
+            7000,
+          )
+        } else {
+          showToast('Profil berhasil diperbarui!', 'success')
+        }
         currentUserQuery.refetch()
       },
       onError: (err) => {
@@ -248,6 +258,7 @@ const updatePassword = () => {
                     type="email"
                     placeholder="nama@email.com"
                     :error="emailError"
+                    :hint="profileForm.email !== user?.email ? 'Mengubah email akan mengirimkan verifikasi ke email baru Anda.' : ''"
                     required
                   >
                     <template #prefix><Mail :size="16" /></template>
