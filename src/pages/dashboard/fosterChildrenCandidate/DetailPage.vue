@@ -203,6 +203,14 @@ const getEducationLevelLabel = (level?: number) => {
               </div>
               <div class="grid grid-cols-3 gap-4">
                 <span class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                  >NIK</span
+                >
+                <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200">{{
+                  fosterChildrenCandidate.nik || '-'
+                }}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-4">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400"
                   >Jenis Kelamin</span
                 >
                 <span class="col-span-2 text-sm text-gray-900 dark:text-gray-200 capitalize">{{

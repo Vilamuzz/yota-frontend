@@ -71,7 +71,7 @@ const newPasswordError = computed(
 )
 const confirmPasswordError = computed(() => {
   if (passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword) {
-    return 'Passwords do not match'
+    return 'Konfirmasi kata sandi tidak cocok'
   }
   return errors.value.confirmPassword || passwordValidationErrors.value?.confirmPassword || ''
 })
@@ -102,6 +102,8 @@ const onFileChange = (event: Event) => {
 }
 
 const updateProfile = () => {
+  const isEmailChanged = profileForm.email !== user.value?.email
+
   updateCurrentUserProfileMutation.mutate(
     {
       ...profileForm,
@@ -110,11 +112,19 @@ const updateProfile = () => {
     },
     {
       onSuccess: () => {
-        showToast('Profile updated successfully', 'success')
+        if (isEmailChanged) {
+          showToast(
+            'Profil berhasil diperbarui! Silakan periksa email baru Anda untuk konfirmasi perubahan email.',
+            'success',
+            7000,
+          )
+        } else {
+          showToast('Profil berhasil diperbarui!', 'success')
+        }
         currentUserQuery.refetch()
       },
       onError: (err) => {
-        showToast(extractError(err, 'Failed to update profile'), 'error')
+        showToast(extractError(err, 'Gagal memperbarui profil'), 'error')
       },
     },
   )
@@ -130,13 +140,13 @@ const updatePassword = () => {
     },
     {
       onSuccess: () => {
-        showToast('Password updated successfully', 'success')
+        showToast('Kata sandi berhasil diperbarui!', 'success')
         passwordForm.currentPassword = ''
         passwordForm.newPassword = ''
         passwordForm.confirmPassword = ''
       },
       onError: (err) => {
-        showToast(extractError(err, 'Failed to update password'), 'error')
+        showToast(extractError(err, 'Gagal memperbarui kata sandi'), 'error')
       },
     },
   )
@@ -145,7 +155,7 @@ const updatePassword = () => {
 
 <template>
   <DashboardLayout>
-    <template #title>Account Settings</template>
+    <template #title>Pengaturan Akun</template>
 
     <div
       v-if="currentUserQuery.isPending.value && !user"
@@ -161,7 +171,7 @@ const updatePassword = () => {
       >
         <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
           <User class="text-primary-300" :size="24" />
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Personal Information</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Informasi Pribadi</h2>
         </div>
 
         <form @submit.prevent="updateProfile" class="p-6 space-y-8">
@@ -194,9 +204,9 @@ const updatePassword = () => {
               />
             </div>
             <div class="text-center sm:text-left">
-              <h3 class="font-semibold text-gray-900 dark:text-white">Profile Photo</h3>
+              <h3 class="font-semibold text-gray-900 dark:text-white">Foto Profil</h3>
               <p class="text-sm text-gray-500 dark:text-gray-400">
-                Update your avatar. JPG or PNG allowed.
+                Perbarui foto profil Anda. Format JPG atau PNG diperbolehkan.
               </p>
             </div>
           </div>
@@ -206,8 +216,8 @@ const updatePassword = () => {
             <BaseInput
               id="username"
               v-model="profileForm.username"
-              label="Username"
-              placeholder="Your username"
+              label="Nama Pengguna"
+              placeholder="Nama pengguna Anda"
               :error="usernameError"
               required
             >
@@ -217,10 +227,15 @@ const updatePassword = () => {
             <BaseInput
               id="email"
               v-model="profileForm.email"
-              label="Email Address"
+              label="Alamat Email"
               type="email"
-              placeholder="your@email.com"
+              placeholder="nama@email.com"
               :error="emailError"
+              :hint="
+                profileForm.email !== user?.email
+                  ? 'Mengubah email akan mengirimkan verifikasi ke email baru Anda.'
+                  : ''
+              "
               required
             >
               <template #prefix><Mail :size="16" /></template>
@@ -247,14 +262,14 @@ const updatePassword = () => {
 
             <div v-if="!authStore.hasRole(ROLES.SUPERADMIN)">
               <label class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Default Role
+                Peran Utama (Default)
               </label>
               <select
                 v-model="profileForm.defaultAccountRoleId"
                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                 :disabled="rolesLoading"
               >
-                <option :value="0" disabled>Select Default Role</option>
+                <option :value="0" disabled>Pilih Peran Utama</option>
                 <option v-for="role in filteredRoles" :key="role.id" :value="role.id">
                   {{ role.name }}
                 </option>
@@ -268,8 +283,8 @@ const updatePassword = () => {
               <BaseInput
                 id="address"
                 v-model="profileForm.address"
-                label="Address"
-                placeholder="Full address"
+                label="Alamat Lengkap"
+                placeholder="Alamat domisili lengkap Anda"
                 :error="addressError"
               >
                 <template #prefix><MapPin :size="16" /></template>
@@ -284,7 +299,7 @@ const updatePassword = () => {
               :loading="updateCurrentUserProfileMutation.isPending.value"
             >
               <Save class="mr-2" :size="18" />
-              Save Changes
+              Simpan Perubahan
             </BaseButton>
           </div>
         </form>
@@ -296,7 +311,7 @@ const updatePassword = () => {
       >
         <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
           <KeyRound class="text-primary-300" :size="24" />
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Security</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Keamanan Akun</h2>
         </div>
 
         <form @submit.prevent="updatePassword" class="p-6 space-y-6">
@@ -305,7 +320,7 @@ const updatePassword = () => {
               <BaseInput
                 id="current-password"
                 v-model="passwordForm.currentPassword"
-                label="Current Password"
+                label="Kata Sandi Saat Ini"
                 type="password"
                 show-password-toggle
                 :error="currentPasswordError"
@@ -318,7 +333,7 @@ const updatePassword = () => {
             <BaseInput
               id="new-password"
               v-model="passwordForm.newPassword"
-              label="New Password"
+              label="Kata Sandi Baru"
               type="password"
               show-password-toggle
               show-password-strength
@@ -331,7 +346,7 @@ const updatePassword = () => {
             <BaseInput
               id="confirm-password"
               v-model="passwordForm.confirmPassword"
-              label="Confirm New Password"
+              label="Konfirmasi Kata Sandi Baru"
               type="password"
               show-password-toggle
               :error="confirmPasswordError"
@@ -349,7 +364,7 @@ const updatePassword = () => {
               :disabled="!!confirmPasswordError"
             >
               <KeyRound class="mr-2" :size="18" />
-              Update Password
+              Perbarui Kata Sandi
             </BaseButton>
           </div>
         </form>
