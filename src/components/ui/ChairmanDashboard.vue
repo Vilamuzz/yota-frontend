@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { BarChart } from 'echarts/charts'
+import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { useTheme } from '@/composables/ui/useTheme'
@@ -15,7 +15,7 @@ import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import { Motion } from 'motion-v'
 import { NotepadText, Baby, ChevronRight, Calendar, AlertCircle } from 'lucide-vue-next'
 
-use([CanvasRenderer, BarChart, GridComponent, TooltipComponent])
+use([CanvasRenderer, LineChart, GridComponent, TooltipComponent])
 
 const toTitleCase = (str: string) =>
   str.replace(/\b\w/g, (char) => char.toUpperCase())
@@ -23,7 +23,7 @@ const { isDark } = useTheme()
 const chartTheme = computed(() => (isDark.value ? 'dark' : 'light'))
 
 const candidateAcceptedParams = {
-  status: FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED,
+  status: FosterChildrenCandidateStatus.ACCEPTED,
   limit: 1,
   page: 1,
 }
@@ -118,7 +118,7 @@ const {
 } = useSocialProgramList(socialProgramPeriodParams)
 
 const fosterCandidatePeriodParams = {
-  status: FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED,
+  status: FosterChildrenCandidateStatus.ACCEPTED,
   sortBy: 'created_at desc',
   limit: 100,
   page: 1,
@@ -202,13 +202,26 @@ const chartOption = computed(() => {
       axisLine: { show: false },
       splitLine: { lineStyle: { color: c.gridLine, type: 'dashed' } },
     },
-    series: [
+   series: [
       {
         name: activeModule.value === 'social_program' ? 'Program Berkelanjutan' : 'Anak Asuh',
-        type: 'bar',
-        barWidth: '55%',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 7,
+        lineStyle: { color: c.bar, width: 2.5 },
+        itemStyle: { color: c.bar },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: c.bar + '33' }, // sedikit transparan di atas
+              { offset: 1, color: c.bar + '00' }, // transparan penuh di bawah
+            ],
+          },
+        },
         data,
-        itemStyle: { color: c.bar, borderRadius: [4, 4, 0, 0] },
       },
     ],
   }
