@@ -313,6 +313,15 @@ const handleBack = () => router.push({ name: 'dashboard-social-programs' })
                     {{ formatStatus(program.status) }}
                   </div>
                 </div>
+                  <div v-if="program.status === SocialProgramStatusEnum.REJECTED && program.rejectionReason">
+                  <label
+                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5"
+                    >Alasan Penolakan</label
+                  >
+                  <div class="px-4 py-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-lg text-sm text-red-700 dark:text-red-300">
+                    {{ program.rejectionReason }}
+                  </div>
+                </div>
                 <div>
                   <label
                     class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5"

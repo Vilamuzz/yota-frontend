@@ -222,6 +222,7 @@ const handleConfirmReject = async (reason: string) => {
                     <option value="minimum_amount asc">Donasi Terendah</option>
                     <option value="minimum_amount desc">Donasi Tertinggi</option>
                     <option value="billing_day asc">Hari Tagihan Terawal</option>
+                    <option value="updated_at desc">Terakhir Diubah</option>
                   </select>
                 </div>
               </div>
@@ -366,7 +367,7 @@ const handleConfirmReject = async (reason: string) => {
                   </BaseIconButton>
 
                   <BaseIconButton
-                    v-if="program.status === SocialProgramStatusEnum.PENDING"
+                    v-if="program.status === SocialProgramStatusEnum.PENDING || program.status === SocialProgramStatusEnum.REJECTED"
                     @click="deleteProgram(program)"
                     title="Hapus program"
                     variant="danger"

@@ -24,11 +24,13 @@
       <h3 class="text-lg font-semibold text-[var(--color-primary-300)] mb-4">Cara Berlangganan</h3>
 
       <ol class="space-y-2 text-sm text-gray-600 leading-relaxed list-decimal list-inside">
-        <li>Klik tombol <b>"Berlangganan"</b>.</li>
-        <li>Konfirmasi data dan lanjutkan ke pembayaran.</li>
-        <li>Lakukan pembayaran melalui metode yang tersedia.</li>
-        <li>Donasi akan tercatat otomatis setiap bulan.</li>
-        <li>Jika tidak membayar hingga periode berikutnya, langganan berhenti otomatis.</li>
+      <li>Baca dan pahami informasi serta deskripsi program yang tersedia.</li>
+      <li>Nominal minimal merupakan jumlah donasi yang harus dibayarkan untuk mengikuti program.</li>
+      <li>Tagihan akan diterbitkan setiap tanggal yang telah ditentukan pada program.</li>
+      <li>Klik tombol <b>"Berlangganan"</b> untuk menjadi donatur program.</li>
+      <li>Tagihan dapat dilihat melalui <b>Nama Pengguna > Invoice Saya > Program Berkelanjutan</b> dan notifikasi akan dikirim melalui email.</li>
+      <li>Apabila tagihan tidak dibayarkan, tidak akan dikenakan sanksi apa pun.</li>
+      <li>Pembayaran dapat dilakukan setelah tagihan diterbitkan.</li>
       </ol>
     </div>
   </div>
