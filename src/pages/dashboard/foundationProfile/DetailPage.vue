@@ -14,6 +14,7 @@ import {
   Instagram,
   Facebook,
   Twitter,
+  Percent,
 } from 'lucide-vue-next'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
@@ -51,6 +52,7 @@ const form = reactive({
   foundationFacebook: '',
   foundationTwitter: '',
   embeddedAddress: '',
+  ppnPercentage: 11,
   logo: makeImageField(),
   icon: makeImageField(),
   organizationStructure: makeImageField(),
@@ -83,6 +85,7 @@ watch(
     form.foundationFacebook = data.foundationFacebook || ''
     form.foundationTwitter = data.foundationTwitter || ''
     form.embeddedAddress = data.embeddedAddress || ''
+    form.ppnPercentage = data.ppnPercentage ?? 11
     form.logo.preview = data.logo || null
     form.icon.preview = data.icon || null
     form.organizationStructure.preview = data.organizationStructure || null
@@ -152,6 +155,7 @@ const handleSubmit = () => {
           foundationFacebook: form.foundationFacebook || undefined,
           foundationTwitter: form.foundationTwitter || undefined,
           embeddedAddress: form.embeddedAddress,
+          ppnPercentage: Number(form.ppnPercentage),
           ...(form.founderPicture.file && { founderPicture: form.founderPicture.file }),
           ...(form.logo.file && { logo: form.logo.file }),
           ...(form.icon.file && { icon: form.icon.file }),
@@ -205,6 +209,7 @@ const handleSubmit = () => {
         foundationFacebook: form.foundationFacebook || undefined,
         foundationTwitter: form.foundationTwitter || undefined,
         embeddedAddress: form.embeddedAddress,
+        ppnPercentage: Number(form.ppnPercentage),
         founderPicture: form.founderPicture.file as File,
         logo: form.logo.file as File,
         icon: form.icon.file as File,
@@ -302,6 +307,19 @@ const handleSubmit = () => {
                 required
               >
                 <template #prefix><Mail :size="16" /></template>
+              </BaseInput>
+
+              <BaseInput
+                id="ppnPercentage"
+                v-model="form.ppnPercentage"
+                label="Persentase PPN (%)"
+                type="number"
+                step="0.1"
+                placeholder="Masukkan persentase PPN..."
+                :error="validationErrors?.ppnPercentage"
+                required
+              >
+                <template #prefix><Percent :size="16" /></template>
               </BaseInput>
 
               <BaseInput

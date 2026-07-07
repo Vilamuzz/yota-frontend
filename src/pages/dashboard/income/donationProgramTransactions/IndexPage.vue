@@ -334,7 +334,7 @@ const incomeChartOption = computed(() => {
       <!-- Stats Grid -->
       <div v-if="!isDonationLoading && donation" class="grid grid-cols-1 md:grid-cols-12 gap-5">
         <div
-          class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+          class="md:col-span-12 lg:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
         >
           <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
             {{ donation.title }}
@@ -343,25 +343,31 @@ const incomeChartOption = computed(() => {
         </div>
 
         <div
-          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+          class="md:col-span-6 lg:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm min-w-0"
         >
-          <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
+          <h3
+            class="text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-500 truncate"
+            :title="formatCurrency(donation.collectedFund)"
+          >
             {{ formatCurrency(donation.collectedFund) }}
           </h3>
           <p class="text-sm text-gray-400 mt-1">Total Donasi</p>
         </div>
 
         <div
-          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+          class="md:col-span-6 lg:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm min-w-0"
         >
-          <span
-            :class="[
-              'inline-flex items-center gap-1 px-3.5 py-0.5 rounded-full text-xl font-medium border',
-              getStatusColor(donation.status),
-            ]"
-          >
-            {{ formatStatus(donation.status) }}
-          </span>
+          <div class="flex items-baseline gap-2 truncate">
+            <span
+              :class="[
+                'inline-flex items-center gap-1 px-3.5 py-0.5 rounded-full text-lg sm:text-xl lg:text-lg xl:text-xl font-medium border truncate',
+                getStatusColor(donation.status),
+              ]"
+              :title="formatStatus(donation.status)"
+            >
+              {{ formatStatus(donation.status) }}
+            </span>
+          </div>
           <p class="text-sm text-gray-400 mt-1">Status Program Donasi</p>
         </div>
       </div>
@@ -481,7 +487,7 @@ const incomeChartOption = computed(() => {
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Donatur</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Metode</th>
-          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Nominal</th>
+          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Net Nominal</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tanggal</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
@@ -511,7 +517,7 @@ const incomeChartOption = computed(() => {
             <td
               class="px-6 py-2 whitespace-nowrap font-bold text-right text-gray-900 dark:text-white"
             >
-              {{ formatCurrency(transaction.grossAmount) }}
+              {{ formatCurrency(transaction.netAmount) }}
             </td>
             <td class="px-6 py-2 whitespace-nowrap text-center">
               <span

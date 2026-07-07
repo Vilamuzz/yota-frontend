@@ -144,7 +144,7 @@ function handleConfirmDelete() {
       <!-- Stats Grid -->
       <div v-if="!isChildLoading && child" class="grid grid-cols-1 md:grid-cols-12 gap-5">
         <div
-          class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+          class="md:col-span-12 lg:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
         >
           <div class="flex items-center gap-5">
             <div class="shrink-0">
@@ -180,23 +180,27 @@ function handleConfirmDelete() {
         </div>
 
         <div
-          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+          class="md:col-span-6 lg:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm min-w-0"
         >
-          <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
+          <h3
+            class="text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-500 truncate"
+            :title="formatCurrency(child.collectedFund || 0)"
+          >
             {{ formatCurrency(child.collectedFund || 0) }}
           </h3>
           <p class="text-sm text-gray-400 mt-1">Total Donasi</p>
         </div>
 
         <div
-          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+          class="md:col-span-6 lg:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm min-w-0"
         >
-          <div class="flex items-baseline gap-2">
+          <div class="flex items-baseline gap-2 truncate">
             <span
               :class="[
-                'inline-flex items-center gap-1 px-3.5 py-0.5 rounded-full text-xl font-medium border',
+                'inline-flex items-center gap-1 px-3.5 py-0.5 rounded-full text-lg sm:text-xl lg:text-lg xl:text-xl font-medium border truncate',
                 getStatusColor(child.isGraduated ? 'completed' : 'active'),
               ]"
+              :title="child.isGraduated ? 'Lulus' : 'Aktif'"
             >
               <GraduationCap v-if="child.isGraduated" :size="12" />
               {{ child.isGraduated ? 'Lulus' : 'Aktif' }}
@@ -242,7 +246,7 @@ function handleConfirmDelete() {
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Donatur</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Metode</th>
-          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Nominal</th>
+          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Net Nominal</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tanggal</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
@@ -272,7 +276,7 @@ function handleConfirmDelete() {
             <td
               class="px-6 py-4 whitespace-nowrap font-bold text-right text-gray-900 dark:text-white"
             >
-              {{ formatCurrency(transaction.grossAmount) }}
+              {{ formatCurrency(transaction.netAmount) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span
@@ -327,9 +331,19 @@ function handleConfirmDelete() {
           : {{ selectedTransaction.donorName || 'Anonim' }}
         </div>
 
-        <div class="text-gray-500 dark:text-gray-400 font-medium">Nominal Donasi</div>
+        <div class="text-gray-500 dark:text-gray-400 font-medium">Nominal Kotor</div>
         <div class="text-gray-900 dark:text-white font-bold">
           : {{ formatCurrency(selectedTransaction.grossAmount) }}
+        </div>
+
+        <div class="text-gray-500 dark:text-gray-400 font-medium">Biaya Admin</div>
+        <div class="text-gray-900 dark:text-white font-bold">
+          : {{ formatCurrency(selectedTransaction.fee) }}
+        </div>
+
+        <div class="text-gray-500 dark:text-gray-400 font-medium">Nominal Bersih</div>
+        <div class="text-green-700 dark:text-green-500 font-bold">
+          : {{ formatCurrency(selectedTransaction.netAmount) }}
         </div>
 
         <div class="text-gray-500 dark:text-gray-400 font-medium">Tanggal Donasi</div>

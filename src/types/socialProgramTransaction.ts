@@ -7,6 +7,8 @@ export interface SocialProgramTransaction {
   donorName: string
   donorEmail: string
   grossAmount: number
+  fee: number
+  netAmount: number
   isOnline: boolean
   transactionStatus: string
   transactionId: string

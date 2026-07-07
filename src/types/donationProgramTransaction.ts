@@ -7,6 +7,8 @@ export interface DonationProgramTransaction {
   donorName: string
   donorEmail: string
   grossAmount: number
+  fee: number
+  netAmount: number
   isOnline: boolean
   transactionStatus: TransactionStatus
   snapToken: string

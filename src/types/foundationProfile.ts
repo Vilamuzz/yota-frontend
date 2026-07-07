@@ -19,6 +19,7 @@ export interface FoundationProfile {
   heroImageTwo: string
   heroImageThree: string
   heroImageFour: string
+  ppnPercentage: number
   createdAt: string
   updatedAt: string
 }
@@ -41,6 +42,7 @@ export interface CreateFoundationProfileRequest {
   heroImageTwo: File
   heroImageThree: File
   heroImageFour: File
+  ppnPercentage?: number
 }
 
 export interface UpdateFoundationProfileRequest {
@@ -61,6 +63,7 @@ export interface UpdateFoundationProfileRequest {
   heroImageTwo?: File
   heroImageThree?: File
   heroImageFour?: File
+  ppnPercentage?: number
 }
 
 export type FoundationProfileResponse = Response<FoundationProfile>

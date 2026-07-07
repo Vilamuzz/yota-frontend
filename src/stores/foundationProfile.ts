@@ -51,6 +51,7 @@ export const useFoundationProfileStore = defineStore('foundationProfile', () => 
   const foundationInstagram = computed(() => profile.value?.foundationInstagram ?? null)
   const foundationFacebook = computed(() => profile.value?.foundationFacebook ?? null)
   const foundationTwitter = computed(() => profile.value?.foundationTwitter ?? null)
+  const ppnPercentage = computed(() => profile.value?.ppnPercentage ?? 11)
 
   const fetchProfile = async () => {
     // If already fetching, skip
@@ -97,6 +98,7 @@ export const useFoundationProfileStore = defineStore('foundationProfile', () => 
     foundationInstagram,
     foundationFacebook,
     foundationTwitter,
+    ppnPercentage,
     fetchProfile,
     refresh,
   }
