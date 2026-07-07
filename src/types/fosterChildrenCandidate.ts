@@ -4,6 +4,7 @@ import type { Pagination, PaginationParams, Response } from './response'
 export interface FosterChildrenCandidate {
   id: string
   name: string
+  nik: string
   profilePicture: string
   gender: Gender
   category: Category
@@ -40,6 +41,7 @@ export interface FosterChildrenCandidateQueryParams extends PaginationParams {
 
 export interface FosterChildrenCandidateCreateRequest {
   name: string
+  nik: string
   gender: Gender
   category: Category
   birthDate: string
