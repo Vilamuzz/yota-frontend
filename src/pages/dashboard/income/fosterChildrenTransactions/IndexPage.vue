@@ -21,10 +21,13 @@ import type { FosterChildrenTransactionQueryParams } from '@/types/fosterChildre
 import { getStatusColor } from '@/utils/statusColor'
 import { useAdminFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenAdminDetail'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const { showToast } = useToast()
 const childId = route.params.id as string
+const authStore = useAuthStore()
+const isSocialManager = computed(() => authStore.user?.roles?.some((r) => r.roleName === 'Koordinator Sosial'))
 
 const { detailQuery, isLoading: isChildLoading } = useAdminFosterChildrenDetail(childId)
 
@@ -211,7 +214,7 @@ function handleConfirmDelete() {
 
       <!-- Header Section -->
       <div
-        v-if="!child?.isGraduated"
+        v-if="!child?.isGraduated && isSocialManager"
         class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-start"
       >
         <BaseButton variant="primary" @click="handleCreate">

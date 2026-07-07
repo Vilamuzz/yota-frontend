@@ -24,9 +24,12 @@ import type {
 } from '@/types/fosterChildrenExpense'
 import { useAdminFosterChildrenDetail } from '@/composables/fosterChildren/useFosterChildrenAdminDetail'
 import BaseIconButton from '@/components/atoms/BaseIconButton.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const { showToast } = useToast()
+const authStore = useAuthStore()
+const isFinance = computed(() => authStore.user?.roles?.some((r) => r.roleName === 'Bendahara'))
 
 const childId = route.params.id as string
 const { deleteMutation } = useFosterChildrenExpenseDelete(childId)
@@ -306,6 +309,7 @@ const handleExport = async (payload: {
             Ekspor CSV
           </BaseButton>
           <BaseButton
+            v-if="isFinance"
             variant="primary"
             :to="{
               name: 'dashboard-foster-children-expense-transaction-create',

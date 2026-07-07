@@ -33,6 +33,14 @@ const searchInput = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
 
 const { candidates, pagination, isLoading } = useFosterChildrenCandidateList(queryParams)
+const filteredCandidates = computed(() => {
+  if (role.value === ROLES.CHAIRMAN) {
+    return candidates.value.filter(
+      (candidate) => candidate.status !== FosterChildrenCandidateStatus.PENDING,
+    )
+  }
+  return candidates.value
+})
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
   queryParams,
   pagination,
@@ -68,13 +76,13 @@ const role = computed(() => {
 
 const statusByRole = computed(() => {
   const common = [
-    { label: 'Menunggu Verifikasi', value: FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED },
-    { label: 'Disetujui', value: FosterChildrenCandidateStatus.ACCEPTED },
+    { label: 'Diterima Koordinator Sosial', value: FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED },
+    { label: 'Diterima', value: FosterChildrenCandidateStatus.ACCEPTED },
     { label: 'Ditolak', value: FosterChildrenCandidateStatus.REJECTED },
   ]
 
   if (role.value === ROLES.SOCIAL_MANAGER) {
-    return [{ label: 'Diajukan', value: FosterChildrenCandidateStatus.PENDING }, ...common]
+    return [{ label: 'Tertunda', value: FosterChildrenCandidateStatus.PENDING }, ...common]
   }
 
   return common
@@ -179,7 +187,7 @@ const hasActiveFilters = computed(
       <BaseTable
         :loading="isLoading"
         loading-message="Memuat data ajuan..."
-        :is-empty="candidates.length === 0"
+        :is-empty="filteredCandidates.length === 0"
         empty-message="Tidak ada data ajuan"
         :has-prev="(queryParams.page ?? 1) > 1"
         :has-next="pagination ? (queryParams.page ?? 1) < pagination.totalPages : false"
@@ -209,7 +217,7 @@ const hasActiveFilters = computed(
 
         <template #rows>
           <tr
-            v-for="(child, index) in candidates"
+            v-for="(child, index) in filteredCandidates"
             :key="child.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
           >
