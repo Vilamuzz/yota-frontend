@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, computed, watch, ref } from 'vue'
+import { useRoute } from 'vue-router'  // tambah ini
 import { useLogin } from '@/composables/auth/useLogin'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import AuthInput from '@/components/atoms/AuthInput.vue'
@@ -9,7 +10,12 @@ import { loginSchema } from '@/schemas/auth.schema'
 import { getZodErrors } from '@/utils/zodError'
 import { extractError } from '@/utils/error'
 
-const { loginMutation, validationErrors } = useLogin()
+//baris yg ditambahin yayas
+const route = useRoute()  // tambah ini
+const redirectPath = route.query.redirect as string | undefined  // tambah ini
+//const { loginMutation, validationErrors } = useLogin(redirectPath)  // tambah redirectPath
+
+const { loginMutation, validationErrors } = useLogin(redirectPath)
 const form = reactive({
   email: '',
   password: '',

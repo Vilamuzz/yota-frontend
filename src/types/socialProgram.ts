@@ -33,6 +33,7 @@ export interface SocialProgram {
   collectedFund?: number
   totalExpense?: number
   createdAt: string
+  rejectionReason?: string
 }
 
 export interface SocialProgramList {

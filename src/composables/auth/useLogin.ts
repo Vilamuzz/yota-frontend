@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter} from 'vue-router' 
 import { useMutation } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/auth.service'
@@ -7,16 +7,20 @@ import type { LoginRequest, LoginResponse } from '@/types/auth'
 import type { ApiError } from '@/types/response'
 import { ROLES } from '@/const/roles'
 
-export const useLogin = () => {
+export const useLogin = (redirectPath?: string) => {
   const authStore = useAuthStore()
   const router = useRouter()
-
   const loginMutation = useMutation<LoginResponse, ApiError, LoginRequest>({
     mutationFn: (credentials) => authService.login(credentials),
     onSuccess: async (data) => {
       if (data.data?.token) {
         authStore.setToken(data.data.token)
         await authStore.initUser()
+
+        if (redirectPath) {
+          router.push(redirectPath)
+          return
+        }
 
         const role = authStore.activeRole
         if (role === ROLES.ORANG_TUA_ASUH) {
