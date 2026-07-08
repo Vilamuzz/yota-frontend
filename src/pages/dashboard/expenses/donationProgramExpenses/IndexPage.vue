@@ -290,7 +290,7 @@ const expenseChartOption = computed(() => {
       <!-- Stats Grid -->
       <div v-if="!isDonationLoading && donation" class="grid grid-cols-1 md:grid-cols-12 gap-5">
         <div
-          class="md:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+          class="md:col-span-12 lg:col-span-6 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
         >
           <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
             {{ donation.title }}
@@ -299,18 +299,24 @@ const expenseChartOption = computed(() => {
         </div>
 
         <div
-          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+          class="md:col-span-6 lg:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm min-w-0"
         >
-          <h3 class="text-3xl font-bold text-green-700 dark:text-green-500">
+          <h3
+            class="text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-500 truncate"
+            :title="formatCurrency(donation.collectedFund)"
+          >
             {{ formatCurrency(donation.collectedFund) }}
           </h3>
           <p class="text-sm text-gray-400 mt-1">Total Donasi</p>
         </div>
 
         <div
-          class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
+          class="md:col-span-6 lg:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm min-w-0"
         >
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
+          <h3
+            class="text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white truncate"
+            :title="formatCurrency(donation.collectedFund - (donation.totalExpense || 0))"
+          >
             {{ formatCurrency(donation.collectedFund - (donation.totalExpense || 0)) }}
           </h3>
           <p class="text-sm text-gray-400 mt-1">Sisa Saldo</p>
