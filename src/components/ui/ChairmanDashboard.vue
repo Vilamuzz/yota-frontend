@@ -13,7 +13,7 @@ import { SocialProgramStatusEnum } from '@/types/socialProgram'
 import { formatDate, formatCurrency } from '@/utils/format'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import { Motion } from 'motion-v'
-import { NotepadText, Baby, ChevronRight, Calendar, AlertCircle } from 'lucide-vue-next'
+import { Briefcase, Baby, ChevronRight, Calendar, AlertCircle } from 'lucide-vue-next'
 
 use([CanvasRenderer, LineChart, GridComponent, TooltipComponent])
 
@@ -291,7 +291,7 @@ const chartOption = computed(() => {
               Program Berkelanjutan
             </span>
             <div class="p-2 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl">
-              <HandHeart class="w-5 h-5" />
+              <Briefcase class="w-5 h-5" />
             </div>
           </div>
           <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
@@ -450,7 +450,7 @@ const chartOption = computed(() => {
 
       <!-- Empty -->
       <div v-else-if="tableItems.length === 0" class="p-12 text-center text-gray-500 dark:text-gray-400">
-        <component :is="activeModule === 'social_program' ? NotepadText : Baby" class="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+        <component :is="activeModule === 'social_program' ? Briefcase : Baby" class="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
         <p class="font-medium">
           Tidak ada {{ activeModule === 'social_program' ? 'program berkelanjutan' : 'anak asuh' }} tervalidasi pada {{ selectedPeriodLabel }}
         </p>
