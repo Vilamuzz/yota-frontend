@@ -48,6 +48,9 @@ export interface AmbulanceService {
   cancelationReason?: string
   createdAt: string
   updatedAt?: string
+  requestedAt?: string
+  pickedUpAt?: string
+  completedAt?: string
 }
 
 export interface AmbulanceServiceList {

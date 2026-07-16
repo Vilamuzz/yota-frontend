@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import { ArrowLeft, Coins } from 'lucide-vue-next'
-import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
 import { usePublicDonationProgramTransactionList } from '@/composables/donationProgramTransaction'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
+import BasePagination from '@/components/atoms/BasePagination.vue'
 import { formatCurrency, formatDate } from '@/utils/format'
+import BasePublicSearch from '@/components/atoms/BasePublicSearch.vue'
 
 const route = useRoute()
 const donationSlug = computed(() => route.params.slug as string)
@@ -17,12 +20,18 @@ const program = computed(() => {
   return {
     title: d.title,
     slug: d.slug,
+    collectedFund: d.collectedFund || 0,
+    fundTarget: d.fundTarget || 0,
   }
 })
 
+const searchQuery = ref('')
+let searchTimeout: ReturnType<typeof setTimeout>
+
 const queryParams = reactive({
   limit: 10,
-  nextCursor: undefined as string | undefined,
+  page: 1,
+  search: undefined as string | undefined,
 })
 
 const { listQuery, transactions, pagination } = usePublicDonationProgramTransactionList(
@@ -30,44 +39,18 @@ const { listQuery, transactions, pagination } = usePublicDonationProgramTransact
   queryParams,
 )
 
-const accumulatedTransactions = ref<any[]>([])
+const { goToPage, resetPagination } = useOffsetPagination(queryParams, pagination)
 
-watch(
-  transactions,
-  (newTransactions) => {
-    if (!queryParams.nextCursor) {
-      accumulatedTransactions.value = [...newTransactions]
-    } else {
-      const existingIds = new Set(accumulatedTransactions.value.map((t) => t.id))
-      for (const tx of newTransactions) {
-        if (!existingIds.has(tx.id)) {
-          accumulatedTransactions.value.push(tx)
-        }
-      }
-    }
-  },
-  { immediate: true },
-)
-
-const handleScroll = () => {
-  const bottomOfWindow =
-    window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 200
-
-  if (bottomOfWindow && !listQuery.isFetching.value && pagination.value?.nextCursor) {
-    queryParams.nextCursor = pagination.value.nextCursor
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
+watch(searchQuery, (val) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    queryParams.search = val || undefined
+    resetPagination()
+  }, 400)
 })
 
 const txList = computed(() => {
-  return accumulatedTransactions.value.map((tx) => ({
+  return transactions.value.map((tx) => ({
     id: tx.id,
     name: tx.donorName || 'Hamba Allah',
     amount: tx.grossAmount,
@@ -113,29 +96,48 @@ const txList = computed(() => {
   <div v-else class="relative min-h-screen bg-gray-50 pb-24 font-poppins">
     <!-- Sticky Header -->
     <div
-      class="sticky top-0 z-40 bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-4"
+      class="sticky top-0 z-40 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center gap-4"
     >
       <!-- Back Button -->
-      <button
-        class="flex items-center justify-center shrink-0 text-gray-700 hover:text-gray-900 transition p-2 hover:bg-gray-100 rounded-full cursor-pointer"
-        @click="$router.push(`/donation-programs/${donationSlug}`)"
-      >
-        <ArrowLeft :size="24" />
-      </button>
+      <div class="flex flex-row">
+        <button
+          class="flex items-center justify-center shrink-0 text-gray-700 hover:text-gray-900 transition p-2 hover:bg-gray-100 rounded-full cursor-pointer"
+          @click="$router.push(`/donation-programs/${donationSlug}`)"
+        >
+          <ArrowLeft :size="24" />
+        </button>
 
-      <!-- Title -->
-      <div>
-        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Donatur Baik</p>
-        <h1 class="text-base md:text-lg font-bold text-gray-800 line-clamp-1">
-          {{ program?.title }}
+        <!-- Title -->
+        <div>
+          <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Donatur Baik</p>
+          <h1 class="text-base md:text-lg font-bold text-gray-800 line-clamp-1">
+            {{ program?.title }}
+          </h1>
+        </div>
+      </div>
+      <div v-if="program" class="text-right hidden sm:block">
+        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Terkumpul</p>
+        <h1 class="text-sm font-bold text-primary-500">
+          {{ formatCurrency(program.collectedFund) }}
+          <span class="text-gray-400 text-xs font-medium"
+            >/ {{ formatCurrency(program.fundTarget) }}</span
+          >
         </h1>
       </div>
     </div>
 
     <!-- Main Content -->
     <div class="max-w-4xl mx-auto px-6 py-10">
-      <div class="flex items-center justify-left mb-8">
-        <h2 class="text-2xl font-bold text-gray-800">Riwayat Donasi</h2>
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 shrink-0">Riwayat Donasi</h2>
+        <div class="w-full md:max-w-sm">
+          <BasePublicSearch
+            v-model="searchQuery"
+            placeholder="Cari nama anda dalam daftar donatur..."
+            :show-sort="false"
+            :show-filter="false"
+          />
+        </div>
       </div>
 
       <!-- Donations Grid -->
@@ -174,15 +176,14 @@ const txList = computed(() => {
         </div>
       </div>
 
-      <!-- Infinite Scroll Loader -->
-      <div
-        v-if="listQuery.isFetching.value && !listQuery.isLoading.value"
-        class="flex justify-center pt-8"
-      >
-        <div
-          class="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin"
-        ></div>
-      </div>
+      <!-- Pagination -->
+      <BasePagination
+        v-if="pagination && pagination.totalPages > 1"
+        class="mt-16"
+        :current-page="queryParams.page ?? 1"
+        :total-pages="pagination.totalPages"
+        @update:current-page="goToPage"
+      />
     </div>
   </div>
 </template>

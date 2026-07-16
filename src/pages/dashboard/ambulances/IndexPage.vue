@@ -7,6 +7,7 @@ import { useAmbulanceDelete } from '@/composables/ambulance/useAmbulanceDelete'
 import { useCursorPagination } from '@/composables/ui/usePagination'
 import { useToast } from '@/composables/ui/useToast'
 import { getStatusColor } from '@/utils/statusColor'
+import { formatPhoneWithDashes } from '@/utils/phone'
 import {
   ambulanceStatusOptions,
   formatAmbulanceStatus,
@@ -87,7 +88,7 @@ function handleConfirmDelete() {
         <div class="flex flex-row gap-3 w-full md:w-auto">
           <BaseSearch
             v-model="searchQuery"
-            placeholder="Cari plat nomor atau model..."
+            placeholder="Cari plat nomor atau supir..."
             class="flex-1 w-full"
           />
           <BaseFilter :has-active-filters="hasActiveFilters" class="w-auto shrink-0">
@@ -180,7 +181,15 @@ function handleConfirmDelete() {
               {{ ambulance.driver.username }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              {{ ambulance.driver.phone }}
+              <p v-if="ambulance.driver.phone === `-`">-</p>
+              <a
+                v-else
+                :href="`https://wa.me/62${ambulance.driver.phone.replace(/^(\+62|62|0)/, '')}`"
+                target="_blank"
+                class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"
+              >
+                {{ formatPhoneWithDashes(ambulance.driver.phone) }}
+              </a>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span

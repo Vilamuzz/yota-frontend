@@ -25,7 +25,7 @@ import { useAssignedAmbulanceServiceUpdate } from '@/composables/ambulanceServic
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
 import { getStatusColor, getCategoryColor } from '@/utils/statusColor'
-import { formatDate, getCategoryLabel } from '@/utils/format'
+import { formatDate, getCategoryLabel, formatDateTime, formatDuration } from '@/utils/format'
 import { AmbulanceServiceCategory, ambulanceServiceCategoryOptions } from '@/types/ambulanceHistory'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import ConfirmationModal from '@/components/molecules/ConfirmationModal.vue'
@@ -429,7 +429,67 @@ const handleConfirmCancel = () => {
                     Dibuat Pada
                   </p>
                   <p class="text-sm text-gray-900 dark:text-gray-200">
-                    {{ formatDate(ambulanceService.createdAt) }}
+                    {{ formatDateTime(ambulanceService.createdAt) }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Requested At -->
+              <div v-if="ambulanceService.requestedAt" class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <Clock :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    Waktu Permintaan
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-200">
+                    {{ formatDateTime(ambulanceService.requestedAt) }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Picked Up At -->
+              <div v-if="ambulanceService.pickedUpAt" class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <Clock :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    Mulai Penjemputan
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-200">
+                    {{ formatDateTime(ambulanceService.pickedUpAt) }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Completed At -->
+              <div v-if="ambulanceService.completedAt" class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <Clock :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    Selesai Layanan
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-200">
+                    {{ formatDateTime(ambulanceService.completedAt) }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Service Duration -->
+              <div v-if="ambulanceService.pickedUpAt && ambulanceService.completedAt" class="flex gap-3">
+                <div class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
+                  <Clock :size="16" />
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                    Durasi Layanan
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-200 font-semibold">
+                    {{ formatDuration(ambulanceService.pickedUpAt, ambulanceService.completedAt) }}
                   </p>
                 </div>
               </div>
@@ -589,7 +649,9 @@ const handleConfirmCancel = () => {
                         >
                           Telepon Pengemudi
                         </p>
+                        <p v-if="ambulanceService.assignedAmbulance.driver.phone === `-`">-</p>
                         <a
+                          v-else
                           :href="`https://wa.me/62${ambulanceService.assignedAmbulance.driver.phone.replace(/^(\+62|62|0)/, '')}`"
                           target="_blank"
                           class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"

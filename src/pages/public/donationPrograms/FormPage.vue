@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import { ArrowLeft } from 'lucide-vue-next'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { formatCurrency, formatNumber } from '@/utils/format'
 import { useRoute, useRouter } from 'vue-router'
 import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
 import { useDonationProgramTransactionCreate } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCreate'
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const slug = computed(() => route.params.slug as string)
 
 const { detailQuery } = useDonationProgramDetail(slug)
@@ -26,9 +28,17 @@ const presets = [10000, 20000, 30000, 50000]
 const selectedPreset = ref<number | null>(null)
 const manualInput = ref('')
 const manualError = ref('')
+const showName = ref(false)
 const donorName = ref('')
 const donorEmail = ref('')
 const prayerContent = ref('')
+
+watch(showName, (val) => {
+  if (val && authStore.isAuthenticated && authStore.user) {
+    if (!donorName.value) donorName.value = authStore.user.username
+    if (!donorEmail.value) donorEmail.value = authStore.user.email
+  }
+})
 
 const prayerTemplates = [
   {
@@ -111,8 +121,8 @@ const handleSubmit = () => {
       slug: slug.value,
       data: {
         grossAmount: selectedAmount.value,
-        donorName: donorName.value || undefined,
-        donorEmail: donorEmail.value || undefined,
+        donorName: showName.value ? (donorName.value || undefined) : undefined,
+        donorEmail: showName.value ? (donorEmail.value || undefined) : undefined,
         prayerContent: prayerContent.value || undefined,
       },
     },
@@ -214,25 +224,38 @@ const handleSubmit = () => {
           <p v-else class="text-xs text-gray-400">Minimal donasi Rp 10.000</p>
         </div>
 
+        <!-- Show Name Toggle -->
+        <div class="flex items-center gap-2 pt-2 pb-1">
+          <input
+            type="checkbox"
+            id="showName"
+            v-model="showName"
+            class="w-4 h-4 text-primary-500 rounded-md border-gray-300 focus:ring-primary-400"
+          />
+          <label for="showName" class="text-sm text-gray-700 font-medium cursor-pointer select-none">
+            Sertakan nama saya sebagai donatur
+          </label>
+        </div>
+
         <!-- Donor Name -->
-        <div>
-          <label class="text-sm text-gray-500">Nama Donatur (Opsional)</label>
+        <div v-if="showName" class="animate-in fade-in slide-in-from-top-2 duration-200">
+          <label class="text-sm text-gray-500">Nama Donatur</label>
           <input
             v-model="donorName"
             type="text"
-            placeholder="Hamba Allah"
-            class="w-full border-2 border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 focus:border-primary-400 transition-colors"
+            placeholder="Nama Anda"
+            class="w-full border-2 border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 focus:border-primary-400 transition-colors mt-1"
           />
         </div>
 
         <!-- Donor Email -->
-        <div>
-          <label class="text-sm text-gray-500">Email Donatur (Opsional)</label>
+        <div v-if="showName" class="animate-in fade-in slide-in-from-top-2 duration-200">
+          <label class="text-sm text-gray-500">Email Donatur</label>
           <input
             v-model="donorEmail"
             type="email"
             placeholder="Email Anda"
-            class="w-full border-2 border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 focus:border-primary-400 transition-colors"
+            class="w-full border-2 border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 focus:border-primary-400 transition-colors mt-1"
           />
         </div>
 

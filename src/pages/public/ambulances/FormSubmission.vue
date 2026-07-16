@@ -357,7 +357,7 @@ const handleSubmit = () => {
                       ? 'Alamat Almarhum'
                       : 'Alamat Pasien'
               }}
-              <span v-if="isEmergency" class="text-red-500">*</span>
+              <span class="text-red-500">*</span>
             </label>
             <textarea
               v-model="form.patientAddress"

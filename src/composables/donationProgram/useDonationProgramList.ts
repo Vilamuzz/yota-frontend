@@ -12,7 +12,7 @@ export const useDonationProgramList = (
   options?: { enabled?: MaybeRefOrGetter<boolean> },
 ) => {
   const listQuery = useQuery<DonationProgramListResponse, ApiError>({
-    queryKey: ['publishedDonationPrograms', params],
+    queryKey: ['donationPrograms', params],
     queryFn: () => donationProgramService.getDonationProgramList(toValue(params)),
     retry: 1,
     ...options,

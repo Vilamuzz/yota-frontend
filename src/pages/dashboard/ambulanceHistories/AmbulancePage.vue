@@ -158,7 +158,9 @@ function getStatusLabel(status: string) {
               {{ ambulance.driver.username }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+              <p v-if="ambulance.driver.phone === `-`">-</p>
               <a
+                v-else
                 :href="`https://wa.me/62${ambulance.driver.phone.replace(/^(\+62|62|0)/, '')}`"
                 target="_blank"
                 class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"

@@ -7,7 +7,7 @@ import { formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { useDonationProgramTransactionList } from '@/composables/donationProgramTransaction/useDonationProgramTransactionList'
 import { useDonationProgramTransactionCancel } from '@/composables/donationProgramTransaction/useDonationProgramTransactionCancel'
 import { useDonationProgramMonthlyIncome } from '@/composables/donationProgramTransaction/useDonationProgramMonthlyIncome'
-import { useCursorPagination } from '@/composables/ui/usePagination'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import { useToast } from '@/composables/ui/useToast'
 import { useTheme } from '@/composables/ui/useTheme'
 import BaseButton from '@/components/atoms/BaseButton.vue'
@@ -120,9 +120,8 @@ function handleCreateTransaction() {
 
 const queryParams = reactive<DonationProgramTransactionQueryParams>({
   limit: 10,
+  page: 1,
   status: undefined,
-  nextCursor: undefined,
-  prevCursor: undefined,
   sortBy: undefined,
 })
 
@@ -142,8 +141,7 @@ const { donationProgramTransactions, pagination, isLoading } = useDonationProgra
   queryParams,
 )
 
-const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
-  useCursorPagination(queryParams)
+const { goToPage } = useOffsetPagination(queryParams, pagination)
 
 const hasActiveFilters = computed(
   () => queryParams.sortBy !== undefined || queryParams.status !== undefined,
@@ -151,7 +149,7 @@ const hasActiveFilters = computed(
 
 watch(
   () => [queryParams.limit, queryParams.sortBy, queryParams.status],
-  () => resetPagination(),
+  () => { queryParams.page = 1 }
 )
 
 function openCancelModal(id: string) {
@@ -472,12 +470,11 @@ const incomeChartOption = computed(() => {
         loading-message="Memuat transaksi donasi..."
         :is-empty="donationProgramTransactions.length === 0"
         empty-message="Tidak ada data transaksi donasi"
-        :has-prev="!!pagination?.prevCursor"
-        :has-next="!!pagination?.nextCursor"
+        :current-page="queryParams.page || 1"
+        :total-pages="pagination?.totalPages || 0"
+        @update:current-page="goToPage"
         v-model:limit="queryParams.limit"
         :limit-options="limitOptions"
-        @prev="handlePrevPage(pagination)"
-        @next="handleNextPage(pagination)"
       >
         <template #empty-icon>
           <HandHeart :size="96" class="mx-auto mb-2 text-gray-300" />
@@ -502,7 +499,7 @@ const incomeChartOption = computed(() => {
             class="hover:bg-gray-50 transition-colors duration-150 dark:hover:bg-gray-700"
           >
             <td class="px-6 py-2 whitespace-nowrap font-medium text-gray-500 dark:text-gray-400">
-              {{ pageOffset * queryParams.limit! + index + 1 }}
+              {{ ((queryParams.page || 1) - 1) * (queryParams.limit || 10) + index + 1 }}
             </td>
             <td
               class="px-6 py-2 whitespace-nowrap font-semibold max-w-50 truncate text-gray-900 dark:text-white"

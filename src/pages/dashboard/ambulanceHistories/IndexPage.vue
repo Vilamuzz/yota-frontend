@@ -451,7 +451,9 @@ function handleConfirmEdit() {
               {{ history.driver.username }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+              <p v-if="history.driver.phone === `-`">-</p>
               <a
+                v-else
                 :href="`https://wa.me/62${history.driver.phone.replace(/^(\+62|62|0)/, '')}`"
                 target="_blank"
                 class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"

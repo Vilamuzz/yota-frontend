@@ -62,8 +62,6 @@ const sortBy = ref<string | undefined>(undefined)
 const sortOptions = [
   { label: 'Terbaru', value: 'created_at desc' },
   { label: 'Terlama', value: 'created_at asc' },
-  { label: 'Nama (A-Z)', value: 'name asc' },
-  { label: 'Nama (Z-A)', value: 'name desc' },
 ]
 
 const toggleSort = () => {
@@ -433,12 +431,12 @@ const getStatusConfig = (status: string) => {
                   Jenis Pengajuan
                 </p>
                 <h3 class="text-sm font-black text-gray-900">
-                  {{ tabs.find((t) => t.key === activeTab)!.label }}+62
+                  {{ tabs.find((t) => t.key === activeTab)!.label }}
                 </h3>
               </div>
             </div>
 
-            <div class="relative w-full md:w-80" ref="searchContainerRef">
+            <div class="relative w-full md:w-96" ref="searchContainerRef">
               <BasePublicSearch
                 v-model="searchQuery"
                 :placeholder="
@@ -491,9 +489,6 @@ const getStatusConfig = (status: string) => {
                 <div class="space-y-4">
                   <!-- Status Filter -->
                   <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-2"
-                      >Status Pengajuan</label
-                    >
                     <div class="grid grid-cols-2 gap-2">
                       <button
                         v-for="status in activeTab === 'ambulance'

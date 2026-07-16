@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import BasePagination from '@/components/atoms/BasePagination.vue'
 
 interface Props {
   loading?: boolean
@@ -11,6 +12,9 @@ interface Props {
   hasNext?: boolean
   limit?: number
   limitOptions?: number[]
+
+  currentPage?: number
+  totalPages?: number
 
   // Tambahan
   showPagination?: boolean
@@ -36,6 +40,7 @@ defineEmits<{
   prev: []
   next: []
   'update:limit': [value: number]
+  'update:currentPage': [value: number]
 }>()
 </script>
 
@@ -87,21 +92,32 @@ defineEmits<{
         v-if="showPagination"
         class="flex items-center gap-2"
       >
-        <button
-          @click="$emit('prev')"
-          :disabled="!hasPrev"
-          class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
-        >
-          <ChevronLeft :size="18" />
-        </button>
-
-        <button
-          @click="$emit('next')"
-          :disabled="!hasNext"
-          class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
-        >
-          <ChevronRight :size="18" />
-        </button>
+        <!-- Offset Pagination -->
+        <BasePagination
+          v-if="totalPages !== undefined && totalPages > 0"
+          :current-page="currentPage || 1"
+          :total-pages="totalPages"
+          @update:current-page="$emit('update:currentPage', $event)"
+        />
+        
+        <!-- Cursor Pagination -->
+        <template v-else>
+          <button
+            @click="$emit('prev')"
+            :disabled="!hasPrev"
+            class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+          >
+            <ChevronLeft :size="18" />
+          </button>
+  
+          <button
+            @click="$emit('next')"
+            :disabled="!hasNext"
+            class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+          >
+            <ChevronRight :size="18" />
+          </button>
+        </template>
       </div>
 
       <!-- Spacer jika pagination disembunyikan -->

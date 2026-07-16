@@ -223,7 +223,9 @@ const handleRequestClick = () => {
                   </div>
                   <div>
                     <p class="text-xs text-gray-400 leading-none mb-0.5">Kontak</p>
+                    <p v-if="ambulance.driver.phone === `-`">-</p>
                     <a
+                      v-else
                       :href="`https://wa.me/+62${ambulance.driver.phone}`"
                       target="_blank"
                       class="font-medium text-primary-600 hover:underline"

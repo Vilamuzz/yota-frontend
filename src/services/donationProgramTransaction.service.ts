@@ -51,7 +51,7 @@ export const donationProgramTransactionService = {
   },
 
   getMyDonationProgramTransactions: async (params?: DonationProgramTransactionQueryParams) => {
-    const response = await api.get(`${API.DONATION_PROGRAMS}/transactions/me`, { params })
+    const response = await api.get(`${API.DONATION_PROGRAMS}/transactions`, { params })
     return response.data
   },
 

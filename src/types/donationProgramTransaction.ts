@@ -1,4 +1,4 @@
-import type { Response, Pagination, PaginationParams } from './response'
+import type { Response, OffsetPagination, PaginationParams } from './response'
 
 export interface DonationProgramTransaction {
   id: string
@@ -24,7 +24,7 @@ export enum TransactionStatus {
 
 export interface DonationProgramTransactionList {
   transactions: DonationProgramTransaction[]
-  pagination: Pagination
+  pagination: OffsetPagination
 }
 
 export interface DonationProgramTransactionQueryParams extends PaginationParams {
@@ -32,6 +32,8 @@ export interface DonationProgramTransactionQueryParams extends PaginationParams 
   sortBy?: string
   startDate?: string
   endDate?: string
+  page?: number
+  search?: string
 }
 
 export interface CreateDonationProgramTransactionRequest {

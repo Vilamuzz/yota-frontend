@@ -341,7 +341,9 @@ const categoryBarClass = (value: string) => {
                     <p class="text-xs font-medium text-gray-400 mb-0.5 uppercase tracking-wider">
                       Kontak Sopir
                     </p>
+                    <p v-if="ambulance.driver.phone === `-`">-</p>
                     <a
+                      v-else
                       :href="`https://wa.me/+62${ambulance.driver.phone}`"
                       target="_blank"
                       class="font-semibold text-primary-600 hover:underline"

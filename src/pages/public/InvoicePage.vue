@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/ui/useToast'
 import PublicLayout from '@/layouts/PublicLayout.vue'
+import BasePagination from '@/components/atoms/BasePagination.vue'
 import { useAuthStore } from '@/stores/auth'
 import {
   FileText,
@@ -29,6 +30,7 @@ import type { FosterChildrenTransaction } from '@/types/fosterChildrenTransactio
 import { Loader2 } from 'lucide-vue-next'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useSnap } from '@/composables/snap/useSnap'
+import BasePublicSearch from '@/components/atoms/BasePublicSearch.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -37,16 +39,26 @@ const authStore = useAuthStore()
 const { pay } = useSnap()
 
 const activeCategory = ref('Program Donasi')
-const activeStatus = ref('WAITING')
+const activeStatus = ref('ALL')
+const searchQuery = ref('')
+const debouncedSearchQuery = ref('')
 
-const donationCursor = ref<string | undefined>(undefined)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+const donationPage = ref(1)
 const fosterCursor = ref<string | undefined>(undefined)
 const socialCursor = ref<string | undefined>(undefined)
 
 const donationParams = computed(() => ({
-  status: activeStatus.value === 'WAITING' ? 'pending' : 'settlement',
-  nextCursor: donationCursor.value,
+  status:
+    activeStatus.value === 'ALL'
+      ? undefined
+      : activeStatus.value === 'WAITING'
+        ? 'pending'
+        : 'settlement',
+  page: donationPage.value,
   limit: 10,
+  search: debouncedSearchQuery.value || undefined,
 }))
 
 const fosterParams = computed(() => ({
@@ -78,7 +90,9 @@ const { isLoading: isLoadingFoster, query: fosterQuery } = useMyFosterChildrenTr
 const { isLoading: isLoadingSocial, query: socialQuery } = useMySocialProgramInvoices(
   socialParams,
   {
-    enabled: computed(() => activeCategory.value === 'Program Berkelanjutan' && authStore.isAuthenticated),
+    enabled: computed(
+      () => activeCategory.value === 'Program Berkelanjutan' && authStore.isAuthenticated,
+    ),
   },
 )
 
@@ -87,7 +101,7 @@ const accumulatedFoster = ref<FosterChildrenTransaction[]>([])
 const accumulatedSocial = ref<SocialProgramInvoice[]>([])
 
 watch(activeStatus, () => {
-  donationCursor.value = undefined
+  donationPage.value = 1
   fosterCursor.value = undefined
   socialCursor.value = undefined
   accumulatedDonations.value = []
@@ -95,19 +109,23 @@ watch(activeStatus, () => {
   accumulatedSocial.value = []
 })
 
+watch(searchQuery, (newVal) => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    debouncedSearchQuery.value = newVal
+  }, 500)
+})
+
+watch(debouncedSearchQuery, () => {
+  donationPage.value = 1
+  accumulatedDonations.value = []
+})
+
 watch(
   () => donationQuery.data.value,
   (newData) => {
     if (newData?.data?.transactions) {
-      if (donationCursor.value) {
-        const existingIds = new Set(accumulatedDonations.value.map((t) => t.id || t.orderId))
-        const newItems = newData.data.transactions.filter(
-          (t) => !existingIds.has(t.id || t.orderId),
-        )
-        accumulatedDonations.value.push(...newItems)
-      } else {
-        accumulatedDonations.value = [...newData.data.transactions]
-      }
+      accumulatedDonations.value = [...newData.data.transactions]
     }
   },
   { immediate: true },
@@ -163,7 +181,7 @@ const isAnyFetching = computed(() => {
 
 const hasNextPage = computed(() => {
   if (activeCategory.value === 'Program Donasi') {
-    return !!donationQuery.data.value?.data?.pagination?.nextCursor
+    return false
   }
   if (activeCategory.value === 'Donasi Anak Asuh') {
     return !!fosterQuery.data.value?.data?.pagination?.nextCursor
@@ -177,12 +195,7 @@ const hasNextPage = computed(() => {
 const loadNextPage = () => {
   if (isAnyFetching.value) return
 
-  if (activeCategory.value === 'Program Donasi') {
-    const next = donationQuery.data.value?.data?.pagination?.nextCursor
-    if (next && next !== donationCursor.value) {
-      donationCursor.value = next
-    }
-  } else if (activeCategory.value === 'Donasi Anak Asuh') {
+  if (activeCategory.value === 'Donasi Anak Asuh') {
     const next = fosterQuery.data.value?.data?.pagination?.nextCursor
     if (next && next !== fosterCursor.value) {
       fosterCursor.value = next
@@ -348,7 +361,9 @@ const invoices = computed(() => {
 
 const filteredInvoices = computed(() => {
   return invoices.value.filter(
-    (invoice) => invoice.type === activeCategory.value && invoice.status === activeStatus.value,
+    (invoice) =>
+      invoice.type === activeCategory.value &&
+      (activeStatus.value === 'ALL' || invoice.status === activeStatus.value),
   )
 })
 
@@ -394,7 +409,19 @@ const getStatusLabel = (status: string) => {
           <div
             class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm"
           >
-            <div class="flex items-center gap-2">
+            <div
+              v-if="activeCategory === `Program Donasi`"
+              class="flex items-center gap-2 w-full max-w-xl"
+            >
+              <BasePublicSearch
+                v-model="searchQuery"
+                :show-sort="false"
+                :show-filter="false"
+                placeholder="Cari program donasi..."
+              />
+            </div>
+
+            <div v-else class="flex items-center gap-2">
               <div
                 class="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400"
               >
@@ -410,6 +437,18 @@ const getStatusLabel = (status: string) => {
 
             <div class="flex flex-col md:flex-row p-1 bg-gray-100 rounded-2xl w-full md:w-fit">
               <button
+                @click="activeStatus = 'ALL'"
+                class="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-wider"
+                :class="
+                  activeStatus === 'ALL'
+                    ? 'bg-white text-primary-400 shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600'
+                "
+              >
+                <Clock :size="14" />
+                Semua
+              </button>
+              <button
                 @click="activeStatus = 'WAITING'"
                 class="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-wider"
                 :class="
@@ -420,18 +459,6 @@ const getStatusLabel = (status: string) => {
               >
                 <Clock :size="14" />
                 Menunggu
-                <span
-                  v-if="
-                    invoices.filter((i) => i.type === activeCategory && i.status === 'WAITING')
-                      .length
-                  "
-                  class="ml-1 px-1.5 py-0.5 bg-primary-400 text-white text-[9px] rounded-full"
-                >
-                  {{
-                    invoices.filter((i) => i.type === activeCategory && i.status === 'WAITING')
-                      .length
-                  }}
-                </span>
               </button>
               <button
                 @click="activeStatus = 'PAID'"
@@ -549,14 +576,27 @@ const getStatusLabel = (status: string) => {
               </div>
             </div>
 
-            <!-- Infinite Scroll Trigger -->
+            <!-- Infinite Scroll Trigger (Not for Program Donasi) -->
             <div
-              v-if="hasNextPage"
+              v-if="hasNextPage && activeCategory !== 'Program Donasi'"
               ref="loadMoreTrigger"
               class="h-20 w-full flex items-center justify-center mt-6"
             >
               <Loader2 class="w-8 h-8 text-primary-400 animate-spin" />
             </div>
+
+            <!-- Pagination for Program Donasi -->
+            <BasePagination
+              v-if="
+                activeCategory === 'Program Donasi' &&
+                donationQuery.data.value?.data?.pagination?.totalPages &&
+                donationQuery.data.value.data.pagination.totalPages > 1
+              "
+              class="mt-8"
+              :current-page="donationPage"
+              :total-pages="donationQuery.data.value.data.pagination.totalPages"
+              @update:current-page="(p) => (donationPage = p)"
+            />
           </div>
 
           <!-- Empty State -->

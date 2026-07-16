@@ -2,7 +2,18 @@
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import PublicConfirmationModal from '@/components/organisms/PublicConfirmationModal.vue'
-import { Share2, Flag, Heart, ArrowLeft, X, MessageCircle, Twitter, Facebook, Send, Link2 } from 'lucide-vue-next'
+import {
+  Share2,
+  Flag,
+  Heart,
+  ArrowLeft,
+  X,
+  MessageCircle,
+  Twitter,
+  Facebook,
+  Send,
+  Link2,
+} from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { useToast } from '@/composables/ui/useToast'
 import { useRoute } from 'vue-router'
@@ -156,7 +167,7 @@ const handleShare = () => {
 const shareTo = (platform: 'whatsapp' | 'twitter' | 'facebook' | 'telegram') => {
   const url = currentUrl.value
   const text = `Mari dukung program donasi: "${program.value?.title}". Selengkapnya silakan kunjungi:`
-  
+
   let shareUrl = ''
   switch (platform) {
     case 'whatsapp':
@@ -172,7 +183,7 @@ const shareTo = (platform: 'whatsapp' | 'twitter' | 'facebook' | 'telegram') => 
       shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`
       break
   }
-  
+
   window.open(shareUrl, '_blank', 'noopener,noreferrer')
 }
 
@@ -365,13 +376,7 @@ const copyLink = async () => {
                     />
                   </div>
                 </div>
-                <div class="flex justify-between items-center text-sm font-bold">
-                  <button
-                    @click="$router.push(`/donation-programs/${program?.slug}/donations`)"
-                    class="text-primary-600 hover:text-primary-700 font-bold transition flex items-center gap-1 cursor-pointer"
-                  >
-                    Lihat Donatur
-                  </button>
+                <div class="flex justify-end items-center text-sm font-bold">
                   <p class="text-primary-600">{{ Math.round(progressPercent) }}% Tercapai</p>
                 </div>
               </div>
@@ -402,7 +407,7 @@ const copyLink = async () => {
                   <h2 class="text-xl font-bold text-gray-800">Doa-doa Orang Baik</h2>
                 </div>
                 <div
-                  v-if="(listQuery.data.value?.data?.pagination.total ?? 0) < 6"
+                  v-if="(listQuery.data.value?.data?.pagination.total ?? 0) > 6"
                   class="flex justify-center pt-2"
                 >
                   <BaseButton
@@ -477,7 +482,16 @@ const copyLink = async () => {
               <div
                 class="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-100/50 space-y-6"
               >
-                <h3 class="text-xl font-bold text-gray-900">Dukung Program Ini</h3>
+                <div class="flex flex-row justify-between items-center">
+                  <h3 class="text-xl font-bold text-gray-900">Dukung Program Ini</h3>
+                  <div
+                    class="rounded-lg p-2 bg-primary-300 transition hover:bg-primary-500"
+                    @click="handleShare"
+                  >
+                    <Share2 :size="15" color="white" />
+                  </div>
+                </div>
+
                 <p class="text-gray-500 text-sm leading-relaxed">
                   Bantuan Anda sangat berarti untuk mewujudkan program ini. Mari berbagi kebaikan
                   bersama kami.
@@ -493,14 +507,14 @@ const copyLink = async () => {
                   >
                     Donasi Sekarang
                   </BaseButton>
-                 <BaseButton
+                  <BaseButton
                     variant="outline"
                     size="lg"
                     full-width
                     class="h-14 font-semibold"
-                    @click="handleShare"
+                    @click="$router.push(`/donation-programs/${program?.slug}/donations`)"
                   >
-                    Bagikan
+                    Lihat Donatur
                   </BaseButton>
                 </div>
               </div>

@@ -32,7 +32,11 @@ import { useAmbulanceList } from '@/composables/ambulance/useAmbulanceList'
 import { useAuthStore } from '@/stores/auth'
 import { ROLES } from '@/const/roles'
 import { useAmbulanceDetail } from '@/composables/ambulance/useAmbulanceDetail'
-import { formatAmbulanceStatus } from '@/types/ambulance'
+import {
+  formatAmbulanceStatus,
+  AmbulanceStatus,
+  type AmbulanceQueryParams,
+} from '@/types/ambulance'
 
 const { showToast } = useToast()
 const authStore = useAuthStore()
@@ -106,14 +110,33 @@ const acceptModalShow = ref(false)
 const acceptServiceId = ref<string | null>(null)
 const selectedAmbulanceId = ref('')
 
+const ambulanceQueryParams = reactive<AmbulanceQueryParams>({
+  limit: 10,
+  search: undefined,
+  status: AmbulanceStatus.Available,
+})
+
+const ambulanceSearchQuery = ref('')
+let ambulanceSearchTimeout: ReturnType<typeof setTimeout>
+
+watch(ambulanceSearchQuery, (val) => {
+  clearTimeout(ambulanceSearchTimeout)
+  ambulanceSearchTimeout = setTimeout(() => {
+    ambulanceQueryParams.search = val || undefined
+  }, 400)
+})
+
 const { ambulances, isLoading: isLoadingAmbulances } = useAmbulanceList(
-  { limit: 100 },
-  computed(() => true),
+  ambulanceQueryParams,
+  computed(() => acceptModalShow.value),
 )
 
 function handleAccept(id: string) {
   acceptServiceId.value = id
   selectedAmbulanceId.value = ''
+  ambulanceSearchQuery.value = ''
+  ambulanceQueryParams.search = undefined
+  ambulanceQueryParams.status = AmbulanceStatus.Available
   acceptModalShow.value = true
 }
 
@@ -344,7 +367,6 @@ function handleConfirmCancel() {
         <template #headers>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-16">No</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Pemohon</th>
-          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Telepon</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Kategori</th>
           <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
             Tgl Permintaan
@@ -366,17 +388,19 @@ function handleConfirmCancel() {
             >
               {{ pageOffset * queryParams.limit! + index + 1 }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white">
-              {{ service.submitterName }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-              <a
-                :href="`https://wa.me/62${service.submitterPhone.replace(/^(\+62|62|0)/, '')}`"
-                target="_blank"
-                class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"
-              >
-                {{ formatPhoneWithDashes(service.submitterPhone) }}
-              </a>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex flex-col">
+                <span class="font-bold text-gray-900 dark:text-white">
+                  {{ service.submitterName }}
+                </span>
+                <a
+                  :href="`https://wa.me/62${service.submitterPhone.replace(/^(\+62|62|0)/, '')}`"
+                  target="_blank"
+                  class="text-sm font-semibold text-primary-200 hover:underline inline-flex items-center"
+                >
+                  {{ formatPhoneWithDashes(service.submitterPhone) }}
+                </a>
+              </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm">
               <span
@@ -515,27 +539,46 @@ function handleConfirmCancel() {
       @secondary="acceptModalShow = false"
       @close="acceptModalShow = false"
     >
-      <div class="mt-4 text-left">
-        <label
-          for="ambulance-select"
-          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Pilih Ambulans
-        </label>
-        <select
-          id="ambulance-select"
-          v-model="selectedAmbulanceId"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm"
-          :disabled="isLoadingAmbulances"
-        >
-          <option value="" disabled>-- Pilih Ambulans --</option>
-          <option v-for="ambulance in ambulances" :key="ambulance.id" :value="ambulance.id">
-            {{ ambulance.plateNumber }} - {{ ambulance.driver.username }}
-          </option>
-        </select>
-        <p v-if="isLoadingAmbulances" class="text-xs text-gray-500 mt-1">
-          Memuat daftar ambulans...
-        </p>
+      <div class="mt-4 text-left space-y-4">
+        <div>
+          <label
+            for="ambulance-search"
+            class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+          >
+            Cari Plat / Sopir
+          </label>
+          <input
+            id="ambulance-search"
+            v-model="ambulanceSearchQuery"
+            type="text"
+            placeholder="Cari plat nomor atau nama sopir..."
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm"
+            :disabled="isLoadingAmbulances"
+          />
+        </div>
+
+        <div>
+          <label
+            for="ambulance-select"
+            class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider"
+          >
+            Pilih Ambulans
+          </label>
+          <select
+            id="ambulance-select"
+            v-model="selectedAmbulanceId"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm"
+            :disabled="isLoadingAmbulances"
+          >
+            <option value="" disabled>-- Pilih Ambulans --</option>
+            <option v-for="ambulance in ambulances" :key="ambulance.id" :value="ambulance.id">
+              {{ ambulance.plateNumber }} - {{ ambulance.driver.username }}
+            </option>
+          </select>
+          <p v-if="isLoadingAmbulances" class="text-xs text-gray-500 mt-1">
+            Memuat daftar ambulans...
+          </p>
+        </div>
       </div>
     </ConfirmationModal>
 

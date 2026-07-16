@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useMyAmbulanceServiceDetail } from '@/composables/ambulanceService/useMyAmbulanceServiceDetail'
-import { formatDate } from '@/utils/format'
+import { formatDate, formatDateTime, formatDuration } from '@/utils/format'
 import { formatAmbulanceServiceCategory } from '@/types/ambulanceHistory'
 import {
   X,
@@ -266,11 +266,44 @@ const statusConfig = computed(() => {
                     <div>
                       <span
                         class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider"
-                        >Tanggal Pengajuan</span
+                        >Waktu Pengajuan</span
                       >
                       <p class="text-xs font-semibold text-gray-600 flex items-center gap-1 mt-0.5">
                         <Clock :size="12" />
-                        {{ formatDate(ambulanceService.createdAt) }}
+                        {{ formatDateTime(ambulanceService.requestedAt || ambulanceService.createdAt) }}
+                      </p>
+                    </div>
+
+                    <div v-if="ambulanceService.pickedUpAt">
+                      <span
+                        class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+                        >Mulai Penjemputan</span
+                      >
+                      <p class="text-xs font-semibold text-gray-600 flex items-center gap-1 mt-0.5">
+                        <Clock :size="12" />
+                        {{ formatDateTime(ambulanceService.pickedUpAt) }}
+                      </p>
+                    </div>
+
+                    <div v-if="ambulanceService.completedAt">
+                      <span
+                        class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+                        >Selesai Layanan</span
+                      >
+                      <p class="text-xs font-semibold text-gray-600 flex items-center gap-1 mt-0.5">
+                        <Clock :size="12" />
+                        {{ formatDateTime(ambulanceService.completedAt) }}
+                      </p>
+                    </div>
+
+                    <div v-if="ambulanceService.pickedUpAt && ambulanceService.completedAt">
+                      <span
+                        class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+                        >Durasi Layanan</span
+                      >
+                      <p class="text-xs font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
+                        <Clock :size="12" />
+                        {{ formatDuration(ambulanceService.pickedUpAt, ambulanceService.completedAt) }}
                       </p>
                     </div>
                   </div>
@@ -391,7 +424,9 @@ const statusConfig = computed(() => {
                             class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider"
                             >Telepon</span
                           >
+                          <p v-if="ambulanceService.assignedAmbulance.driver.phone === `-`">-</p>
                           <a
+                            v-else
                             :href="`https://wa.me/+62${ambulanceService.assignedAmbulance.driver.phone}`"
                             class="text-xs font-bold text-gray-700"
                           >
@@ -402,6 +437,7 @@ const statusConfig = computed(() => {
                         </div>
                       </div>
                       <a
+                        v-if="ambulanceService.assignedAmbulance.driver.phone !== `-`"
                         :href="`https://wa.me/+62${ambulanceService.assignedAmbulance.driver.phone}`"
                         target="_blank"
                         class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition flex items-center justify-center shrink-0"

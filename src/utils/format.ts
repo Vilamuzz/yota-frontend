@@ -20,6 +20,12 @@ export const formatDate = (dateString: string) => {
     timeZone: 'Asia/Jakarta',
   })
 }
+
+export const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString)
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
 export const formatMonth = (dateString: string) => {
   const date = new Date(dateString)
   return date.toLocaleDateString('id-ID', {
@@ -68,3 +74,23 @@ export const formatStatus = (status: string): string => {
 
   return statusMap[status.toLowerCase()] || status.charAt(0).toUpperCase() + status.slice(1)
 }
+
+export const formatDuration = (startString: string, endString: string): string => {
+  const start = new Date(startString)
+  const end = new Date(endString)
+  const diffMs = end.getTime() - start.getTime()
+  if (diffMs <= 0) return '0 menit'
+
+  const diffMins = Math.floor(diffMs / 60000)
+  if (diffMins < 60) {
+    return `${diffMins} menit`
+  }
+
+  const diffHours = Math.floor(diffMins / 60)
+  const remainingMins = diffMins % 60
+  if (remainingMins === 0) {
+    return `${diffHours} jam`
+  }
+  return `${diffHours} jam ${remainingMins} menit`
+}
+

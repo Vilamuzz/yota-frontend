@@ -2,8 +2,10 @@
 import BaseSkeleton from '@/components/ui/BaseSkeleton.vue'
 import PublicConfirmationModal from '@/components/organisms/PublicConfirmationModal.vue'
 import { Flag, Heart, ArrowLeft } from 'lucide-vue-next'
-import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import { useRoute } from 'vue-router'
+import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
+import BasePagination from '@/components/atoms/BasePagination.vue'
 import { useDonationProgramDetail } from '@/composables/donationProgram/useDonationProgramDetail'
 import { usePrayerList } from '@/composables/prayer/usePrayerList'
 import { usePrayerAmen } from '@/composables/prayer/usePrayerAmen'
@@ -34,46 +36,7 @@ const queryParams = reactive({
 
 const { listQuery, prayers, pagination } = usePrayerList(donationSlug, queryParams)
 
-const accumulatedPrayers = ref<any[]>([])
-
-watch(
-  prayers,
-  (newPrayers) => {
-    if (queryParams.page === 1) {
-      accumulatedPrayers.value = [...newPrayers]
-    } else {
-      const existingIds = new Set(accumulatedPrayers.value.map((p) => p.id))
-      for (const pray of newPrayers) {
-        if (!existingIds.has(pray.id)) {
-          accumulatedPrayers.value.push(pray)
-        }
-      }
-    }
-  },
-  { immediate: true },
-)
-
-const handleScroll = () => {
-  const bottomOfWindow =
-    window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 200
-
-  if (
-    bottomOfWindow &&
-    !listQuery.isFetching.value &&
-    pagination.value &&
-    queryParams.page < pagination.value.totalPages
-  ) {
-    queryParams.page++
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
+const { goToPage } = useOffsetPagination(queryParams, pagination)
 
 const { createMutation: amenMutation } = usePrayerAmen()
 const { createMutation: reportMutation } = usePrayerReport()
@@ -83,7 +46,7 @@ const showAuthModal = ref(false)
 const reportPrayerId = ref<string>('')
 
 const prays = computed(() => {
-  return accumulatedPrayers.value.map((pray) => ({
+  return (prayers.value || []).map((pray) => ({
     ...pray,
     date: formatDate(pray.createdAt),
   }))
@@ -277,15 +240,14 @@ const handleReportPrayer = async () => {
           <p class="text-gray-500 font-medium">Belum ada doa yang dikirimkan.</p>
         </div>
       </div>
-      <!-- Infinite Scroll Loader -->
-      <div
-        v-if="listQuery.isFetching.value && !listQuery.isLoading.value"
-        class="flex justify-center pt-8"
-      >
-        <div
-          class="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin"
-        ></div>
-      </div>
+      <!-- Pagination -->
+      <BasePagination
+        v-if="pagination && pagination.totalPages > 1"
+        class="mt-16"
+        :current-page="queryParams.page ?? 1"
+        :total-pages="pagination.totalPages"
+        @update:current-page="goToPage"
+      />
     </div>
   </div>
 
