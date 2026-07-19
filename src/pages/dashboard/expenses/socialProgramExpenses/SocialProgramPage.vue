@@ -87,7 +87,7 @@ const {
             Minimal Iuran
           </th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
-            Hari Penagihan
+            Total Pengeluaran
           </th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
           <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider w-24">
@@ -115,7 +115,7 @@ const {
             <td
               class="px-6 py-4 whitespace-nowrap font-medium text-center text-gray-600 dark:text-gray-200"
             >
-              Tanggal {{ program.billingDay }}
+              {{ formatCurrency(program.totalExpense) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span

@@ -6,10 +6,13 @@ export const useSocialProgramExpenseDelete = (programId: string) => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => socialProgramExpenseService.deleteSocialProgramExpense(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminSocialPrograms'] })
-      queryClient.invalidateQueries({ queryKey: ['adminSocialProgramDetail', programId] })
-      queryClient.invalidateQueries({ queryKey: ['adminSocialProgramExpenses', programId] })
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['adminSocialPrograms'] }),
+        queryClient.invalidateQueries({ queryKey: ['adminSocialProgramDetail', programId] }),
+        queryClient.invalidateQueries({ queryKey: ['adminSocialProgramExpenses', programId] }),
+        queryClient.invalidateQueries({ queryKey: ['socialProgramExpenses'] }),
+      ])
     },
   })
 

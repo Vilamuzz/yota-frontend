@@ -410,6 +410,30 @@ const getStatusLabel = (status: string) => {
 
             <div class="flex flex-col md:flex-row p-1 bg-gray-100 rounded-2xl w-full md:w-fit">
               <button
+                @click="activeStatus = 'ALL'"
+                class="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-wider"
+                :class="
+                  activeStatus === 'ALL'
+                    ? 'bg-white text-primary-400 shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600'
+                "
+              >
+                <Clock :size="14" />
+                Semua
+                <span
+                  v-if="
+                    invoices.filter((i) => i.type === activeCategory && i.status === 'WAITING')
+                      .length
+                  "
+                  class="ml-1 px-1.5 py-0.5 bg-primary-400 text-white text-[9px] rounded-full"
+                >
+                  {{
+                    invoices.filter((i) => i.type === activeCategory && i.status === 'WAITING')
+                      .length
+                  }}
+                </span>
+              </button>
+              <button
                 @click="activeStatus = 'WAITING'"
                 class="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-wider"
                 :class="
