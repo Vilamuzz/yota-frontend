@@ -30,6 +30,8 @@ const errors = ref<Record<string, string>>({})
 
 const isLoading = computed(() => createMutation.isPending.value)
 
+const maxExpenseDate = computed(() => new Date().toISOString().substring(0, 10))
+
 const formatCurrencyPreview = computed(() => {
   const num = Number(form.amount)
   if (!num || isNaN(num)) return ''
@@ -84,6 +86,7 @@ const handleSubmit = () => {
     amount: Number(form.amount),
     expenseDate: form.expenseDate,
     note: form.note.trim(),
+    proofFile: form.proofFile ?? undefined,
   })
 
   const zodErrors = getZodErrors(result)
@@ -167,6 +170,7 @@ const handleSubmit = () => {
               id="expenseDate"
               v-model="form.expenseDate"
               type="date"
+              :max="maxExpenseDate"
               label="Tanggal Pengeluaran"
               :error="expenseDateError"
               required
@@ -196,7 +200,7 @@ const handleSubmit = () => {
           <div class="p-6 space-y-5 border-l border-gray-100 dark:border-gray-700">
             <div>
               <label class="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-2">
-                Bukti Pengeluaran (Opsional)
+                Bukti Pengeluaran <span class="text-red-500">*</span>
               </label>
 
               <div
