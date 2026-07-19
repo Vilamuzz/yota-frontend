@@ -143,6 +143,14 @@ const {
   isLoading: expLoading,
 } = useSocialProgramExpenseList(programId, expParams)
 
+const displayedTotalExpense = computed(() => {
+  const sum = socialProgramExpenses.value.reduce((total, expense) => {
+    return total + Number(expense.amount || 0)
+  }, 0)
+
+  return sum > 0 ? sum : program.value?.totalExpense ?? 0
+})
+
 const {
   pageOffset: expPageOffset,
   resetPagination: expResetPagination,
@@ -192,8 +200,19 @@ function openFilePreviewModal(fileUrl: string) {
 }
 
 // ── Summary ─────────────────────────────────────────────────────
-const totalCollectedFund = computed(() => program.value?.collectedFund ?? 0)
-const totalExpense = computed(() => program.value?.totalExpense ?? 0)
+const totalCollectedFund = computed(() => {
+  return subscriptions.value.reduce((total, subscription) => {
+    const donation = Number(subscription.totalDonation || 0)
+    if (donation <= 0) return total
+
+    if (subscription.status === SocialProgramSubscriptionStatus.ACTIVE) {
+      return total + donation
+    }
+
+    return total + 0
+  }, 0)
+})
+const totalExpense = computed(() => displayedTotalExpense.value)
 const totalSubscribers = computed(() => program.value?.totalSubscribers ?? 0)
 
 // ── Program actions ─────────────────────────────────────────────

@@ -9,7 +9,7 @@ import { useCursorPagination } from '@/composables/ui/usePagination'
 import type { SocialProgramInvoiceQueryParams } from '@/types/socialProgramInvoice'
 import { InvoiceStatus } from '@/types/socialProgramInvoice'
 import { getStatusColor } from '@/utils/statusColor'
-import { formatCurrency, formatDate, formatMonth, formatStatus } from '@/utils/format'
+import { formatBillingPeriodLabel, formatCurrency, formatDate, formatStatus } from '@/utils/format'
 import { useSocialProgramTransactionCreateOffline } from '@/composables/socialProgramTransaction/useSocialProgramTransactionCreateOffline'
 import { useToast } from '@/composables/ui/useToast'
 import { extractError } from '@/utils/error'
@@ -42,6 +42,7 @@ const selectedInvoice = ref<SocialProgramInvoice>()
 const { createMutation } = useSocialProgramTransactionCreateOffline()
 
 const handleOpenPayModal = (invoice: SocialProgramInvoice) => {
+  if (invoice.status === InvoiceStatus.PAID) return
   selectedInvoice.value = invoice
   isPayModalOpen.value = true
 }
@@ -158,7 +159,7 @@ const handlePayOffline = (payload: CreateSocialProgramTransactionRequest) => {
                 class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white"
               >
                 <Calendar :size="14" class="text-gray-400" />
-                Bulan {{ formatMonth(invoice.createdAt) }}
+                {{ formatBillingPeriodLabel(invoice.billingPeriod, invoice.createdAt) }}
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">

@@ -56,10 +56,18 @@ const modalExpenseData = computed(
 const searchInput = ref('')
 let searchTimeout: ReturnType<typeof setTimeout>
 
-const { socialProgramExpenses, pagination, isLoading } = useSocialProgramExpenseList(
+const { socialProgramExpenses, pagination, isLoading, listQuery } = useSocialProgramExpenseList(
   socialProgramId,
   queryParams,
 )
+
+const displayedTotalExpense = computed(() => {
+  const sum = socialProgramExpenses.value.reduce((total, expense) => {
+    return total + Number(expense.amount || 0)
+  }, 0)
+
+  return sum > 0 ? sum : socialProgram.value?.totalExpense || 0
+})
 
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } =
   useCursorPagination(queryParams)
@@ -107,10 +115,11 @@ function openFilePreviewModal(fileUrl: string) {
 function handleConfirmDelete() {
   if (selectedExpenseId.value) {
     deleteMutation.mutate(selectedExpenseId.value, {
-      onSuccess: () => {
+      onSuccess: async () => {
         showToast('Pengeluaran berhasil dihapus', 'success')
         isDeleteModalOpen.value = false
         selectedExpenseId.value = null
+        await Promise.all([listQuery.refetch(), detailQuery.refetch()])
       },
       onError: () => {
         showToast('Gagal menghapus pengeluaran', 'error')
@@ -149,7 +158,7 @@ function handleConfirmDelete() {
           class="md:col-span-3 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm"
         >
           <h3 class="text-3xl font-bold text-red-700 dark:text-red-500">
-            {{ formatCurrency(socialProgram?.totalExpense || 0) }}
+            {{ formatCurrency(displayedTotalExpense) }}
           </h3>
           <p class="text-sm text-gray-400 mt-1">Total Pengeluaran</p>
         </div>

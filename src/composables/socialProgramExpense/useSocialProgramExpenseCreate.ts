@@ -16,6 +16,7 @@ export const useSocialProgramExpenseCreate = () => {
     { id: string; data: CreateSocialProgramExpenseRequest }
   >({
     mutationFn: ({ id, data }) => socialProgramExpenseService.createSocialProgramExpense(id, data),
+   //INI SALAH key nya beda socialProgramExpenses yang dipakai useSocialProgramExpenseDetail
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialProgramExpenses'] })
     },

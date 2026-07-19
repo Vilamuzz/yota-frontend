@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BaseModal from '@/components/organisms/BaseModal.vue'
 import BaseButton from '@/components/atoms/BaseButton.vue'
 import BaseInput from '@/components/atoms/BaseInput.vue'
 import type { CreateSocialProgramTransactionRequest } from '@/types/socialProgramTransaction'
 import type { SocialProgramInvoice } from '@/types/socialProgramInvoice'
-import { formatCurrency, formatMonth } from '@/utils/format'
+import { formatBillingPeriodLabel, formatCurrency } from '@/utils/format'
 
 const props = defineProps<{
   show: boolean
   invoice?: SocialProgramInvoice
   loading?: boolean
 }>()
-
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'submit', payload: CreateSocialProgramTransactionRequest): void
@@ -21,6 +20,19 @@ const emit = defineEmits<{
 const form = ref<CreateSocialProgramTransactionRequest>({
   grossAmount: 0,
 })
+
+const normalizedAmount = computed(() => {
+  const amount = Number(form.value.grossAmount || 0)
+  return Number.isFinite(amount) && amount > 0 ? amount : 0
+})
+
+const minimumAmount = computed(() => props.invoice?.minimumAmount ?? 0)
+
+const isBelowMinimum = computed(
+  () => normalizedAmount.value > 0 && normalizedAmount.value < minimumAmount.value,
+)
+
+const isInvalid = computed(() => normalizedAmount.value <= 0 || isBelowMinimum.value)
 
 watch(
   () => props.invoice,
@@ -33,7 +45,10 @@ watch(
 )
 
 const handleSubmit = () => {
-  emit('submit', { ...form.value })
+  if (isInvalid.value) return
+  emit('submit', {
+    grossAmount: normalizedAmount.value,
+  })
 }
 </script>
 
@@ -50,24 +65,29 @@ const handleSubmit = () => {
           Tagihan
         </p>
         <p class="text-sm font-bold text-blue-900 dark:text-blue-100">
-          Bulan {{ formatMonth(invoice.createdAt) }}
+          {{ formatBillingPeriodLabel(invoice.billingPeriod, invoice.createdAt) }}
         </p>
         <p class="text-lg font-bold text-blue-900 dark:text-blue-100 mt-2">
           {{ formatCurrency(invoice.minimumAmount) }}
         </p>
       </div>
-
-      <BaseInput
-        id="grossAmount"
-        v-model.number="form.grossAmount"
-        label="Nominal Pembayaran"
-        type="number"
-        required
-      />
-
+      <div>
+        <BaseInput
+          id="grossAmount"
+          v-model.number="form.grossAmount"
+          label="Nominal Pembayaran"
+          type="number"
+          required
+        />
+        <p v-if="isBelowMinimum" class="text-sm text-red-500 mt-1">
+          Nominal tidak boleh kurang dari {{ formatCurrency(minimumAmount) }}
+        </p>
+      </div>
       <div class="flex justify-end gap-3 mt-6">
         <BaseButton type="button" variant="secondary" @click="emit('close')">Batal</BaseButton>
-        <BaseButton type="submit" variant="primary" :loading="loading">Catat Pembayaran</BaseButton>
+        <BaseButton type="submit" variant="primary" :loading="loading" :disabled="isInvalid">
+          Catat Pembayaran
+        </BaseButton>
       </div>
     </form>
   </BaseModal>
