@@ -11,13 +11,40 @@ export const formatNumber = (amount: number) => {
   return new Intl.NumberFormat('id-ID').format(amount)
 }
 
-export const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
+const parseDisplayDate = (dateString: string | null | undefined) => {
+  if (!dateString) return null
+
+  const value = String(dateString).trim()
+  if (!value) return null
+
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch
+    return new Date(Number(year), Number(month) - 1, Number(day))
+  }
+
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+const formatDisplayDate = (
+  dateString: string | null | undefined,
+  options: Intl.DateTimeFormatOptions,
+) => {
+  const date = parseDisplayDate(dateString)
+  if (!date) return '-'
+
   return date.toLocaleDateString('id-ID', {
+    ...options,
+    timeZone: 'Asia/Jakarta',
+  })
+}
+
+export const formatDate = (dateString: string | null | undefined) => {
+  return formatDisplayDate(dateString, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    timeZone: 'Asia/Jakarta',
   })
 }
 
@@ -31,8 +58,47 @@ export const formatMonth = (dateString: string) => {
   return date.toLocaleDateString('id-ID', {
     month: 'long',
     year: 'numeric',
-    timeZone: 'Asia/Jakarta',
   })
+}
+
+export const formatBillingPeriodLabel = (
+  period: number | string | null | undefined,
+  fallbackDate?: string | null,
+) => {
+  if (period !== null && period !== undefined && period !== '') {
+    const rawPeriod = String(period).trim()
+
+    if (/^\d{6}$/.test(rawPeriod)) {
+      const year = Number(rawPeriod.slice(0, 4))
+      const month = Number(rawPeriod.slice(4, 6))
+      const date = new Date(year, month - 1, 1)
+
+      return `Bulan ${date.toLocaleDateString('id-ID', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+      })}`
+    }
+
+    if (/^\d{4}-\d{2}$/.test(rawPeriod)) {
+      const [year, month] = rawPeriod.split('-').map(Number)
+      const date = new Date(year, month - 1, 1)
+
+      return `Bulan ${date.toLocaleDateString('id-ID', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+      })}`
+    }
+
+    return `Periode ${rawPeriod}`
+  }
+
+  if (fallbackDate) {
+    return `Bulan ${formatMonth(fallbackDate)}`
+  }
+
+  return ''
 }
 
 export const getCategoryLabel = (value: string, options: { value: string; label: string }[]) => {
