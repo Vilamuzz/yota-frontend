@@ -437,7 +437,8 @@ const getEducationLevelLabel = (level?: number) => {
         <!-- Action Footer -->
         <div
           v-if="
-            fosterChildrenCandidate.status === FosterChildrenCandidateStatus.PENDING ||
+            (fosterChildrenCandidate.status === FosterChildrenCandidateStatus.PENDING &&
+              role === ROLES.SOCIAL_MANAGER) ||
             (fosterChildrenCandidate.status ===
               FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED &&
               role === ROLES.CHAIRMAN)
