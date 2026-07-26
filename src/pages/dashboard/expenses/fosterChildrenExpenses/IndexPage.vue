@@ -181,9 +181,8 @@ const handleExport = async (payload: {
     <div class="space-y-6">
       <div
         v-if="child"
-        class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6"
+        class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6"
       >
-        <!-- Card Anak Asuh -->
         <div
           class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center gap-4"
         >
@@ -210,7 +209,6 @@ const handleExport = async (payload: {
           </div>
         </div>
 
-        <!-- Card Dana Terkumpul -->
         <div
           class="bg-white dark:bg-gray-800 rounded-2xl border border-green-100 dark:border-green-900 shadow-sm p-5"
         >
@@ -229,7 +227,6 @@ const handleExport = async (payload: {
           </p>
         </div>
 
-        <!-- Card Dana Tersisa -->
         <div
           class="bg-white dark:bg-gray-800 rounded-2xl border border-red-100 dark:border-red-900 shadow-sm p-5"
         >
@@ -245,6 +242,24 @@ const handleExport = async (payload: {
 
           <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Sisa dana setelah seluruh pengeluaran.
+          </p>
+        </div>
+
+        <div
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-blue-100 dark:border-blue-900 shadow-sm p-5"
+        >
+          <p
+            class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 font-medium"
+          >
+            Total Pengeluaran
+          </p>
+
+          <h2 class="mt-2 text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {{ formatCurrency(child.totalExpense || 0) }}
+          </h2>
+
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              Total pengeluaran yang telah dicatat.
           </p>
         </div>
       </div>
@@ -402,6 +417,7 @@ const handleExport = async (payload: {
                   <Eye :size="18" />
                 </BaseIconButton>
                 <BaseIconButton
+                  v-if="isFinance"
                   title="Hapus pengeluaran"
                   @click="openDeleteModal(expense.id)"
                   variant="danger"

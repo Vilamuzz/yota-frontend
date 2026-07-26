@@ -5,9 +5,7 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import BaseSearch from '@/components/atoms/BaseSearch.vue'
 import BaseFilter from '@/components/atoms/BaseFilter.vue'
 import BaseTable from '@/components/organisms/BaseTable.vue'
-import { useAuthStore } from '@/stores/auth'
 import { Category, Gender } from '@/types/fosterChildren'
-import { ROLES } from '@/const/roles'
 import { useFosterChildrenCandidateList } from '@/composables/fosterChildrenCandidate/useFosterChildrenCandidateList'
 import { useOffsetPagination } from '@/composables/ui/useOffsetPagination'
 import { getStatusColor } from '@/utils/statusColor'
@@ -34,11 +32,6 @@ let searchTimeout: ReturnType<typeof setTimeout>
 
 const { candidates, pagination, isLoading } = useFosterChildrenCandidateList(queryParams)
 const filteredCandidates = computed(() => {
-  if (role.value === ROLES.CHAIRMAN) {
-    return candidates.value.filter(
-      (candidate) => candidate.status !== FosterChildrenCandidateStatus.PENDING,
-    )
-  }
   return candidates.value
 })
 const { pageOffset, resetPagination, handleNextPage, handlePrevPage } = useOffsetPagination(
@@ -68,24 +61,13 @@ watch(
 const genders = Object.values(Gender)
 const categories = Object.values(Category)
 
-const authStore = useAuthStore()
-const role = computed(() => {
-  if (authStore.activeRole === ROLES.CHAIRMAN) return ROLES.CHAIRMAN
-  return ROLES.SOCIAL_MANAGER
-})
-
 const statusByRole = computed(() => {
-  const common = [
+  return [
+    { label: 'Tertunda', value: FosterChildrenCandidateStatus.PENDING },
     { label: 'Diterima Koordinator Sosial', value: FosterChildrenCandidateStatus.SOCIAL_MANAGER_ACCEPTED },
     { label: 'Diterima', value: FosterChildrenCandidateStatus.ACCEPTED },
     { label: 'Ditolak', value: FosterChildrenCandidateStatus.REJECTED },
   ]
-
-  if (role.value === ROLES.SOCIAL_MANAGER) {
-    return [{ label: 'Tertunda', value: FosterChildrenCandidateStatus.PENDING }, ...common]
-  }
-
-  return common
 })
 
 const hasActiveFilters = computed(

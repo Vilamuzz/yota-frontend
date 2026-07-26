@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { LineChart } from 'echarts/charts'
+import { BarChart } from 'echarts/charts'
 import {
   GridComponent,
   TooltipComponent,
@@ -25,7 +25,7 @@ import { Briefcase, Baby, ChevronRight, AlertCircle } from 'lucide-vue-next'
 
 use([
   CanvasRenderer,
-  LineChart,
+  BarChart,
   GridComponent,
   TooltipComponent,
   LegendComponent,
@@ -160,7 +160,7 @@ const monthlyChartOption = computed(() => {
     series: [
       {
         name: 'Pendapatan',
-        type: 'line',
+        type: 'bar',
         smooth: true,
         symbol: 'circle',
         symbolSize: 6,
@@ -179,7 +179,7 @@ const monthlyChartOption = computed(() => {
       },
       {
         name: 'Pengeluaran',
-        type: 'line',
+        type: 'bar',
         smooth: true,
         symbol: 'circle',
         symbolSize: 6,
@@ -212,7 +212,7 @@ const monthlyChartOption = computed(() => {
       v-if="summaryQuery.isError.value"
       class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 p-4 rounded-xl flex items-start gap-3 text-red-800 dark:text-red-300"
     >
-      <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
+      <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
       <div>
         <h4 class="font-semibold">Gagal memuat data</h4>
         <p class="text-sm mt-1">Silakan coba muat ulang halaman atau periksa koneksi internet Anda.</p>
@@ -245,7 +245,7 @@ const monthlyChartOption = computed(() => {
         :initial="{ opacity: 0, y: 15 }"
         :animate="{ opacity: 1, y: 0 }"
         :transition="{ duration: 0.3, delay: 0.05 }"
-        class="group relative overflow-hidden border border-blue-100 dark:border-blue-900/10 bg-gradient-to-br from-white to-blue-50/5 dark:from-gray-900/60 dark:to-blue-950/5 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+        class="group relative overflow-hidden border border-blue-100 dark:border-blue-900/10 bg-linear-to-br from-white to-blue-50/5 dark:from-gray-900/60 dark:to-blue-950/5 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
       >
         <div>
           <div class="flex justify-between items-start mb-4">
@@ -286,7 +286,7 @@ const monthlyChartOption = computed(() => {
         :initial="{ opacity: 0, y: 15 }"
         :animate="{ opacity: 1, y: 0 }"
         :transition="{ duration: 0.3, delay: 0.1 }"
-        class="group relative overflow-hidden border border-violet-100 dark:border-violet-900/10 bg-gradient-to-br from-white to-violet-50/5 dark:from-gray-900/60 dark:to-violet-950/5 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+        class="group relative overflow-hidden border border-violet-100 dark:border-violet-900/10 bg--to-br from-white to-violet-50/5 dark:from-gray-900/60 dark:to-violet-950/5 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
       >
         <div>
           <div class="flex justify-between items-start mb-4">

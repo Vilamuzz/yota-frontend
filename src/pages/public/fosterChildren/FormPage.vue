@@ -169,7 +169,7 @@ const handleSubmit = () => {
         </div>
 
         <!-- Donor Name -->
-        <div>
+        <div class="space-y-1.5">
           <label class="text-sm text-gray-500">Nama Donatur (Opsional)</label>
           <input
             v-model="donorName"
@@ -177,6 +177,7 @@ const handleSubmit = () => {
             placeholder="Nama Anda"
             class="w-full border-2 border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 focus:border-primary-400 transition-colors"
           />
+          <p class="text-xs text-gray-400">Jika tidak diisi, nama donatur akan masuk sebagai "Hamba Allah"</p>
         </div>
 
         <!-- Donor Email -->
